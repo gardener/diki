@@ -21,7 +21,7 @@ COPY vendor/ vendor/
 # Build
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -a -o diki cmd/diki/main.go
 
-FROM gcr.io/distroless/static-debian11:nonroot
+FROM gcr.io/distroless/static-debian11:nonroot AS diki
 WORKDIR /
 COPY --from=builder /workspace/diki .
 
