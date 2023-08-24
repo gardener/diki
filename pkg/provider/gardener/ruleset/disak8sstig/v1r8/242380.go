@@ -7,6 +7,7 @@ package v1r8
 import (
 	"context"
 	"log/slog"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 	appsv1 "k8s.io/api/apps/v1"
@@ -76,6 +77,12 @@ func (r *Rule242380) checkStatefulSet(ctx context.Context, statefulSetName strin
 	err = yaml.Unmarshal(configByteSlice, config)
 	if err != nil {
 		return rule.ErroredCheckResult(err.Error(), target)
+	}
+
+	// We do not check the command-line flags and environment variables,
+	// since they are ignored when a config file is set. ref https://etcd.io/docs/v3.5/op-guide/configuration/
+	if len(strings.Split(config.InitialCluster, ",")) == 1 {
+		return rule.SkippedCheckResult("ETCD runs as a single instance, peer communication options are not used.", target)
 	}
 
 	if config.PeerTransportSecurity.AutoTLS == nil {

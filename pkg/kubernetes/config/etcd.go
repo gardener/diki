@@ -6,6 +6,7 @@ package config
 
 // EtcdConfig describes ETCD configuration values.
 type EtcdConfig struct {
+	InitialCluster          string            `yaml:"initial-cluster"`
 	ClientTransportSecurity TransportSecurity `yaml:"client-transport-security"`
 	PeerTransportSecurity   TransportSecurity `yaml:"peer-transport-security"`
 }
