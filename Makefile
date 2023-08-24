@@ -35,9 +35,7 @@ revendor:
 	@GO111MODULE=on go mod tidy
 	@GO111MODULE=on go mod vendor
 	@chmod +x $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/*
-
-.PHONY: verify
-verify: format check test
+	@chmod +x $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/.ci/*
 
 .PHONY: gen-styles
 gen-styles: $(TAILWINDCSS)
@@ -51,3 +49,17 @@ generate:
 .PHONY: check-generate
 check-generate:
 	@$(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/check-generate.sh $(REPO_ROOT)
+
+.PHONY: test-cov
+test-cov:
+	@$(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/test-cover.sh ./cmd/... ./pkg/...
+
+.PHONY: test-clean
+test-clean:
+	@$(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/test-cover-clean.sh
+
+.PHONY: verify
+verify: format check test
+
+.PHONY: verify-extended
+verify-extended: check-generate check format test test-cov test-clean

@@ -10,4 +10,5 @@ package tools
 
 import (
 	_ "github.com/gardener/gardener/hack"
+	_ "github.com/gardener/gardener/hack/.ci"
 )

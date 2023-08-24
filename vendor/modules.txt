@@ -54,6 +54,7 @@ github.com/gardener/etcd-druid/api/v1alpha1
 # github.com/gardener/gardener v1.77.1
 ## explicit; go 1.20
 github.com/gardener/gardener/hack
+github.com/gardener/gardener/hack/.ci
 github.com/gardener/gardener/pkg/apis/core
 github.com/gardener/gardener/pkg/apis/core/install
 github.com/gardener/gardener/pkg/apis/core/v1beta1
