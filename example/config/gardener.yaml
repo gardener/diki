@@ -1,0 +1,45 @@
+providers:             # contains information about known providers
+- id: gardener         # unique provider identifier
+  name: Gardener       # user friendly name of the provider
+  metadata:
+    projectName: local
+    shootName: local
+    # foo: bar
+  args:
+    shootKubeconfigPath: /tmp/shoot.config  # path to shoot admin kubeconfig
+    seedKubeconfigPath: /tmp/seed.config    # path to seed admin kubeconfig
+    shootName: local                           # name of shoot cluster to be tested
+    shootNamespace: shoot--local--local        # name of namespace which contains the shoot controlplane residing in the seed cluster
+  rulesets:
+  - id: disa-kubernetes-stig
+    name: DISA Kubernetes Security Technical Implementation Guide
+    version: v1r8
+    ruleOptions:
+    - ruleID: "242414"
+      # skip:
+      #   enabled: true
+      #   justification: "whole rule is allowed"
+      args:
+        acceptedPods:
+        - podNamePrefix: "node-local-dns-"
+          namespacePrefix: "kube-system"
+          justification: "node local dns is allowed because of special handling!"
+          ports:
+          - 53
+        - podNamePrefix: "network-problem-detector-"
+          namespacePrefix: "kube-system"
+          ports:
+          - 1011
+          - 1012
+    - ruleID: "245543"
+      args:
+        acceptedTokens:
+        - user: "health-check"
+          uid: "health-check"
+          # groups: "group1,group2,group3"
+    - ruleID: "254800"
+      args:
+        minPodSecurityLevel: "baseline"
+output:
+  path: /tmp/test-output.json          #  optional, path to summary json report
+  minStatus: Passed

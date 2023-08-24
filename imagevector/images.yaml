@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+---
+images:
+- name: ops-toolbelt
+  sourceRepository: github.com/gardener/ops-toolbelt
+  repository: eu.gcr.io/gardener-project/gardener/ops-toolbelt
+  tag: "0.23.0"
