@@ -1031,26 +1031,6 @@ var _ = Describe("utils", func() {
 	})
 })
 
-type fakeRule struct{}
-
-func (*fakeRule) ID() string {
-	return "id"
-}
-
-func (*fakeRule) Name() string {
-	return "name"
-}
-
-func (*fakeRule) Run(context.Context) (rule.RuleResult, error) {
-	return rule.RuleResult{}, nil
-}
-
-type fakeTarget struct{}
-
-func (*fakeTarget) String() string {
-	return "string"
-}
-
 const (
 	kubeletConfig = `maxPods: 111
 readOnlyPort: 222

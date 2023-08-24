@@ -24,13 +24,13 @@ import (
 var _ = Describe("#245543", func() {
 
 	const (
-		notValidToken  = `foo,bar`
-		acceptedToken  = `foo,health-check,health-check`
-		acceptedTokens = `foo,health-check,health-check
+		notValidEntry   = `foo,bar`
+		acceptedEntry   = `foo,health-check,health-check`
+		acceptedEntries = `foo,health-check,health-check
 bar,root,0,group`
-		acceptedTokenGroups = `foo,groups,groups,"group1,group2,group3"`
-		notAcceptedToken    = `foo,foo,bar`
-		notAcceptedTokens   = `foo,health-check,health-check
+		acceptedEntryGroups = `foo,groups,groups,"group1,group2,group3"`
+		notAcceptedEntry    = `foo,foo,bar`
+		notAcceptedEntries  = `foo,health-check,health-check
 bar,for,bar,`
 	)
 
@@ -165,7 +165,7 @@ bar,for,bar,`
 		Entry("should accept when token has been accepted.",
 			[]string{"--token-auth-file=foo/bar/static_tokens.csv"}, &options,
 			corev1.Volume{Name: "static-token", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"static_tokens.csv": []byte(acceptedToken)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"static_tokens.csv": []byte(acceptedEntry)}},
 			[]dikirule.CheckResult{
 				{
 					Status:  dikirule.Accepted,
@@ -177,7 +177,7 @@ bar,for,bar,`
 		Entry("should accept when there are more than 1 accepted tokens.",
 			[]string{"--token-auth-file=foo/bar/static_tokens.csv"}, &options,
 			corev1.Volume{Name: "static-token", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"static_tokens.csv": []byte(acceptedTokens)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"static_tokens.csv": []byte(acceptedEntries)}},
 			[]dikirule.CheckResult{
 				{
 					Status:  dikirule.Accepted,
@@ -189,7 +189,7 @@ bar,for,bar,`
 		Entry("should accept when token has been accepted and has more than 1 group.",
 			[]string{"--token-auth-file=foo/bar/static_tokens.csv"}, &options,
 			corev1.Volume{Name: "static-token", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"static_tokens.csv": []byte(acceptedTokenGroups)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"static_tokens.csv": []byte(acceptedEntryGroups)}},
 			[]dikirule.CheckResult{
 				{
 					Status:  dikirule.Accepted,
@@ -201,7 +201,7 @@ bar,for,bar,`
 		Entry("should fail when token is not accepted.",
 			[]string{"--token-auth-file=foo/bar/static_tokens.csv"}, &options,
 			corev1.Volume{Name: "static-token", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"static_tokens.csv": []byte(notAcceptedToken)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"static_tokens.csv": []byte(notAcceptedEntry)}},
 			[]dikirule.CheckResult{
 				{
 					Status:  dikirule.Failed,
@@ -213,7 +213,7 @@ bar,for,bar,`
 		Entry("should fail when there are mor tha 1 tokens and at least 1 is not accepted.",
 			[]string{"--token-auth-file=foo/bar/static_tokens.csv"}, &options,
 			corev1.Volume{Name: "static-token", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"static_tokens.csv": []byte(notAcceptedTokens)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"static_tokens.csv": []byte(notAcceptedEntries)}},
 			[]dikirule.CheckResult{
 				{
 					Status:  dikirule.Failed,
@@ -225,7 +225,7 @@ bar,for,bar,`
 		Entry("should fail when not valid token is used.",
 			[]string{"--token-auth-file=foo/bar/static_tokens.csv"}, &options,
 			corev1.Volume{Name: "static-token", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"static_tokens.csv": []byte(notValidToken)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"static_tokens.csv": []byte(notValidEntry)}},
 			[]dikirule.CheckResult{
 				{
 					Status:  dikirule.Failed,
