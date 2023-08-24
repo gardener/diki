@@ -116,6 +116,8 @@ func GetWorkers(ctx context.Context, c client.Client, namespace string, limit in
 	}
 }
 
+// GetPodSecurityPolicies returns all pod security policies.
+// It retrieves policies by portions set by limit.
 func GetPodSecurityPolicies(ctx context.Context, c client.Client, limit int64) ([]policyv1beta1.PodSecurityPolicy, error) {
 	podSecurityPoliciesList := &policyv1beta1.PodSecurityPolicyList{}
 	podSecurityPolicies := []policyv1beta1.PodSecurityPolicy{}
