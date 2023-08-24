@@ -46,8 +46,8 @@ var _ = Describe("#242393", func() {
 			[]rule.CheckResult{
 				rule.FailedCheckResult("SSH daemon started on port 22", gardener.NewTarget("cluster", "shoot")),
 			}),
-		Entry("should return passed checkResult when sshd is not found in systemctl",
-			[][]string{{"", "foo NO such file or directory"}},
+		Entry("should return passed checkResult when sshd is inactive in systemctl",
+			[][]string{{"", "Inactive"}},
 			[][]error{{nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("SSH daemon service not installed", gardener.NewTarget("cluster", "shoot")),
@@ -72,9 +72,9 @@ var _ = Describe("#242393", func() {
 			}),
 		Entry("should return errored checkResult when second execute errors",
 			[][]string{{"", "foo"}},
-			[][]error{{nil, errors.New("bat")}},
+			[][]error{{nil, errors.New("bar")}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("bat", gardener.NewTarget("cluster", "shoot")),
+				rule.ErroredCheckResult("bar", gardener.NewTarget("cluster", "shoot")),
 			}),
 	)
 })

@@ -47,9 +47,9 @@ var _ = Describe("#242394", func() {
 			[]rule.CheckResult{
 				rule.FailedCheckResult("SSH daemon started on port 22", target),
 			}),
-		Entry("should return passed checkResult when sshd is not found in systemctl",
-			[][]string{{"", "foo NO such file or directory"}},
-			[][]error{{nil, nil}},
+		Entry("should return passed checkResult when second execute errors with sshd is not found in systemctl",
+			[][]string{{"", ""}},
+			[][]error{{nil, errors.New(" foo NO such file or directory  ")}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("SSH daemon service not installed", target),
 			}),
@@ -73,9 +73,9 @@ var _ = Describe("#242394", func() {
 			}),
 		Entry("should return errored checkResult when second execute errors",
 			[][]string{{"", "foo"}},
-			[][]error{{nil, errors.New("bat")}},
+			[][]error{{nil, errors.New("bar")}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("bat", target),
+				rule.ErroredCheckResult("bar", target),
 			}),
 	)
 })
