@@ -50,3 +50,7 @@ You can manually run the tests via `make test`.
 ## Contributing
 
 Contributions are very welcome. To learn more, see the [contributor guide](https://gardener.cloud/docs/contribute).
+
+## Credits
+
+A special thank you to @vlerenc, @AleksandarSavchev and @dimityrmirchev who made significant contributions to the project before it was made available to the public.
