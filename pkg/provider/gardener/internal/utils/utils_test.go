@@ -531,51 +531,6 @@ var _ = Describe("utils", func() {
 			}, "container2", corev1.Container{}, false),
 	)
 
-	DescribeTable("#GetVolumeFromStatefulSet",
-		func(statefulSet *appsv1.StatefulSet, volumeName string, expectedVolume corev1.Volume, expectedFound bool) {
-			volume, found := utils.GetVolumeFromStatefulSet(statefulSet, volumeName)
-
-			Expect(volume).To(Equal(expectedVolume))
-
-			Expect(found).To(Equal(expectedFound))
-		},
-
-		Entry("should return correct volume",
-			&appsv1.StatefulSet{
-				Spec: appsv1.StatefulSetSpec{
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{
-							Volumes: []corev1.Volume{
-								{
-									Name: "volume1",
-								},
-								{
-									Name: "volume2",
-								},
-								{
-									Name: "volume3",
-								},
-							},
-						},
-					},
-				},
-			}, "volume2", corev1.Volume{Name: "volume2"}, true),
-		Entry("should return found false when volume not found",
-			&appsv1.StatefulSet{
-				Spec: appsv1.StatefulSetSpec{
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{
-							Volumes: []corev1.Volume{
-								{
-									Name: "volume1",
-								},
-							},
-						},
-					},
-				},
-			}, "volume2", corev1.Volume{}, false),
-	)
-
 	DescribeTable("#EqualSets",
 		func(s1, s2 []string, expectedResult bool) {
 			result := utils.EqualSets(s1, s2)

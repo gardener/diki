@@ -207,16 +207,6 @@ func GetVolumeFromDeployment(deployment *appsv1.Deployment, volumeName string) (
 	return corev1.Volume{}, false
 }
 
-// GetVolumeFromStatefulSet returns a volume object with a specific volumeName, if such volume is not present it retuns found=false
-func GetVolumeFromStatefulSet(statefulSet *appsv1.StatefulSet, volumeName string) (volume corev1.Volume, found bool) {
-	for _, volume := range statefulSet.Spec.Template.Spec.Volumes {
-		if volume.Name == volumeName {
-			return volume, true
-		}
-	}
-	return corev1.Volume{}, false
-}
-
 // EqualSets checks if two slices contain exactly the same elements independent of the ordering.
 func EqualSets(s1, s2 []string) bool {
 	clone1 := slices.Clone(s1)

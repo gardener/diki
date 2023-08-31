@@ -16,7 +16,6 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/config"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
-	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -63,7 +62,7 @@ func (r *Rule242380) checkStatefulSet(ctx context.Context, statefulSetName strin
 		return rule.ErroredCheckResult(err.Error(), target)
 	}
 
-	volume, found := utils.GetVolumeFromStatefulSet(statefulSet, "etcd-config-file")
+	volume, found := kubeutils.GetVolumeFromStatefulSet(statefulSet, "etcd-config-file")
 	if !found {
 		return rule.ErroredCheckResult("StatefulSet does not contain volume with name: etcd-config-file.", target)
 	}
