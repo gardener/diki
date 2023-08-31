@@ -364,32 +364,6 @@ func getVolumeMountFromContainerByPath(container corev1.Container, volumePath st
 	return corev1.VolumeMount{}, fmt.Errorf("cannot find volume with path %s", volumePath)
 }
 
-// GetVolumeConfigByteSliceByMountPath returns the byte slice data of a specific volume in a deployment by the volumes mountPath and containerName
-func GetVolumeConfigByteSliceByMountPath(ctx context.Context, c client.Client, deployment *appsv1.Deployment, containerName, mountPath string) ([]byte, error) {
-	container, found := GetContainerFromDeployment(deployment, containerName)
-	if !found {
-		return nil, fmt.Errorf("deployment does not contain container with name: %s", containerName)
-	}
-
-	volumeMount, err := getVolumeMountFromContainerByPath(container, mountPath)
-	if err != nil {
-		return nil, err
-	}
-	fileName := strings.Replace(mountPath, fmt.Sprintf("%s/", volumeMount.MountPath), "", 1)
-
-	volume, found := GetVolumeFromDeployment(deployment, volumeMount.Name)
-	if !found {
-		return nil, fmt.Errorf("deployment does not contain volume with name: %s", volumeMount.Name)
-	}
-
-	data, err := GetFileDataFromVolume(ctx, c, deployment.Namespace, volume, fileName)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, nil
-}
-
 // EqualSets checks if two slices contain exactly the same elements independent of the ordering.
 func EqualSets(s1, s2 []string) bool {
 	clone1 := slices.Clone(s1)
