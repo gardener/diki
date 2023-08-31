@@ -5,7 +5,6 @@
 package utils
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"slices"
@@ -14,10 +13,6 @@ import (
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
@@ -28,27 +23,6 @@ import (
 type ReadyNode struct {
 	Node  *corev1.Node
 	Ready bool
-}
-
-// GetObjectsMetadata returns the object metadata for all resources of a given group version kind for a namespace,
-// or all namespaces if it's set to "".
-// It retrieves objects by portions set by limit.
-func GetObjectsMetadata(ctx context.Context, c client.Client, gvk schema.GroupVersionKind, namespace string, selector labels.Selector, limit int64) ([]metav1.PartialObjectMetadata, error) {
-	objectList := &metav1.PartialObjectMetadataList{}
-	objectList.SetGroupVersionKind(gvk)
-	objects := []metav1.PartialObjectMetadata{}
-
-	for {
-		if err := c.List(ctx, objectList, client.InNamespace(namespace), client.Limit(limit), client.MatchingLabelsSelector{Selector: selector}, client.Continue(objectList.Continue)); err != nil {
-			return nil, err
-		}
-
-		objects = append(objects, objectList.Items...)
-
-		if len(objectList.Continue) == 0 {
-			return objects, nil
-		}
-	}
 }
 
 // GetSingleRunningNodePerWorker returns a map where the keys are the names of the worker pool and the values are the first

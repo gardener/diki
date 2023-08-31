@@ -5,17 +5,11 @@
 package utils_test
 
 import (
-	"context"
-	"strconv"
-
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
@@ -23,111 +17,6 @@ import (
 )
 
 var _ = Describe("utils", func() {
-	Describe("#GetObjectsMetadata", func() {
-		var (
-			fakeClient       client.Client
-			ctx              = context.TODO()
-			namespaceFoo     = "foo"
-			namespaceDefault = "default"
-		)
-
-		BeforeEach(func() {
-			fakeClient = fakeclient.NewClientBuilder().Build()
-			for i := 0; i < 10; i++ {
-				pod := &corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      strconv.Itoa(i),
-						Namespace: namespaceDefault,
-					},
-					Spec: corev1.PodSpec{
-						Containers: []corev1.Container{
-							{
-								Name: "test",
-							},
-						},
-					},
-				}
-				Expect(fakeClient.Create(ctx, pod)).To(Succeed())
-			}
-			for i := 10; i < 12; i++ {
-				pod := &corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      strconv.Itoa(i),
-						Namespace: namespaceDefault,
-						Labels: map[string]string{
-							"foo": "bar",
-						},
-					},
-					Spec: corev1.PodSpec{
-						Containers: []corev1.Container{
-							{
-								Name: "test",
-							},
-						},
-					},
-				}
-				Expect(fakeClient.Create(ctx, pod)).To(Succeed())
-			}
-			for i := 0; i < 6; i++ {
-				pod := &corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      strconv.Itoa(i),
-						Namespace: namespaceFoo,
-					},
-					Spec: corev1.PodSpec{
-						Containers: []corev1.Container{
-							{
-								Name: "test",
-							},
-						},
-					},
-				}
-				Expect(fakeClient.Create(ctx, pod)).To(Succeed())
-			}
-			for i := 0; i < 3; i++ {
-				node := &corev1.Node{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: strconv.Itoa(i),
-					},
-				}
-				Expect(fakeClient.Create(ctx, node)).To(Succeed())
-			}
-		})
-
-		It("should return correct number of pods in default namespace", func() {
-			pods, err := utils.GetObjectsMetadata(ctx, fakeClient, corev1.SchemeGroupVersion.WithKind("PodList"), namespaceDefault, labels.NewSelector(), 2)
-
-			Expect(len(pods)).To(Equal(12))
-			Expect(err).To(BeNil())
-		})
-
-		It("should return correct number of pods in foo namespace", func() {
-			pods, err := utils.GetObjectsMetadata(ctx, fakeClient, corev1.SchemeGroupVersion.WithKind("PodList"), namespaceFoo, labels.NewSelector(), 2)
-
-			Expect(len(pods)).To(Equal(6))
-			Expect(err).To(BeNil())
-		})
-
-		It("should return correct number of pods in all namespaces", func() {
-			pods, err := utils.GetObjectsMetadata(ctx, fakeClient, corev1.SchemeGroupVersion.WithKind("PodList"), "", labels.NewSelector(), 2)
-
-			Expect(len(pods)).To(Equal(18))
-			Expect(err).To(BeNil())
-		})
-		It("should return correct number of labeled pods in default namespace", func() {
-			pods, err := utils.GetObjectsMetadata(ctx, fakeClient, corev1.SchemeGroupVersion.WithKind("PodList"), namespaceDefault, labels.SelectorFromSet(labels.Set{"foo": "bar"}), 2)
-
-			Expect(len(pods)).To(Equal(2))
-			Expect(err).To(BeNil())
-		})
-		It("should return correct number of nodes", func() {
-			nodes, err := utils.GetObjectsMetadata(ctx, fakeClient, corev1.SchemeGroupVersion.WithKind("NodeList"), "", labels.NewSelector(), 2)
-
-			Expect(len(nodes)).To(Equal(3))
-			Expect(err).To(BeNil())
-		})
-	})
-
 	Describe("#GetSingleRunningNodePerWorker", func() {
 		var (
 			nodes     []corev1.Node
@@ -327,9 +216,3 @@ var _ = Describe("utils", func() {
 		)
 	})
 })
-
-const (
-	kubeletConfig = `maxPods: 111
-readOnlyPort: 222
-`
-)

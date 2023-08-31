@@ -14,8 +14,8 @@ import (
 	"k8s.io/apimachinery/pkg/selection"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
-	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -50,7 +50,7 @@ func (r *Rule242417) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 	for _, namespace := range systemNamespaces {
 		selector := labels.NewSelector().Add(*notManagedByGardenerReq).Add(*notDikiPodReq)
-		podsPartialMetadata, err := utils.GetObjectsMetadata(ctx, r.Client, corev1.SchemeGroupVersion.WithKind("PodList"), namespace, selector, 300)
+		podsPartialMetadata, err := kubeutils.GetObjectsMetadata(ctx, r.Client, corev1.SchemeGroupVersion.WithKind("PodList"), namespace, selector, 300)
 		if err != nil {
 			return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("namespace", namespace, "kind", "podList"))), nil
 		}
