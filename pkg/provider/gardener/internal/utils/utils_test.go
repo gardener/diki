@@ -6,7 +6,6 @@ package utils_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 
@@ -20,13 +19,10 @@ import (
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/provider/gardener"
-	"github.com/gardener/diki/pkg/provider/gardener/internal/config"
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -934,38 +930,6 @@ var _ = Describe("utils", func() {
 				"--foo=bar --set-flag=true", true),
 			Entry("should return true when flag is set multiple times",
 				"--foo=bar --set-flag=true --set-flag=false", true),
-		)
-	})
-
-	Describe("#GetKubeletConfig", func() {
-		var (
-			fakePodExecutor *fakepod.FakePodExecutor
-			ctx             context.Context
-		)
-		BeforeEach(func() {
-			ctx = context.TODO()
-		})
-
-		DescribeTable("#MatchCases",
-			func(executeReturnString []string, executeReturnError []error, rawKubeletCommand string, expectedKubeletConfig *config.KubeletConfig, errorMatcher gomegatypes.GomegaMatcher) {
-				fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
-				result, err := utils.GetKubeletConfig(ctx, fakePodExecutor, rawKubeletCommand)
-
-				Expect(err).To(errorMatcher)
-				Expect(result).To(Equal(expectedKubeletConfig))
-			},
-			Entry("should return correct kubelet config",
-				[]string{kubeletConfig}, []error{nil}, "--foo=./bar --config=./config",
-				&config.KubeletConfig{MaxPods: pointer.Int32(111), ReadOnlyPort: pointer.Int32(222)}, BeNil()),
-			Entry("should return error if no kubelet config is set in command",
-				[]string{kubeletConfig}, []error{nil}, "--foo=./bar",
-				&config.KubeletConfig{}, MatchError("kubelet config file has not been set")),
-			Entry("should return error if more than 1 kubelet config is set in command",
-				[]string{kubeletConfig}, []error{nil}, "--config=./config --foo=./bar --config=./config2",
-				&config.KubeletConfig{}, MatchError("kubelet config file has been set more than once")),
-			Entry("should return error if pod execute command errors",
-				[]string{kubeletConfig}, []error{errors.New("command error")}, "--config=./config",
-				&config.KubeletConfig{}, MatchError("command error")),
 		)
 	})
 

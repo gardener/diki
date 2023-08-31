@@ -6,8 +6,6 @@ package utils
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"slices"
@@ -17,19 +15,16 @@ import (
 
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	"gopkg.in/yaml.v3"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	"github.com/gardener/diki/pkg/provider/gardener"
-	"github.com/gardener/diki/pkg/provider/gardener/internal/config"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -360,48 +355,6 @@ func IsKubeletFlagSet(rawKubeletCommand, option string) bool {
 	optionSlice := FindFlagValueRaw(strings.Split(rawKubeletCommand, " "), option)
 
 	return len(optionSlice) != 0
-}
-
-// GetKubeletConfig returns the kubelet config specified in the kubelet command's option `--config`
-func GetKubeletConfig(ctx context.Context, podExecutor pod.PodExecutor, rawKubeletCommand string) (*config.KubeletConfig, error) {
-	configPathSlice := FindFlagValueRaw(strings.Split(rawKubeletCommand, " "), "config")
-
-	if len(configPathSlice) == 0 {
-		return &config.KubeletConfig{}, errors.New("kubelet config file has not been set")
-	}
-	if len(configPathSlice) > 1 {
-		return &config.KubeletConfig{}, errors.New("kubelet config file has been set more than once")
-	}
-	configPath := configPathSlice[0]
-
-	rawKubeletConfig, err := podExecutor.Execute(ctx, "bin/sh", fmt.Sprintf("cat %s", configPath))
-	if err != nil {
-		return &config.KubeletConfig{}, err
-	}
-
-	kubeletConfig := &config.KubeletConfig{}
-	err = yaml.Unmarshal([]byte(rawKubeletConfig), kubeletConfig)
-	if err != nil {
-		return &config.KubeletConfig{}, err
-	}
-
-	return kubeletConfig, nil
-}
-
-// GetNodeConfigz returns the runtime kubelet config
-func GetNodeConfigz(ctx context.Context, coreV1RESTClient rest.Interface, nodeName string) (*config.KubeletConfig, error) {
-	request := coreV1RESTClient.Get().Resource("nodes").Name(nodeName).SubResource("proxy").Suffix("configz")
-	rawNodeConfigz, err := request.DoRaw(ctx)
-	if err != nil {
-		return &config.KubeletConfig{}, err
-	}
-
-	nodeConfigz := &config.NodeConfigz{}
-	err = json.Unmarshal(rawNodeConfigz, nodeConfigz)
-	if err != nil {
-		return &config.KubeletConfig{}, err
-	}
-	return &nodeConfigz.KubeletConfig, nil
 }
 
 // getVolumeMountFromContainerByPath returns the VolumeMount of a container with a given path. If the VolumeMount is not found an error is returned

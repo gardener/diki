@@ -16,6 +16,7 @@ import (
 
 	"github.com/gardener/diki/imagevector"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset"
@@ -88,7 +89,7 @@ func (r *Rule242420) Run(ctx context.Context) (rule.RuleResult, error) {
 			continue
 		}
 
-		kubeletConfig, err := utils.GetNodeConfigz(ctx, r.ClusterCoreV1RESTClient, clusterNode.Name)
+		kubeletConfig, err := kubeutils.GetNodeConfigz(ctx, r.ClusterCoreV1RESTClient, clusterNode.Name)
 		if err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target))
 			continue
@@ -148,7 +149,7 @@ func (r *Rule242420) checkWorkerGroup(ctx context.Context, workerGroup string, n
 		return rule.FailedCheckResult(fmt.Sprintf("Use of deprecated kubelet config flag %s.", clientCaFileFlag), target)
 	}
 
-	kubeletConfig, err := utils.GetKubeletConfig(ctx, clusterPodExecutor, rawKubeletCommand)
+	kubeletConfig, err := kubeutils.GetKubeletConfig(ctx, clusterPodExecutor, rawKubeletCommand)
 	if err != nil {
 		return rule.ErroredCheckResult(err.Error(), podTarget)
 	}
