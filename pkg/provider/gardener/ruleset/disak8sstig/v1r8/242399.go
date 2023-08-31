@@ -54,12 +54,12 @@ func (r *Rule242399) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.SkippedCheckResult(fmt.Sprintf("Option %s removed in Kubernetes v1.26.", dynamicKubeletConfigOption), shootTarget.With("details", fmt.Sprintf("Cluster uses Kubernetes %s.", r.ClusterVersion.String())))), nil
 	}
 
-	clusterNodes, err := utils.GetNodes(ctx, r.ClusterClient, 300)
+	clusterNodes, err := kubeutils.GetNodes(ctx, r.ClusterClient, 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "nodeList"))), nil
 	}
 
-	clusterWorkers, err := utils.GetWorkers(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, 300)
+	clusterWorkers, err := kubeutils.GetWorkers(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "seed", "kind", "workerList"))), nil
 	}

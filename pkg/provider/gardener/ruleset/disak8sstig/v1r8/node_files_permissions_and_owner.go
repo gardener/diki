@@ -105,12 +105,12 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 	}
 
-	clusterNodes, err := utils.GetNodes(ctx, r.ClusterClient, 512)
+	clusterNodes, err := kubeutils.GetNodes(ctx, r.ClusterClient, 512)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "shoot", "kind", "nodeList"))), nil
 	}
 
-	clusterWorkers, err := utils.GetWorkers(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, 512)
+	clusterWorkers, err := kubeutils.GetWorkers(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, 512)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "seed", "kind", "workerList"))), nil
 	}

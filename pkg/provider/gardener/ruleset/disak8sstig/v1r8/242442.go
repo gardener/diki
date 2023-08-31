@@ -13,8 +13,8 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
-	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -38,14 +38,14 @@ func (r *Rule242442) Name() string {
 func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 	images := map[string]string{}
 	reportedImages := map[string]struct{}{}
-	seedPods, err := utils.GetAllPods(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, labels.NewSelector(), 300)
+	seedPods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, labels.NewSelector(), 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "seed", "namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
 	}
 
 	checkResults := r.checkImages(seedPods, images, reportedImages)
 
-	shootPods, err := utils.GetAllPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
+	shootPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "shoot", "kind", "podList"))), nil
 	}

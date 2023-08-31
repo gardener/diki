@@ -22,6 +22,7 @@ import (
 	"github.com/gardener/diki/imagevector"
 	"github.com/gardener/diki/pkg/kubernetes/config"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset"
@@ -72,7 +73,7 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	seedPodSelector := labels.NewSelector().Add(*gardenerRoleControlplaneReq)
-	seedPods, err := utils.GetAllPods(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, seedPodSelector, 300)
+	seedPods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, seedPodSelector, 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
 	}
@@ -90,7 +91,7 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	shootPodSelector := labels.NewSelector().Add(*managedByGardenerReq).Add(*gardenerRoleSystemComponentReq)
-	shootPods, err := utils.GetAllPods(ctx, r.ClusterClient, "", shootPodSelector, 300)
+	shootPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", shootPodSelector, 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList"))), nil
 	}

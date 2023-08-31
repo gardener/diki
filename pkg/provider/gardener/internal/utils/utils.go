@@ -14,7 +14,6 @@ import (
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -48,81 +47,6 @@ func GetObjectsMetadata(ctx context.Context, c client.Client, gvk schema.GroupVe
 
 		if len(objectList.Continue) == 0 {
 			return objects, nil
-		}
-	}
-}
-
-// GetAllPods return all pods for a given namespace, or all namespaces if it's set to empty string "".
-// It retrieves pods by portions set by limit.
-func GetAllPods(ctx context.Context, c client.Client, namespace string, selector labels.Selector, limit int64) ([]corev1.Pod, error) {
-	podList := &corev1.PodList{}
-	pods := []corev1.Pod{}
-
-	for {
-		if err := c.List(ctx, podList, client.InNamespace(namespace), client.Limit(limit), client.MatchingLabelsSelector{Selector: selector}, client.Continue(podList.Continue)); err != nil {
-			return nil, err
-		}
-
-		pods = append(pods, podList.Items...)
-
-		if len(podList.Continue) == 0 {
-			return pods, nil
-		}
-	}
-}
-
-// GetNodes return all nodes. It retrieves pods by portions set by limit.
-func GetNodes(ctx context.Context, c client.Client, limit int64) ([]corev1.Node, error) {
-	nodeList := &corev1.NodeList{}
-	nodes := []corev1.Node{}
-
-	for {
-		if err := c.List(ctx, nodeList, client.Limit(limit), client.Continue(nodeList.Continue)); err != nil {
-			return nil, err
-		}
-
-		nodes = append(nodes, nodeList.Items...)
-
-		if len(nodeList.Continue) == 0 {
-			return nodes, nil
-		}
-	}
-}
-
-// GetWorkers return all workers for a given namespace, or all namespaces if it's set to empty string "".
-// It retrieves workers by portions set by limit.
-func GetWorkers(ctx context.Context, c client.Client, namespace string, limit int64) ([]extensionsv1alpha1.Worker, error) {
-	workerList := &extensionsv1alpha1.WorkerList{}
-	workers := []extensionsv1alpha1.Worker{}
-
-	for {
-		if err := c.List(ctx, workerList, client.InNamespace(namespace), client.Limit(limit), client.Continue(workerList.Continue)); err != nil {
-			return nil, err
-		}
-
-		workers = append(workers, workerList.Items...)
-
-		if len(workerList.Continue) == 0 {
-			return workers, nil
-		}
-	}
-}
-
-// GetPodSecurityPolicies returns all pod security policies.
-// It retrieves policies by portions set by limit.
-func GetPodSecurityPolicies(ctx context.Context, c client.Client, limit int64) ([]policyv1beta1.PodSecurityPolicy, error) {
-	podSecurityPoliciesList := &policyv1beta1.PodSecurityPolicyList{}
-	podSecurityPolicies := []policyv1beta1.PodSecurityPolicy{}
-
-	for {
-		if err := c.List(ctx, podSecurityPoliciesList, client.Limit(limit), client.Continue(podSecurityPoliciesList.Continue)); err != nil {
-			return nil, err
-		}
-
-		podSecurityPolicies = append(podSecurityPolicies, podSecurityPoliciesList.Items...)
-
-		if len(podSecurityPoliciesList.Continue) == 0 {
-			return podSecurityPolicies, nil
 		}
 	}
 }

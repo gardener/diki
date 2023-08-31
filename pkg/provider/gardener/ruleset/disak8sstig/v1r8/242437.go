@@ -14,8 +14,8 @@ import (
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
-	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -44,7 +44,7 @@ func (r *Rule242437) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults = append(checkResults, rule.SkippedCheckResult("Pod security policies dropped with Kubernetes v1.25.",
 			gardener.NewTarget("cluster", "seed", "details", fmt.Sprintf("Cluster uses Kubernetes %s.", r.ControlPlaneVersion.String()))))
 	} else {
-		seedPodSecurityPolicies, err := utils.GetPodSecurityPolicies(ctx, r.ControlPlaneClient, 300)
+		seedPodSecurityPolicies, err := kubeutils.GetPodSecurityPolicies(ctx, r.ControlPlaneClient, 300)
 		if err != nil {
 			return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "seed", "namespace", r.ControlPlaneNamespace, "kind", "podSecurityPolicyList"))), nil
 		}
@@ -56,7 +56,7 @@ func (r *Rule242437) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults = append(checkResults, rule.SkippedCheckResult("Pod security policies dropped with Kubernetes v1.25.",
 			gardener.NewTarget("cluster", "shoot", "details", fmt.Sprintf("Cluster uses Kubernetes %s.", r.ControlPlaneVersion.String()))))
 	} else {
-		shootPodSecurityPolicies, err := utils.GetPodSecurityPolicies(ctx, r.ClusterClient, 300)
+		shootPodSecurityPolicies, err := kubeutils.GetPodSecurityPolicies(ctx, r.ClusterClient, 300)
 		if err != nil {
 			return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "shoot", "namespace", r.ControlPlaneNamespace, "kind", "podSecurityPolicyList"))), nil
 		}

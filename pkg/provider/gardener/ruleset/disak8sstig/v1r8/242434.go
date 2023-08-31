@@ -44,12 +44,12 @@ func (r *Rule242434) Name() string {
 
 func (r *Rule242434) Run(ctx context.Context) (rule.RuleResult, error) {
 	shootTarget := gardener.NewTarget("cluster", "shoot")
-	clusterNodes, err := utils.GetNodes(ctx, r.ClusterClient, 300)
+	clusterNodes, err := kubeutils.GetNodes(ctx, r.ClusterClient, 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "nodeList"))), nil
 	}
 
-	clusterWorkers, err := utils.GetWorkers(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, 300)
+	clusterWorkers, err := kubeutils.GetWorkers(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "seed", "kind", "workerList"))), nil
 	}
