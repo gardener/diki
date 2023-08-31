@@ -576,59 +576,6 @@ var _ = Describe("utils", func() {
 			}, "volume2", corev1.Volume{}, false),
 	)
 
-	DescribeTable("#FindFlagValueRaw ",
-		func(command []string, flag string, expectedResult []string) {
-			result := utils.FindFlagValueRaw(command, flag)
-
-			Expect(result).To(Equal(expectedResult))
-		},
-
-		Entry("should correctly find value for flag",
-			[]string{"--flag1=value1", "--flag2=value2", "--flag3 value3", "--flag4=value4", "--flag5=value5"},
-			"flag1",
-			[]string{"value1"}),
-		Entry("should correctly find values for flag starts with --",
-			[]string{"--flag1=value1", "--flag2=value2", "--flag1 value3", "--flag1foo=value4", "--flag1", "--barflag1=value6"},
-			"flag1",
-			[]string{"value1", "value3", ""}),
-		Entry("should correctly find values for flag starts with -",
-			[]string{"-flag1=value1", "-flag2=value2", "-flag1 value3", "-flag1foo=value4", "-flag1", "-barflag1=value6"},
-			"flag1",
-			[]string{"value1", "value3", ""}),
-		Entry("ambiguous behavior",
-			[]string{"--flag1=value1 --flag2=value2", "-flag1=     value3", "--flag1=\"value4\"", "-flag1      "},
-			"flag1",
-			[]string{"value1 --flag2=value2", "value3", "\"value4\"", ""}),
-		Entry("should return values that have inner flags",
-			[]string{"--flag1=value1=value1.1,value2=value2.1", "--flag2=value2", "--flag3=value3=value3.1", "--flag4=value4", "--flag1=value5=value5.1"},
-			"flag1",
-			[]string{"value1=value1.1,value2=value2.1", "value5=value5.1"}),
-		Entry("should trim whitespaces from values",
-			[]string{"--flag1  value1 ", "--flag2=value2", "--flag1 value3", "--flag4=value4", "--flag1=value5 "},
-			"flag1",
-			[]string{"value1", "value3", "value5"}),
-	)
-
-	DescribeTable("#FindInnerValue",
-		func(values []string, flag string, expectedResult []string) {
-			result := utils.FindInnerValue(values, flag)
-
-			Expect(result).To(Equal(expectedResult))
-		},
-		Entry("should correctly find values for flag",
-			[]string{"flag1=value1,flag2=value2,flag3=value3", "flag4=value2", "flag4=value4,flag1=value5"},
-			"flag1",
-			[]string{"value1", "value5"}),
-		Entry("should correctly find multiple values of the same flag in a single string",
-			[]string{"flag1=value1,flag2=value2,flag1=value3", "flag4=value2", "flag4=value4,flag5=value5"},
-			"flag1",
-			[]string{"value1", "value3"}),
-		Entry("should return empty string when no values are found",
-			[]string{"flag1=value1,flag2=value2,flag3=value3", "flag4=value2", "flag4=value4,flag1=value5"},
-			"flag6",
-			[]string{}),
-	)
-
 	DescribeTable("#EqualSets",
 		func(s1, s2 []string, expectedResult bool) {
 			result := utils.EqualSets(s1, s2)

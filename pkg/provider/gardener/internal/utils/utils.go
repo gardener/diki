@@ -10,7 +10,6 @@ import (
 	"os"
 	"slices"
 	"strconv"
-	"strings"
 
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
@@ -216,59 +215,6 @@ func GetVolumeFromStatefulSet(statefulSet *appsv1.StatefulSet, volumeName string
 		}
 	}
 	return corev1.Volume{}, false
-}
-
-// FindFlagValueRaw returns the value of a specific flag in a commands slice.
-// The following flag representations are supported:
-//
-//	--flag=foo
-//	--flag foo
-//	--flag
-//	-flag=foo
-//	-flag foo
-//	-flag
-//
-// Notable ambiguous behavior:
-//
-//	--flag="foo"           -> `"foo"`
-//	--flag=foo --flag2=bar -> "foo --flag2=bar"
-//	--flag=   foo          -> "foo"
-//	--flag=                -> ""
-func FindFlagValueRaw(command []string, flag string) []string {
-	flag = fmt.Sprintf("-%s", flag)
-
-	result := []string{}
-	for _, c := range command {
-		before, after, found := strings.Cut(c, flag)
-		if found && (before == "" || before == "-") && (len(after) == 0 || string(after[0]) == "=" || string(after[0]) == " ") {
-			if len(after) != 0 && string(after[0]) == "=" {
-				after = after[1:]
-			}
-			result = append(result, strings.TrimSpace(after))
-		}
-	}
-
-	return result
-}
-
-// FindInnerValue returns the value of a specific flag when the format is
-// flag1=value1,flag3=value3,flag3=value3
-func FindInnerValue(values []string, flag string) []string {
-	result := []string{}
-	flag = fmt.Sprintf("%s=", flag)
-	for _, value := range values {
-		v := value
-		for {
-			_, after, found := strings.Cut(v, flag)
-			if !found {
-				break
-			}
-			var before string
-			before, v, _ = strings.Cut(after, ",")
-			result = append(result, before)
-		}
-	}
-	return result
 }
 
 // EqualSets checks if two slices contain exactly the same elements independent of the ordering.

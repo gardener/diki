@@ -13,7 +13,6 @@ import (
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
-	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -45,7 +44,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
-	allAlphaOptSlice := utils.FindInnerValue(fgOptSlice, "AllAlpha")
+	allAlphaOptSlice := kubeutils.FindInnerValue(fgOptSlice, "AllAlpha")
 
 	// empty options are allowed because feature-gates.AllAlpha defaults to false
 	switch {
