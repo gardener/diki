@@ -12,8 +12,8 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
-	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -42,7 +42,7 @@ func (r *Rule245544) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults := []rule.CheckResult{}
 	target := gardener.NewTarget("cluster", "seed", "name", kapiName, "namespace", r.Namespace, "kind", "deployment")
 
-	kubeletClientCertificateOptionSlice, err := utils.GetCommandOptionFromDeployment(ctx, r.Client, kapiName, kapiName, r.Namespace, certOptName)
+	kubeletClientCertificateOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, kapiName, kapiName, r.Namespace, certOptName)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
@@ -58,7 +58,7 @@ func (r *Rule245544) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s set.", certOptName), target))
 	}
 
-	kubeletClientKeyOptionSlice, err := utils.GetCommandOptionFromDeployment(ctx, r.Client, kapiName, kapiName, r.Namespace, keyOptName)
+	kubeletClientKeyOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, kapiName, kapiName, r.Namespace, keyOptName)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}

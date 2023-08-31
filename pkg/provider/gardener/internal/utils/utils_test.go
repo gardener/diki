@@ -13,7 +13,6 @@ import (
 	kubernetesgardener "github.com/gardener/gardener/pkg/client/kubernetes"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	gomegatypes "github.com/onsi/gomega/types"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
@@ -753,67 +752,6 @@ var _ = Describe("utils", func() {
 			Expect(err).To(MatchError(fmt.Sprintf("cannot handle volume: %v", volume)))
 			Expect(byteSlice).To(BeNil())
 		})
-	})
-
-	Describe("#GetCommandOptionFromDeployment", func() {
-		var (
-			fakeClient     client.Client
-			ctx            = context.TODO()
-			namespace      = "foo"
-			deploymentName = "foo"
-			containerName  = "foo"
-			deployment     *appsv1.Deployment
-		)
-
-		BeforeEach(func() {
-			fakeClient = fakeclient.NewClientBuilder().Build()
-			deployment = &appsv1.Deployment{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      deploymentName,
-					Namespace: namespace,
-				},
-				Spec: appsv1.DeploymentSpec{
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{
-							Containers: []corev1.Container{
-								{
-									Name: containerName,
-									Command: []string{
-										"--foo=bar",
-										"--bar1=foo1",
-									},
-									Args: []string{
-										"--foo2=bar2",
-										"--bar1=foo3",
-									},
-								},
-							},
-						},
-					},
-				},
-			}
-			Expect(fakeClient.Create(ctx, deployment)).To(Succeed())
-		})
-
-		DescribeTable("Run cases",
-			func(deploymentName, containerName, namespace, option string, expectedResults []string, errorMatcher gomegatypes.GomegaMatcher) {
-				result, err := utils.GetCommandOptionFromDeployment(ctx, fakeClient, deploymentName, containerName, namespace, option)
-				Expect(err).To(errorMatcher)
-
-				Expect(result).To(Equal(expectedResults))
-			},
-			Entry("should return correct values for flag",
-				deploymentName, containerName, namespace, "foo", []string{"bar"}, BeNil()),
-			Entry("should return correct values for flag when there are more than 1 occurances",
-				deploymentName, containerName, namespace, "bar1", []string{"foo1", "foo3"}, BeNil()),
-			Entry("should return empty slice when the options is missing",
-				deploymentName, containerName, namespace, "foo5", []string{}, BeNil()),
-			Entry("should return error when the deployment is missing",
-				"test", containerName, namespace, "foo", []string{}, MatchError("deployments.apps \"test\" not found")),
-			Entry("should return error when the container is missing",
-				deploymentName, "test", namespace, "foo", []string{}, MatchError("deployment: foo does not contain container: test")),
-		)
-
 	})
 
 	DescribeTable("#EqualSets",

@@ -21,7 +21,6 @@ import (
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
-	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -49,7 +48,7 @@ func (r *Rule254800) Name() string {
 func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 	target := gardener.NewTarget("cluster", "seed", "name", "kube-apiserver", "namespace", r.Namespace, "kind", "deployment")
 
-	admissionControlConfigFileOptionSlice, err := utils.GetCommandOptionFromDeployment(ctx, r.Client, "kube-apiserver", "kube-apiserver", r.Namespace, "admission-control-config-file")
+	admissionControlConfigFileOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, "kube-apiserver", "kube-apiserver", r.Namespace, "admission-control-config-file")
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
