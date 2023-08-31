@@ -315,29 +315,6 @@ func GetFileDataFromVolume(ctx context.Context, c client.Client, namespace strin
 	return nil, fmt.Errorf("cannot handle volume: %v", volume)
 }
 
-// GetCommandOptionFromDeployment returns command and args from a specific deployment container.
-func GetCommandOptionFromDeployment(ctx context.Context, c client.Client, deploymentName, containerName, namespace, option string) ([]string, error) {
-	deployment := &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      deploymentName,
-			Namespace: namespace,
-		},
-	}
-
-	if err := c.Get(ctx, client.ObjectKeyFromObject(deployment), deployment); err != nil {
-		return []string{}, err
-	}
-
-	container, found := GetContainerFromDeployment(deployment, containerName)
-	if !found {
-		return []string{}, fmt.Errorf("deployment: %s does not contain container: %s", deploymentName, containerName)
-	}
-
-	optionSlice := FindFlagValueRaw(append(container.Command, container.Args...), option)
-
-	return optionSlice, nil
-}
-
 // EqualSets checks if two slices contain exactly the same elements independent of the ordering.
 func EqualSets(s1, s2 []string) bool {
 	clone1 := slices.Clone(s1)
