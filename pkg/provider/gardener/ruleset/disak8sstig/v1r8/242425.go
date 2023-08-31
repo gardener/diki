@@ -162,11 +162,11 @@ func (r *Rule242425) checkWorkerGroup(ctx context.Context, workerGroup string, n
 		tlsCertFileFlag         = "tls-cert-file"
 	)
 
-	if utils.IsKubeletFlagSet(rawKubeletCommand, featureGatesFlag) {
+	if kubeutils.IsFlagSet(rawKubeletCommand, featureGatesFlag) {
 		return rule.FailedCheckResult(fmt.Sprintf("Use of deprecated kubelet config flag %s.", featureGatesFlag), target)
 	}
 
-	if utils.IsKubeletFlagSet(rawKubeletCommand, tlsCertFileFlag) {
+	if kubeutils.IsFlagSet(rawKubeletCommand, tlsCertFileFlag) {
 		return rule.FailedCheckResult(fmt.Sprintf("Use of deprecated kubelet config flag %s.", tlsCertFileFlag), target)
 	}
 

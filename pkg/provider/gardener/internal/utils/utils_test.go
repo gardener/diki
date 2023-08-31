@@ -917,22 +917,6 @@ var _ = Describe("utils", func() {
 
 	})
 
-	Describe("#IsKubeletFlagSet", func() {
-		DescribeTable("#MatchCases",
-			func(rawKubeletCommand string, expectedResult bool) {
-				result := utils.IsKubeletFlagSet(rawKubeletCommand, "set-flag")
-
-				Expect(result).To(Equal(expectedResult))
-			},
-			Entry("should return false when flag is not set",
-				"--foo=bar --not-set-flag=true", false),
-			Entry("should return true when flag is set",
-				"--foo=bar --set-flag=true", true),
-			Entry("should return true when flag is set multiple times",
-				"--foo=bar --set-flag=true --set-flag=false", true),
-		)
-	})
-
 	DescribeTable("#EqualSets",
 		func(s1, s2 []string, expectedResult bool) {
 			result := utils.EqualSets(s1, s2)

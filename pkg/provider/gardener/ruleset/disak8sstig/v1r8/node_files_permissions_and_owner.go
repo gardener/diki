@@ -166,7 +166,7 @@ func (r *RuleNodeFiles) checkWorkerGroup(ctx context.Context, image, workerGroup
 		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execNodePodTarget)}
 	}
 
-	if utils.IsKubeletFlagSet(rawKubeletCommand, "feature-gates") {
+	if kubeutils.IsFlagSet(rawKubeletCommand, "feature-gates") {
 		return []rule.CheckResult{rule.FailedCheckResult("Use of deprecated kubelet config flag feature-gates", target)}
 	}
 

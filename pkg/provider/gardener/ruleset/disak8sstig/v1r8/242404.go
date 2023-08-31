@@ -14,6 +14,7 @@ import (
 
 	"github.com/gardener/diki/imagevector"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset"
@@ -117,7 +118,7 @@ func (r *Rule242404) checkWorkerGroup(ctx context.Context, workerGroup string, n
 	const hostnameOverrideFlag = "hostname-override"
 
 	// hostname-override does not exist in the kubelet config file. We can check if the hostname-override flag is set to validate the rule. ref https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/
-	if utils.IsKubeletFlagSet(rawKubeletCommand, hostnameOverrideFlag) {
+	if kubeutils.IsFlagSet(rawKubeletCommand, hostnameOverrideFlag) {
 		return rule.FailedCheckResult(fmt.Sprintf("Flag %s set.", hostnameOverrideFlag), target)
 	}
 

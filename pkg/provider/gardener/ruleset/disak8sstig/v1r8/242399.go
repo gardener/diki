@@ -157,7 +157,7 @@ func (r *Rule242399) checkWorkerGroup(ctx context.Context, workerGroup string, n
 		featureGatesFlag           = "feature-gates"
 	)
 
-	if utils.IsKubeletFlagSet(rawKubeletCommand, featureGatesFlag) {
+	if kubeutils.IsFlagSet(rawKubeletCommand, featureGatesFlag) {
 		return rule.FailedCheckResult(fmt.Sprintf("Use of deprecated kubelet config flag %s.", featureGatesFlag), target)
 	}
 

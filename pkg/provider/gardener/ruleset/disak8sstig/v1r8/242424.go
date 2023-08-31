@@ -163,11 +163,11 @@ func (r *Rule242424) checkWorkerGroup(ctx context.Context, workerGroup string, n
 		tlsPrivateKeyFileFlag         = "tls-private-key-file"
 	)
 
-	if utils.IsKubeletFlagSet(rawKubeletCommand, featureGatesFlag) {
+	if kubeutils.IsFlagSet(rawKubeletCommand, featureGatesFlag) {
 		return rule.FailedCheckResult(fmt.Sprintf("Use of deprecated kubelet config flag %s.", featureGatesFlag), target)
 	}
 
-	if utils.IsKubeletFlagSet(rawKubeletCommand, tlsPrivateKeyFileFlag) {
+	if kubeutils.IsFlagSet(rawKubeletCommand, tlsPrivateKeyFileFlag) {
 		return rule.FailedCheckResult(fmt.Sprintf("Use of deprecated kubelet config flag %s.", tlsPrivateKeyFileFlag), target)
 	}
 

@@ -145,7 +145,7 @@ func (r *Rule242434) checkWorkerGroup(ctx context.Context, workerGroup string, n
 		protectKernelDefaultsFlag         = "protect-kernel-defaults"
 	)
 
-	if utils.IsKubeletFlagSet(rawKubeletCommand, protectKernelDefaultsFlag) {
+	if kubeutils.IsFlagSet(rawKubeletCommand, protectKernelDefaultsFlag) {
 		return rule.FailedCheckResult(fmt.Sprintf("Use of deprecated kubelet config flag %s.", protectKernelDefaultsFlag), target)
 	}
 

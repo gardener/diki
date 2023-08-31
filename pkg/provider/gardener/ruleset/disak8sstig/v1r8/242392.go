@@ -155,7 +155,7 @@ func (r *Rule242392) checkWorkerGroup(ctx context.Context, workerGroup string, n
 		authorizationModeFlag         = "authorization-mode"
 	)
 
-	if utils.IsKubeletFlagSet(rawKubeletCommand, authorizationModeFlag) {
+	if kubeutils.IsFlagSet(rawKubeletCommand, authorizationModeFlag) {
 		return rule.FailedCheckResult(fmt.Sprintf("Use of deprecated kubelet config flag %s.", authorizationModeFlag), target)
 	}
 

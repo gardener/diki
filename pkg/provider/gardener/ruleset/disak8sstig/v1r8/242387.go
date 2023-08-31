@@ -156,7 +156,7 @@ func (r *Rule242387) checkWorkerGroup(ctx context.Context, workerGroup string, n
 		readOnlyPortFlag         = "read-only-port"
 	)
 
-	if utils.IsKubeletFlagSet(rawKubeletCommand, readOnlyPortFlag) {
+	if kubeutils.IsFlagSet(rawKubeletCommand, readOnlyPortFlag) {
 		return rule.FailedCheckResult(fmt.Sprintf("Use of deprecated kubelet config flag %s.", readOnlyPortFlag), target)
 	}
 

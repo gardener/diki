@@ -350,13 +350,6 @@ func GetKubeletCommand(ctx context.Context, podExecutor pod.PodExecutor) (string
 	return rawKubeletCommand, nil
 }
 
-// IsKubeletFlagSet returns true if a specific flag is set in the kubelet command
-func IsKubeletFlagSet(rawKubeletCommand, option string) bool {
-	optionSlice := FindFlagValueRaw(strings.Split(rawKubeletCommand, " "), option)
-
-	return len(optionSlice) != 0
-}
-
 // getVolumeMountFromContainerByPath returns the VolumeMount of a container with a given path. If the VolumeMount is not found an error is returned
 func getVolumeMountFromContainerByPath(container corev1.Container, volumePath string) (corev1.VolumeMount, error) {
 	volumeMounts := container.VolumeMounts

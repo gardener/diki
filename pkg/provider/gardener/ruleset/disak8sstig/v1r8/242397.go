@@ -145,7 +145,7 @@ func (r *Rule242397) checkWorkerGroup(ctx context.Context, workerGroup string, n
 		podManifestPathFlag       = "pod-manifest-path"
 	)
 
-	if utils.IsKubeletFlagSet(rawKubeletCommand, podManifestPathFlag) {
+	if kubeutils.IsFlagSet(rawKubeletCommand, podManifestPathFlag) {
 		return rule.FailedCheckResult(fmt.Sprintf("Use of deprecated kubelet config flag %s.", podManifestPathFlag), target)
 	}
 

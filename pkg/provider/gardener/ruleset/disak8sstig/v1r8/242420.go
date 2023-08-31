@@ -145,7 +145,7 @@ func (r *Rule242420) checkWorkerGroup(ctx context.Context, workerGroup string, n
 		clientCaFileFlag         = "client-ca-file"
 	)
 
-	if utils.IsKubeletFlagSet(rawKubeletCommand, clientCaFileFlag) {
+	if kubeutils.IsFlagSet(rawKubeletCommand, clientCaFileFlag) {
 		return rule.FailedCheckResult(fmt.Sprintf("Use of deprecated kubelet config flag %s.", clientCaFileFlag), target)
 	}
 

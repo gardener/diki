@@ -155,7 +155,7 @@ func (r *Rule242391) checkWorkerGroup(ctx context.Context, workerGroup string, n
 		anonymousAuthFlag         = "anonymous-auth"
 	)
 
-	if utils.IsKubeletFlagSet(rawKubeletCommand, anonymousAuthFlag) {
+	if kubeutils.IsFlagSet(rawKubeletCommand, anonymousAuthFlag) {
 		return rule.FailedCheckResult(fmt.Sprintf("Use of deprecated kubelet config flag %s.", anonymousAuthFlag), target)
 	}
 
