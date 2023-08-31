@@ -271,50 +271,6 @@ func FindInnerValue(values []string, flag string) []string {
 	return result
 }
 
-// GetFileDataFromVolume returns byte slice of the value of a specific Data field
-// in a ConfigMap or Secret volume
-func GetFileDataFromVolume(ctx context.Context, c client.Client, namespace string, volume corev1.Volume, fileName string) ([]byte, error) {
-	if volume.ConfigMap != nil {
-		configMap := &corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      volume.ConfigMap.Name,
-				Namespace: namespace,
-			},
-		}
-		err := c.Get(ctx, client.ObjectKeyFromObject(configMap), configMap)
-		if err != nil {
-			return nil, err
-		}
-
-		_, ok := configMap.Data[fileName]
-		if !ok {
-			return nil, fmt.Errorf("configMap: %s does not contain filed: %s in Data field", volume.ConfigMap.Name, fileName)
-		}
-		return []byte(configMap.Data[fileName]), nil
-	}
-
-	if volume.Secret != nil {
-		secret := &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      volume.Secret.SecretName,
-				Namespace: namespace,
-			},
-		}
-		err := c.Get(ctx, client.ObjectKeyFromObject(secret), secret)
-		if err != nil {
-			return nil, err
-		}
-
-		_, ok := secret.Data[fileName]
-		if !ok {
-			return nil, fmt.Errorf("secret: %s does not contain filed: %s in Data field", volume.Secret.SecretName, fileName)
-		}
-		return secret.Data[fileName], nil
-	}
-
-	return nil, fmt.Errorf("cannot handle volume: %v", volume)
-}
-
 // EqualSets checks if two slices contain exactly the same elements independent of the ordering.
 func EqualSets(s1, s2 []string) bool {
 	clone1 := slices.Clone(s1)

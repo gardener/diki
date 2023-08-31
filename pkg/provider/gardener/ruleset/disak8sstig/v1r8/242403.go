@@ -16,6 +16,7 @@ import (
 	auditv1 "k8s.io/apiserver/pkg/apis/audit/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
@@ -62,7 +63,7 @@ func (r *Rule242403) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(fmt.Sprintf("Deployment does not contain volume with name: %s.", mountName), target)), nil
 	}
 
-	auditPolicyByteSlice, err := utils.GetFileDataFromVolume(ctx, r.Client, r.Namespace, volume, fileName)
+	auditPolicyByteSlice, err := kubeutils.GetFileDataFromVolume(ctx, r.Client, r.Namespace, volume, fileName)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}

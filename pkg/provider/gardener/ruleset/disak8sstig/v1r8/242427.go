@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/kubernetes/config"
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
@@ -68,7 +69,7 @@ func (r *Rule242427) checkStatefulSet(ctx context.Context, statefulSetName strin
 		return rule.ErroredCheckResult("StatefulSet does not contain volume with name: etcd-config-file.", target)
 	}
 
-	configByteSlice, err := utils.GetFileDataFromVolume(ctx, r.Client, r.Namespace, volume, "etcd.conf.yaml")
+	configByteSlice, err := kubeutils.GetFileDataFromVolume(ctx, r.Client, r.Namespace, volume, "etcd.conf.yaml")
 	if err != nil {
 		return rule.ErroredCheckResult(err.Error(), target)
 	}

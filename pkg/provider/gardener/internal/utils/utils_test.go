@@ -6,7 +6,6 @@ package utils_test
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
@@ -629,130 +628,6 @@ var _ = Describe("utils", func() {
 			"flag6",
 			[]string{}),
 	)
-
-	Describe("#GetVolumeConfigByteSlice", func() {
-		var (
-			fakeClient client.Client
-			ctx        = context.TODO()
-			volume     corev1.Volume
-			namespace  = "foo"
-			fileName   = "foo"
-		)
-
-		BeforeEach(func() {
-			fakeClient = fakeclient.NewClientBuilder().Build()
-			volume = corev1.Volume{}
-		})
-
-		It("should return correct data when volume is ConfigMap", func() {
-			volume.ConfigMap = &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: "foo",
-				},
-			}
-			configMap := &corev1.ConfigMap{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "foo",
-					Namespace: namespace,
-				},
-				Data: map[string]string{
-					fileName: "foo",
-				},
-			}
-			Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
-			byteSlice, err := utils.GetFileDataFromVolume(ctx, fakeClient, namespace, volume, fileName)
-
-			Expect(err).To(BeNil())
-			Expect(byteSlice).To(Equal([]byte("foo")))
-		})
-
-		It("should return error when ConfigMap is not found", func() {
-			volume.ConfigMap = &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: "foo",
-				},
-			}
-			byteSlice, err := utils.GetFileDataFromVolume(ctx, fakeClient, namespace, volume, fileName)
-
-			Expect(err).To(MatchError("configmaps \"foo\" not found"))
-			Expect(byteSlice).To(BeNil())
-		})
-
-		It("should return error when ConfigMap does not have Data field with file name", func() {
-			volume.ConfigMap = &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: "foo",
-				},
-			}
-			configMap := &corev1.ConfigMap{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "foo",
-					Namespace: namespace,
-				},
-				Data: map[string]string{},
-			}
-			Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
-			byteSlice, err := utils.GetFileDataFromVolume(ctx, fakeClient, namespace, volume, fileName)
-
-			Expect(err).To(MatchError("configMap: foo does not contain filed: foo in Data field"))
-			Expect(byteSlice).To(BeNil())
-		})
-
-		It("should return correct data when volume is Secret", func() {
-			volume.Secret = &corev1.SecretVolumeSource{
-				SecretName: "foo",
-			}
-			secret := &corev1.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "foo",
-					Namespace: namespace,
-				},
-				Data: map[string][]byte{
-					fileName: []byte("foo"),
-				},
-			}
-			Expect(fakeClient.Create(ctx, secret)).To(Succeed())
-			byteSlice, err := utils.GetFileDataFromVolume(ctx, fakeClient, namespace, volume, fileName)
-
-			Expect(err).To(BeNil())
-			Expect(byteSlice).To(Equal([]byte("foo")))
-		})
-
-		It("should return error when Secret is not found", func() {
-			volume.Secret = &corev1.SecretVolumeSource{
-				SecretName: "foo",
-			}
-			byteSlice, err := utils.GetFileDataFromVolume(ctx, fakeClient, namespace, volume, fileName)
-
-			Expect(err).To(MatchError("secrets \"foo\" not found"))
-			Expect(byteSlice).To(BeNil())
-		})
-
-		It("should return error when Secret does not have Data field with file name", func() {
-			volume.Secret = &corev1.SecretVolumeSource{
-				SecretName: "foo",
-			}
-			secret := &corev1.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "foo",
-					Namespace: namespace,
-				},
-				Data: map[string][]byte{},
-			}
-			Expect(fakeClient.Create(ctx, secret)).To(Succeed())
-			byteSlice, err := utils.GetFileDataFromVolume(ctx, fakeClient, namespace, volume, fileName)
-
-			Expect(err).To(MatchError("secret: foo does not contain filed: foo in Data field"))
-			Expect(byteSlice).To(BeNil())
-		})
-
-		It("should return error when volume type is not supported", func() {
-			byteSlice, err := utils.GetFileDataFromVolume(ctx, fakeClient, namespace, volume, fileName)
-
-			Expect(err).To(MatchError(fmt.Sprintf("cannot handle volume: %v", volume)))
-			Expect(byteSlice).To(BeNil())
-		})
-	})
 
 	DescribeTable("#EqualSets",
 		func(s1, s2 []string, expectedResult bool) {
