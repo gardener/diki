@@ -146,7 +146,7 @@ func (r *Rule242387) checkWorkerGroup(ctx context.Context, workerGroup string, n
 		return rule.FailedCheckResult("Kubelet read-only port 10255 open.", target)
 	}
 
-	rawKubeletCommand, err := utils.GetKubeletCommand(ctx, clusterPodExecutor)
+	rawKubeletCommand, err := kubeutils.GetKubeletCommand(ctx, clusterPodExecutor)
 	if err != nil {
 		return rule.ErroredCheckResult(err.Error(), podTarget)
 	}

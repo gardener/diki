@@ -161,7 +161,7 @@ func (r *RuleNodeFiles) checkWorkerGroup(ctx context.Context, image, workerGroup
 		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execNodePodTarget)}
 	}
 
-	rawKubeletCommand, err := utils.GetKubeletCommand(ctx, nodePodExecutor)
+	rawKubeletCommand, err := kubeutils.GetKubeletCommand(ctx, nodePodExecutor)
 	if err != nil {
 		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execNodePodTarget)}
 	}

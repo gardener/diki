@@ -152,7 +152,7 @@ func (r *Rule242424) checkWorkerGroup(ctx context.Context, workerGroup string, n
 		return rule.ErroredCheckResult(err.Error(), podTarget)
 	}
 
-	rawKubeletCommand, err := utils.GetKubeletCommand(ctx, clusterPodExecutor)
+	rawKubeletCommand, err := kubeutils.GetKubeletCommand(ctx, clusterPodExecutor)
 	if err != nil {
 		return rule.ErroredCheckResult(err.Error(), podTarget)
 	}

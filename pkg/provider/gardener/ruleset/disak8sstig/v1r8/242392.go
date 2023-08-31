@@ -145,7 +145,7 @@ func (r *Rule242392) checkWorkerGroup(ctx context.Context, workerGroup string, n
 		return rule.FailedCheckResult("Kubelet always allows access (or could not be probed).", target)
 	}
 
-	rawKubeletCommand, err := utils.GetKubeletCommand(ctx, clusterPodExecutor)
+	rawKubeletCommand, err := kubeutils.GetKubeletCommand(ctx, clusterPodExecutor)
 	if err != nil {
 		return rule.ErroredCheckResult(err.Error(), podTarget)
 	}

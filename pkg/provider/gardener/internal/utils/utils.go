@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"os"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -23,7 +22,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/gardener/diki/pkg/kubernetes/pod"
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -338,30 +336,6 @@ func GetCommandOptionFromDeployment(ctx context.Context, c client.Client, deploy
 	optionSlice := FindFlagValueRaw(append(container.Command, container.Args...), option)
 
 	return optionSlice, nil
-}
-
-// GetKubeletCommand returns the used kubelet command
-func GetKubeletCommand(ctx context.Context, podExecutor pod.PodExecutor) (string, error) {
-	rawKubeletCommand, err := podExecutor.Execute(ctx, "bin/sh", `ps x -o command | grep "/opt/bin/kubelet" | grep -v "grep"`)
-	if err != nil {
-		return "", err
-	}
-
-	return rawKubeletCommand, nil
-}
-
-// getVolumeMountFromContainerByPath returns the VolumeMount of a container with a given path. If the VolumeMount is not found an error is returned
-func getVolumeMountFromContainerByPath(container corev1.Container, volumePath string) (corev1.VolumeMount, error) {
-	volumeMounts := container.VolumeMounts
-	sort.Slice(volumeMounts, func(i, j int) bool {
-		return volumeMounts[i].MountPath < volumeMounts[j].MountPath
-	})
-	for _, volumeMount := range volumeMounts {
-		if strings.HasPrefix(volumePath, volumeMount.MountPath) {
-			return volumeMount, nil
-		}
-	}
-	return corev1.VolumeMount{}, fmt.Errorf("cannot find volume with path %s", volumePath)
 }
 
 // EqualSets checks if two slices contain exactly the same elements independent of the ordering.
