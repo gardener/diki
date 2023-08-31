@@ -12,7 +12,6 @@ import (
 	kubernetesgardener "github.com/gardener/gardener/pkg/client/kubernetes"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -440,96 +439,6 @@ var _ = Describe("utils", func() {
 			}))
 		})
 	})
-
-	DescribeTable("#GetContainerFromDeployment",
-		func(deployment *appsv1.Deployment, containerName string, expectedContainer corev1.Container, expectedFound bool) {
-			container, found := utils.GetContainerFromDeployment(deployment, containerName)
-
-			Expect(container).To(Equal(expectedContainer))
-
-			Expect(found).To(Equal(expectedFound))
-		},
-
-		Entry("should return correct container",
-			&appsv1.Deployment{
-				Spec: appsv1.DeploymentSpec{
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{
-							Containers: []corev1.Container{
-								{
-									Name: "container1",
-								},
-								{
-									Name: "container2",
-								},
-								{
-									Name: "container3",
-								},
-							},
-						},
-					},
-				},
-			}, "container2", corev1.Container{Name: "container2"}, true),
-		Entry("should return found false when container not found",
-			&appsv1.Deployment{
-				Spec: appsv1.DeploymentSpec{
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{
-							Containers: []corev1.Container{
-								{
-									Name: "container1",
-								},
-							},
-						},
-					},
-				},
-			}, "container2", corev1.Container{}, false),
-	)
-
-	DescribeTable("#GetContainerFromStatefulSet",
-		func(statefulSet *appsv1.StatefulSet, containerName string, expectedContainer corev1.Container, expectedFound bool) {
-			container, found := utils.GetContainerFromStatefulSet(statefulSet, containerName)
-
-			Expect(container).To(Equal(expectedContainer))
-
-			Expect(found).To(Equal(expectedFound))
-		},
-
-		Entry("should return correct container",
-			&appsv1.StatefulSet{
-				Spec: appsv1.StatefulSetSpec{
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{
-							Containers: []corev1.Container{
-								{
-									Name: "container1",
-								},
-								{
-									Name: "container2",
-								},
-								{
-									Name: "container3",
-								},
-							},
-						},
-					},
-				},
-			}, "container2", corev1.Container{Name: "container2"}, true),
-		Entry("should return found false when container not found",
-			&appsv1.StatefulSet{
-				Spec: appsv1.StatefulSetSpec{
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{
-							Containers: []corev1.Container{
-								{
-									Name: "container1",
-								},
-							},
-						},
-					},
-				},
-			}, "container2", corev1.Container{}, false),
-	)
 
 	DescribeTable("#EqualSets",
 		func(s1, s2 []string, expectedResult bool) {

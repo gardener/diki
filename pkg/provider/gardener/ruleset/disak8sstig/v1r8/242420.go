@@ -84,7 +84,7 @@ func (r *Rule242420) Run(ctx context.Context) (rule.RuleResult, error) {
 	const clientCAFileConfigOption = "authentication.x509.clientCAFile"
 	for _, clusterNode := range clusterNodes {
 		target := shootTarget.With("kind", "node", "name", clusterNode.Name)
-		if !utils.NodeReadyStatus(clusterNode) {
+		if !kubeutils.NodeReadyStatus(clusterNode) {
 			checkResults = append(checkResults, rule.WarningCheckResult("Node is not in Ready state.", target))
 			continue
 		}

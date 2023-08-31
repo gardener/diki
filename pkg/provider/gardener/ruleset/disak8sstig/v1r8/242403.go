@@ -18,7 +18,6 @@ import (
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
-	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -58,7 +57,7 @@ func (r *Rule242403) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
-	volume, found := utils.GetVolumeFromDeployment(deployment, mountName)
+	volume, found := kubeutils.GetVolumeFromDeployment(deployment, mountName)
 	if !found {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(fmt.Sprintf("Deployment does not contain volume with name: %s.", mountName), target)), nil
 	}

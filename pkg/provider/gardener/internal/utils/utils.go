@@ -13,7 +13,6 @@ import (
 
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,6 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -141,7 +141,7 @@ func GetSingleRunningNodePerWorker(workers []extensionsv1alpha1.Worker, nodes []
 			var rn *corev1.Node
 			for _, node := range nodes {
 				// find the first ready node per worker group
-				if node.ObjectMeta.Labels[v1beta1constants.LabelWorkerPool] == workerGroup.Name && NodeReadyStatus(node) {
+				if node.ObjectMeta.Labels[v1beta1constants.LabelWorkerPool] == workerGroup.Name && kubeutils.NodeReadyStatus(node) {
 					node := node
 					rn = &node
 					break
@@ -165,46 +165,6 @@ func anyNodesForWorkerGroup(workerGroupName string, nodes []corev1.Node) bool {
 		}
 	}
 	return false
-}
-
-// NodeReadyStatus returns true if the given node has NodeReady status condition true and false in every other case.
-func NodeReadyStatus(node corev1.Node) bool {
-	for _, condition := range node.Status.Conditions {
-		if condition.Type == corev1.NodeReady && condition.Status == corev1.ConditionTrue {
-			return true
-		}
-	}
-	return false
-}
-
-// GetContainerFromDeployment returns a container object with a specific cainerName, if such container is not present it retuns found=false
-func GetContainerFromDeployment(deployment *appsv1.Deployment, containerName string) (container corev1.Container, found bool) {
-	for _, container := range deployment.Spec.Template.Spec.Containers {
-		if container.Name == containerName {
-			return container, true
-		}
-	}
-	return corev1.Container{}, false
-}
-
-// GetContainerFromStatefulSet returns a container object with a specific cainerName, if such container is not present it retuns found=false
-func GetContainerFromStatefulSet(statefulSet *appsv1.StatefulSet, containerName string) (container corev1.Container, found bool) {
-	for _, container := range statefulSet.Spec.Template.Spec.Containers {
-		if container.Name == containerName {
-			return container, true
-		}
-	}
-	return corev1.Container{}, false
-}
-
-// GetVolumeFromDeployment returns a volume object with a specific volumeName, if such volume is not present it retuns found=false
-func GetVolumeFromDeployment(deployment *appsv1.Deployment, volumeName string) (volume corev1.Volume, found bool) {
-	for _, volume := range deployment.Spec.Template.Spec.Volumes {
-		if volume.Name == volumeName {
-			return volume, true
-		}
-	}
-	return corev1.Volume{}, false
 }
 
 // EqualSets checks if two slices contain exactly the same elements independent of the ordering.

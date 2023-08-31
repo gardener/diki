@@ -85,7 +85,7 @@ func (r *Rule242425) Run(ctx context.Context) (rule.RuleResult, error) {
 	const tlsCertFileConfigOption = "tlsCertFile"
 	for _, clusterNode := range clusterNodes {
 		target := shootTarget.With("kind", "node", "name", clusterNode.Name)
-		if !utils.NodeReadyStatus(clusterNode) {
+		if !kubeutils.NodeReadyStatus(clusterNode) {
 			checkResults = append(checkResults, rule.WarningCheckResult("Node is not in Ready state.", target))
 			continue
 		}
