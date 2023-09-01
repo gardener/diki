@@ -208,42 +208,6 @@ func StringOrDefault(t rule.Target) string {
 	return ""
 }
 
-func runAllRulesets(ctx context.Context, p provider.Provider) error { //nolint:unused
-	res, err := p.RunAll(ctx)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("Provider: %s\n", p.Name())
-	for _, r := range res.RulesetResults {
-		fmt.Printf("- Ruleset: %s\n", r.RulesetName)
-		for _, rr := range r.RuleResults {
-			fmt.Printf("   - Rule: %s\n", rr.RuleName)
-			for _, cr := range rr.CheckResults {
-				fmt.Printf("      - Status: %s %s Message: %s Target: %s\n", cr.Status, string(rule.GetStatusIcon(cr.Status)), cr.Message, StringOrDefault(cr.Target))
-			}
-		}
-	}
-	return nil
-}
-
-func runRuleset(ctx context.Context, p provider.Provider, rulesetID, rulesetVersion string) error { //nolint:unused
-	res, err := p.RunRuleset(ctx, rulesetID, rulesetVersion)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("Provider: %s\n", p.Name())
-	fmt.Printf("- Ruleset: %s\n", res.RulesetName)
-	for _, r := range res.RuleResults {
-		fmt.Printf("   - Rule: %s\n", r.RuleName)
-		for _, cr := range r.CheckResults {
-			fmt.Printf("      - Status: %s %s Message: %s Target: %s\n", cr.Status, string(rule.GetStatusIcon(cr.Status)), cr.Message, StringOrDefault(cr.Target))
-		}
-	}
-	return nil
-}
-
 func runRule(ctx context.Context, p provider.Provider, rulesetID, rulesetVersion, ruleID string) error {
 	res, err := p.RunRule(ctx, rulesetID, rulesetVersion, ruleID)
 	if err != nil {
