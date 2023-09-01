@@ -18,7 +18,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
-	dikirule "github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#242388", func() {
@@ -55,14 +55,14 @@ var _ = Describe("#242388", func() {
 	})
 
 	It("should error when kube-apiserver is not found", func() {
-		rule := &v1r8.Rule242388{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+		r := &v1r8.Rule242388{Logger: testLogger, Client: fakeClient, Namespace: namespace}
 
-		ruleResult, err := rule.Run(ctx)
+		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		Expect(ruleResult.CheckResults).To(Equal([]dikirule.CheckResult{
+		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
 			{
-				Status:  dikirule.Errored,
+				Status:  rule.Errored,
 				Message: "deployments.apps \"kube-apiserver\" not found",
 				Target:  target,
 			},
@@ -71,12 +71,12 @@ var _ = Describe("#242388", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(container corev1.Container, expectedCheckResults []dikirule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
+		func(container corev1.Container, expectedCheckResults []rule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
 			ksDeployment.Spec.Template.Spec.Containers = []corev1.Container{container}
 			Expect(fakeClient.Create(ctx, ksDeployment)).To(Succeed())
 
-			rule := &v1r8.Rule242388{Logger: testLogger, Client: fakeClient, Namespace: namespace}
-			ruleResult, err := rule.Run(ctx)
+			r := &v1r8.Rule242388{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -84,19 +84,19 @@ var _ = Describe("#242388", func() {
 
 		Entry("should pass when insecure-bind-address is not set",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--flag1=value1", "--flag2=value2"}},
-			[]dikirule.CheckResult{{Status: dikirule.Passed, Message: "Option insecure-bind-address not set.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Option insecure-bind-address not set.", Target: target}},
 			BeNil()),
 		Entry("should fail when insecure-bind-address is set",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--insecure-bind-address=localhost"}},
-			[]dikirule.CheckResult{{Status: dikirule.Failed, Message: "Option insecure-bind-address set.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Option insecure-bind-address set.", Target: target}},
 			BeNil()),
 		Entry("should fail when insecure-bind-address is set more than once",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--insecure-bind-address=127.0.0.1"}, Args: []string{"--insecure-bind-address=255.255.255.255"}},
-			[]dikirule.CheckResult{{Status: dikirule.Failed, Message: "Option insecure-bind-address set.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Option insecure-bind-address set.", Target: target}},
 			BeNil()),
 		Entry("should error when deployment does not have container 'kube-apiserver'",
 			corev1.Container{Name: "not-kube-apiserver", Command: []string{"--insecure-bind-address=255.255.255.255"}},
-			[]dikirule.CheckResult{{Status: dikirule.Errored, Message: "deployment: kube-apiserver does not contain container: kube-apiserver", Target: target}},
+			[]rule.CheckResult{{Status: rule.Errored, Message: "deployment: kube-apiserver does not contain container: kube-apiserver", Target: target}},
 			BeNil()),
 	)
 })

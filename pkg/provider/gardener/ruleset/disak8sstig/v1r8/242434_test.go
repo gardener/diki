@@ -181,7 +181,7 @@ var _ = Describe("#242434", func() {
 			}
 			expectedCheckResults = append(expectedCheckResults, alwaysExpectedCheckResults...)
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
-			rule := &v1r8.Rule242434{
+			r := &v1r8.Rule242434{
 				Logger:                  testLogger,
 				ControlPlaneClient:      fakeControlPlaneClient,
 				ControlPlaneNamespace:   namespace,
@@ -190,7 +190,7 @@ var _ = Describe("#242434", func() {
 				ClusterPodContext:       fakeClusterPodContext,
 			}
 
-			ruleResult, err := rule.Run(ctx)
+			ruleResult, err := r.Run(ctx)
 			Expect(err).To(BeNil())
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))

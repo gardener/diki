@@ -29,13 +29,13 @@ var _ = Describe("#242394", func() {
 	DescribeTable("Run cases",
 		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
-			rule := &v1r8.Rule242394{
+			r := &v1r8.Rule242394{
 				Logger:            testLogger,
 				InstanceID:        instanceID,
 				ClusterPodContext: fakeClusterPodContext,
 			}
 
-			ruleResult, err := rule.Run(ctx)
+			ruleResult, err := r.Run(ctx)
 			Expect(err).To(BeNil())
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))

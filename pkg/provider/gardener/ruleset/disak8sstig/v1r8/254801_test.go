@@ -192,7 +192,7 @@ var _ = Describe("#254801", func() {
 		executeReturnString := [][]string{{"--not-feature-gates=PodSecurity=true --config=./config", podSecurityNotSetConfig}, {"--not-feature-gates=PodSecurity=true, --config=./config", podSecurityNotSetConfig}}
 		executeReturnError := [][]error{{nil, nil}, {nil, nil}}
 		fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
-		rule := &v1r8.Rule254801{
+		r := &v1r8.Rule254801{
 			Logger:                  testLogger,
 			ControlPlaneClient:      fakeControlPlaneClient,
 			ControlPlaneNamespace:   namespace,
@@ -202,7 +202,7 @@ var _ = Describe("#254801", func() {
 			ClusterPodContext:       fakeClusterPodContext,
 		}
 
-		ruleResult, err := rule.Run(ctx)
+		ruleResult, err := r.Run(ctx)
 		Expect(err).To(BeNil())
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -218,7 +218,7 @@ var _ = Describe("#254801", func() {
 			}
 			expectedCheckResults = append(expectedCheckResults, alwaysExpectedCheckResults...)
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
-			rule := &v1r8.Rule254801{
+			r := &v1r8.Rule254801{
 				Logger:                  testLogger,
 				ControlPlaneClient:      fakeControlPlaneClient,
 				ControlPlaneNamespace:   namespace,
@@ -228,7 +228,7 @@ var _ = Describe("#254801", func() {
 				ClusterPodContext:       fakeClusterPodContext,
 			}
 
-			ruleResult, err := rule.Run(ctx)
+			ruleResult, err := r.Run(ctx)
 			Expect(err).To(BeNil())
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))

@@ -17,7 +17,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
-	dikirule "github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#242437", func() {
@@ -89,7 +89,7 @@ var _ = Describe("#242437", func() {
 	})
 
 	It("should return correct results when all PSPs pass", func() {
-		rule := &v1r8.Rule242437{
+		r := &v1r8.Rule242437{
 			Logger:                testLogger,
 			ClusterClient:         fakeShootClient,
 			ClusterVersion:        kubernetesVersion124,
@@ -100,17 +100,17 @@ var _ = Describe("#242437", func() {
 		Expect(fakeSeedClient.Create(ctx, seedPSP)).To(Succeed())
 		Expect(fakeShootClient.Create(ctx, shootPSP)).To(Succeed())
 
-		ruleResult, err := rule.Run(ctx)
+		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		expectedCheckResults := []dikirule.CheckResult{
+		expectedCheckResults := []rule.CheckResult{
 			{
-				Status:  dikirule.Passed,
+				Status:  rule.Passed,
 				Message: "Pod security policy correctly configured.",
 				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
 			},
 			{
-				Status:  dikirule.Passed,
+				Status:  rule.Passed,
 				Message: "Pod security policy correctly configured.",
 				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
 			},
@@ -120,7 +120,7 @@ var _ = Describe("#242437", func() {
 	})
 
 	It("should return correct results when all PSPs fail with fs group", func() {
-		rule := &v1r8.Rule242437{
+		r := &v1r8.Rule242437{
 			Logger:                testLogger,
 			ClusterClient:         fakeShootClient,
 			ClusterVersion:        kubernetesVersion124,
@@ -144,17 +144,17 @@ var _ = Describe("#242437", func() {
 		}
 		Expect(fakeShootClient.Create(ctx, shootPSP)).To(Succeed())
 
-		ruleResult, err := rule.Run(ctx)
+		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		expectedCheckResults := []dikirule.CheckResult{
+		expectedCheckResults := []rule.CheckResult{
 			{
-				Status:  dikirule.Failed,
+				Status:  rule.Failed,
 				Message: "Pod security policy fs group range not excluding 0.",
 				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
 			},
 			{
-				Status:  dikirule.Failed,
+				Status:  rule.Failed,
 				Message: "Pod security policy fs group range not excluding 0.",
 				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
 			},
@@ -164,7 +164,7 @@ var _ = Describe("#242437", func() {
 	})
 
 	It("should return correct results when PSPs do not have ranges set", func() {
-		rule := &v1r8.Rule242437{
+		r := &v1r8.Rule242437{
 			Logger:                testLogger,
 			ClusterClient:         fakeShootClient,
 			ClusterVersion:        kubernetesVersion124,
@@ -177,17 +177,17 @@ var _ = Describe("#242437", func() {
 		shootPSP.Spec.SupplementalGroups.Ranges = []policyv1beta1.IDRange{}
 		Expect(fakeShootClient.Create(ctx, shootPSP)).To(Succeed())
 
-		ruleResult, err := rule.Run(ctx)
+		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		expectedCheckResults := []dikirule.CheckResult{
+		expectedCheckResults := []rule.CheckResult{
 			{
-				Status:  dikirule.Failed,
+				Status:  rule.Failed,
 				Message: "Pod security policy fs group ranges are not set.",
 				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
 			},
 			{
-				Status:  dikirule.Failed,
+				Status:  rule.Failed,
 				Message: "Pod security policy supplemental group ranges are not set.",
 				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
 			},
@@ -197,7 +197,7 @@ var _ = Describe("#242437", func() {
 	})
 
 	It("should return correct results when all PSPs fail with supplemental group", func() {
-		rule := &v1r8.Rule242437{
+		r := &v1r8.Rule242437{
 			Logger:                testLogger,
 			ClusterClient:         fakeShootClient,
 			ClusterVersion:        kubernetesVersion124,
@@ -221,17 +221,17 @@ var _ = Describe("#242437", func() {
 		}
 		Expect(fakeShootClient.Create(ctx, shootPSP)).To(Succeed())
 
-		ruleResult, err := rule.Run(ctx)
+		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		expectedCheckResults := []dikirule.CheckResult{
+		expectedCheckResults := []rule.CheckResult{
 			{
-				Status:  dikirule.Failed,
+				Status:  rule.Failed,
 				Message: "Pod security policy supplemental group range not excluding 0.",
 				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
 			},
 			{
-				Status:  dikirule.Failed,
+				Status:  rule.Failed,
 				Message: "Pod security policy supplemental group range not excluding 0.",
 				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
 			},
@@ -241,7 +241,7 @@ var _ = Describe("#242437", func() {
 	})
 
 	It("should return correct results when all PSPs fail with RunAsUser", func() {
-		rule := &v1r8.Rule242437{
+		r := &v1r8.Rule242437{
 			Logger:                testLogger,
 			ClusterClient:         fakeShootClient,
 			ClusterVersion:        kubernetesVersion124,
@@ -254,17 +254,17 @@ var _ = Describe("#242437", func() {
 		shootPSP.Spec.RunAsUser.Rule = "RunAsAny"
 		Expect(fakeShootClient.Create(ctx, shootPSP)).To(Succeed())
 
-		ruleResult, err := rule.Run(ctx)
+		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		expectedCheckResults := []dikirule.CheckResult{
+		expectedCheckResults := []rule.CheckResult{
 			{
-				Status:  dikirule.Failed,
+				Status:  rule.Failed,
 				Message: "Pod security policy run user not defined as MustRunAsNonRoot.",
 				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
 			},
 			{
-				Status:  dikirule.Failed,
+				Status:  rule.Failed,
 				Message: "Pod security policy run user not defined as MustRunAsNonRoot.",
 				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
 			},
@@ -274,7 +274,7 @@ var _ = Describe("#242437", func() {
 	})
 
 	It("should return correct results when all PSPs fail with multiple reasons", func() {
-		rule := &v1r8.Rule242437{
+		r := &v1r8.Rule242437{
 			Logger:                testLogger,
 			ClusterClient:         fakeShootClient,
 			ClusterVersion:        kubernetesVersion124,
@@ -297,27 +297,27 @@ var _ = Describe("#242437", func() {
 		shootPSP.Spec.RunAsUser.Rule = "RunAsAny"
 		Expect(fakeShootClient.Create(ctx, shootPSP)).To(Succeed())
 
-		ruleResult, err := rule.Run(ctx)
+		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		expectedCheckResults := []dikirule.CheckResult{
+		expectedCheckResults := []rule.CheckResult{
 			{
-				Status:  dikirule.Failed,
+				Status:  rule.Failed,
 				Message: "Pod security policy fs group range not excluding 0.",
 				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
 			},
 			{
-				Status:  dikirule.Failed,
+				Status:  rule.Failed,
 				Message: "Pod security policy run user not defined as MustRunAsNonRoot.",
 				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
 			},
 			{
-				Status:  dikirule.Failed,
+				Status:  rule.Failed,
 				Message: "Pod security policy supplemental group range not excluding 0.",
 				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
 			},
 			{
-				Status:  dikirule.Failed,
+				Status:  rule.Failed,
 				Message: "Pod security policy run user not defined as MustRunAsNonRoot.",
 				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
 			},
@@ -327,7 +327,7 @@ var _ = Describe("#242437", func() {
 	})
 
 	It("should skip rule when kubernetes version is >= v1.25.", func() {
-		rule := &v1r8.Rule242437{
+		r := &v1r8.Rule242437{
 			Logger:                testLogger,
 			ClusterClient:         fakeShootClient,
 			ClusterVersion:        kubernetesVersion125,
@@ -336,17 +336,17 @@ var _ = Describe("#242437", func() {
 			ControlPlaneNamespace: namespace,
 		}
 
-		ruleResult, err := rule.Run(ctx)
+		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		expectedCheckResults := []dikirule.CheckResult{
+		expectedCheckResults := []rule.CheckResult{
 			{
-				Status:  dikirule.Skipped,
+				Status:  rule.Skipped,
 				Message: "Pod security policies dropped with Kubernetes v1.25.",
 				Target:  gardener.NewTarget("cluster", "seed", "details", "Cluster uses Kubernetes 1.25.0."),
 			},
 			{
-				Status:  dikirule.Skipped,
+				Status:  rule.Skipped,
 				Message: "Pod security policies dropped with Kubernetes v1.25.",
 				Target:  gardener.NewTarget("cluster", "shoot", "details", "Cluster uses Kubernetes 1.25.0."),
 			},

@@ -100,7 +100,7 @@ var _ = Describe("#RuleNodeFiles", func() {
 	DescribeTable("Run cases",
 		func(clusterExecuteReturnString [][]string, clusterExecuteReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(clusterExecuteReturnString, clusterExecuteReturnError)
-			rule := &v1r8.RuleNodeFiles{
+			r := &v1r8.RuleNodeFiles{
 				Logger:                testLogger,
 				InstanceID:            instanceID,
 				ClusterClient:         fakeClusterClient,
@@ -109,7 +109,7 @@ var _ = Describe("#RuleNodeFiles", func() {
 				ClusterPodContext:     fakeClusterPodContext,
 			}
 
-			ruleResult, err := rule.Run(ctx)
+			ruleResult, err := r.Run(ctx)
 			Expect(err).To(BeNil())
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))

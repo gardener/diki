@@ -18,7 +18,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
-	dikirule "github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#242433", func() {
@@ -64,19 +64,19 @@ var _ = Describe("#242433", func() {
 	})
 
 	It("should return error check results when etcd-main and etcd-events are not found", func() {
-		rule := &v1r8.Rule242433{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+		r := &v1r8.Rule242433{Logger: testLogger, Client: fakeClient, Namespace: namespace}
 
-		ruleResult, err := rule.Run(ctx)
+		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		Expect(ruleResult.CheckResults).To(Equal([]dikirule.CheckResult{
+		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
 			{
-				Status:  dikirule.Errored,
+				Status:  rule.Errored,
 				Message: "statefulsets.apps \"etcd-main\" not found",
 				Target:  targetEtcdMain,
 			},
 			{
-				Status:  dikirule.Errored,
+				Status:  rule.Errored,
 				Message: "statefulsets.apps \"etcd-events\" not found",
 				Target:  targetEtcdEvents,
 			},
@@ -85,7 +85,7 @@ var _ = Describe("#242433", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(etcdMainVolume, etcdEventsVolume corev1.Volume, etcdMainSecret, etcdEventsSecret *corev1.Secret, expectedCheckResults []dikirule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
+		func(etcdMainVolume, etcdEventsVolume corev1.Volume, etcdMainSecret, etcdEventsSecret *corev1.Secret, expectedCheckResults []rule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
 			etcdMainStatefulSet.Spec.Template.Spec.Volumes = []corev1.Volume{etcdMainVolume}
 			Expect(fakeClient.Create(ctx, etcdMainStatefulSet)).To(Succeed())
 
@@ -95,8 +95,8 @@ var _ = Describe("#242433", func() {
 			Expect(fakeClient.Create(ctx, etcdMainSecret)).To(Succeed())
 			Expect(fakeClient.Create(ctx, etcdEventsSecret)).To(Succeed())
 
-			rule := &v1r8.Rule242433{Logger: testLogger, Client: fakeClient, Namespace: namespace}
-			ruleResult, err := rule.Run(ctx)
+			r := &v1r8.Rule242433{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -107,14 +107,14 @@ var _ = Describe("#242433", func() {
 			corev1.Volume{Name: "etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "bar"}}},
 			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsKeyFileNotSetConfig)}},
 			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "bar", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsKeyFileSetEmptyConfig)}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				{
-					Status:  dikirule.Failed,
+					Status:  rule.Failed,
 					Message: "Option peer-transport-security.key-file has not been set.",
 					Target:  targetEtcdMain,
 				},
 				{
-					Status:  dikirule.Failed,
+					Status:  rule.Failed,
 					Message: "Option peer-transport-security.key-file is empty.",
 					Target:  targetEtcdEvents,
 				},
@@ -125,14 +125,14 @@ var _ = Describe("#242433", func() {
 			corev1.Volume{Name: "etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "bar"}}},
 			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsKeyFileSetConfig)}},
 			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "bar", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsKeyFileSetConfig)}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				{
-					Status:  dikirule.Passed,
+					Status:  rule.Passed,
 					Message: "Option peer-transport-security.key-file set to allowed value.",
 					Target:  targetEtcdMain,
 				},
 				{
-					Status:  dikirule.Passed,
+					Status:  rule.Passed,
 					Message: "Option peer-transport-security.key-file set to allowed value.",
 					Target:  targetEtcdEvents,
 				},
@@ -143,14 +143,14 @@ var _ = Describe("#242433", func() {
 			corev1.Volume{Name: "etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "bar"}}},
 			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsCertAuthSetTrueConfig)}},
 			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "not-bar", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsCertAuthSetTrueConfig)}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				{
-					Status:  dikirule.Errored,
+					Status:  rule.Errored,
 					Message: "StatefulSet does not contain volume with name: etcd-config-file.",
 					Target:  targetEtcdMain,
 				},
 				{
-					Status:  dikirule.Errored,
+					Status:  rule.Errored,
 					Message: "secrets \"bar\" not found",
 					Target:  targetEtcdEvents,
 				},

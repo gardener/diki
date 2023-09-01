@@ -288,7 +288,7 @@ var _ = Describe("#RulePodFiles", func() {
 			controlPlaneExecuteReturnString[0] = append(controlPlaneExecuteReturnString[0], additionalReturnStrings...)
 			controlPlaneExecuteReturnError[0] = append(controlPlaneExecuteReturnError[0], additionalReturnErrors...)
 			fakeControlPlanePodContext = fakepod.NewFakeSimplePodContext(controlPlaneExecuteReturnString, controlPlaneExecuteReturnError)
-			rule := &v1r8.RulePodFiles{
+			r := &v1r8.RulePodFiles{
 				Logger:                 testLogger,
 				InstanceID:             instanceID,
 				ClusterClient:          fakeClusterClient,
@@ -312,7 +312,7 @@ var _ = Describe("#RulePodFiles", func() {
 			Expect(fakeControlPlaneClient.Create(ctx, controlPlaneDikiPod)).To(Succeed())
 			Expect(fakeClusterClient.Create(ctx, clusterDikiPod)).To(Succeed())
 
-			ruleResult, err := rule.Run(ctx)
+			ruleResult, err := r.Run(ctx)
 			Expect(err).To(BeNil())
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))

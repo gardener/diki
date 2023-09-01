@@ -137,7 +137,7 @@ var _ = Describe("#242404", func() {
 	DescribeTable("Run cases",
 		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
-			rule := &v1r8.Rule242404{
+			r := &v1r8.Rule242404{
 				Logger:                testLogger,
 				ControlPlaneClient:    fakeControlPlaneClient,
 				ControlPlaneNamespace: namespace,
@@ -145,7 +145,7 @@ var _ = Describe("#242404", func() {
 				ClusterPodContext:     fakeClusterPodContext,
 			}
 
-			ruleResult, err := rule.Run(ctx)
+			ruleResult, err := r.Run(ctx)
 			Expect(err).To(BeNil())
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))

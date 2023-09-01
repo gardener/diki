@@ -18,7 +18,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
-	dikirule "github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#254800", func() {
@@ -87,14 +87,14 @@ var _ = Describe("#254800", func() {
 	})
 
 	It("should error when kube-apiserver is not found", func() {
-		rule := &v1r8.Rule254800{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+		r := &v1r8.Rule254800{Logger: testLogger, Client: fakeClient, Namespace: namespace}
 
-		ruleResult, err := rule.Run(ctx)
+		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		Expect(ruleResult.CheckResults).To(Equal([]dikirule.CheckResult{
+		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
 			{
-				Status:  dikirule.Errored,
+				Status:  rule.Errored,
 				Message: "deployments.apps \"kube-apiserver\" not found",
 				Target:  deployTarget,
 			},
@@ -102,15 +102,15 @@ var _ = Describe("#254800", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(command []string, configMapData map[string]string, options *v1r8.Options254800, expectedCheckResults []dikirule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
+		func(command []string, configMapData map[string]string, options *v1r8.Options254800, expectedCheckResults []rule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
 			deployment.Spec.Template.Spec.Containers[0].Command = command
 			Expect(fakeClient.Create(ctx, deployment)).To(Succeed())
 
 			configMap.Data = configMapData
 			Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
 
-			rule := &v1r8.Rule254800{Logger: testLogger, Client: fakeClient, Namespace: namespace, Options: options}
-			ruleResult, err := rule.Run(ctx)
+			r := &v1r8.Rule254800{Logger: testLogger, Client: fakeClient, Namespace: namespace, Options: options}
+			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -119,44 +119,44 @@ var _ = Describe("#254800", func() {
 		Entry("should warn when admission-control-config-file is not set",
 			[]string{"--flag1=value1", "--flag2=value2"},
 			map[string]string{}, nil,
-			[]dikirule.CheckResult{{Status: dikirule.Warning, Message: "Option admission-control-config-file has not been set.", Target: deployTarget}},
+			[]rule.CheckResult{{Status: rule.Warning, Message: "Option admission-control-config-file has not been set.", Target: deployTarget}},
 			BeNil()),
 		Entry("should warn when admission-control-config-file is set more than once",
 			[]string{"--admission-control-config-file=/foo/bar/fileName.yaml", "--admission-control-config-file=/foo/fileName.yaml"},
 			map[string]string{}, nil,
-			[]dikirule.CheckResult{{Status: dikirule.Warning, Message: "Option admission-control-config-file has been set more than once in container command.", Target: deployTarget}},
+			[]rule.CheckResult{{Status: rule.Warning, Message: "Option admission-control-config-file has been set more than once in container command.", Target: deployTarget}},
 			BeNil()),
 		Entry("should return passed when options are defaulted to baseline",
 			[]string{"--admission-control-config-file=/foo/bar/fileName.yaml"},
 			map[string]string{fileName: admissionConfig}, nil,
-			[]dikirule.CheckResult{{Status: dikirule.Passed, Message: "PodSecurity is properly configured", Target: podSecurityTarget}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "PodSecurity is properly configured", Target: podSecurityTarget}},
 			BeNil()),
 		Entry("should return passed when options are set to baseline",
 			[]string{"--admission-control-config-file=/foo/bar/fileName.yaml"},
 			map[string]string{fileName: admissionConfig}, &v1r8.Options254800{MinPodSecurityLevel: "baseline"},
-			[]dikirule.CheckResult{{Status: dikirule.Passed, Message: "PodSecurity is properly configured", Target: podSecurityTarget}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "PodSecurity is properly configured", Target: podSecurityTarget}},
 			BeNil()),
 		Entry("should return failed when PodSecurity is not configured",
 			[]string{"--admission-control-config-file=/foo/bar/fileName.yaml"},
 			map[string]string{fileName: admissionConfigWithoutPlugins}, &v1r8.Options254800{MinPodSecurityLevel: "baseline"},
-			[]dikirule.CheckResult{{Status: dikirule.Failed, Message: "PodSecurity is not configured", Target: genericTarget}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "PodSecurity is not configured", Target: genericTarget}},
 			BeNil()),
 		Entry("should return correct checkResults when config missing and path present",
 			[]string{"--admission-control-config-file=/foo/bar/fileName.yaml"},
 			map[string]string{fileName: admissionConfigWithPath, "podsecurity.yaml": podSecurityBaseline}, &v1r8.Options254800{MinPodSecurityLevel: "baseline"},
-			[]dikirule.CheckResult{{Status: dikirule.Passed, Message: "PodSecurity is properly configured", Target: podSecurityTarget}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "PodSecurity is properly configured", Target: podSecurityTarget}},
 			BeNil()),
 		Entry("should return faild checkResults when using baseline and expected is restricted",
 			[]string{"--admission-control-config-file=/foo/bar/fileName.yaml"},
 			map[string]string{fileName: admissionConfigWithPath, "podsecurity.yaml": podSecurityBaseline}, &v1r8.Options254800{MinPodSecurityLevel: "restricted"},
-			[]dikirule.CheckResult{{Status: dikirule.Failed, Message: "Enforce level is lower than the minimum pod security level allowed: restricted", Target: podSecurityTarget},
-				{Status: dikirule.Failed, Message: "Audit level is lower than the minimum pod security level allowed: restricted", Target: podSecurityTarget},
-				{Status: dikirule.Failed, Message: "Warn level is lower than the minimum pod security level allowed: restricted", Target: podSecurityTarget}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Enforce level is lower than the minimum pod security level allowed: restricted", Target: podSecurityTarget},
+				{Status: rule.Failed, Message: "Audit level is lower than the minimum pod security level allowed: restricted", Target: podSecurityTarget},
+				{Status: rule.Failed, Message: "Warn level is lower than the minimum pod security level allowed: restricted", Target: podSecurityTarget}},
 			BeNil()),
 		Entry("should return passed checkResults when using privileged and expected is privileged",
 			[]string{"--admission-control-config-file=/foo/bar/fileName.yaml"},
 			map[string]string{fileName: admissionConfigWithPath, "podsecurity.yaml": podSecurityPrivileged}, &v1r8.Options254800{MinPodSecurityLevel: "privileged"},
-			[]dikirule.CheckResult{{Status: dikirule.Passed, Message: "PodSecurity is properly configured", Target: podSecurityTarget}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "PodSecurity is properly configured", Target: podSecurityTarget}},
 			BeNil()),
 	)
 })

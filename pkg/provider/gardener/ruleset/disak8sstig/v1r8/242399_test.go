@@ -169,11 +169,11 @@ var _ = Describe("#242399", func() {
 		expectedCheckResults := []rule.CheckResult{
 			rule.SkippedCheckResult("Option featureGates.DynamicKubeletConfig removed in Kubernetes v1.26.", gardener.NewTarget("cluster", "shoot", "details", "Cluster uses Kubernetes 1.26.0.")),
 		}
-		rule := &v1r8.Rule242399{
+		r := &v1r8.Rule242399{
 			ClusterVersion: clusterVersion126,
 		}
 
-		ruleResult, err := rule.Run(ctx)
+		ruleResult, err := r.Run(ctx)
 		Expect(err).To(BeNil())
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -189,7 +189,7 @@ var _ = Describe("#242399", func() {
 			}
 			expectedCheckResults = append(expectedCheckResults, alwaysExpectedCheckResults...)
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
-			rule := &v1r8.Rule242399{
+			r := &v1r8.Rule242399{
 				Logger:                  testLogger,
 				ControlPlaneClient:      fakeControlPlaneClient,
 				ControlPlaneNamespace:   namespace,
@@ -199,7 +199,7 @@ var _ = Describe("#242399", func() {
 				ClusterPodContext:       fakeClusterPodContext,
 			}
 
-			ruleResult, err := rule.Run(ctx)
+			ruleResult, err := r.Run(ctx)
 			Expect(err).To(BeNil())
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
