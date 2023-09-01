@@ -17,7 +17,6 @@ import (
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
 	"github.com/gardener/diki/pkg/rule"
-	dikirule "github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#242395", func() {
@@ -52,7 +51,7 @@ var _ = Describe("#242395", func() {
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		expectedCheckResults := []dikirule.CheckResult{
+		expectedCheckResults := []rule.CheckResult{
 			rule.PassedCheckResult("Kubernetes dashboard not installed", gardener.NewTarget("cluster", "shoot")),
 		}
 
@@ -75,7 +74,7 @@ var _ = Describe("#242395", func() {
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		expectedCheckResults := []dikirule.CheckResult{
+		expectedCheckResults := []rule.CheckResult{
 			rule.FailedCheckResult("Kubernetes dashboard installed", gardener.NewTarget("cluster", "shoot", "name", pod1.Name, "namespace", pod1.Namespace, "kind", "pod")),
 			rule.FailedCheckResult("Kubernetes dashboard installed", gardener.NewTarget("cluster", "shoot", "name", pod2.Name, "namespace", pod2.Namespace, "kind", "pod")),
 		}

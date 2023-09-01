@@ -30,7 +30,6 @@ import (
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
 	"github.com/gardener/diki/pkg/rule"
-	dikirule "github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#242399", func() {
@@ -167,7 +166,7 @@ var _ = Describe("#242399", func() {
 	})
 
 	It("should return skipped checkResults when cluster Kubernetes version is >= v1.26", func() {
-		expectedCheckResults := []dikirule.CheckResult{
+		expectedCheckResults := []rule.CheckResult{
 			rule.SkippedCheckResult("Option featureGates.DynamicKubeletConfig removed in Kubernetes v1.26.", gardener.NewTarget("cluster", "shoot", "details", "Cluster uses Kubernetes 1.26.0.")),
 		}
 		rule := &v1r8.Rule242399{
@@ -181,8 +180,8 @@ var _ = Describe("#242399", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []dikirule.CheckResult) {
-			alwaysExpectedCheckResults := []dikirule.CheckResult{
+		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
+			alwaysExpectedCheckResults := []rule.CheckResult{
 				rule.PassedCheckResult("Option featureGates.DynamicKubeletConfig set to allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
 				rule.FailedCheckResult("Option featureGates.DynamicKubeletConfig set to not allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node2")),
 				rule.WarningCheckResult("Node is not in Ready state.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
@@ -209,7 +208,7 @@ var _ = Describe("#242399", func() {
 		Entry("should return correct checkResults when execute errors, and one node has feature-gates kubelet flag set",
 			[][]string{{""}, {"--feature-gates=DynamicKubeletConfig=true"}},
 			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", gardener.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
 				rule.FailedCheckResult("Use of deprecated kubelet config flag feature-gates.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
 				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
@@ -217,7 +216,7 @@ var _ = Describe("#242399", func() {
 		Entry("should return correct checkResults when nodes have featureGates.DynamicKubeletConfig set",
 			[][]string{{"--not-feature-gates=DynamicKubeletConfig=true --config=./config", dynamicKubeletConfigAllowedConfig}, {"--not-feature-gates=DynamicKubeletConfig=true --config=./config", dynamicKubeletConfigNotAllowedConfig}},
 			[][]error{{nil, nil}, {nil, nil}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.PassedCheckResult("Option featureGates.DynamicKubeletConfig set to allowed value.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option featureGates.DynamicKubeletConfig set to not allowed value.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
 				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
@@ -225,7 +224,7 @@ var _ = Describe("#242399", func() {
 		Entry("should return correct checkResults when nodes do not have featureGates.DynamicKubeletConfig set",
 			[][]string{{"--not-feature-gates=DynamicKubeletConfig=true --config=./config", dynamicKubeletConfigNotSetConfig}, {"--not-feature-gates=DynamicKubeletConfig=true, --config=./config", dynamicKubeletConfigNotSetConfig}},
 			[][]error{{nil, nil}, {nil, nil}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.PassedCheckResult("Option featureGates.DynamicKubeletConfig not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.PassedCheckResult("Option featureGates.DynamicKubeletConfig not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
 				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),

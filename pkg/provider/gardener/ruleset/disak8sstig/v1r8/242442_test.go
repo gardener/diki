@@ -17,7 +17,6 @@ import (
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
 	"github.com/gardener/diki/pkg/rule"
-	dikirule "github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#242442", func() {
@@ -87,7 +86,7 @@ var _ = Describe("#242442", func() {
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		expectedCheckResults := []dikirule.CheckResult{
+		expectedCheckResults := []rule.CheckResult{
 			rule.PassedCheckResult("All found images use current versions.", &gardener.Target{}),
 		}
 
@@ -107,7 +106,7 @@ var _ = Describe("#242442", func() {
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		expectedCheckResults := []dikirule.CheckResult{
+		expectedCheckResults := []rule.CheckResult{
 			rule.FailedCheckResult("Image is used with more than one versions.", gardener.NewTarget("image", "eu.gcr.io/image2")),
 			rule.FailedCheckResult("Image is used with more than one versions.", gardener.NewTarget("image", "eu.gcr.io/image3")),
 		}

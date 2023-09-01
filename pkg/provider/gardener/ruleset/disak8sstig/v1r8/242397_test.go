@@ -29,7 +29,6 @@ import (
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
 	"github.com/gardener/diki/pkg/rule"
-	dikirule "github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#242397", func() {
@@ -161,8 +160,8 @@ var _ = Describe("#242397", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []dikirule.CheckResult) {
-			alwaysExpectedCheckResults := []dikirule.CheckResult{
+		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
+			alwaysExpectedCheckResults := []rule.CheckResult{
 				rule.PassedCheckResult("Option staticPodPath is empty.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
 				rule.FailedCheckResult("Option staticPodPath set.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node2")),
 				rule.WarningCheckResult("Node is not in Ready state.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
@@ -188,7 +187,7 @@ var _ = Describe("#242397", func() {
 		Entry("should return correct checkResults when execute errors, and one node has pod-manifest-path kubelet flag set",
 			[][]string{{""}, {"--pod-manifest-path=/foo/bar"}},
 			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", gardener.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
 				rule.FailedCheckResult("Use of deprecated kubelet config flag pod-manifest-path.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
 				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
@@ -196,7 +195,7 @@ var _ = Describe("#242397", func() {
 		Entry("should return correct checkResults when nodes have staticPodPath set",
 			[][]string{{"--not-pod-manifest-path=/foo/bar --config=./config", staticPodPathEmptyConfig}, {"--not-pod-manifest-path=/foo/bar --config=./config", staticPodPathSetConfig}},
 			[][]error{{nil, nil}, {nil, nil}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.PassedCheckResult("Option staticPodPath is empty.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option staticPodPath set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
 				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
@@ -204,7 +203,7 @@ var _ = Describe("#242397", func() {
 		Entry("should return correct checkResults when nodes do not have staticPodPath set",
 			[][]string{{"--not-pod-manifest-path=/foo/bar --config=./config", staticPodPathNotSetConfig}, {"--not-pod-manifest-path=/foo/bar, --config=./config", staticPodPathNotSetConfig}},
 			[][]error{{nil, nil}, {nil, nil}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.PassedCheckResult("Option staticPodPath not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.PassedCheckResult("Option staticPodPath not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
 				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
