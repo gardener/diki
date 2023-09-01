@@ -31,7 +31,7 @@ type Rule245543 struct {
 type Options245543 struct {
 	AcceptedTokens []struct {
 		User   string `yaml:"user"`
-		Uid    string `yaml:"uid"`
+		UID    string `yaml:"uid"`
 		Groups string `yaml:"groups"`
 	}
 }
@@ -122,7 +122,7 @@ func (r *Rule245543) Run(ctx context.Context) (rule.RuleResult, error) {
 
 func (r *Rule245543) isTokenAccepted(token [4]string) bool {
 	for _, acceptedToken := range r.Options.AcceptedTokens {
-		if token[1] == acceptedToken.User && token[2] == acceptedToken.Uid && token[3] == acceptedToken.Groups {
+		if token[1] == acceptedToken.User && token[2] == acceptedToken.UID && token[3] == acceptedToken.Groups {
 			return true
 		}
 	}

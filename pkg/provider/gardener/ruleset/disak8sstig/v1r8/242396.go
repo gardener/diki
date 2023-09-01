@@ -23,6 +23,6 @@ func (r *Rule242396) Name() string {
 	return "Kubernetes Kubectl cp command must give expected access and results (MEDIUM 242396)"
 }
 
-func (r *Rule242396) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242396) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`"kubectl" is not installed into control plane pods or worker nodes and Gardener does not offer Kubernetes v1.12 or older.`, gardener.NewTarget())), nil
 }

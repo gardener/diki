@@ -44,21 +44,21 @@ bar,for,bar,`
 		options        = v1r8.Options245543{
 			AcceptedTokens: []struct {
 				User   string `yaml:"user"`
-				Uid    string `yaml:"uid"`
+				UID    string `yaml:"uid"`
 				Groups string `yaml:"groups"`
 			}{
 				{
 					User: "health-check",
-					Uid:  "health-check",
+					UID:  "health-check",
 				},
 				{
 					User:   "root",
-					Uid:    "0",
+					UID:    "0",
 					Groups: "group",
 				},
 				{
 					User:   "groups",
-					Uid:    "groups",
+					UID:    "groups",
 					Groups: "group1,group2,group3",
 				},
 			},

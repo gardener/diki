@@ -20,3 +20,4 @@ issues:
     - path: 'pkg/provider/gardener/ruleset/disak8sstig/v1r8/'
       linters:
         - revive
+      text: "exported: exported"

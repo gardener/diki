@@ -23,6 +23,6 @@ func (r *Rule242447) Name() string {
 	return "Kubernetes Kube Proxy must have file permissions set to 644 or more restrictive (MEDIUM 242447)"
 }
 
-func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242447) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Rule is implemented by the "pod-files" rule for correctness, consistency, deduplication, reliability, and performance reasons.`, gardener.NewTarget())), nil
 }

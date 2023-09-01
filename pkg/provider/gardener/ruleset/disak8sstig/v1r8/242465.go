@@ -23,6 +23,6 @@ func (r *Rule242465) Name() string {
 	return "Kubernetes API Server audit log path must be set (MEDIUM 242465)"
 }
 
-func (r *Rule242465) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242465) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Rule is duplicate of "242402"`, gardener.NewTarget())), nil
 }

@@ -23,6 +23,6 @@ func (r *Rule242457) Name() string {
 	return "Kubernetes kubelet config must be owned by root (MEDIUM 242457)"
 }
 
-func (r *Rule242457) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242457) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Rule is duplicate of "242453".`, gardener.NewTarget())), nil
 }

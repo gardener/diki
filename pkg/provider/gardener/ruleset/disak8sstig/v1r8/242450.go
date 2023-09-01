@@ -23,6 +23,6 @@ func (r *Rule242450) Name() string {
 	return "Kubernetes Kubelet certificate authority must be owned by root (MEDIUM 242450)"
 }
 
-func (r *Rule242450) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242450) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Rule implemented by "node-files" for correctness, consistency, deduplication, reliability, and performance reasons.`, gardener.NewTarget())), nil
 }

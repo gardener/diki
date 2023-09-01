@@ -23,6 +23,6 @@ func (r *Rule242384) Name() string {
 	return "Kubernetes Scheduler must have secure binding (MEDIUM 242384)"
 }
 
-func (r *Rule242384) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242384) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`The Kubernetes Scheduler runs in a container which already has limited access to network interfaces. In addition ingress traffic to the Kubernetes Scheduler is restricted via network policies, making an unintended exposure less likely.`, gardener.NewTarget())), nil
 }

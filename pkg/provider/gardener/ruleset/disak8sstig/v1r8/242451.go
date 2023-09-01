@@ -23,6 +23,6 @@ func (r *Rule242451) Name() string {
 	return "Kubernetes component PKI must be owned by root (MEDIUM 242451)"
 }
 
-func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242451) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Rule implemented by "node-files" for correctness, consistency, deduplication, reliability, and performance reasons.`, gardener.NewTarget())), nil
 }

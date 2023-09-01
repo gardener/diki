@@ -23,6 +23,6 @@ func (r *Rule242448) Name() string {
 	return "Kubernetes Kube Proxy must be owned by root (MEDIUM 242448)"
 }
 
-func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242448) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Rule is implemented by the "pod-files" rule for correctness, consistency, deduplication, reliability, and performance reasons.`, gardener.NewTarget())), nil
 }

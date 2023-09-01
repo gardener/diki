@@ -23,6 +23,6 @@ func (r *Rule242452) Name() string {
 	return "Kubernetes kubelet config must have file permissions set to 644 or more restrictive (MEDIUM 242452)"
 }
 
-func (r *Rule242452) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242452) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Rule implemented by "node-files" for correctness, consistency, deduplication, reliability, and performance reasons.`, gardener.NewTarget())), nil
 }

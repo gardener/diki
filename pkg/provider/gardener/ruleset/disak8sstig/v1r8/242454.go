@@ -23,6 +23,6 @@ func (r *Rule242454) Name() string {
 	return "Kubernetes kubeadm.conf must be owned by root(MEDIUM 242454)"
 }
 
-func (r *Rule242454) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242454) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Gardener does not use "kubeadm" and also does not store any "main config" anywhere in seed or shoot (flow/component logic built-in/in-code).`, gardener.NewTarget())), nil
 }

@@ -23,6 +23,6 @@ func (r *Rule242405) Name() string {
 	return "Kubernetes manifests must be owned by root (MEDIUM 242405)"
 }
 
-func (r *Rule242405) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242405) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult("Gardener does not deploy any control plane component as systemd processes or static pod.", gardener.NewTarget())), nil
 }

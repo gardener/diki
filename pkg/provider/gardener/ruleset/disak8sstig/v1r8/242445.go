@@ -23,6 +23,6 @@ func (r *Rule242445) Name() string {
 	return "Kubernetes component etcd must be owned by etcd (MEDIUM 242445)"
 }
 
-func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242445) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Gardener does not deploy any control plane component as systemd processes or static pod. It is deployed as regular pod under root:root, not readable by non-root users, which is checked by "pod-files" for correctness, consistency, deduplication, reliability, and performance reasons.`, gardener.NewTarget())), nil
 }
