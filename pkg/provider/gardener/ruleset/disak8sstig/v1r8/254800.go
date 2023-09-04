@@ -61,19 +61,19 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.WarningCheckResult("Option admission-control-config-file has been set more than once in container command.", target)), nil
 	}
 
-	kubeApiDeployment := &appsv1.Deployment{
+	kubeAPIDeployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "kube-apiserver",
 			Namespace: r.Namespace,
 		},
 	}
-	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(kubeApiDeployment), kubeApiDeployment); err != nil {
+	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(kubeAPIDeployment), kubeAPIDeployment); err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	volumePath := admissionControlConfigFileOptionSlice[0]
 
-	admissionConfigByteSlice, err := utils.GetVolumeConfigByteSliceByMountPath(ctx, r.Client, kubeApiDeployment, "kube-apiserver", volumePath)
+	admissionConfigByteSlice, err := utils.GetVolumeConfigByteSliceByMountPath(ctx, r.Client, kubeAPIDeployment, "kube-apiserver", volumePath)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
@@ -100,7 +100,7 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 				}, nil
 			}
 			if strings.TrimSpace(plugin.Path) != "" {
-				pluginAdmissionConfigByteSlice, err := utils.GetVolumeConfigByteSliceByMountPath(ctx, r.Client, kubeApiDeployment, "kube-apiserver", plugin.Path)
+				pluginAdmissionConfigByteSlice, err := utils.GetVolumeConfigByteSliceByMountPath(ctx, r.Client, kubeAPIDeployment, "kube-apiserver", plugin.Path)
 				if err != nil {
 					return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 				}

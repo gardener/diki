@@ -30,7 +30,6 @@ import (
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
 	"github.com/gardener/diki/pkg/rule"
-	dikirule "github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#254801", func() {
@@ -181,7 +180,7 @@ var _ = Describe("#254801", func() {
 	})
 
 	It("should return correct checkResults when nodes do not have featureGates.PodSecurity set and cluster version is = v1.22", func() {
-		expectedCheckResults := []dikirule.CheckResult{
+		expectedCheckResults := []rule.CheckResult{
 			rule.FailedCheckResult("Option featureGates.PodSecurity not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1", "details", "Cluster uses Kubernetes 1.22.0.")),
 			rule.FailedCheckResult("Option featureGates.PodSecurity not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "Cluster uses Kubernetes 1.22.0.")),
 			rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
@@ -193,7 +192,7 @@ var _ = Describe("#254801", func() {
 		executeReturnString := [][]string{{"--not-feature-gates=PodSecurity=true --config=./config", podSecurityNotSetConfig}, {"--not-feature-gates=PodSecurity=true, --config=./config", podSecurityNotSetConfig}}
 		executeReturnError := [][]error{{nil, nil}, {nil, nil}}
 		fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
-		rule := &v1r8.Rule254801{
+		r := &v1r8.Rule254801{
 			Logger:                  testLogger,
 			ControlPlaneClient:      fakeControlPlaneClient,
 			ControlPlaneNamespace:   namespace,
@@ -203,15 +202,15 @@ var _ = Describe("#254801", func() {
 			ClusterPodContext:       fakeClusterPodContext,
 		}
 
-		ruleResult, err := rule.Run(ctx)
+		ruleResult, err := r.Run(ctx)
 		Expect(err).To(BeNil())
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 
 	DescribeTable("Run cases",
-		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []dikirule.CheckResult) {
-			alwaysExpectedCheckResults := []dikirule.CheckResult{
+		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
+			alwaysExpectedCheckResults := []rule.CheckResult{
 				rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
 				rule.FailedCheckResult("Option featureGates.PodSecurity set to not allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node2")),
 				rule.WarningCheckResult("Node is not in Ready state.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
@@ -219,7 +218,7 @@ var _ = Describe("#254801", func() {
 			}
 			expectedCheckResults = append(expectedCheckResults, alwaysExpectedCheckResults...)
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
-			rule := &v1r8.Rule254801{
+			r := &v1r8.Rule254801{
 				Logger:                  testLogger,
 				ControlPlaneClient:      fakeControlPlaneClient,
 				ControlPlaneNamespace:   namespace,
@@ -229,7 +228,7 @@ var _ = Describe("#254801", func() {
 				ClusterPodContext:       fakeClusterPodContext,
 			}
 
-			ruleResult, err := rule.Run(ctx)
+			ruleResult, err := r.Run(ctx)
 			Expect(err).To(BeNil())
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -238,7 +237,7 @@ var _ = Describe("#254801", func() {
 		Entry("should return correct checkResults when execute errors, and one pod has feature-gates kubelet flag set",
 			[][]string{{""}, {"--feature-gates=PodSecurity=true"}},
 			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", gardener.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
 				rule.FailedCheckResult("Use of deprecated kubelet config flag feature-gates.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
 				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
@@ -246,7 +245,7 @@ var _ = Describe("#254801", func() {
 		Entry("should return correct checkResults when nodes have featureGates.PodSecurity set",
 			[][]string{{"--not-feature-gates=PodSecurity=true --config=./config", podSecurityAllowedConfig}, {"--not-feature-gates=PodSecurity=true --config=./config", podSecurityNotAllowedConfig}},
 			[][]error{{nil, nil}, {nil, nil}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option featureGates.PodSecurity set to not allowed value.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
 				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
@@ -254,7 +253,7 @@ var _ = Describe("#254801", func() {
 		Entry("should return correct checkResults when nodes do not have featureGates.PodSecurity set and cluster version is > v1.22",
 			[][]string{{"--not-feature-gates=PodSecurity=true --config=./config", podSecurityNotSetConfig}, {"--not-feature-gates=PodSecurity=true, --config=./config", podSecurityNotSetConfig}},
 			[][]error{{nil, nil}, {nil, nil}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.PassedCheckResult("Option featureGates.PodSecurity not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1", "details", "Cluster uses Kubernetes 1.26.0.")),
 				rule.PassedCheckResult("Option featureGates.PodSecurity not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "Cluster uses Kubernetes 1.26.0.")),
 				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),

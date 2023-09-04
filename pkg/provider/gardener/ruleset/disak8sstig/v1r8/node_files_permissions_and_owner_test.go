@@ -22,7 +22,6 @@ import (
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
 	"github.com/gardener/diki/pkg/rule"
-	dikirule "github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#RuleNodeFiles", func() {
@@ -99,9 +98,9 @@ var _ = Describe("#RuleNodeFiles", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(clusterExecuteReturnString [][]string, clusterExecuteReturnError [][]error, expectedCheckResults []dikirule.CheckResult) {
+		func(clusterExecuteReturnString [][]string, clusterExecuteReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(clusterExecuteReturnString, clusterExecuteReturnError)
-			rule := &v1r8.RuleNodeFiles{
+			r := &v1r8.RuleNodeFiles{
 				Logger:                testLogger,
 				InstanceID:            instanceID,
 				ClusterClient:         fakeClusterClient,
@@ -110,7 +109,7 @@ var _ = Describe("#RuleNodeFiles", func() {
 				ClusterPodContext:     fakeClusterPodContext,
 			}
 
-			ruleResult, err := rule.Run(ctx)
+			ruleResult, err := r.Run(ctx)
 			Expect(err).To(BeNil())
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -121,7 +120,7 @@ var _ = Describe("#RuleNodeFiles", func() {
 				{"--config=./config", serverTLSBootstrapSetTrue, compliantKubeletServerFilesStats},
 				{"--config=./config", serverTLSBootstrapSetFalse, compliantPKICRTFilesStats, compliantPKIKeyFilesStats}},
 			[][]error{{nil, nil, nil, nil, nil}, {nil, nil, nil}, {nil, nil, nil, nil}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "shoot", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 644, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "shoot", "details", "fileName: /var/lib/kubelet/kubeconfig-real, permissions: 600, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "shoot", "details", "fileName: /var/lib/kubelet/config/kubelet, permissions: 644, ownerUser: 0, ownerGroup: 0")),
@@ -139,7 +138,7 @@ var _ = Describe("#RuleNodeFiles", func() {
 				{"--config=./config", serverTLSBootstrapSetTrue, nonCompliantKubeletServerFilesStats},
 				{"--config=./config", serverTLSBootstrapSetTrue, nonCompliantKubeletServerFilesStats}},
 			[][]error{{nil, nil, nil, nil, nil}, {nil, nil, nil}, {nil, nil, nil}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.FailedCheckResult("File has too wide permissions", gardener.NewTarget("cluster", "shoot", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 664, expectedPermissionsMax: 644")),
 				rule.FailedCheckResult("File has too wide permissions", gardener.NewTarget("cluster", "shoot", "details", "fileName: /var/lib/kubelet/kubeconfig-real, permissions: 644, expectedPermissionsMax: 600")),
 				rule.FailedCheckResult("File has unexpected owner user", gardener.NewTarget("cluster", "shoot", "details", "fileName: /var/lib/kubelet/config/kubelet, ownerUser: 1000, expectedOwnerUsers: [0]")),
@@ -156,7 +155,7 @@ var _ = Describe("#RuleNodeFiles", func() {
 				{"--feature-gates=some-feature --config=./config"},
 				{"--foo=./bar"}},
 			[][]error{{errors.New("foo"), nil, nil, nil, errors.New("bar")}, {nil}, {nil}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.ErroredCheckResult("foo", gardener.NewTarget("cluster", "shoot", "name", dikiPodName, "namespace", "kube-system", "kind", "pod")),
 				rule.ErroredCheckResult("Stats not found", gardener.NewTarget("cluster", "shoot", "details", "filePath: /var/lib/kubelet/kubeconfig-real")),
 				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "shoot", "details", "fileName: /var/lib/kubelet/config/kubelet, permissions: 644, ownerUser: 0, ownerGroup: 0")),

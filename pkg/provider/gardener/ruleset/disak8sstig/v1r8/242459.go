@@ -23,6 +23,6 @@ func (r *Rule242459) Name() string {
 	return "Kubernetes etcd must have file permissions set to 644 or more restrictive (MEDIUM 242459)"
 }
 
-func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242459) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Rule is implemented by the "pod-files" rule for correctness, consistency, deduplication, reliability, and performance reasons.`, gardener.NewTarget())), nil
 }

@@ -18,7 +18,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
-	dikirule "github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#242378", func() {
@@ -55,14 +55,14 @@ var _ = Describe("#242378", func() {
 	})
 
 	It("should error when kube-apiserver is not found", func() {
-		rule := &v1r8.Rule242378{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+		r := &v1r8.Rule242378{Logger: testLogger, Client: fakeClient, Namespace: namespace}
 
-		ruleResult, err := rule.Run(ctx)
+		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		Expect(ruleResult.CheckResults).To(Equal([]dikirule.CheckResult{
+		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
 			{
-				Status:  dikirule.Errored,
+				Status:  rule.Errored,
 				Message: "deployments.apps \"kube-apiserver\" not found",
 				Target:  target,
 			},
@@ -71,12 +71,12 @@ var _ = Describe("#242378", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(container corev1.Container, expectedCheckResults []dikirule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
+		func(container corev1.Container, expectedCheckResults []rule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
 			ksDeployment.Spec.Template.Spec.Containers = []corev1.Container{container}
 			Expect(fakeClient.Create(ctx, ksDeployment)).To(Succeed())
 
-			rule := &v1r8.Rule242378{Logger: testLogger, Client: fakeClient, Namespace: namespace}
-			ruleResult, err := rule.Run(ctx)
+			r := &v1r8.Rule242378{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -84,27 +84,27 @@ var _ = Describe("#242378", func() {
 
 		Entry("should pass when tls-min-version is not set",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--flag1=value1", "--flag2=value2"}},
-			[]dikirule.CheckResult{{Status: dikirule.Passed, Message: "Option tls-min-version has not been set.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Option tls-min-version has not been set.", Target: target}},
 			BeNil()),
 		Entry("should fail when tls-min-version is set to not allowed value VersionTLS10",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--tls-min-version=VersionTLS10"}},
-			[]dikirule.CheckResult{{Status: dikirule.Failed, Message: "Option tls-min-version set to not allowed value.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Option tls-min-version set to not allowed value.", Target: target}},
 			BeNil()),
 		Entry("should fail when tls-min-version is set to not allowed value VersionTLS11",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--tls-min-version=VersionTLS11"}},
-			[]dikirule.CheckResult{{Status: dikirule.Failed, Message: "Option tls-min-version set to not allowed value.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Option tls-min-version set to not allowed value.", Target: target}},
 			BeNil()),
 		Entry("should pass when tls-min-version is set to allowed value",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--tls-min-version=VersionTLS12"}},
-			[]dikirule.CheckResult{{Status: dikirule.Passed, Message: "Option tls-min-version set to allowed value.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Option tls-min-version set to allowed value.", Target: target}},
 			BeNil()),
 		Entry("should warn when tls-min-version is set more than once",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--tls-min-version=VersionTLS11"}, Args: []string{"--tls-min-version=VersionTLS12"}},
-			[]dikirule.CheckResult{{Status: dikirule.Warning, Message: "Option tls-min-version has been set more than once in container command.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Warning, Message: "Option tls-min-version has been set more than once in container command.", Target: target}},
 			BeNil()),
 		Entry("should error when deployment does not have container 'kube-apiserver'",
 			corev1.Container{Name: "not-kube-apiserver", Command: []string{"--tls-min-version=VersionTLS12"}},
-			[]dikirule.CheckResult{{Status: dikirule.Errored, Message: "deployment: kube-apiserver does not contain container: kube-apiserver", Target: target}},
+			[]rule.CheckResult{{Status: rule.Errored, Message: "deployment: kube-apiserver does not contain container: kube-apiserver", Target: target}},
 			BeNil()),
 	)
 })

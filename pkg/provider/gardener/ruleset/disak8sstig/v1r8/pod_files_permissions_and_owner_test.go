@@ -21,7 +21,6 @@ import (
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
 	"github.com/gardener/diki/pkg/rule"
-	dikirule "github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#RulePodFiles", func() {
@@ -280,7 +279,7 @@ var _ = Describe("#RulePodFiles", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(controlPlanePodLabelInstance string, controlPlaneExecuteReturnString, clusterExecuteReturnString [][]string, controlPlaneExecuteReturnError, clusterExecuteReturnError [][]error, expectedCheckResults []dikirule.CheckResult) {
+		func(controlPlanePodLabelInstance string, controlPlaneExecuteReturnString, clusterExecuteReturnString [][]string, controlPlaneExecuteReturnError, clusterExecuteReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			clusterExecuteReturnString[0] = append(clusterExecuteReturnString[0], emptyMounts)
 			clusterExecuteReturnError[0] = append(clusterExecuteReturnError[0], nil)
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(clusterExecuteReturnString, clusterExecuteReturnError)
@@ -289,7 +288,7 @@ var _ = Describe("#RulePodFiles", func() {
 			controlPlaneExecuteReturnString[0] = append(controlPlaneExecuteReturnString[0], additionalReturnStrings...)
 			controlPlaneExecuteReturnError[0] = append(controlPlaneExecuteReturnError[0], additionalReturnErrors...)
 			fakeControlPlanePodContext = fakepod.NewFakeSimplePodContext(controlPlaneExecuteReturnString, controlPlaneExecuteReturnError)
-			rule := &v1r8.RulePodFiles{
+			r := &v1r8.RulePodFiles{
 				Logger:                 testLogger,
 				InstanceID:             instanceID,
 				ClusterClient:          fakeClusterClient,
@@ -313,7 +312,7 @@ var _ = Describe("#RulePodFiles", func() {
 			Expect(fakeControlPlaneClient.Create(ctx, controlPlaneDikiPod)).To(Succeed())
 			Expect(fakeClusterClient.Create(ctx, clusterDikiPod)).To(Succeed())
 
-			ruleResult, err := rule.Run(ctx)
+			ruleResult, err := r.Run(ctx)
 			Expect(err).To(BeNil())
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -322,7 +321,7 @@ var _ = Describe("#RulePodFiles", func() {
 		Entry("should return passed checkResults when all files comply", "",
 			[][]string{{mounts, compliantStats}}, [][]string{{mounts, compliantStats}},
 			[][]error{{nil, nil}}, [][]error{{nil, nil}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /compliant/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /foo/bar/file2.txt, permissions: 644, ownerUser: 0, ownerGroup: 65534")),
 				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "shoot", "name", "1-shoot-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /compliant/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
@@ -331,21 +330,21 @@ var _ = Describe("#RulePodFiles", func() {
 		Entry("should return correct checkResult when container is etcd", "",
 			[][]string{{mountsWithETCD, compliantStats}}, [][]string{{emptyMounts}},
 			[][]error{{nil, nil}}, [][]error{{nil}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /compliant/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
 				rule.FailedCheckResult("File has too wide permissions", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /foo/bar/file2.txt, permissions: 644, expectedPermissionsMax: 600")),
 			}),
 		Entry("should return errored checkResults when podExecutor errors", "",
 			[][]string{{mounts}}, [][]string{{mounts, compliantStats}},
 			[][]error{{errors.New("foo")}}, [][]error{{nil, errors.New("bar")}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.ErroredCheckResult("foo", gardener.NewTarget("cluster", "seed", "name", "diki-pod-files-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
 				rule.ErroredCheckResult("bar", gardener.NewTarget("cluster", "shoot", "name", "diki-pod-files-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
 			}),
 		Entry("should return failed checkResults when mandatory component not present", "not-etcd-main",
 			[][]string{{mounts}}, [][]string{{mounts, compliantStats}},
 			[][]error{{errors.New("foo")}}, [][]error{{nil, errors.New("bar")}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.FailedCheckResult("Mandatory Component not found!", gardener.NewTarget("cluster", "seed", "details", "missing ETCD Main")),
 			}),
 	)

@@ -49,7 +49,7 @@ func (r *Rule242437) Run(ctx context.Context) (rule.RuleResult, error) {
 			return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "seed", "namespace", r.ControlPlaneNamespace, "kind", "podSecurityPolicyList"))), nil
 		}
 
-		checkResults = r.checkPodSecurityPolicies(ctx, seedPodSecurityPolicies, "seed")
+		checkResults = r.checkPodSecurityPolicies(seedPodSecurityPolicies, "seed")
 	}
 
 	if versionutils.ConstraintK8sGreaterEqual125.Check(r.ClusterVersion) {
@@ -61,7 +61,7 @@ func (r *Rule242437) Run(ctx context.Context) (rule.RuleResult, error) {
 			return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "shoot", "namespace", r.ControlPlaneNamespace, "kind", "podSecurityPolicyList"))), nil
 		}
 
-		checkResults = append(checkResults, r.checkPodSecurityPolicies(ctx, shootPodSecurityPolicies, "shoot")...)
+		checkResults = append(checkResults, r.checkPodSecurityPolicies(shootPodSecurityPolicies, "shoot")...)
 	}
 
 	return rule.RuleResult{
@@ -71,7 +71,7 @@ func (r *Rule242437) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (*Rule242437) checkPodSecurityPolicies(ctx context.Context, podSecurityPolicies []policyv1beta1.PodSecurityPolicy, cluster string) []rule.CheckResult {
+func (*Rule242437) checkPodSecurityPolicies(podSecurityPolicies []policyv1beta1.PodSecurityPolicy, cluster string) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
 	target := gardener.NewTarget("cluster", cluster)
 	if len(podSecurityPolicies) == 0 {

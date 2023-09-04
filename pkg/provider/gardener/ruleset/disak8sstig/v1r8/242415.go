@@ -43,14 +43,14 @@ func (r *Rule242415) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
 	}
 
-	checkResults := r.checkPods(ctx, seedPods, seedTarget)
+	checkResults := r.checkPods(seedPods, seedTarget)
 
 	shootPods, err := utils.GetAllPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
 	}
 
-	checkResults = append(checkResults, r.checkPods(ctx, shootPods, shootTarget)...)
+	checkResults = append(checkResults, r.checkPods(shootPods, shootTarget)...)
 
 	return rule.RuleResult{
 		RuleID:       r.ID(),
@@ -59,7 +59,7 @@ func (r *Rule242415) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (*Rule242415) checkPods(ctx context.Context, pods []corev1.Pod, clusterTarget gardener.Target) []rule.CheckResult {
+func (*Rule242415) checkPods(pods []corev1.Pod, clusterTarget gardener.Target) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
 	for _, pod := range pods {
 		target := clusterTarget.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")

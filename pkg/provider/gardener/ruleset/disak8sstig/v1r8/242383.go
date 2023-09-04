@@ -23,6 +23,6 @@ func (r *Rule242383) Name() string {
 	return "User-managed resources must be created in dedicated namespaces (HIGH 242383)"
 }
 
-func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242383) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`By definition, all resources that Gardener creates are no end-user resources.`, gardener.NewTarget())), nil
 }

@@ -43,14 +43,14 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "seed", "namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
 	}
 
-	checkResults := r.checkImages(ctx, seedPods, images, reportedImages)
+	checkResults := r.checkImages(seedPods, images, reportedImages)
 
 	shootPods, err := utils.GetAllPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "shoot", "kind", "podList"))), nil
 	}
 
-	checkResults = append(checkResults, r.checkImages(ctx, shootPods, images, reportedImages)...)
+	checkResults = append(checkResults, r.checkImages(shootPods, images, reportedImages)...)
 
 	if len(checkResults) == 0 {
 		return rule.SingleCheckResult(r, rule.PassedCheckResult("All found images use current versions.", &gardener.Target{})), nil
@@ -63,7 +63,7 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (*Rule242442) checkImages(ctx context.Context, pods []corev1.Pod, images map[string]string, reportedImages map[string]struct{}) []rule.CheckResult {
+func (*Rule242442) checkImages(pods []corev1.Pod, images map[string]string, reportedImages map[string]struct{}) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
 	for _, pod := range pods {
 		for _, container := range pod.Spec.Containers {

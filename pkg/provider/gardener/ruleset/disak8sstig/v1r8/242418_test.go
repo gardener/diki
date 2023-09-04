@@ -18,7 +18,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
-	dikirule "github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#242418", func() {
@@ -55,13 +55,13 @@ var _ = Describe("#242418", func() {
 	})
 
 	It("should error when kube-apiserver is not found", func() {
-		rule := v1r8.Rule242418{Logger: testLogger, Client: fakeClient, Namespace: namespace}
-		ruleResult, err := rule.Run(ctx)
+		r := &v1r8.Rule242418{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		Expect(ruleResult.CheckResults).To(Equal([]dikirule.CheckResult{
+		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
 			{
-				Status:  dikirule.Errored,
+				Status:  rule.Errored,
 				Message: "deployments.apps \"kube-apiserver\" not found",
 				Target:  target,
 			},
@@ -70,12 +70,12 @@ var _ = Describe("#242418", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(container corev1.Container, expectedCheckResults []dikirule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
+		func(container corev1.Container, expectedCheckResults []rule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
 			kcmDeployment.Spec.Template.Spec.Containers = []corev1.Container{container}
 			Expect(fakeClient.Create(ctx, kcmDeployment)).To(Succeed())
 
-			rule := v1r8.Rule242418{Logger: testLogger, Client: fakeClient, Namespace: namespace}
-			ruleResult, err := rule.Run(ctx)
+			r := &v1r8.Rule242418{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -83,23 +83,23 @@ var _ = Describe("#242418", func() {
 
 		Entry("should warn when tls-cipher-suites is not set",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--flag1=value1", "--flag2=value2"}},
-			[]dikirule.CheckResult{{Status: dikirule.Warning, Message: "Option tls-cipher-suites has not been set.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Warning, Message: "Option tls-cipher-suites has not been set.", Target: target}},
 			BeNil()),
 		Entry("should pass when tls-cipher-suites is set to allowed values",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,foo,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,bar"}},
-			[]dikirule.CheckResult{{Status: dikirule.Passed, Message: "Option tls-cipher-suites set to allowed values.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Option tls-cipher-suites set to allowed values.", Target: target}},
 			BeNil()),
 		Entry("should fail when tls-cipher-suites is set to not allowed values",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--tls-cipher-suites=foo,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,bar,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"}},
-			[]dikirule.CheckResult{{Status: dikirule.Failed, Message: "Option tls-cipher-suites set to not allowed values.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Option tls-cipher-suites set to not allowed values.", Target: target}},
 			BeNil()),
 		Entry("should warn when tls-cipher-suites is set more than once",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--tls-cipher-suites=foo,bar"}, Args: []string{"--tls-cipher-suites=foobar"}},
-			[]dikirule.CheckResult{{Status: dikirule.Warning, Message: "Option tls-cipher-suites has been set more than once in container command.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Warning, Message: "Option tls-cipher-suites has been set more than once in container command.", Target: target}},
 			BeNil()),
 		Entry("should error when deployment does not have container 'kube-apiserver'",
 			corev1.Container{Name: "not-kube-apiserver", Command: []string{"--tls-cipher-suites=foo"}},
-			[]dikirule.CheckResult{{Status: dikirule.Errored, Message: "deployment: kube-apiserver does not contain container: kube-apiserver", Target: target}},
+			[]rule.CheckResult{{Status: rule.Errored, Message: "deployment: kube-apiserver does not contain container: kube-apiserver", Target: target}},
 			BeNil()),
 	)
 })

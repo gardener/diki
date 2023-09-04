@@ -23,6 +23,6 @@ func (r *Rule242449) Name() string {
 	return "Kubernetes Kubelet certificate authority file must have file permissions set to 644 or more restrictive (MEDIUM 242449)"
 }
 
-func (r *Rule242449) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242449) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Rule implemented by "node-files" for correctness, consistency, deduplication, reliability, and performance reasons.`, gardener.NewTarget())), nil
 }

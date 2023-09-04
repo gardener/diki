@@ -29,7 +29,6 @@ import (
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
 	"github.com/gardener/diki/pkg/rule"
-	dikirule "github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#242391", func() {
@@ -161,8 +160,8 @@ var _ = Describe("#242391", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []dikirule.CheckResult) {
-			alwaysExpectedCheckResults := []dikirule.CheckResult{
+		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
+			alwaysExpectedCheckResults := []rule.CheckResult{
 				rule.PassedCheckResult("Option authentication.anonymous.enabled set to allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
 				rule.FailedCheckResult("Option authentication.anonymous.enabled set to not allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node2")),
 				rule.WarningCheckResult("Node is not in Ready state.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
@@ -170,7 +169,7 @@ var _ = Describe("#242391", func() {
 			}
 			expectedCheckResults = append(expectedCheckResults, alwaysExpectedCheckResults...)
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
-			rule := &v1r8.Rule242391{
+			r := &v1r8.Rule242391{
 				Logger:                  testLogger,
 				ControlPlaneClient:      fakeControlPlaneClient,
 				ControlPlaneNamespace:   namespace,
@@ -179,7 +178,7 @@ var _ = Describe("#242391", func() {
 				ClusterPodContext:       fakeClusterPodContext,
 			}
 
-			ruleResult, err := rule.Run(ctx)
+			ruleResult, err := r.Run(ctx)
 			Expect(err).To(BeNil())
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -188,7 +187,7 @@ var _ = Describe("#242391", func() {
 		Entry("should return correct checkResults when one node's /healthz enpoint can be reached anonymously, another has anonymous-auth kubelet flag set",
 			[][]string{{"healthy"}, {"Unauthorized", "--anonymous-auth=false"}},
 			[][]error{{nil}, {nil, nil}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.FailedCheckResult("Kubelet allowed anonymous authentication (or could not be probed).", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Use of deprecated kubelet config flag anonymous-auth.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
 				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
@@ -196,7 +195,7 @@ var _ = Describe("#242391", func() {
 		Entry("should return correct checkResults when nodes have authentication.anonymous.enabled set",
 			[][]string{{"Unauthorized", "--not-anonymous-auth=true --config=./config", anonymousAuthAllowedConfig}, {"Unauthorized", "--not-anonymous-auth=true --config=./config", anonymousAuthNotAllowedConfig}},
 			[][]error{{nil, nil, nil}, {nil, nil, nil}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.PassedCheckResult("Option authentication.anonymous.enabled set to allowed value.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option authentication.anonymous.enabled set to not allowed value.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
 				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
@@ -204,7 +203,7 @@ var _ = Describe("#242391", func() {
 		Entry("should return correct checkResults when nodes do not have authentication.anonymous.enabled set",
 			[][]string{{"Unauthorized", "--not-anonymous-auth=true --config=./config", anonymousAuthNotSetConfig}, {"Unauthorized", "--not-anonymous-auth=true, --config=./config", anonymousAuthNotSetConfig}},
 			[][]error{{nil, nil, nil}, {nil, nil, nil}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.PassedCheckResult("Option authentication.anonymous.enabled not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.PassedCheckResult("Option authentication.anonymous.enabled not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
 				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
@@ -212,7 +211,7 @@ var _ = Describe("#242391", func() {
 		Entry("should return correct checkResults when execute errors",
 			[][]string{{""}, {"Unauthorized", ""}},
 			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil, fmt.Errorf("command stderr output: sh: 1: netstat: not found")}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", gardener.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
 				rule.ErroredCheckResult("command stderr output: sh: 1: netstat: not found", gardener.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-bbbbbbbbbb")),
 				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),

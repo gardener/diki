@@ -16,7 +16,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
-	dikirule "github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#242414", func() {
@@ -72,21 +72,21 @@ var _ = Describe("#242414", func() {
 	})
 
 	It("should return correct results when all pods pass", func() {
-		rule := &v1r8.Rule242414{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace, Options: &options}
+		r := &v1r8.Rule242414{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace, Options: &options}
 		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
 		Expect(fakeShootClient.Create(ctx, shootPod)).To(Succeed())
 
-		ruleResult, err := rule.Run(ctx)
+		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		expectedCheckResults := []dikirule.CheckResult{
+		expectedCheckResults := []rule.CheckResult{
 			{
-				Status:  dikirule.Passed,
+				Status:  rule.Passed,
 				Message: "Container does not use hostPort < 1024.",
 				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "foo", "kind", "pod"),
 			},
 			{
-				Status:  dikirule.Passed,
+				Status:  rule.Passed,
 				Message: "Container does not use hostPort < 1024.",
 				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "foo", "kind", "pod"),
 			},
@@ -96,22 +96,22 @@ var _ = Describe("#242414", func() {
 	})
 
 	It("should return correct results when a pod fails", func() {
-		rule := &v1r8.Rule242414{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace, Options: &options}
+		r := &v1r8.Rule242414{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace, Options: &options}
 		shootPod.Spec.Containers[0].Ports[0].HostPort = 1011
 		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
 		Expect(fakeShootClient.Create(ctx, shootPod)).To(Succeed())
 
-		ruleResult, err := rule.Run(ctx)
+		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		expectedCheckResults := []dikirule.CheckResult{
+		expectedCheckResults := []rule.CheckResult{
 			{
-				Status:  dikirule.Passed,
+				Status:  rule.Passed,
 				Message: "Container does not use hostPort < 1024.",
 				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "foo", "kind", "pod"),
 			},
 			{
-				Status:  dikirule.Failed,
+				Status:  rule.Failed,
 				Message: "Container may not use hostPort < 1024.",
 				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "foo", "kind", "pod", "details", "containerName: test, port: 1011"),
 			},
@@ -142,7 +142,7 @@ var _ = Describe("#242414", func() {
 			},
 		}
 
-		rule := &v1r8.Rule242414{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace, Options: &options}
+		r := &v1r8.Rule242414{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace, Options: &options}
 
 		nodeLocalPod := shootPod.DeepCopy()
 		nodeLocalPod.Name = "node-local-dns-123!"
@@ -158,22 +158,22 @@ var _ = Describe("#242414", func() {
 		Expect(fakeShootClient.Create(ctx, nodeLocalPod)).To(Succeed())
 		Expect(fakeShootClient.Create(ctx, fooPod)).To(Succeed())
 
-		ruleResult, err := rule.Run(ctx)
+		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		expectedCheckResults := []dikirule.CheckResult{
+		expectedCheckResults := []rule.CheckResult{
 			{
-				Status:  dikirule.Passed,
+				Status:  rule.Passed,
 				Message: "Container does not use hostPort < 1024.",
 				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "foo", "kind", "pod"),
 			},
 			{
-				Status:  dikirule.Accepted,
+				Status:  rule.Accepted,
 				Message: "foo justify",
 				Target:  gardener.NewTarget("cluster", "shoot", "name", "node-local-dns-123!", "namespace", "namespace-test", "kind", "pod", "details", "containerName: test, port: 53"),
 			},
 			{
-				Status:  dikirule.Accepted,
+				Status:  rule.Accepted,
 				Message: "Container accepted to use hostPort < 1024.",
 				Target:  gardener.NewTarget("cluster", "shoot", "name", "foo", "namespace", "namespace", "kind", "pod", "details", "containerName: test, port: 58"),
 			},

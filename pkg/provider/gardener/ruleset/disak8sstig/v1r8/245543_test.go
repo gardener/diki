@@ -18,7 +18,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
-	dikirule "github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#245543", func() {
@@ -44,21 +44,21 @@ bar,for,bar,`
 		options        = v1r8.Options245543{
 			AcceptedTokens: []struct {
 				User   string `yaml:"user"`
-				Uid    string `yaml:"uid"`
+				UID    string `yaml:"uid"`
 				Groups string `yaml:"groups"`
 			}{
 				{
 					User: "health-check",
-					Uid:  "health-check",
+					UID:  "health-check",
 				},
 				{
 					User:   "root",
-					Uid:    "0",
+					UID:    "0",
 					Groups: "group",
 				},
 				{
 					User:   "groups",
-					Uid:    "groups",
+					UID:    "groups",
 					Groups: "group1,group2,group3",
 				},
 			},
@@ -96,14 +96,14 @@ bar,for,bar,`
 	})
 
 	It("should return error check results when kube-apiserver is not found", func() {
-		rule := &v1r8.Rule245543{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+		r := &v1r8.Rule245543{Logger: testLogger, Client: fakeClient, Namespace: namespace}
 
-		ruleResult, err := rule.Run(ctx)
+		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		Expect(ruleResult.CheckResults).To(Equal([]dikirule.CheckResult{
+		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
 			{
-				Status:  dikirule.Errored,
+				Status:  rule.Errored,
 				Message: "deployments.apps \"kube-apiserver\" not found",
 				Target:  target,
 			},
@@ -112,15 +112,15 @@ bar,for,bar,`
 	})
 
 	DescribeTable("Run cases",
-		func(command []string, options *v1r8.Options245543, kapiVolume corev1.Volume, staticTokenSecret *corev1.Secret, expectedCheckResults []dikirule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
+		func(command []string, options *v1r8.Options245543, kapiVolume corev1.Volume, staticTokenSecret *corev1.Secret, expectedCheckResults []rule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
 			kapiDeployment.Spec.Template.Spec.Containers[0].Command = command
 			kapiDeployment.Spec.Template.Spec.Volumes = []corev1.Volume{kapiVolume}
 			Expect(fakeClient.Create(ctx, kapiDeployment)).To(Succeed())
 
 			Expect(fakeClient.Create(ctx, staticTokenSecret)).To(Succeed())
 
-			rule := &v1r8.Rule245543{Logger: testLogger, Client: fakeClient, Namespace: namespace, Options: options}
-			ruleResult, err := rule.Run(ctx)
+			r := &v1r8.Rule245543{Logger: testLogger, Client: fakeClient, Namespace: namespace, Options: options}
+			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -130,9 +130,9 @@ bar,for,bar,`
 			[]string{"--not-token-auth-file"}, nil,
 			corev1.Volume{Name: "static-token"},
 			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				{
-					Status:  dikirule.Passed,
+					Status:  rule.Passed,
 					Message: "Option token-auth-file has not been set.",
 					Target:  target,
 				},
@@ -142,9 +142,9 @@ bar,for,bar,`
 			[]string{"--token-auth-file=foo/bar"}, nil,
 			corev1.Volume{Name: "static-token"},
 			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				{
-					Status:  dikirule.Failed,
+					Status:  rule.Failed,
 					Message: "Option token-auth-file is set.",
 					Target:  target,
 				},
@@ -154,9 +154,9 @@ bar,for,bar,`
 			[]string{"--token-auth-file=foo/bar", "--token-auth-file=foobar"}, &options,
 			corev1.Volume{Name: "static-token"},
 			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				{
-					Status:  dikirule.Warning,
+					Status:  rule.Warning,
 					Message: "Option token-auth-file has been set more than once in container command.",
 					Target:  target,
 				},
@@ -166,9 +166,9 @@ bar,for,bar,`
 			[]string{"--token-auth-file=foo/bar/static_tokens.csv"}, &options,
 			corev1.Volume{Name: "static-token", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
 			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"static_tokens.csv": []byte(acceptedEntry)}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				{
-					Status:  dikirule.Accepted,
+					Status:  rule.Accepted,
 					Message: "All defined tokens are accepted.",
 					Target:  target,
 				},
@@ -178,9 +178,9 @@ bar,for,bar,`
 			[]string{"--token-auth-file=foo/bar/static_tokens.csv"}, &options,
 			corev1.Volume{Name: "static-token", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
 			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"static_tokens.csv": []byte(acceptedEntries)}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				{
-					Status:  dikirule.Accepted,
+					Status:  rule.Accepted,
 					Message: "All defined tokens are accepted.",
 					Target:  target,
 				},
@@ -190,9 +190,9 @@ bar,for,bar,`
 			[]string{"--token-auth-file=foo/bar/static_tokens.csv"}, &options,
 			corev1.Volume{Name: "static-token", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
 			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"static_tokens.csv": []byte(acceptedEntryGroups)}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				{
-					Status:  dikirule.Accepted,
+					Status:  rule.Accepted,
 					Message: "All defined tokens are accepted.",
 					Target:  target,
 				},
@@ -202,9 +202,9 @@ bar,for,bar,`
 			[]string{"--token-auth-file=foo/bar/static_tokens.csv"}, &options,
 			corev1.Volume{Name: "static-token", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
 			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"static_tokens.csv": []byte(notAcceptedEntry)}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				{
-					Status:  dikirule.Failed,
+					Status:  rule.Failed,
 					Message: "Invalid token.",
 					Target:  target,
 				},
@@ -214,9 +214,9 @@ bar,for,bar,`
 			[]string{"--token-auth-file=foo/bar/static_tokens.csv"}, &options,
 			corev1.Volume{Name: "static-token", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
 			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"static_tokens.csv": []byte(notAcceptedEntries)}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				{
-					Status:  dikirule.Failed,
+					Status:  rule.Failed,
 					Message: "Invalid token.",
 					Target:  target,
 				},
@@ -226,9 +226,9 @@ bar,for,bar,`
 			[]string{"--token-auth-file=foo/bar/static_tokens.csv"}, &options,
 			corev1.Volume{Name: "static-token", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
 			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"static_tokens.csv": []byte(notValidEntry)}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				{
-					Status:  dikirule.Failed,
+					Status:  rule.Failed,
 					Message: "Invalid token.",
 					Target:  target,
 				},
@@ -238,9 +238,9 @@ bar,for,bar,`
 			[]string{"--token-auth-file=foobar/static_tokens.csv"}, &options,
 			corev1.Volume{Name: "static-token"},
 			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				{
-					Status:  dikirule.Errored,
+					Status:  rule.Errored,
 					Message: "cannot find volume with path foobar/static_tokens.csv",
 					Target:  target,
 				},

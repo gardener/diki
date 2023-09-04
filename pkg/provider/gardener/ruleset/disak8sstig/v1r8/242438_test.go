@@ -18,7 +18,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
-	dikirule "github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#242438", func() {
@@ -55,13 +55,13 @@ var _ = Describe("#242438", func() {
 	})
 
 	It("should error when kube-apiserver is not found", func() {
-		rule := v1r8.Rule242438{Logger: testLogger, Client: fakeClient, Namespace: namespace}
-		ruleResult, err := rule.Run(ctx)
+		r := &v1r8.Rule242438{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		Expect(ruleResult.CheckResults).To(Equal([]dikirule.CheckResult{
+		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
 			{
-				Status:  dikirule.Errored,
+				Status:  rule.Errored,
 				Message: "deployments.apps \"kube-apiserver\" not found",
 				Target:  target,
 			},
@@ -70,12 +70,12 @@ var _ = Describe("#242438", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(container corev1.Container, expectedCheckResults []dikirule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
+		func(container corev1.Container, expectedCheckResults []rule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
 			kcmDeployment.Spec.Template.Spec.Containers = []corev1.Container{container}
 			Expect(fakeClient.Create(ctx, kcmDeployment)).To(Succeed())
 
-			rule := v1r8.Rule242438{Logger: testLogger, Client: fakeClient, Namespace: namespace}
-			ruleResult, err := rule.Run(ctx)
+			r := &v1r8.Rule242438{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -83,27 +83,27 @@ var _ = Describe("#242438", func() {
 
 		Entry("should pass when request-timeout is not set",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--flag1=value1", "--flag2=value2"}},
-			[]dikirule.CheckResult{{Status: dikirule.Passed, Message: "Option request-timeout has not been set.", Target: target.With("details", "defaults to 1m0s")}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Option request-timeout has not been set.", Target: target.With("details", "defaults to 1m0s")}},
 			BeNil()),
 		Entry("should pass when request-timeout is set to allowed values",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--request-timeout=15m"}},
-			[]dikirule.CheckResult{{Status: dikirule.Passed, Message: "Option request-timeout set to allowed value.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Option request-timeout set to allowed value.", Target: target}},
 			BeNil()),
 		Entry("should fail when request-timeout is set to not allowed value 0",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--request-timeout=0"}},
-			[]dikirule.CheckResult{{Status: dikirule.Failed, Message: "Option request-timeout set to not allowed value.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Option request-timeout set to not allowed value.", Target: target}},
 			BeNil()),
 		Entry("should warn when request-timeout is set more than once",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--request-timeout=45s"}, Args: []string{"--request-timeout=45s"}},
-			[]dikirule.CheckResult{{Status: dikirule.Warning, Message: "Option request-timeout has been set more than once in container command.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Warning, Message: "Option request-timeout has been set more than once in container command.", Target: target}},
 			BeNil()),
 		Entry("should error when request-timeout is set to not supported time.Duration value 45",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--request-timeout=45"}},
-			[]dikirule.CheckResult{{Status: dikirule.Errored, Message: "time: missing unit in duration \"45\"", Target: target}},
+			[]rule.CheckResult{{Status: rule.Errored, Message: "time: missing unit in duration \"45\"", Target: target}},
 			BeNil()),
 		Entry("should error when deployment does not have container 'kube-apiserver'",
 			corev1.Container{Name: "not-kube-apiserver", Command: []string{"--request-timeout=45s"}},
-			[]dikirule.CheckResult{{Status: dikirule.Errored, Message: "deployment: kube-apiserver does not contain container: kube-apiserver", Target: target}},
+			[]rule.CheckResult{{Status: rule.Errored, Message: "deployment: kube-apiserver does not contain container: kube-apiserver", Target: target}},
 			BeNil()),
 	)
 })

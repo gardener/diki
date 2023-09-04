@@ -12,7 +12,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
-	dikirule "github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#242443", func() {
@@ -21,14 +21,14 @@ var _ = Describe("#242443", func() {
 	)
 
 	It("should skip rules with correct message", func() {
-		rule := &v1r8.Rule242443{}
+		r := &v1r8.Rule242443{}
 
-		ruleResult, err := rule.Run(ctx)
+		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		Expect(ruleResult.CheckResults).To(Equal([]dikirule.CheckResult{
+		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
 			{
-				Status:  dikirule.Skipped,
+				Status:  rule.Skipped,
 				Message: `Scanning/patching security vulnerabilities should be enforced organizationally. Security vulnerability scanning should be automated and maintainers should be informed by automatically.`,
 				Target:  gardener.NewTarget(),
 			},

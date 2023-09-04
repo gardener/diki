@@ -23,6 +23,6 @@ func (r *Rule242385) Name() string {
 	return "Kubernetes Controller Manager must have secure binding (MEDIUM 242385)"
 }
 
-func (r *Rule242385) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242385) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`The Kubernetes Controller Manager runs in a container which already has limited access to network interfaces. In addition ingress traffic to the Kubernetes Controller Manager is restricted via network policies, making an unintended exposure less likely.`, gardener.NewTarget())), nil
 }

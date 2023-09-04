@@ -23,6 +23,6 @@ func (r *Rule242468) Name() string {
 	return "Kubernetes API Server must prohibit communication using TLS version 1.0 and 1.1, and SSL 2.0 and 3.0 (MEDIUM 242468)"
 }
 
-func (r *Rule242468) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242468) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Rule is duplicate of "242378"`, gardener.NewTarget())), nil
 }

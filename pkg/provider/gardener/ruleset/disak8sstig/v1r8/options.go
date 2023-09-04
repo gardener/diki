@@ -5,7 +5,6 @@
 package v1r8
 
 const (
-	// Rule ID constants
 	ID242376    = "242376"
 	ID242377    = "242377"
 	ID242378    = "242378"

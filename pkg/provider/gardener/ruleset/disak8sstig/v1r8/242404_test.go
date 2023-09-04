@@ -22,7 +22,6 @@ import (
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
 	"github.com/gardener/diki/pkg/rule"
-	dikirule "github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#242404", func() {
@@ -136,9 +135,9 @@ var _ = Describe("#242404", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []dikirule.CheckResult) {
+		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
-			rule := &v1r8.Rule242404{
+			r := &v1r8.Rule242404{
 				Logger:                testLogger,
 				ControlPlaneClient:    fakeControlPlaneClient,
 				ControlPlaneNamespace: namespace,
@@ -146,7 +145,7 @@ var _ = Describe("#242404", func() {
 				ClusterPodContext:     fakeClusterPodContext,
 			}
 
-			ruleResult, err := rule.Run(ctx)
+			ruleResult, err := r.Run(ctx)
 			Expect(err).To(BeNil())
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -155,7 +154,7 @@ var _ = Describe("#242404", func() {
 		Entry("should return correct checkResults when execute errors, and one node has hostname-override kubelet flag not set",
 			[][]string{{""}, {"--not-hostname-override=/foo/bar"}},
 			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", gardener.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
 				rule.PassedCheckResult("Flag hostname-override not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
 				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
@@ -163,7 +162,7 @@ var _ = Describe("#242404", func() {
 		Entry("should return correct checkResults when hostname-override flag is set",
 			[][]string{{"--hostname-override=/foo/bar --config=./config"}, {"--hostname-override --config=./config"}},
 			[][]error{{nil}, {nil}},
-			[]dikirule.CheckResult{
+			[]rule.CheckResult{
 				rule.FailedCheckResult("Flag hostname-override set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Flag hostname-override set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
 				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),

@@ -23,6 +23,6 @@ func (r *Rule242444) Name() string {
 	return "Kubernetes component manifests must be owned by root (MEDIUM 242444)"
 }
 
-func (r *Rule242444) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242444) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Rule is duplicate of "242405"`, gardener.NewTarget())), nil
 }

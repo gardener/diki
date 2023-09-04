@@ -17,7 +17,6 @@ import (
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r8"
 	"github.com/gardener/diki/pkg/rule"
-	dikirule "github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#242417", func() {
@@ -66,7 +65,7 @@ var _ = Describe("#242417", func() {
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		expectedCheckResults := []dikirule.CheckResult{
+		expectedCheckResults := []rule.CheckResult{
 			rule.PassedCheckResult("Found no user pods in system namespaces.", gardener.NewTarget("cluster", "shoot")),
 		}
 
@@ -94,7 +93,7 @@ var _ = Describe("#242417", func() {
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
-		expectedCheckResults := []dikirule.CheckResult{
+		expectedCheckResults := []rule.CheckResult{
 			rule.FailedCheckResult("Found user pods in system namespaces.", gardener.NewTarget("cluster", "shoot", "name", pod1.Name, "namespace", pod1.Namespace, "kind", "pod")),
 			rule.FailedCheckResult("Found user pods in system namespaces.", gardener.NewTarget("cluster", "shoot", "name", pod2.Name, "namespace", pod2.Namespace, "kind", "pod")),
 			rule.FailedCheckResult("Found user pods in system namespaces.", gardener.NewTarget("cluster", "shoot", "name", pod3.Name, "namespace", pod3.Namespace, "kind", "pod")),

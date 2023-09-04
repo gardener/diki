@@ -23,6 +23,6 @@ func (r *Rule242410) Name() string {
 	return "Kubernetes API Server must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242410)"
 }
 
-func (r *Rule242410) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242410) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Cannot be tested and should be enforced organizationally. Gardener uses a minimum of known and automatically opened/used/created ports/protocols/services (PPSM stands for Ports, Protocols, Service Management).`, gardener.NewTarget())), nil
 }

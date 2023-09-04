@@ -23,6 +23,6 @@ func (r *Rule242406) Name() string {
 	return "Kubernetes kubelet configuration file must be owned by root (MEDIUM 242406)"
 }
 
-func (r *Rule242406) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242406) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Rule implemented by "node-files" for correctness, consistency, deduplication, reliability, and performance reasons.`, gardener.NewTarget())), nil
 }

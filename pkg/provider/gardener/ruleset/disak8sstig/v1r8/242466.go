@@ -23,6 +23,6 @@ func (r *Rule242466) Name() string {
 	return "Kubernetes PKI CRT must have file permissions set to 644 or more restrictive (MEDIUM 242466)"
 }
 
-func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242466) Run(_ context.Context) (rule.RuleResult, error) {
 	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Rule implemented by "node-files" for correctness, consistency, deduplication, reliability, and performance reasons.`, gardener.NewTarget())), nil
 }
