@@ -26,7 +26,7 @@ var _ = Describe("#242433", func() {
 		singleETCDCluster = `
 initial-cluster: etcd-main-0=foo
 peer-transport-security:
-  client-cert-auth: false`
+  key-file: false`
 		ptsKeyFileNotSetConfig = `
 initial-cluster: etcd-main-0=foo,etcd-main-1=bar
 peer-transport-security:`
