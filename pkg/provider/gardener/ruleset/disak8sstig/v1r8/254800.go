@@ -19,8 +19,8 @@ import (
 	admissionapiv1 "k8s.io/pod-security-admission/admission/api/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
-	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -48,7 +48,7 @@ func (r *Rule254800) Name() string {
 func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 	target := gardener.NewTarget("cluster", "seed", "name", "kube-apiserver", "namespace", r.Namespace, "kind", "deployment")
 
-	admissionControlConfigFileOptionSlice, err := utils.GetCommandOptionFromDeployment(ctx, r.Client, "kube-apiserver", "kube-apiserver", r.Namespace, "admission-control-config-file")
+	admissionControlConfigFileOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, "kube-apiserver", "kube-apiserver", r.Namespace, "admission-control-config-file")
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
@@ -73,7 +73,7 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	volumePath := admissionControlConfigFileOptionSlice[0]
 
-	admissionConfigByteSlice, err := utils.GetVolumeConfigByteSliceByMountPath(ctx, r.Client, kubeAPIDeployment, "kube-apiserver", volumePath)
+	admissionConfigByteSlice, err := kubeutils.GetVolumeConfigByteSliceByMountPath(ctx, r.Client, kubeAPIDeployment, "kube-apiserver", volumePath)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
@@ -100,7 +100,7 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 				}, nil
 			}
 			if strings.TrimSpace(plugin.Path) != "" {
-				pluginAdmissionConfigByteSlice, err := utils.GetVolumeConfigByteSliceByMountPath(ctx, r.Client, kubeAPIDeployment, "kube-apiserver", plugin.Path)
+				pluginAdmissionConfigByteSlice, err := kubeutils.GetVolumeConfigByteSliceByMountPath(ctx, r.Client, kubeAPIDeployment, "kube-apiserver", plugin.Path)
 				if err != nil {
 					return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 				}

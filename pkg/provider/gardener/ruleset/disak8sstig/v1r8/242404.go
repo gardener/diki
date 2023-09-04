@@ -14,6 +14,7 @@ import (
 
 	"github.com/gardener/diki/imagevector"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset"
@@ -41,7 +42,7 @@ func (r *Rule242404) Name() string {
 
 func (r *Rule242404) Run(ctx context.Context) (rule.RuleResult, error) {
 	shootTarget := gardener.NewTarget("cluster", "shoot")
-	clusterNodes, err := utils.GetNodes(ctx, r.ClusterClient, 300)
+	clusterNodes, err := kubeutils.GetNodes(ctx, r.ClusterClient, 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "nodeList"))), nil
 	}
@@ -109,7 +110,7 @@ func (r *Rule242404) checkWorkerGroup(ctx context.Context, workerGroup string, n
 		return rule.ErroredCheckResult(err.Error(), podTarget)
 	}
 
-	rawKubeletCommand, err := utils.GetKubeletCommand(ctx, clusterPodExecutor)
+	rawKubeletCommand, err := kubeutils.GetKubeletCommand(ctx, clusterPodExecutor)
 	if err != nil {
 		return rule.ErroredCheckResult(err.Error(), podTarget)
 	}
@@ -117,7 +118,7 @@ func (r *Rule242404) checkWorkerGroup(ctx context.Context, workerGroup string, n
 	const hostnameOverrideFlag = "hostname-override"
 
 	// hostname-override does not exist in the kubelet config file. We can check if the hostname-override flag is set to validate the rule. ref https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/
-	if utils.IsKubeletFlagSet(rawKubeletCommand, hostnameOverrideFlag) {
+	if kubeutils.IsFlagSet(rawKubeletCommand, hostnameOverrideFlag) {
 		return rule.FailedCheckResult(fmt.Sprintf("Flag %s set.", hostnameOverrideFlag), target)
 	}
 

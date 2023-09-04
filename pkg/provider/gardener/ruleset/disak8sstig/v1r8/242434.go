@@ -15,6 +15,7 @@ import (
 
 	"github.com/gardener/diki/imagevector"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset"
@@ -43,7 +44,7 @@ func (r *Rule242434) Name() string {
 
 func (r *Rule242434) Run(ctx context.Context) (rule.RuleResult, error) {
 	shootTarget := gardener.NewTarget("cluster", "shoot")
-	clusterNodes, err := utils.GetNodes(ctx, r.ClusterClient, 300)
+	clusterNodes, err := kubeutils.GetNodes(ctx, r.ClusterClient, 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "nodeList"))), nil
 	}
@@ -82,12 +83,12 @@ func (r *Rule242434) Run(ctx context.Context) (rule.RuleResult, error) {
 	const protectKernelDefaultsConfigOption = "protectKernelDefaults"
 	for _, clusterNode := range clusterNodes {
 		target := shootTarget.With("kind", "node", "name", clusterNode.Name)
-		if !utils.NodeReadyStatus(clusterNode) {
+		if !kubeutils.NodeReadyStatus(clusterNode) {
 			checkResults = append(checkResults, rule.WarningCheckResult("Node is not in Ready state.", target))
 			continue
 		}
 
-		kubeletConfig, err := utils.GetNodeConfigz(ctx, r.ClusterCoreV1RESTClient, clusterNode.Name)
+		kubeletConfig, err := kubeutils.GetNodeConfigz(ctx, r.ClusterCoreV1RESTClient, clusterNode.Name)
 		if err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target))
 			continue
@@ -134,7 +135,7 @@ func (r *Rule242434) checkWorkerGroup(ctx context.Context, workerGroup string, n
 		return rule.ErroredCheckResult(err.Error(), podTarget)
 	}
 
-	rawKubeletCommand, err := utils.GetKubeletCommand(ctx, clusterPodExecutor)
+	rawKubeletCommand, err := kubeutils.GetKubeletCommand(ctx, clusterPodExecutor)
 	if err != nil {
 		return rule.ErroredCheckResult(err.Error(), podTarget)
 	}
@@ -144,11 +145,11 @@ func (r *Rule242434) checkWorkerGroup(ctx context.Context, workerGroup string, n
 		protectKernelDefaultsFlag         = "protect-kernel-defaults"
 	)
 
-	if utils.IsKubeletFlagSet(rawKubeletCommand, protectKernelDefaultsFlag) {
+	if kubeutils.IsFlagSet(rawKubeletCommand, protectKernelDefaultsFlag) {
 		return rule.FailedCheckResult(fmt.Sprintf("Use of deprecated kubelet config flag %s.", protectKernelDefaultsFlag), target)
 	}
 
-	kubeletConfig, err := utils.GetKubeletConfig(ctx, clusterPodExecutor, rawKubeletCommand)
+	kubeletConfig, err := kubeutils.GetKubeletConfig(ctx, clusterPodExecutor, rawKubeletCommand)
 	if err != nil {
 		return rule.ErroredCheckResult(err.Error(), podTarget)
 	}

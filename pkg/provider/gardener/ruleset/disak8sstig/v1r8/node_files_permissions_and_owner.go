@@ -15,6 +15,7 @@ import (
 
 	"github.com/gardener/diki/imagevector"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset"
@@ -104,7 +105,7 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 	}
 
-	clusterNodes, err := utils.GetNodes(ctx, r.ClusterClient, 512)
+	clusterNodes, err := kubeutils.GetNodes(ctx, r.ClusterClient, 512)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "shoot", "kind", "nodeList"))), nil
 	}
@@ -160,16 +161,16 @@ func (r *RuleNodeFiles) checkWorkerGroup(ctx context.Context, image, workerGroup
 		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execNodePodTarget)}
 	}
 
-	rawKubeletCommand, err := utils.GetKubeletCommand(ctx, nodePodExecutor)
+	rawKubeletCommand, err := kubeutils.GetKubeletCommand(ctx, nodePodExecutor)
 	if err != nil {
 		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execNodePodTarget)}
 	}
 
-	if utils.IsKubeletFlagSet(rawKubeletCommand, "feature-gates") {
+	if kubeutils.IsFlagSet(rawKubeletCommand, "feature-gates") {
 		return []rule.CheckResult{rule.FailedCheckResult("Use of deprecated kubelet config flag feature-gates", target)}
 	}
 
-	kubeletConfig, err := utils.GetKubeletConfig(ctx, nodePodExecutor, rawKubeletCommand)
+	kubeletConfig, err := kubeutils.GetKubeletConfig(ctx, nodePodExecutor, rawKubeletCommand)
 	if err != nil {
 		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), target)}
 	}
