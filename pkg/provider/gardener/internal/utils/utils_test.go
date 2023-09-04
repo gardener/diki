@@ -5,11 +5,17 @@
 package utils_test
 
 import (
+	"context"
+	"strconv"
+
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	kubernetesgardener "github.com/gardener/gardener/pkg/client/kubernetes"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
@@ -17,6 +23,35 @@ import (
 )
 
 var _ = Describe("utils", func() {
+
+	Describe("#GetWorkers", func() {
+		var (
+			fakeClient client.Client
+			ctx        = context.TODO()
+			namespace  = "foo"
+		)
+
+		BeforeEach(func() {
+			fakeClient = fakeclient.NewClientBuilder().WithScheme(kubernetesgardener.SeedScheme).Build()
+			for i := 0; i < 6; i++ {
+				worker := &extensionsv1alpha1.Worker{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      strconv.Itoa(i),
+						Namespace: namespace,
+					},
+				}
+				Expect(fakeClient.Create(ctx, worker)).To(Succeed())
+			}
+		})
+
+		It("should return correct number of workers", func() {
+			workers, err := utils.GetWorkers(ctx, fakeClient, namespace, 2)
+
+			Expect(len(workers)).To(Equal(6))
+			Expect(err).To(BeNil())
+		})
+	})
+
 	Describe("#GetSingleRunningNodePerWorker", func() {
 		var (
 			nodes     []corev1.Node

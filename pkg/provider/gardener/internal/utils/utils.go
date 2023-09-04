@@ -5,6 +5,7 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"slices"
@@ -13,11 +14,31 @@ import (
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/rule"
 )
+
+// GetWorkers returns all workers for a given namespace, or all namespaces if it's set to empty string "".
+// It retrieves workers by portions set by limit.
+func GetWorkers(ctx context.Context, c client.Client, namespace string, limit int64) ([]extensionsv1alpha1.Worker, error) {
+	workerList := &extensionsv1alpha1.WorkerList{}
+	workers := []extensionsv1alpha1.Worker{}
+
+	for {
+		if err := c.List(ctx, workerList, client.InNamespace(namespace), client.Limit(limit), client.Continue(workerList.Continue)); err != nil {
+			return nil, err
+		}
+
+		workers = append(workers, workerList.Items...)
+
+		if len(workerList.Continue) == 0 {
+			return workers, nil
+		}
+	}
+}
 
 // ReadyNode contains a single Node and whether it is in Ready state or not
 type ReadyNode struct {

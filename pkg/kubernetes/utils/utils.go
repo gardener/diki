@@ -12,7 +12,6 @@ import (
 	"sort"
 	"strings"
 
-	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"gopkg.in/yaml.v3"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -81,25 +80,6 @@ func GetNodes(ctx context.Context, c client.Client, limit int64) ([]corev1.Node,
 
 		if len(nodeList.Continue) == 0 {
 			return nodes, nil
-		}
-	}
-}
-
-// GetWorkers return all workers for a given namespace, or all namespaces if it's set to empty string "".
-// It retrieves workers by portions set by limit.
-func GetWorkers(ctx context.Context, c client.Client, namespace string, limit int64) ([]extensionsv1alpha1.Worker, error) {
-	workerList := &extensionsv1alpha1.WorkerList{}
-	workers := []extensionsv1alpha1.Worker{}
-
-	for {
-		if err := c.List(ctx, workerList, client.InNamespace(namespace), client.Limit(limit), client.Continue(workerList.Continue)); err != nil {
-			return nil, err
-		}
-
-		workers = append(workers, workerList.Items...)
-
-		if len(workerList.Continue) == 0 {
-			return workers, nil
 		}
 	}
 }

@@ -10,8 +10,6 @@ import (
 	"fmt"
 	"strconv"
 
-	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	kubernetesgardener "github.com/gardener/gardener/pkg/client/kubernetes"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	gomegatypes "github.com/onsi/gomega/types"
@@ -249,34 +247,6 @@ var _ = Describe("utils", func() {
 			nodes, err := utils.GetNodes(ctx, fakeClient, 2)
 
 			Expect(len(nodes)).To(Equal(6))
-			Expect(err).To(BeNil())
-		})
-	})
-
-	Describe("#GetWorkers", func() {
-		var (
-			fakeClient client.Client
-			ctx        = context.TODO()
-			namespace  = "foo"
-		)
-
-		BeforeEach(func() {
-			fakeClient = fakeclient.NewClientBuilder().WithScheme(kubernetesgardener.SeedScheme).Build()
-			for i := 0; i < 6; i++ {
-				worker := &extensionsv1alpha1.Worker{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      strconv.Itoa(i),
-						Namespace: namespace,
-					},
-				}
-				Expect(fakeClient.Create(ctx, worker)).To(Succeed())
-			}
-		})
-
-		It("should return correct number of workers", func() {
-			workers, err := utils.GetWorkers(ctx, fakeClient, namespace, 2)
-
-			Expect(len(workers)).To(Equal(6))
 			Expect(err).To(BeNil())
 		})
 	})
