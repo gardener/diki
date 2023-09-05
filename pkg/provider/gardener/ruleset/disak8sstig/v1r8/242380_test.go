@@ -22,6 +22,24 @@ import (
 )
 
 var _ = Describe("#242380", func() {
+	const (
+		singleETCDCluster = `
+initial-cluster: etcd-main-0=foo
+peer-transport-security:
+  auto-tls: true`
+		ptsAutoTLSNotSetConfig = `
+initial-cluster: etcd-main-0=foo,etcd-main-1=bar
+peer-transport-security:`
+		ptsAutoTLSSetFalseConfig = `
+initial-cluster: etcd-main-0=foo,etcd-main-1=bar
+peer-transport-security:
+  auto-tls: false`
+		ptsAutoTLSSetTrueConfig = `
+initial-cluster: etcd-main-0=foo,etcd-main-1=bar
+peer-transport-security:
+  auto-tls: true`
+	)
+
 	var (
 		fakeClient client.Client
 		ctx        = context.TODO()
@@ -105,8 +123,8 @@ var _ = Describe("#242380", func() {
 		Entry("should pass when peer-transport-security.auto-tls is set to allowed value",
 			corev1.Volume{Name: "etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
 			corev1.Volume{Name: "etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "bar"}}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsAutoTLSnotSetConfig)}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "bar", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsAutoTLSsetFalseConfig)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsAutoTLSNotSetConfig)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "bar", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsAutoTLSSetFalseConfig)}},
 			[]rule.CheckResult{
 				{
 					Status:  rule.Warning,
@@ -123,8 +141,8 @@ var _ = Describe("#242380", func() {
 		Entry("should fail when peer-transport-security.auto-tls is set to not allowed value",
 			corev1.Volume{Name: "etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
 			corev1.Volume{Name: "etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "bar"}}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsAutoTLSsetTrueConfig)}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "bar", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsAutoTLSsetTrueConfig)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsAutoTLSSetTrueConfig)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "bar", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsAutoTLSSetTrueConfig)}},
 			[]rule.CheckResult{
 				{
 					Status:  rule.Failed,
@@ -141,8 +159,8 @@ var _ = Describe("#242380", func() {
 		Entry("should error when statefulSet does not have volume 'etcd-config-file' or secret is not found",
 			corev1.Volume{Name: "not-etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
 			corev1.Volume{Name: "etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "bar"}}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsAutoTLSsetTrueConfig)}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "not-bar", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsAutoTLSsetTrueConfig)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsAutoTLSSetTrueConfig)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "not-bar", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsAutoTLSSetTrueConfig)}},
 			[]rule.CheckResult{
 				{
 					Status:  rule.Errored,
@@ -156,16 +174,23 @@ var _ = Describe("#242380", func() {
 				},
 			},
 			BeNil()),
+		Entry("should skip when initial-cluster is set with single value",
+			corev1.Volume{Name: "etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
+			corev1.Volume{Name: "etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "bar"}}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(singleETCDCluster)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "bar", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(singleETCDCluster)}},
+			[]rule.CheckResult{
+				{
+					Status:  rule.Skipped,
+					Message: "ETCD runs as a single instance, peer communication options are not used.",
+					Target:  targetEtcdMain,
+				},
+				{
+					Status:  rule.Skipped,
+					Message: "ETCD runs as a single instance, peer communication options are not used.",
+					Target:  targetEtcdEvents,
+				},
+			},
+			BeNil()),
 	)
 })
-
-const (
-	ptsAutoTLSnotSetConfig = `
-peer-transport-security:`
-	ptsAutoTLSsetFalseConfig = `
-peer-transport-security:
-  auto-tls: false`
-	ptsAutoTLSsetTrueConfig = `
-peer-transport-security:
-  auto-tls: true`
-)

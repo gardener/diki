@@ -79,6 +79,12 @@ func (r *Rule242432) checkStatefulSet(ctx context.Context, statefulSetName strin
 		return rule.ErroredCheckResult(err.Error(), target)
 	}
 
+	// We do not check the command-line flags and environment variables,
+	// since they are ignored when a config file is set. ref https://etcd.io/docs/v3.5/op-guide/configuration/
+	if len(strings.Split(config.InitialCluster, ",")) == 1 {
+		return rule.SkippedCheckResult("ETCD runs as a single instance, peer communication options are not used.", target)
+	}
+
 	if config.PeerTransportSecurity.CertFile == nil {
 		return rule.FailedCheckResult("Option peer-transport-security.cert-file has not been set.", target)
 	}

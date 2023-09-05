@@ -22,6 +22,24 @@ import (
 )
 
 var _ = Describe("#242426", func() {
+	const (
+		singleETCDCluster = `
+initial-cluster: etcd-main-0=foo
+peer-transport-security:
+  client-cert-auth: false`
+		ptsCertAuthNotSetConfig = `
+initial-cluster: etcd-main-0=foo,etcd-main-1=bar
+peer-transport-security:`
+		ptsCertAuthSetFalseConfig = `
+initial-cluster: etcd-main-0=foo,etcd-main-1=bar
+peer-transport-security:
+  client-cert-auth: false`
+		ptsCertAuthSetTrueConfig = `
+initial-cluster: etcd-main-0=foo,etcd-main-1=bar
+peer-transport-security:
+  client-cert-auth: true`
+	)
+
 	var (
 		fakeClient client.Client
 		ctx        = context.TODO()
@@ -156,16 +174,23 @@ var _ = Describe("#242426", func() {
 				},
 			},
 			BeNil()),
+		Entry("should skip when initial-cluster is set with signel value",
+			corev1.Volume{Name: "etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
+			corev1.Volume{Name: "etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "bar"}}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(singleETCDCluster)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "bar", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(singleETCDCluster)}},
+			[]rule.CheckResult{
+				{
+					Status:  rule.Skipped,
+					Message: "ETCD runs as a single instance, peer communication options are not used.",
+					Target:  targetEtcdMain,
+				},
+				{
+					Status:  rule.Skipped,
+					Message: "ETCD runs as a single instance, peer communication options are not used.",
+					Target:  targetEtcdEvents,
+				},
+			},
+			BeNil()),
 	)
 })
-
-const (
-	ptsCertAuthNotSetConfig = `
-peer-transport-security:`
-	ptsCertAuthSetFalseConfig = `
-peer-transport-security:
-  client-cert-auth: false`
-	ptsCertAuthSetTrueConfig = `
-peer-transport-security:
-  client-cert-auth: true`
-)
