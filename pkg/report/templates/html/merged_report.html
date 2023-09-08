@@ -1,0 +1,135 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {{ template "_styles" }}
+    <style>
+        .arrow {
+            border: solid black;
+            border-width: 0px 3px 3px 0px;
+            display: inline-block;
+            padding: 4px;
+        }
+
+        .right {
+            transform: rotate(-45deg);
+            -webkit-transform: rotate(-45deg);
+        }
+
+        .left {
+            transform: rotate(135deg);
+            -webkit-transform: rotate(135deg);
+        }
+
+        .up {
+            transform: rotate(-135deg);
+            -webkit-transform: rotate(-135deg);
+        }
+
+        .down {
+            transform: rotate(45deg);
+            -webkit-transform: rotate(45deg);
+        }
+    </style>
+    <script>
+        function collapse(event) {
+            const parent = event.currentTarget.parentElement
+            const list = parent.getElementsByTagName('ul')[0]
+            const arrow = event.currentTarget.getElementsByTagName('i')[0]
+
+            if (list.classList.contains('hidden') === true) {
+                list.classList.remove('hidden')
+                arrow.classList.replace('right', 'down')
+                return
+            }
+
+            list.classList.add('hidden')
+            arrow.classList.replace('down', 'right')
+        }
+    </script>
+</head>
+
+<body>
+    <div class="flex-col">
+        <h1 class="text-3xl font-bold pb-5 pt-2 flex justify-center">Compliance Run ({{ Time .Time }})</h1>
+        <div class="content px-6">
+            {{ range .Providers }}
+            <div>
+                <label class="font-bold text-2xl">Provider {{ .Name }}</label>
+                <ul class="list-disc  list-inside">
+
+                    {{ range $id, $metadataText := MergedMetadataTexts . }}
+                    <li>
+                        <span class="font-bold">{{ $id }}</span> {{ $metadataText }}
+                    </li>
+                    {{ end }}
+                </ul>
+                <ul class="list-none list-inside">
+                    {{ range .Rulesets }}
+                    {{ $statuses := Statuses }}
+                    {{ $ruleset := . }}
+                    <li>
+                        <span class="text-lg">
+                            <span class="font-semibold">{{ $ruleset.Version }} {{ $ruleset.Name }}</span> ({{
+                            MergedRulesetSummaryText $ruleset }})
+                        </span>
+                        {{ range $key, $value := $statuses }}
+                        <ul class="list-inside pl-2">
+                            {{ with MergedRulesWithStatus $ruleset $value }}
+                            <li>
+                                <button onclick="collapse(event)" class="text-lg pr-2"><i
+                                        class="arrow right"></i></button>
+                                <span class="text-lg">&#{{ Icon $value }} {{ $value }}</span>
+                                <ul class="list-inside pl-5 hidden">
+                                    {{ range . }}
+                                    <li>
+                                        <button onclick="collapse(event)" class="pr-2"><i
+                                                class="arrow right"></i></button>
+                                        <span class="font-semibold">{{ .Name }}</span>
+                                        <ul class="list-inside pl-5 hidden">
+                                            {{ range .Checks }}
+                                            <li>
+                                                <button onclick="collapse(event)" class="pr-2"><i
+                                                        class="arrow right"></i></button>
+                                                <span class="font-medium">{{ .Message }}</span>
+                                                <ul class="list-inside pl-5 hidden">
+                                                    {{ range $id, $targets := .ReportsTargets }}
+                                                    <li>
+                                                        <span class="font-semibold">{{ $id }}</span>
+                                                        <ul class="list-disc list-inside pl-5">
+                                                            {{ range $targets }}
+                                                            {{ if . }}
+                                                            <li>
+                                                                {{ range $key, $value := . }}
+                                                                <span class="font-medium">{{ $key }}</span>: {{ $value }}
+                                                                {{ end }}
+                                                            </li>
+                                                            {{ end }}
+                                                            {{ end }}
+                                                        </ul>
+                                                    </li>
+                                                    {{ end }}
+                                                </ul>
+                                            </li>
+                                            {{ end }}
+                                        </ul>
+                                    </li>
+                                    {{ end }}
+                                </ul>
+                            </li>
+                            {{ end }}
+                        </ul>
+                        {{ end }}
+                    </li>
+                    {{ end }}
+                </ul>
+            </div>
+            {{ end }}
+        </div>
+    </div>
+</body>
+
+</html>
