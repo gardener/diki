@@ -81,7 +81,7 @@ func addRunFlags(cmd *cobra.Command, opts *runOptions) {
 
 func addReportFlags(cmd *cobra.Command, opts *reportOptions) {
 	cmd.PersistentFlags().StringVar(&opts.output, "output", "html", "Output type.")
-	cmd.PersistentFlags().Var(cliflag.NewMapStringString(&opts.distinctBy), "distinct-by", "If set the created reports is a merged between all given reports containing only the slelected providers in this filed with their fistinct metadata field.")
+	cmd.PersistentFlags().Var(cliflag.NewMapStringString(&opts.distinctBy), "distinct-by", "If set generates a merged report. The keys are the IDs for the providers which the merged report will include and the values are distinct metadata attributes to be used as IDs for the different reports.")
 }
 
 func reportCmd(args []string, opts reportOptions) error {
