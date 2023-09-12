@@ -32,7 +32,7 @@ func parseV1R8Options[O v1r8.RuleOption](options any) (*O, error) {
 	return &parsedOptions, nil
 }
 
-func getOptionOrNil[O v1r8.RuleOption](options any) (*O, error) {
+func getV1R8OptionOrNil[O v1r8.RuleOption](options any) (*O, error) {
 	if options == nil {
 		return nil, nil
 	}
@@ -90,15 +90,15 @@ func (r *Ruleset) registerV1R8Rules(ruleOptions map[string]config.RuleOptionsCon
 		return err
 	}
 
-	opts242414, err := getOptionOrNil[v1r8.Options242414](ruleOptions[v1r8.ID242414].Args)
+	opts242414, err := getV1R8OptionOrNil[v1r8.Options242414](ruleOptions[v1r8.ID242414].Args)
 	if err != nil {
 		return err
 	}
-	opts245543, err := getOptionOrNil[v1r8.Options245543](ruleOptions[v1r8.ID245543].Args)
+	opts245543, err := getV1R8OptionOrNil[v1r8.Options245543](ruleOptions[v1r8.ID245543].Args)
 	if err != nil {
 		return err
 	}
-	opts254800, err := getOptionOrNil[v1r8.Options254800](ruleOptions[v1r8.ID254800].Args)
+	opts254800, err := getV1R8OptionOrNil[v1r8.Options254800](ruleOptions[v1r8.ID254800].Args)
 	if err != nil {
 		return err
 	}
