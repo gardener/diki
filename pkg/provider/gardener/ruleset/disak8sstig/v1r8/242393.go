@@ -66,10 +66,10 @@ func (r *Rule242393) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
-	if strings.HasSuffix(strings.ToLower(commandResult), "no such file or directory") {
+	if strings.TrimSpace(strings.ToLower(commandResult)) == "inactive" {
 		return rule.SingleCheckResult(r, rule.PassedCheckResult("SSH daemon service not installed", target)), nil
 	}
-	if strings.ToLower(commandResult) == "active" {
+	if strings.TrimSpace(strings.ToLower(commandResult)) == "active" {
 		return rule.SingleCheckResult(r, rule.FailedCheckResult("SSH daemon active", target)), nil
 	}
 	return rule.SingleCheckResult(r, rule.PassedCheckResult("SSH daemon inactive (or could not be probed)", target)), nil

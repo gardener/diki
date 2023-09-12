@@ -64,12 +64,14 @@ func (r *Rule242394) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	commandResult, err = clusterPodExecutor.Execute(ctx, "/bin/sh", `systemctl is-enabled sshd || true`)
 	if err != nil {
+		if strings.HasSuffix(strings.TrimSpace(strings.ToLower(err.Error())), "no such file or directory") {
+			return rule.SingleCheckResult(r, rule.PassedCheckResult("SSH daemon service not installed", target)), nil
+		}
+
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
-	if strings.HasSuffix(strings.ToLower(commandResult), "no such file or directory") {
-		return rule.SingleCheckResult(r, rule.PassedCheckResult("SSH daemon service not installed", target)), nil
-	}
-	if strings.ToLower(commandResult) == "alias" {
+
+	if strings.TrimSpace(strings.ToLower(commandResult)) == "alias" {
 		return rule.SingleCheckResult(r, rule.FailedCheckResult("SSH daemon enabled", target)), nil
 	}
 	return rule.SingleCheckResult(r, rule.PassedCheckResult("SSH daemon disabled (or could not be probed)", target)), nil
