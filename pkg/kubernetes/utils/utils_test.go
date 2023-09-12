@@ -251,6 +251,53 @@ var _ = Describe("utils", func() {
 		})
 	})
 
+	Describe("#GetNamespaces", func() {
+		var (
+			fakeClient client.Client
+			ctx        = context.TODO()
+		)
+
+		BeforeEach(func() {
+			fakeClient = fakeclient.NewClientBuilder().Build()
+			for i := 0; i < 3; i++ {
+				namespace := &corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: strconv.Itoa(i),
+					},
+				}
+				Expect(fakeClient.Create(ctx, namespace)).To(Succeed())
+			}
+		})
+
+		It("should return correct namespace map", func() {
+			namespaces, err := utils.GetNamespaces(ctx, fakeClient)
+
+			expectedNamespaces := map[string]corev1.Namespace{
+				"0": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:            "0",
+						ResourceVersion: "1",
+					},
+				},
+				"1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:            "1",
+						ResourceVersion: "1",
+					},
+				},
+				"2": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:            "2",
+						ResourceVersion: "1",
+					},
+				},
+			}
+
+			Expect(namespaces).To(Equal(expectedNamespaces))
+			Expect(err).To(BeNil())
+		})
+	})
+
 	Describe("#GetPodSecurityPolicies", func() {
 		var (
 			fakeClient client.Client

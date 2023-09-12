@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -16,6 +15,7 @@ import (
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
+	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -30,12 +30,14 @@ type Rule242414 struct {
 }
 
 type Options242414 struct {
-	AcceptedPods []struct {
-		PodNamePrefix       string
-		NamespaceNamePrefix string
-		Justification       string
-		Ports               []int32
-	}
+	AcceptedPods []AcceptedPods242414 `json:"acceptedPods" yaml:"acceptedPods"`
+}
+
+type AcceptedPods242414 struct {
+	PodMatchLabels       map[string]string `json:"podMatchLabels" yaml:"podMatchLabels"`
+	NamespaceMatchLabels map[string]string `json:"namespaceMatchLabels" yaml:"namespaceMatchLabels"`
+	Justification        string            `json:"justification" yaml:"justification"`
+	Ports                []int32           `json:"ports" yaml:"ports"`
 }
 
 func (r *Rule242414) ID() string {
@@ -54,7 +56,11 @@ func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
 	}
 
-	checkResults := r.checkPods(seedPods, seedTarget)
+	seedNamespaces, err := kubeutils.GetNamespaces(ctx, r.ControlPlaneClient)
+	if err != nil {
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "namespaceList"))), nil
+	}
+	checkResults := r.checkPods(seedPods, seedNamespaces, seedTarget)
 
 	shootPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
@@ -65,7 +71,11 @@ func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {
 		}, nil
 	}
 
-	checkResults = append(checkResults, r.checkPods(shootPods, shootTarget)...)
+	shootNamespaces, err := kubeutils.GetNamespaces(ctx, r.ClusterClient)
+	if err != nil {
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "namespaceList"))), nil
+	}
+	checkResults = append(checkResults, r.checkPods(shootPods, shootNamespaces, shootTarget)...)
 
 	return rule.RuleResult{
 		RuleID:       r.ID(),
@@ -74,7 +84,7 @@ func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (r *Rule242414) checkPods(pods []corev1.Pod, clusterTarget gardener.Target) []rule.CheckResult {
+func (r *Rule242414) checkPods(pods []corev1.Pod, namespaces map[string]corev1.Namespace, clusterTarget gardener.Target) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
 	for _, pod := range pods {
 		target := clusterTarget.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
@@ -84,7 +94,7 @@ func (r *Rule242414) checkPods(pods []corev1.Pod, clusterTarget gardener.Target)
 				for _, port := range container.Ports {
 					if port.HostPort != 0 && port.HostPort < 1024 {
 						target = target.With("details", fmt.Sprintf("containerName: %s, port: %d", container.Name, port.HostPort))
-						if accepted, justification := r.accepted(pod.Name, pod.Namespace, port.HostPort); accepted {
+						if accepted, justification := r.accepted(pod, namespaces[pod.Namespace], port.HostPort); accepted {
 							msg := "Container accepted to use hostPort < 1024."
 							if justification != "" {
 								msg = justification
@@ -105,12 +115,13 @@ func (r *Rule242414) checkPods(pods []corev1.Pod, clusterTarget gardener.Target)
 	return checkResults
 }
 
-func (r *Rule242414) accepted(podName, namespace string, hostPort int32) (bool, string) {
-	for _, acceptedPods := range r.Options.AcceptedPods {
-		if strings.HasPrefix(podName, acceptedPods.PodNamePrefix) && strings.HasPrefix(namespace, acceptedPods.NamespaceNamePrefix) {
-			for _, acceptedHostPort := range acceptedPods.Ports {
+func (r *Rule242414) accepted(pod corev1.Pod, namespace corev1.Namespace, hostPort int32) (bool, string) {
+	for _, acceptedPod := range r.Options.AcceptedPods {
+		if utils.MatchLabels(pod.Labels, acceptedPod.PodMatchLabels) &&
+			utils.MatchLabels(namespace.Labels, acceptedPod.NamespaceMatchLabels) {
+			for _, acceptedHostPort := range acceptedPod.Ports {
 				if acceptedHostPort == hostPort {
-					return true, acceptedPods.Justification
+					return true, acceptedPod.Justification
 				}
 			}
 		}

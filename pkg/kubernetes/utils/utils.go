@@ -84,6 +84,21 @@ func GetNodes(ctx context.Context, c client.Client, limit int64) ([]corev1.Node,
 	}
 }
 
+// GetNamespaces returns a map containing all namespaces, where the names of the namespaces are used as a keys.
+func GetNamespaces(ctx context.Context, c client.Client) (map[string]corev1.Namespace, error) {
+	namespaceList := &corev1.NamespaceList{}
+
+	if err := c.List(ctx, namespaceList); err != nil {
+		return nil, err
+	}
+
+	res := make(map[string]corev1.Namespace, len(namespaceList.Items))
+	for _, n := range namespaceList.Items {
+		res[n.Name] = n
+	}
+	return res, nil
+}
+
 // GetPodSecurityPolicies returns all pod security policies.
 // It retrieves policies by portions set by limit.
 func GetPodSecurityPolicies(ctx context.Context, c client.Client, limit int64) ([]policyv1beta1.PodSecurityPolicy, error) {
