@@ -33,17 +33,16 @@ type MergedProvider struct {
 	Rulesets   []MergedRuleset              `json:"rulesets"`
 }
 
-// addSingleReportRulesets adds rulesets from a single report.
-// Rulesets are converted to MergedRulesets if the selected ruleset has not been added
-// or they are added to existing MergedRulesets otherwise.
-func (mp *MergedProvider) addSingleReportRulesets(id string, rulesets []Ruleset) {
+// mergeRulesets traverses the rulesets from a single report
+// and merges them into the already existing ones.
+func (mp *MergedProvider) mergeRulesets(uniqueAttrVal string, rulesets []Ruleset) {
 	for _, ruleset := range rulesets {
 		idx := slices.IndexFunc(mp.Rulesets, func(mr MergedRuleset) bool {
 			return ruleset.ID == mr.ID && ruleset.Version == mr.Version
 		})
 
 		if idx >= 0 {
-			mp.Rulesets[idx].addSingleRulesetRules(id, ruleset.Rules)
+			mp.Rulesets[idx].mergeRules(uniqueAttrVal, ruleset.Rules)
 		} else {
 			mergedRuleset := MergedRuleset{
 				ID:      ruleset.ID,
@@ -51,7 +50,7 @@ func (mp *MergedProvider) addSingleReportRulesets(id string, rulesets []Ruleset)
 				Version: ruleset.Version,
 				Rules:   []MergedRule{},
 			}
-			mergedRuleset.addSingleRulesetRules(id, ruleset.Rules)
+			mergedRuleset.mergeRules(uniqueAttrVal, ruleset.Rules)
 			mp.Rulesets = append(mp.Rulesets, mergedRuleset)
 		}
 	}
@@ -65,24 +64,23 @@ type MergedRuleset struct {
 	Rules   []MergedRule `json:"rules"`
 }
 
-// addSingleReportRulesets adds rules from a single ruleset.
-// Rules are converted to MergedRules if the selected rule has not been added
-// or they are added to existing MergedRules otherwise.
-func (mr *MergedRuleset) addSingleRulesetRules(id string, rules []Rule) {
+// mergeRules traverses the rules from a single ruleset
+// and merges them into the already existing ones.
+func (mr *MergedRuleset) mergeRules(uniqueAttrVal string, rules []Rule) {
 	for _, rule := range rules {
 		idx := slices.IndexFunc(mr.Rules, func(mr MergedRule) bool {
 			return rule.ID == mr.ID
 		})
 
 		if idx >= 0 {
-			mr.Rules[idx].addChecks(id, rule.Checks)
+			mr.Rules[idx].mergeChecks(uniqueAttrVal, rule.Checks)
 		} else {
 			mergedRule := MergedRule{
 				ID:     rule.ID,
 				Name:   rule.Name,
 				Checks: []MergedCheck{},
 			}
-			mergedRule.addChecks(id, rule.Checks)
+			mergedRule.mergeChecks(uniqueAttrVal, rule.Checks)
 			mr.Rules = append(mr.Rules, mergedRule)
 		}
 	}
@@ -95,21 +93,23 @@ type MergedRule struct {
 	Checks []MergedCheck `json:"checks"`
 }
 
-func (mr *MergedRule) addChecks(id string, checks []Check) {
+// mergeChecks traverses the checks from a single rule
+// and merges them into the already existing ones.
+func (mr *MergedRule) mergeChecks(uniqueAttrVal string, checks []Check) {
 	for _, check := range checks {
 		idx := slices.IndexFunc(mr.Checks, func(mr MergedCheck) bool {
 			return check.Message == mr.Message && check.Status == mr.Status
 		})
 
 		if idx >= 0 {
-			mr.Checks[idx].ReportsTargets[id] = check.Targets
+			mr.Checks[idx].ReportsTargets[uniqueAttrVal] = check.Targets
 		} else {
 			mergedCheck := MergedCheck{
 				Message:        check.Message,
 				Status:         check.Status,
 				ReportsTargets: map[string][]rule.Target{},
 			}
-			mergedCheck.ReportsTargets[id] = check.Targets
+			mergedCheck.ReportsTargets[uniqueAttrVal] = check.Targets
 			mr.Checks = append(mr.Checks, mergedCheck)
 		}
 	}
@@ -185,7 +185,7 @@ func MergeReport(reports []*Report, distinctByAttrs map[string]string) (*MergedR
 			for _, provider := range report.Providers {
 				if provider.ID == mergedProvider.ID {
 					uniqueAttr := provider.Metadata[mergedProvider.DistinctBy]
-					mergedProvider.addSingleReportRulesets(uniqueAttr, provider.Rulesets)
+					mergedProvider.mergeRulesets(uniqueAttr, provider.Rulesets)
 					mergedReport.Providers[idx] = mergedProvider
 				}
 			}
@@ -233,7 +233,7 @@ func numOfMergedRulesWithStatus(ruleset *MergedRuleset, status rule.Status) int 
 		if hasStatus := slices.ContainsFunc(rule.Checks, func(check MergedCheck) bool {
 			return check.Status == status
 		}); hasStatus {
-				num++
+			num++
 		}
 	}
 	return num
