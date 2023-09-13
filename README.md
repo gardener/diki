@@ -38,7 +38,7 @@ diki run --config=config.yaml --provider=gardener --ruleset-id=disa-kubernetes-s
 
 #### Report
 
-Diki report generates a human readable html report from the .json output of a `diki run` execution. Merged reports can be generated using the `distinct-by` flag, the value of this flag is a list of key:value pairs where the keys are the IDs of the providers we want to include in the merged report and the values are the unique metadata fields to be used for IDs of the different reports.
+Diki can generate a human readable report from the output files of a `diki run` execution. Merged reports can be produced by setting the `distinct-by` flag. The value of this flag is a list of `key=value` pairs where the keys are the IDs of the providers we want to include in the merged report and the values are the unique metadata fields to be used as distinction values between different provider runs.
 
 - Generate an html report
 ```bash
