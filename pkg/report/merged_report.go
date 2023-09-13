@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"sort"
 	"time"
 
 	"github.com/gardener/diki/pkg/rule"
@@ -131,11 +132,17 @@ func MergeReport(reports []*Report, distinctByAttrs map[string]string) (*MergedR
 		Providers: []MergedProvider{},
 	}
 
-	for selectedProvider, distinctBy := range distinctByAttrs {
+	distinctByAttrsProviders := []string{}
+	for key := range distinctByAttrs {
+		distinctByAttrsProviders = append(distinctByAttrsProviders, key)
+	}
+	sort.Strings(distinctByAttrsProviders)
+
+	for _, selectedProvider := range distinctByAttrsProviders {
 		mergedReport.Providers = append(mergedReport.Providers, MergedProvider{
 			ID:         selectedProvider,
 			Name:       "",
-			DistinctBy: distinctBy,
+			DistinctBy: distinctByAttrs[selectedProvider],
 			Metadata:   map[string]map[string]string{},
 			Rulesets:   []MergedRuleset{},
 		})
