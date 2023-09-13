@@ -230,18 +230,17 @@ func mergedRulesetSummaryText(ruleset *MergedRuleset) string {
 func numOfMergedRulesWithStatus(ruleset *MergedRuleset, status rule.Status) int {
 	num := 0
 	for _, rule := range ruleset.Rules {
-		for _, check := range rule.Checks {
-			if check.Status == status {
+		if hasStatus := slices.ContainsFunc(rule.Checks, func(check MergedCheck) bool {
+			return check.Status == status
+		}); hasStatus {
 				num++
-				break
-			}
 		}
 	}
 	return num
 }
 
 func metadataTextForMergedProvider(mp MergedProvider) map[string]string {
-	metadataTexts := map[string]string{}
+	metadataTexts := make(map[string]string, len(mp.Metadata))
 	for id, metadata := range mp.Metadata {
 		var metadataText strings.Builder
 		metadataText.WriteString("(")

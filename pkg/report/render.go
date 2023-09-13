@@ -14,14 +14,17 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-var (
-	//go:embed templates/html/*
-	files                embed.FS
+const (
 	tmplReportName       = "report"
 	tmplReportPath       = "templates/html/report.html"
 	tmplMergedReportName = "merged_report"
 	tmplMergedReportPath = "templates/html/merged_report.html"
 	tmplStylesPath       = "templates/html/_styles.tpl"
+)
+
+var (
+	//go:embed templates/html/*
+	files embed.FS
 )
 
 // HTMLRenderer renders Diki reports in html format.
