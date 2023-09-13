@@ -176,7 +176,7 @@ func MergeReport(reports []*Report, distinctByAttrs map[string]string) (*MergedR
 			}
 
 			mergedProvider.Metadata[uniqueAttr] = report.Providers[idx].Metadata
-			mergedProvider.Metadata[uniqueAttr]["time"] = report.Time.Format("01-02-2006")
+			mergedProvider.Metadata[uniqueAttr]["time"] = report.Time.Format("01-02-2006 15:04:05")
 		}
 	}
 	for _, report := range reports {
