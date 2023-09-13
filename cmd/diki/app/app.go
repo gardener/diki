@@ -86,11 +86,11 @@ func addReportFlags(cmd *cobra.Command, opts *reportOptions) {
 
 func reportCmd(args []string, opts reportOptions) error {
 	if len(args) == 0 {
-		return errors.New("report requires a minimum of one filepath arguments")
+		return errors.New("report command requires a minimum of one filepath argument")
 	}
 
 	if len(args) > 1 && len(opts.distinctBy) == 0 {
-		return errors.New("report requires a single filepath argument when flag distinct-by is not set ")
+		return errors.New("report command requires a single filepath argument when the distinct-by flag is not set")
 	}
 
 	if opts.output != "html" {
@@ -101,7 +101,7 @@ func reportCmd(args []string, opts reportOptions) error {
 	for _, arg := range args {
 		fileData, err := os.ReadFile(filepath.Clean(arg))
 		if err != nil {
-			return fmt.Errorf("failed to read file %s:%w", arg, err)
+			return fmt.Errorf("failed to read file %s: %w", arg, err)
 		}
 
 		// TODO: handle report types

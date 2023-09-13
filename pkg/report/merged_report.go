@@ -123,7 +123,7 @@ type MergedCheck struct {
 // MergeReport merges given reports by specified providers and unique metadata attribute.
 func MergeReport(reports []*Report, distinctByAttrs map[string]string) (*MergedReport, error) {
 	if len(reports) == 0 {
-		return &MergedReport{}, errors.New("reports slice is empty")
+		return nil, errors.New("zero reports provided for merging")
 	}
 	mergedReport := &MergedReport{
 		Time:      time.Now(),
@@ -143,7 +143,7 @@ func MergeReport(reports []*Report, distinctByAttrs map[string]string) (*MergedR
 
 	for _, report := range reports {
 		if report.MinStatus != mergedReport.MinStatus {
-			return &MergedReport{}, errors.New("reports must have equal minStatus to be merged")
+			return nil, errors.New("reports must have equal minStatus in order to be merged")
 		}
 
 		for key, mergedProvider := range mergedReport.Providers {
@@ -152,7 +152,7 @@ func MergeReport(reports []*Report, distinctByAttrs map[string]string) (*MergedR
 			})
 
 			if idx == -1 {
-				return &MergedReport{}, fmt.Errorf("provider %s not found in at least 1 of the selected reports", mergedProvider.ID)
+				return nil, fmt.Errorf("provider %s not found in at least 1 of the selected reports", mergedProvider.ID)
 			}
 
 			if mergedReport.Providers[key].Name == "" {
@@ -161,11 +161,11 @@ func MergeReport(reports []*Report, distinctByAttrs map[string]string) (*MergedR
 
 			uniqueAttr := report.Providers[idx].Metadata[mergedProvider.DistinctBy]
 			if uniqueAttr == "" {
-				return &MergedReport{}, fmt.Errorf("distinct attribute %s is empty in at least 1 of the selected reports", mergedProvider.DistinctBy)
+				return nil, fmt.Errorf("distinct attribute %s is empty in at least 1 of the selected reports", mergedProvider.DistinctBy)
 			}
 
 			if _, ok := mergedProvider.Metadata[uniqueAttr]; ok {
-				return &MergedReport{}, fmt.Errorf("distinct attribute %s is not unique", mergedProvider.DistinctBy)
+				return nil, fmt.Errorf("distinct attribute %s is not unique", mergedProvider.DistinctBy)
 			}
 
 			mergedProvider.Metadata[uniqueAttr] = report.Providers[idx].Metadata

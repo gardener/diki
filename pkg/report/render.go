@@ -74,6 +74,6 @@ func (r *HTMLRenderer) Render(w io.Writer, report any) error {
 	case *MergedReport:
 		return r.templates[tmplMergedReportName].Execute(w, rep)
 	default:
-		return fmt.Errorf("unsupported report type: %T", rep)
+		return fmt.Errorf("unsupported report type: %T", report)
 	}
 }
