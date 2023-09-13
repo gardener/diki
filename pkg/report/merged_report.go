@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"slices"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/gardener/diki/pkg/rule"
@@ -242,18 +243,21 @@ func numOfMergedRulesWithStatus(ruleset *MergedRuleset, status rule.Status) int 
 func metadataTextForMergedProvider(mp MergedProvider) map[string]string {
 	metadataTexts := map[string]string{}
 	for id, metadata := range mp.Metadata {
-		metadataText := "("
+		var metadataText strings.Builder
+		metadataText.WriteString("(")
 		for key, value := range metadata {
 			if key == mp.DistinctBy {
 				continue
 			}
-			metadataText = fmt.Sprintf("%s%s: %s, ", metadataText, key, value)
+			metadataText.WriteString(fmt.Sprintf("%s: %s, ", key, value))
 		}
-		if len(metadataText) > 1 {
-			metadataText = metadataText[:len(metadataText)-2]
-			metadataText = fmt.Sprintf("%s)", metadataText)
+		if len(metadataText.String()) > 1 {
+			metadataTextString := metadataText.String()
+			metadataTextString = metadataTextString[:len(metadataTextString)-2]
+			metadataText.Reset()
+			metadataText.WriteString(fmt.Sprintf("%s)", metadataTextString))
 		}
-		metadataTexts[id] = metadataText
+		metadataTexts[id] = metadataText.String()
 	}
 	return metadataTexts
 }
