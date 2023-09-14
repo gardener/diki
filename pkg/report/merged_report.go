@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"slices"
-	"sort"
 	"strings"
 	"time"
 
@@ -137,7 +136,7 @@ func MergeReport(reports []*Report, distinctByAttrs map[string]string) (*MergedR
 	for key := range distinctByAttrs {
 		distinctByAttrsProviders = append(distinctByAttrsProviders, key)
 	}
-	sort.Strings(distinctByAttrsProviders)
+	slices.Sort(distinctByAttrsProviders)
 
 	for _, selectedProvider := range distinctByAttrsProviders {
 		mergedReport.Providers = append(mergedReport.Providers, MergedProvider{
