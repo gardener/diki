@@ -106,13 +106,13 @@ func Subset(s1, s2 []string) bool {
 }
 
 // MatchLabels checks if all m2 keys and values are present in m1. If m1 or m2 is nil returns false.
-func MatchLabels(a, b map[string]string) bool {
-	if a == nil || b == nil {
+func MatchLabels(m1, m2 map[string]string) bool {
+	if m1 == nil || m2 == nil {
 		return false
 	}
 
-	for k, v := range b {
-		if a[k] != v {
+	for k, v := range m2 {
+		if m1[k] != v {
 			return false
 		}
 	}
