@@ -21,22 +21,47 @@ import (
 
 var _ = Describe("#242414", func() {
 	var (
-		fakeSeedClient  client.Client
-		fakeShootClient client.Client
-		options         v1r8.Options242414
-		seedPod         *corev1.Pod
-		shootPod        *corev1.Pod
-		ctx             = context.TODO()
-		namespace       = "foo"
+		fakeSeedClient     client.Client
+		fakeShootClient    client.Client
+		options            v1r8.Options242414
+		seedPod            *corev1.Pod
+		shootPod           *corev1.Pod
+		ctx                = context.TODO()
+		seedNamespaceName  = "seed"
+		shootNamespaceName = "shoot"
+		seedNamespace      *corev1.Namespace
+		shootNamespace     *corev1.Namespace
 	)
 
 	BeforeEach(func() {
 		fakeSeedClient = fakeclient.NewClientBuilder().Build()
 		fakeShootClient = fakeclient.NewClientBuilder().Build()
+
+		shootNamespace = &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: shootNamespaceName,
+				Labels: map[string]string{
+					"foo": "bar",
+				},
+			},
+		}
+
+		seedNamespace = &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: seedNamespaceName,
+				Labels: map[string]string{
+					"foo": "bar",
+				},
+			},
+		}
+
 		seedPod = &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "seed-pod",
-				Namespace: namespace,
+				Namespace: seedNamespaceName,
+				Labels: map[string]string{
+					"foo": "bar",
+				},
 			},
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
@@ -54,7 +79,10 @@ var _ = Describe("#242414", func() {
 		shootPod = &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "shoot-pod",
-				Namespace: namespace,
+				Namespace: shootNamespaceName,
+				Labels: map[string]string{
+					"foo": "bar",
+				},
 			},
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
@@ -72,7 +100,7 @@ var _ = Describe("#242414", func() {
 	})
 
 	It("should return correct results when all pods pass", func() {
-		r := &v1r8.Rule242414{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace, Options: &options}
+		r := &v1r8.Rule242414{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: &options}
 		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
 		Expect(fakeShootClient.Create(ctx, shootPod)).To(Succeed())
 
@@ -83,12 +111,12 @@ var _ = Describe("#242414", func() {
 			{
 				Status:  rule.Passed,
 				Message: "Container does not use hostPort < 1024.",
-				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "foo", "kind", "pod"),
+				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
 			},
 			{
 				Status:  rule.Passed,
 				Message: "Container does not use hostPort < 1024.",
-				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "foo", "kind", "pod"),
+				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "shoot", "kind", "pod"),
 			},
 		}
 
@@ -96,7 +124,7 @@ var _ = Describe("#242414", func() {
 	})
 
 	It("should return correct results when a pod fails", func() {
-		r := &v1r8.Rule242414{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace, Options: &options}
+		r := &v1r8.Rule242414{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: &options}
 		shootPod.Spec.Containers[0].Ports[0].HostPort = 1011
 		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
 		Expect(fakeShootClient.Create(ctx, shootPod)).To(Succeed())
@@ -108,12 +136,12 @@ var _ = Describe("#242414", func() {
 			{
 				Status:  rule.Passed,
 				Message: "Container does not use hostPort < 1024.",
-				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "foo", "kind", "pod"),
+				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
 			},
 			{
 				Status:  rule.Failed,
 				Message: "Container may not use hostPort < 1024.",
-				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "foo", "kind", "pod", "details", "containerName: test, port: 1011"),
+				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "shoot", "kind", "pod", "details", "containerName: test, port: 1011"),
 			},
 		}
 
@@ -122,41 +150,36 @@ var _ = Describe("#242414", func() {
 
 	It("should return correct results when options are present", func() {
 		options = v1r8.Options242414{
-			AcceptedPods: []struct {
-				PodNamePrefix       string
-				NamespaceNamePrefix string
-				Justification       string
-				Ports               []int32
-			}{
+			AcceptedPods: []v1r8.AcceptedPods242414{
 				{
-					PodNamePrefix:       "foo",
-					NamespaceNamePrefix: "namespace",
-					Ports:               []int32{58},
+					PodMatchLabels:       map[string]string{"foo": "bar"},
+					NamespaceMatchLabels: map[string]string{"foo": "not-bar"},
+					Ports:                []int32{58},
 				},
 				{
-					PodNamePrefix:       "node-local-dns-",
-					NamespaceNamePrefix: "namespace",
-					Justification:       "foo justify",
-					Ports:               []int32{53},
+					PodMatchLabels:       map[string]string{"foo": "bar"},
+					NamespaceMatchLabels: map[string]string{"foo": "bar"},
+					Justification:        "foo justify",
+					Ports:                []int32{53},
 				},
 			},
 		}
 
-		r := &v1r8.Rule242414{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace, Options: &options}
+		r := &v1r8.Rule242414{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: &options}
 
-		nodeLocalPod := shootPod.DeepCopy()
-		nodeLocalPod.Name = "node-local-dns-123!"
-		nodeLocalPod.Namespace = "namespace-test"
-		nodeLocalPod.Spec.Containers[0].Ports[0].HostPort = 53
+		acceptedShootPod := shootPod.DeepCopy()
+		acceptedShootPod.Name = "accepted-shoot-pod"
+		acceptedShootPod.Spec.Containers[0].Ports[0].HostPort = 53
 
-		fooPod := shootPod.DeepCopy()
-		fooPod.Name = "foo"
-		fooPod.Namespace = "namespace"
-		fooPod.Spec.Containers[0].Ports[0].HostPort = 58
+		notAcceptedShootPod := shootPod.DeepCopy()
+		notAcceptedShootPod.Name = "not-accepted-shoot-pod"
+		notAcceptedShootPod.Spec.Containers[0].Ports[0].HostPort = 58
 
+		Expect(fakeSeedClient.Create(ctx, seedNamespace)).To(Succeed())
+		Expect(fakeShootClient.Create(ctx, shootNamespace)).To(Succeed())
 		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
-		Expect(fakeShootClient.Create(ctx, nodeLocalPod)).To(Succeed())
-		Expect(fakeShootClient.Create(ctx, fooPod)).To(Succeed())
+		Expect(fakeShootClient.Create(ctx, acceptedShootPod)).To(Succeed())
+		Expect(fakeShootClient.Create(ctx, notAcceptedShootPod)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
@@ -165,17 +188,17 @@ var _ = Describe("#242414", func() {
 			{
 				Status:  rule.Passed,
 				Message: "Container does not use hostPort < 1024.",
-				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "foo", "kind", "pod"),
+				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
 			},
 			{
 				Status:  rule.Accepted,
 				Message: "foo justify",
-				Target:  gardener.NewTarget("cluster", "shoot", "name", "node-local-dns-123!", "namespace", "namespace-test", "kind", "pod", "details", "containerName: test, port: 53"),
+				Target:  gardener.NewTarget("cluster", "shoot", "name", "accepted-shoot-pod", "namespace", "shoot", "kind", "pod", "details", "containerName: test, port: 53"),
 			},
 			{
-				Status:  rule.Accepted,
-				Message: "Container accepted to use hostPort < 1024.",
-				Target:  gardener.NewTarget("cluster", "shoot", "name", "foo", "namespace", "namespace", "kind", "pod", "details", "containerName: test, port: 58"),
+				Status:  rule.Failed,
+				Message: "Container may not use hostPort < 1024.",
+				Target:  gardener.NewTarget("cluster", "shoot", "name", "not-accepted-shoot-pod", "namespace", "shoot", "kind", "pod", "details", "containerName: test, port: 58"),
 			},
 		}
 

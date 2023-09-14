@@ -220,6 +220,24 @@ var _ = Describe("utils", func() {
 			[]string{"foo", "bar", "foo-bar"}, []string{"foo", "bar"}, false),
 	)
 
+	DescribeTable("#MatchLabels",
+		func(m1, m2 map[string]string, expectedResult bool) {
+			result := utils.MatchLabels(m1, m2)
+
+			Expect(result).To(Equal(expectedResult))
+		},
+		Entry("should return true when m1 contains all keys and values of m2",
+			map[string]string{"foo": "bar", "key1": "value1", "key2": "value2"},
+			map[string]string{"key1": "value1", "key2": "value2"}, true),
+		Entry("should return false when m1 does not contain all keys and values of m2",
+			map[string]string{"key1": "value1", "key2": "value2"},
+			map[string]string{"key1": "value1", "foo": "bar"}, false),
+		Entry("should return false when m1 is nil",
+			nil, map[string]string{"key1": "value1", "foo": "bar"}, false),
+		Entry("should return false when m2 is nil",
+			map[string]string{"key1": "value1", "foo": "bar"}, nil, false),
+	)
+
 	Describe("#MatchFilePermissionsAndOwnersCases", func() {
 		var (
 			target = gardener.NewTarget()

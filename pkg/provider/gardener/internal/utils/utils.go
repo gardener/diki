@@ -105,6 +105,21 @@ func Subset(s1, s2 []string) bool {
 	return true
 }
 
+// MatchLabels checks if all m2 keys and values are present in m1. If m1 or m2 is nil returns false.
+func MatchLabels(m1, m2 map[string]string) bool {
+	if m1 == nil || m2 == nil {
+		return false
+	}
+
+	for k, v := range m2 {
+		if m1[k] != v {
+			return false
+		}
+	}
+
+	return true
+}
+
 // MatchFilePermissionsAndOwnersCases returns []rule.CheckResult for a given file and its permissions and owners  for a select expected values.
 func MatchFilePermissionsAndOwnersCases(
 	filePermissions,
