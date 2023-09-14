@@ -257,7 +257,7 @@ func metadataTextForMergedProvider(mp MergedProvider) map[string]string {
 		metadataText := sb.String()
 		if !empty {
 			metadataText = metadataText[:len(metadataText)-2]
-			metadataText = metadataText + ")"
+			metadataText += ")"
 		}
 		metadataTexts[id] = metadataText
 	}
