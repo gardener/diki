@@ -15,6 +15,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
+	cliflag "k8s.io/component-base/cli/flag"
 
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/provider"
@@ -80,26 +81,36 @@ func addRunFlags(cmd *cobra.Command, opts *runOptions) {
 
 func addReportFlags(cmd *cobra.Command, opts *reportOptions) {
 	cmd.PersistentFlags().StringVar(&opts.output, "output", "html", "Output type.")
+	cmd.PersistentFlags().Var(cliflag.NewMapStringString(&opts.distinctBy), "distinct-by", "If set generates a merged report. The keys are the IDs for the providers which the merged report will include and the values are distinct metadata attributes to be used as IDs for the different reports.")
 }
 
 func reportCmd(args []string, opts reportOptions) error {
-	if len(args) != 1 {
-		return errors.New("report requires a single filepath argument")
+	if len(args) == 0 {
+		return errors.New("report command requires a minimum of one filepath argument")
+	}
+
+	if len(args) > 1 && len(opts.distinctBy) == 0 {
+		return errors.New("report command requires a single filepath argument when the distinct-by flag is not set")
 	}
 
 	if opts.output != "html" {
 		return fmt.Errorf("unsuported output format: %s", opts.output)
 	}
 
-	fileData, err := os.ReadFile(args[0])
-	if err != nil {
-		return fmt.Errorf("failed to read file %s:%w", args[0], err)
-	}
+	reports := []*report.Report{}
+	for _, arg := range args {
+		fileData, err := os.ReadFile(filepath.Clean(arg))
+		if err != nil {
+			return fmt.Errorf("failed to read file %s: %w", arg, err)
+		}
 
-	// TODO: handle report types
-	rep := &report.Report{}
-	if err := json.Unmarshal(fileData, rep); err != nil {
-		return fmt.Errorf("failed to unmarshal data: %w", err)
+		// TODO: handle report types
+		rep := &report.Report{}
+		if err := json.Unmarshal(fileData, rep); err != nil {
+			return fmt.Errorf("failed to unmarshal data: %w", err)
+		}
+
+		reports = append(reports, rep)
 	}
 
 	htlmRenderer, err := report.NewHTMLRenderer()
@@ -107,7 +118,15 @@ func reportCmd(args []string, opts reportOptions) error {
 		return fmt.Errorf("failed to initialize renderer: %w", err)
 	}
 
-	return htlmRenderer.Render(os.Stdout, rep)
+	if len(opts.distinctBy) > 0 {
+		mergedReport, err := report.MergeReport(reports, opts.distinctBy)
+		if err != nil {
+			return err
+		}
+		return htlmRenderer.Render(os.Stdout, mergedReport)
+	}
+
+	return htlmRenderer.Render(os.Stdout, reports[0])
 }
 
 func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.ProviderFromConfigFunc, opts runOptions) error {
@@ -232,7 +251,8 @@ type runOptions struct {
 }
 
 type reportOptions struct {
-	output string
+	output     string
+	distinctBy map[string]string
 }
 
 func readConfig(filePath string) (*config.DikiConfig, error) {

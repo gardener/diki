@@ -60,8 +60,11 @@
             <div>
                 <label class="font-bold text-2xl">Provider {{ .Name }}</label>
                 <ul class="list-disc  list-inside">
-                    {{ range $key, $value := .Metadata }}
-                    <li><span class="font-semibold">{{ $key }}</span>: {{ $value }}</li>
+
+                    {{ range $id, $metadataText := MergedMetadataTexts . }}
+                    <li>
+                        <span class="font-bold">{{ $id }}</span> {{ $metadataText }}
+                    </li>
                     {{ end }}
                 </ul>
                 <ul class="list-none list-inside">
@@ -70,11 +73,12 @@
                     {{ $ruleset := . }}
                     <li>
                         <span class="text-lg">
-                            <span class="font-semibold">{{ $ruleset.Version }} {{ $ruleset.Name }}</span> ({{ RulesetSummaryText $ruleset }})
+                            <span class="font-semibold">{{ $ruleset.Version }} {{ $ruleset.Name }}</span> ({{
+                            MergedRulesetSummaryText $ruleset }})
                         </span>
                         {{ range $key, $value := $statuses }}
                         <ul class="list-inside pl-2">
-                            {{ with RulesWithStatus $ruleset $value }}
+                            {{ with MergedRulesWithStatus $ruleset $value }}
                             <li>
                                 <button onclick="collapse(event)" class="text-lg pr-2"><i
                                         class="arrow right"></i></button>
@@ -91,15 +95,22 @@
                                                 <button onclick="collapse(event)" class="pr-2"><i
                                                         class="arrow right"></i></button>
                                                 <span class="font-medium">{{ .Message }}</span>
-                                                <ul class="list-disc list-inside pl-5 hidden">
-                                                    {{ range .Targets }}
-                                                    {{ if . }}
+                                                <ul class="list-inside pl-5 hidden">
+                                                    {{ range $id, $targets := .ReportsTargets }}
                                                     <li>
-                                                        {{ range $key, $value := . }}
-                                                        <span class="font-medium">{{ $key }}</span>: {{ $value }};
-                                                        {{ end }}
+                                                        <span class="font-semibold">{{ $id }}</span>
+                                                        <ul class="list-disc list-inside pl-5">
+                                                            {{ range $targets }}
+                                                            {{ if . }}
+                                                            <li>
+                                                                {{ range $key, $value := . }}
+                                                                <span class="font-medium">{{ $key }}</span>: {{ $value }}
+                                                                {{ end }}
+                                                            </li>
+                                                            {{ end }}
+                                                            {{ end }}
+                                                        </ul>
                                                     </li>
-                                                    {{ end }}
                                                     {{ end }}
                                                 </ul>
                                             </li>
