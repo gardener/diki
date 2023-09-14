@@ -284,7 +284,6 @@ func (r *Ruleset) registerV1R10Rules(ruleOptions map[string]config.RuleOptionsCo
 		&v1r10.Rule242465{},
 		&v1r10.Rule242466{},
 		&v1r10.Rule242467{},
-		&v1r10.Rule242468{},
 		&v1r10.Rule245541{
 			Logger:                  r.Logger().With("rule", v1r10.ID245541),
 			InstanceID:              r.instanceID,
