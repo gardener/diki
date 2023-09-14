@@ -275,7 +275,6 @@ func (r *Ruleset) registerV1R10Rules(ruleOptions map[string]config.RuleOptionsCo
 		&v1r10.Rule242455{},
 		&v1r10.Rule242456{},
 		&v1r10.Rule242457{},
-		&v1r10.Rule242458{},
 		&v1r10.Rule242459{},
 		&v1r10.Rule242460{},
 		&v1r10.Rule242461{},

@@ -46,7 +46,7 @@ func (r *RulePodFiles) ID() string {
 }
 
 func (r *RulePodFiles) Name() string {
-	return "Config files for pod components must have required permissions and owners (242405, 242408, 242445, 242446, 242447, 242448, 242458, 242459)"
+	return "Config files for pod components must have required permissions and owners (242405, 242408, 242445, 242446, 242447, 242448, 242459)"
 }
 
 func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
