@@ -5,20 +5,13 @@
 package report_test
 
 import (
-	"log/slog"
-	"os"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var testLogger *slog.Logger
-
 func TestReport(t *testing.T) {
-	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
-	logger := slog.New(handler)
-	testLogger = logger
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Report Test Suite")
 }
