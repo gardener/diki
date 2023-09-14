@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 	cliflag "k8s.io/component-base/cli/flag"
+	"k8s.io/component-base/version"
 
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/provider"
@@ -38,6 +39,21 @@ It is part of the Gardener family, but can be used also on other Kubernetes dist
 e.g. to check compliance of your hyperscaler accounts.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
+		},
+	}
+
+	versionCmd := &cobra.Command{
+		Use:   "version",
+		Short: "Show version details.",
+		Long:  "Show version details.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			info := version.Get()
+			jsonInfo, err := json.Marshal(info)
+			if err != nil {
+				return err
+			}
+			fmt.Print(string(jsonInfo))
+			return nil
 		},
 	}
 
@@ -66,6 +82,7 @@ e.g. to check compliance of your hyperscaler accounts.`,
 
 	addReportFlags(reportCmd, &reportOpts)
 	rootCmd.AddCommand(reportCmd)
+	rootCmd.AddCommand(versionCmd)
 
 	return rootCmd
 }
