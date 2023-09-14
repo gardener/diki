@@ -242,21 +242,25 @@ func numOfMergedRulesWithStatus(ruleset *MergedRuleset, status rule.Status) int 
 func metadataTextForMergedProvider(mp MergedProvider) map[string]string {
 	metadataTexts := make(map[string]string, len(mp.Metadata))
 	for id, metadata := range mp.Metadata {
-		var metadataText strings.Builder
-		metadataText.WriteString("(")
+		var sb strings.Builder
+		empty := true
 		for key, value := range metadata {
 			if key == mp.DistinctBy {
 				continue
 			}
-			metadataText.WriteString(fmt.Sprintf("%s: %s, ", key, value))
+			if empty {
+				sb.WriteString("(")
+				empty = false
+			}
+			sb.WriteString(fmt.Sprintf("%s: %s, ", key, value))
 		}
-		if len(metadataText.String()) > 1 {
-			metadataTextString := metadataText.String()
-			metadataTextString = metadataTextString[:len(metadataTextString)-2]
-			metadataText.Reset()
-			metadataText.WriteString(fmt.Sprintf("%s)", metadataTextString))
+
+		metadataText := sb.String()
+		if !empty {
+			metadataText = metadataText[:len(metadataText)-2]
+			metadataText = metadataText + ")"
 		}
-		metadataTexts[id] = metadataText.String()
+		metadataTexts[id] = metadataText
 	}
 	return metadataTexts
 }
