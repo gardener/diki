@@ -63,3 +63,29 @@ verify: format check test
 
 .PHONY: verify-extended
 verify-extended: check-generate check format test test-cov test-clean
+
+#### BUILD ####
+
+.PHONY: build
+build:
+	@$(REPO_ROOT)/hack/build.sh
+
+.PHONY: build-linux-amd64
+build-linux-amd64:
+	@$(REPO_ROOT)/hack/build.sh "linux-amd64"
+
+.PHONY: build-linux-arm64
+build-linux-arm64:
+	@$(REPO_ROOT)/hack/build.sh "linux-arm64"
+
+.PHONY: build-darwin-amd64
+build-darwin-amd64:
+	@$(REPO_ROOT)/hack/build.sh "darwin-amd64"
+
+.PHONY: build-darwin-arm64
+build-darwin-arm64:
+	@$(REPO_ROOT)/hack/build.sh "darwin-arm64"
+
+.PHONY: build-windows-amd64
+build-windows-amd64:
+	@$(REPO_ROOT)/hack/build.sh "windows-amd64"
