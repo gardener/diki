@@ -7,15 +7,9 @@ FROM golang:1.21.0 AS builder
 ARG TARGETARCH
 WORKDIR /workspace
 
-COPY go.mod go.mod
-COPY go.sum go.sum
+COPY . .
 
-COPY cmd/ cmd/
-COPY imagevector/ imagevector/
-COPY pkg/ pkg/
-COPY vendor/ vendor/
-
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -a -o diki cmd/diki/main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -a -ldflags="$(/workspace/hack/get-build-ld-flags.sh)" -o diki cmd/diki/main.go
 
 FROM gcr.io/distroless/static-debian11:nonroot AS diki
 WORKDIR /
