@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"slices"
 	"strings"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -46,14 +47,17 @@ func (r *Rule242382) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
+	// option defaults to not allowed value AlwaysAllow
 	switch {
 	case len(optSlice) == 0:
-		return rule.SingleCheckResult(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has not been set.", option), target)), nil
+		return rule.SingleCheckResult(r, rule.FailedCheckResult(fmt.Sprintf("Option %s has not been set.", option), target)), nil
 	case len(optSlice) > 1:
 		return rule.SingleCheckResult(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", option), target)), nil
+	case slices.Contains(strings.Split(optSlice[0], ","), "AlwaysAllow"):
+		return rule.SingleCheckResult(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", option), target)), nil
 	case utils.EqualSets([]string{"Node", "RBAC"}, strings.Split(optSlice[0], ",")):
 		return rule.SingleCheckResult(r, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", option), target)), nil
 	default:
-		return rule.SingleCheckResult(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", option), target)), nil
+		return rule.SingleCheckResult(r, rule.WarningCheckResult(fmt.Sprintf("Option %s set to not recommended value.", option), target)), nil
 	}
 }
