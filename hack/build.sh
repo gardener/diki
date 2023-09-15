@@ -7,7 +7,7 @@
 set -e
 
 platform="${1:-"linux-amd64 linux-arm64 darwin-amd64 darwin-arm64 windows-amd64"}"
-root_dir="$(readlink -f $(dirname ${0})/..)"
+root_dir="$(readlink -f "$(dirname "${0}")/..")"
 bin_path="${root_dir}/bin"
 
 if [[ -z "${LD_FLAGS}" ]]; then
