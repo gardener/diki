@@ -95,10 +95,9 @@ func (r *Rule242392) Run(ctx context.Context) (rule.RuleResult, error) {
 			continue
 		}
 
-		// authorization.mode defaults to allowed value Webhook. ref https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/
 		switch {
 		case kubeletConfig.Authorization.Mode == nil:
-			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", authorizationModeConfigOption), target))
+			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Option %s not set.", authorizationModeConfigOption), target))
 		case *kubeletConfig.Authorization.Mode != "Webhook":
 			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", authorizationModeConfigOption), target.With("details", fmt.Sprintf("Authorization Mode set to %s", *kubeletConfig.Authorization.Mode))))
 		default:
@@ -164,9 +163,8 @@ func (r *Rule242392) checkWorkerGroup(ctx context.Context, workerGroup string, n
 		return rule.ErroredCheckResult(err.Error(), podTarget)
 	}
 
-	// authorization.mode defaults to allowed value Webhook. ref https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/
 	if kubeletConfig.Authorization.Mode == nil {
-		return rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", authorizationModeConfigOption), target)
+		return rule.FailedCheckResult(fmt.Sprintf("Option %s not set.", authorizationModeConfigOption), target)
 	}
 
 	if *kubeletConfig.Authorization.Mode != "Webhook" {
