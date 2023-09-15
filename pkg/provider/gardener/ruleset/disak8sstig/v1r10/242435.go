@@ -15,6 +15,7 @@ import (
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
+	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -54,7 +55,9 @@ func (r *Rule242435) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", option), target)), nil
 	case slices.Contains(strings.Split(optSlice[0], ","), "AlwaysAllow"):
 		return rule.SingleCheckResult(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", option), target)), nil
-	default:
+	case utils.EqualSets([]string{"Node", "RBAC"}, strings.Split(optSlice[0], ",")):
 		return rule.SingleCheckResult(r, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", option), target)), nil
+	default:
+		return rule.SingleCheckResult(r, rule.WarningCheckResult(fmt.Sprintf("Option %s set to not recommended value.", option), target)), nil
 	}
 }
