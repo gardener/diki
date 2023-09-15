@@ -5,7 +5,10 @@
 package gardener
 
 import (
+	"fmt"
 	"maps"
+	"slices"
+	"strings"
 )
 
 // StringTarget describes the targets which were checked during ruleset runs.
@@ -19,6 +22,25 @@ func (s StringTarget) String() string {
 // Target is a structure that can be represented as string.
 // It is used to describe the targets which were checked during ruleset runs.
 type Target map[string]string
+
+// Target implements Stringer.
+func (t Target) String() string {
+	var sb strings.Builder
+	sb.WriteString("[")
+
+	sortedKeys := []string{}
+	for key := range t {
+		sortedKeys = append(sortedKeys, key)
+	}
+	slices.Sort(sortedKeys)
+
+	for _, key := range sortedKeys {
+		sb.WriteString(fmt.Sprintf(" %s:%s", key, t[key]))
+	}
+
+	sb.WriteString(" ]")
+	return sb.String()
+}
 
 // NewTarget creates a new Target with the given key values.
 // Panics if the number of arguments is an odd number.
