@@ -250,11 +250,12 @@ func runRule(ctx context.Context, p provider.Provider, rulesetID, rulesetVersion
 		return err
 	}
 
-	fmt.Printf("Rule: %s\n", res.RuleName)
-	for _, cr := range res.CheckResults {
-		fmt.Printf("- Status: %s %s Message: %s Target: %s\n", cr.Status, string(rule.GetStatusIcon(cr.Status)), cr.Message, StringOrDefault(cr.Target))
+	j, err := json.Marshal(res)
+	if err != nil {
+		return err
 	}
 
+	fmt.Print(string(j))
 	return nil
 }
 
