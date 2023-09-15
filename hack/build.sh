@@ -17,7 +17,7 @@ fi
 for p in $platform
 do
     out_file=${bin_path}/diki-${p}
-    echo "building for ${t}: ${out_file}"
+    echo "building diki for platform ${p}: ${out_file}"
     os=$(echo "${p}" | cut -d "-" -f 1)
     arch=$(echo "${p}" | cut -d "-" -f 2)
     CGO_ENABLED=0 GOOS=$os GOARCH=$arch GO111MODULE=on go build \
