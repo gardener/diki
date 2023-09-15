@@ -30,7 +30,7 @@ func (r *Rule245544) ID() string {
 }
 
 func (r *Rule245544) Name() string {
-	return "Kubernetes endpoints must use approved organizational certificate and key pair to protect information in transit (MEDIUM 245544)"
+	return "Kubernetes endpoints must use approved organizational certificate and key pair to protect information in transit (HIGH 245544)"
 }
 
 func (r *Rule245544) Run(ctx context.Context) (rule.RuleResult, error) {
