@@ -111,6 +111,7 @@ func (r *Rule242424) Run(ctx context.Context) (rule.RuleResult, error) {
 
 		switch {
 		case *kubeletConfig.ServerTLSBootstrap && kubeletConfig.FeatureGates["RotateKubeletServerCertificate"]:
+			// https://kubernetes.io/docs/reference/access-authn-authz/kubelet-tls-bootstrapping/#certificate-rotation
 			checkResults = append(checkResults, rule.PassedCheckResult("Kubelet rotates server certificates automatically itself.", target))
 		case kubeletConfig.TLSPrivateKeyFile == nil:
 			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Option %s not set.", tlsPrivateKeyFileConfigOption), target))

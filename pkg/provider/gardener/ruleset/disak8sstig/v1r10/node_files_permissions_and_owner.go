@@ -186,6 +186,7 @@ func (r *RuleNodeFiles) checkWorkerGroup(ctx context.Context, image, workerGroup
 		kubeletConfig.FeatureGates["RotateKubeletServerCertificate"] = true
 	}
 
+	// https://kubernetes.io/docs/reference/access-authn-authz/kubelet-tls-bootstrapping/#certificate-rotation
 	if *kubeletConfig.ServerTLSBootstrap && kubeletConfig.FeatureGates["RotateKubeletServerCertificate"] {
 		pkiServerStatsRaw, err := nodePodExecutor.Execute(ctx, "/bin/sh", `stat -Lc "%a %u %g %n" /var/lib/kubelet/pki/kubelet-server-*.pem`)
 		if err != nil {
