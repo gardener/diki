@@ -120,8 +120,20 @@ func MatchLabels(m1, m2 map[string]string) bool {
 	return true
 }
 
-// CheckFilePermissions returns true if the given filePermissions do not exceed filePermissionsMax.
-func CheckFilePermissions(filePermissions, filePermissionsMax string) (bool, error) {
+// ExceedFilePermissions returns true if any of the user, group or other permissions
+// exceed their counterparts in what is passed as max permissions.
+// Examples where filePermissions do not exceed filePermissionsMax:
+// filePermissions: 0003; filePermissionsMax: 0644
+// filePermissions: 0444; filePermissionsMax: 0644
+// filePermissions: 0600; filePermissionsMax: 0644
+// filePermissions: 0644; filePermissionsMax: 0644
+//
+// Examples where filePermissions exceed filePermissionsMax:
+// filePermissions: 0005; filePermissionsMax: 0644
+// filePermissions: 0050; filePermissionsMax: 0644
+// filePermissions: 0700; filePermissionsMax: 0644
+// filePermissions: 0755; filePermissionsMax: 0644
+func ExceedFilePermissions(filePermissions, filePermissionsMax string) (bool, error) {
 	filePermissionsInt, err := strconv.ParseInt(filePermissions, 8, 32)
 	if err != nil {
 		return false, err
@@ -133,7 +145,7 @@ func CheckFilePermissions(filePermissions, filePermissionsMax string) (bool, err
 
 	fileModePermission := os.FileMode(filePermissionsInt)
 	fileModePermissionsMax := os.FileMode(filePermissionsMaxInt)
-	return fileModePermission&^fileModePermissionsMax == 0, nil
+	return fileModePermission&^fileModePermissionsMax != 0, nil
 }
 
 // MatchFilePermissionsAndOwnersCases returns []rule.CheckResult for a given file and its permissions and owners  for a select expected values.
@@ -149,12 +161,12 @@ func MatchFilePermissionsAndOwnersCases(
 ) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
 	if len(expectedFilePermissionsMax) > 0 {
-		areFilePermissionsCompliant, err := CheckFilePermissions(filePermissions, expectedFilePermissionsMax)
+		exceedFilePermissions, err := ExceedFilePermissions(filePermissions, expectedFilePermissionsMax)
 		if err != nil {
 			return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), target)}
 		}
 
-		if !areFilePermissionsCompliant {
+		if exceedFilePermissions {
 			detailedTarget := target.With("details", fmt.Sprintf("fileName: %s, permissions: %s, expectedPermissionsMax: %s", fileName, filePermissions, expectedFilePermissionsMax))
 			checkResults = append(checkResults, rule.FailedCheckResult("File has too wide permissions", detailedTarget))
 		}
