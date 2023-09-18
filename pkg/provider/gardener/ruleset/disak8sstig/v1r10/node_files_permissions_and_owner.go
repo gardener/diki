@@ -45,8 +45,7 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults := []rule.CheckResult{}
 	expectedFileOwnerUsers := []string{"0"}
 	expectedFileOwnerGroups := []string{"0", "65534"}
-	kubeletFilePaths := []string{"/var/lib/kubelet/ca.crt", "/var/lib/kubelet/kubeconfig-real",
-		"/var/lib/kubelet/config/kubelet", "/etc/systemd/system/kubelet.service"}
+	kubeletFilePaths := []string{}
 
 	podName := fmt.Sprintf("diki-%s-%s", IDNodeFiles, Generator.Generate(10))
 	execPodTarget := gardener.NewTarget("cluster", "shoot", "name", podName, "namespace", "kube-system", "kind", "pod")
@@ -67,6 +66,43 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), execPodTarget)), nil
 	}
 
+	rawKubeletCommand, err := kubeutils.GetKubeletCommand(ctx, podExecutor)
+	if err != nil {
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), execPodTarget)), nil
+	}
+
+	kubeletConfig, err := kubeutils.GetKubeletConfig(ctx, podExecutor, rawKubeletCommand)
+	if err != nil {
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), execPodTarget)), nil
+	}
+
+	switch {
+	case kubeletConfig.Authentication.X509.ClientCAFile == nil:
+		checkResults = append(checkResults, rule.FailedCheckResult("could not find client ca path: client-ca-file not set.", execPodTarget))
+	case strings.TrimSpace(*kubeletConfig.Authentication.X509.ClientCAFile) == "":
+		checkResults = append(checkResults, rule.FailedCheckResult("could not find client ca path: client-ca-file is empty.", execPodTarget))
+	default:
+		kubeletFilePaths = append(kubeletFilePaths, *kubeletConfig.Authentication.X509.ClientCAFile)
+	}
+
+	kubeconfigPath, err := r.getKubeletFlagValue(rawKubeletCommand, "kubeconfig")
+	if err != nil {
+		checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find kubeconfig path: %s", err.Error()), execPodTarget))
+	}
+	kubeletFilePaths = append(kubeletFilePaths, kubeconfigPath)
+
+	kubeletConfigPath, err := r.getKubeletFlagValue(rawKubeletCommand, "config")
+	if err != nil {
+		checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find kubelet config path: %s", err.Error()), execPodTarget))
+	}
+	kubeletFilePaths = append(kubeletFilePaths, kubeletConfigPath)
+
+	kubeletServicePath, err := podExecutor.Execute(ctx, "/bin/sh", "systemctl show -P FragmentPath kubelet.service")
+	if err != nil {
+		checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find kubelet.service path: %s", err.Error()), execPodTarget))
+	}
+	kubeletFilePaths = append(kubeletFilePaths, kubeletServicePath)
+
 	for _, kubeletFilePath := range kubeletFilePaths {
 		target := gardener.NewTarget("cluster", "shoot", "details", fmt.Sprintf("filePath: %s", kubeletFilePath))
 		statsRaw, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`stat -Lc "%%a %%u %%g %%n" %s`, kubeletFilePath))
@@ -81,7 +117,7 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		stats := strings.Split(strings.TrimSpace(statsRaw), "\n")
 
 		expectedFilePermissionsMax := "644"
-		if kubeletFilePath == "/var/lib/kubelet/kubeconfig-real" {
+		if kubeletFilePath == kubeconfigPath {
 			expectedFilePermissionsMax = "600"
 		}
 
@@ -224,4 +260,16 @@ func (r *RuleNodeFiles) checkWorkerGroup(ctx context.Context, image, workerGroup
 		}
 	}
 	return checkResults
+}
+
+func (r *RuleNodeFiles) getKubeletFlagValue(rawKubeletCommand, flag string) (string, error) {
+	valueSlice := kubeutils.FindFlagValueRaw(strings.Split(rawKubeletCommand, " "), flag)
+
+	if len(valueSlice) == 0 {
+		return "", fmt.Errorf("kubelet %s flag has not been set", flag)
+	}
+	if len(valueSlice) > 1 {
+		return "", fmt.Errorf("kubelet %s flag has been set more than once", flag)
+	}
+	return valueSlice[0], nil
 }
