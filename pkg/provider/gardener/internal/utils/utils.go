@@ -120,6 +120,22 @@ func MatchLabels(m1, m2 map[string]string) bool {
 	return true
 }
 
+// CheckFilePermissions returns true if the given filePermissions do not exceed filePermissionsMax.
+func CheckFilePermissions(filePermissions, filePermissionsMax string) (bool, error) {
+	filePermissionsInt, err := strconv.ParseInt(filePermissions, 8, 32)
+	if err != nil {
+		return false, err
+	}
+	filePermissionsMaxInt, err := strconv.ParseInt(filePermissionsMax, 8, 32)
+	if err != nil {
+		return false, err
+	}
+
+	fileModePermission := os.FileMode(filePermissionsInt)
+	fileModePermissionsMax := os.FileMode(filePermissionsMaxInt)
+	return fileModePermission&^fileModePermissionsMax == 0, nil
+}
+
 // MatchFilePermissionsAndOwnersCases returns []rule.CheckResult for a given file and its permissions and owners  for a select expected values.
 func MatchFilePermissionsAndOwnersCases(
 	filePermissions,
@@ -133,19 +149,12 @@ func MatchFilePermissionsAndOwnersCases(
 ) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
 	if len(expectedFilePermissionsMax) > 0 {
-		filePermissionsInt, err := strconv.ParseInt(filePermissions, 8, 32)
-		if err != nil {
-			return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), target)}
-		}
-		expectedFilePermissionsMaxInt, err := strconv.ParseInt(expectedFilePermissionsMax, 8, 32)
+		areFilePermissionsCompliant, err := CheckFilePermissions(filePermissions, expectedFilePermissionsMax)
 		if err != nil {
 			return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), target)}
 		}
 
-		fileModePermission := os.FileMode(filePermissionsInt)
-		expectedFileModePermissionsMax := os.FileMode(expectedFilePermissionsMaxInt)
-
-		if fileModePermission&^expectedFileModePermissionsMax != 0 {
+		if !areFilePermissionsCompliant {
 			detailedTarget := target.With("details", fmt.Sprintf("fileName: %s, permissions: %s, expectedPermissionsMax: %s", fileName, filePermissions, expectedFilePermissionsMax))
 			checkResults = append(checkResults, rule.FailedCheckResult("File has too wide permissions", detailedTarget))
 		}
