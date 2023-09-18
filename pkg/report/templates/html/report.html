@@ -56,67 +56,45 @@
     <div class="flex-col">
         <h1 class="text-3xl font-bold pb-5 pt-2 flex justify-center">Compliance Run ({{ Time .Time }})</h1>
         <div class="content px-6">
-            {{ range .Providers }}
-            <div>
+            {{ range .Providers }}<div>
                 <label class="font-bold text-2xl">Provider {{ .Name }}</label>
                 <ul class="list-disc  list-inside">
-                    {{ range $key, $value := .Metadata }}
-                    <li><span class="font-semibold">{{ $key }}</span>: {{ $value }}</li>
+                    {{ range $key, $value := .Metadata }}<li><span class="font-semibold">{{ $key }}</span>: {{ $value }}</li>
                     {{ end }}
                 </ul>
                 <ul class="list-none list-inside">
-                    {{ range .Rulesets }}
-                    {{ $statuses := Statuses }}
-                    {{ $ruleset := . }}
-                    <li>
+                    {{ range .Rulesets }}{{ $statuses := Statuses }}{{ $ruleset := . }}<li>
                         <span class="text-lg">
                             <span class="font-semibold">{{ $ruleset.Version }} {{ $ruleset.Name }}</span> ({{ RulesetSummaryText $ruleset }})
                         </span>
-                        {{ range $key, $value := $statuses }}
-                        <ul class="list-inside pl-2">
-                            {{ with RulesWithStatus $ruleset $value }}
-                            <li>
+                        {{ range $key, $value := $statuses }}<ul class="list-inside pl-2">
+                            {{ with RulesWithStatus $ruleset $value }}<li>
                                 <button onclick="collapse(event)" class="text-lg pr-2"><i
                                         class="arrow right"></i></button>
                                 <span class="text-lg">&#{{ Icon $value }} {{ $value }}</span>
                                 <ul class="list-inside pl-5 hidden">
-                                    {{ range . }}
-                                    <li>
+                                    {{ range . }}<li>
                                         <button onclick="collapse(event)" class="pr-2"><i
                                                 class="arrow right"></i></button>
                                         <span class="font-semibold">{{ .Name }}</span>
                                         <ul class="list-inside pl-5 hidden">
-                                            {{ range .Checks }}
-                                            <li>
+                                            {{ range .Checks }}<li>
                                                 <button onclick="collapse(event)" class="pr-2"><i
                                                         class="arrow right"></i></button>
                                                 <span class="font-medium">{{ .Message }}</span>
                                                 <ul class="list-disc list-inside pl-5 hidden">
-                                                    {{ range .Targets }}
-                                                    {{ if . }}
-                                                    <li>
-                                                        {{ range $key, $value := . }}
-                                                        <span class="font-medium">{{ $key }}</span>: {{ $value }};
-                                                        {{ end }}
-                                                    </li>
-                                                    {{ end }}
-                                                    {{ end }}
+                                                    {{ range .Targets }}{{ if . }}<li>{{ range $key, $value := . }}<span class="font-medium">{{ $key }}</span>: {{ $value }};{{ end }}</li>
+                                                    {{ end }}{{ end }}
                                                 </ul>
-                                            </li>
-                                            {{ end }}
+                                            </li>{{ end }}
                                         </ul>
-                                    </li>
-                                    {{ end }}
+                                    </li>{{ end }}
                                 </ul>
-                            </li>
-                            {{ end }}
-                        </ul>
-                        {{ end }}
-                    </li>
-                    {{ end }}
+                            </li>{{ end }}
+                        </ul>{{ end }}
+                    </li>{{ end }}
                 </ul>
-            </div>
-            {{ end }}
+            </div>{{ end }}
         </div>
     </div>
 </body>
