@@ -122,6 +122,7 @@ func MatchLabels(m1, m2 map[string]string) bool {
 
 // ExceedFilePermissions returns true if any of the user, group or other permissions
 // exceed their counterparts in what is passed as max permissions.
+//
 // Examples where filePermissions do not exceed filePermissionsMax:
 //
 //	filePermissions = "0003" filePermissionsMax = "0644"
