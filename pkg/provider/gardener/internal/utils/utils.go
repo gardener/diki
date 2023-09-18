@@ -145,7 +145,7 @@ func MatchFilePermissionsAndOwnersCases(
 		fileModePermission := os.FileMode(filePermissionsInt)
 		expectedFileModePermissionsMax := os.FileMode(expectedFilePermissionsMaxInt)
 
-		if fileModePermission > expectedFileModePermissionsMax {
+		if fileModePermission&^expectedFileModePermissionsMax != 0 {
 			detailedTarget := target.With("details", fmt.Sprintf("fileName: %s, permissions: %s, expectedPermissionsMax: %s", fileName, filePermissions, expectedFilePermissionsMax))
 			checkResults = append(checkResults, rule.FailedCheckResult("File has too wide permissions", detailedTarget))
 		}
