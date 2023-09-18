@@ -41,7 +41,7 @@ func (r *Rule245543) ID() string {
 }
 
 func (r *Rule245543) Name() string {
-	return "Kubernetes API Server must disable token authentication to protect information in transit (MEDIUM 245543)"
+	return "Kubernetes API Server must disable token authentication to protect information in transit (HIGH 245543)"
 }
 
 func (r *Rule245543) Run(ctx context.Context) (rule.RuleResult, error) {
