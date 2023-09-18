@@ -95,10 +95,9 @@ func (r *Rule242391) Run(ctx context.Context) (rule.RuleResult, error) {
 			continue
 		}
 
-		// authentication.anonymous.enabled defaults to allowed value false. ref https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/
 		switch {
 		case kubeletConfig.Authentication.Anonymous.Enabled == nil:
-			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", anonymousAuthConfigOption), target))
+			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Option %s not set.", anonymousAuthConfigOption), target))
 		case *kubeletConfig.Authentication.Anonymous.Enabled:
 			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", anonymousAuthConfigOption), target))
 		default:
@@ -164,9 +163,8 @@ func (r *Rule242391) checkWorkerGroup(ctx context.Context, workerGroup string, n
 		return rule.ErroredCheckResult(err.Error(), podTarget)
 	}
 
-	// authentication.anonymous.enabled defaults to allowed value false. ref https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/
 	if kubeletConfig.Authentication.Anonymous.Enabled == nil {
-		return rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", anonymousAuthConfigOption), target)
+		return rule.FailedCheckResult(fmt.Sprintf("Option %s not set.", anonymousAuthConfigOption), target)
 	}
 
 	if *kubeletConfig.Authentication.Anonymous.Enabled {

@@ -165,7 +165,7 @@ var _ = Describe("#242392", func() {
 				rule.PassedCheckResult("Option authorization.mode set to allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
 				rule.FailedCheckResult("Option authorization.mode set to not allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node2", "details", "Authorization Mode set to AlwaysAllow")),
 				rule.WarningCheckResult("Node is not in Ready state.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
-				rule.PassedCheckResult("Option authorization.mode not set.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node4")),
+				rule.FailedCheckResult("Option authorization.mode not set.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node4")),
 			}
 			expectedCheckResults = append(expectedCheckResults, alwaysExpectedCheckResults...)
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
@@ -204,8 +204,8 @@ var _ = Describe("#242392", func() {
 			[][]string{{"Unauthorized", "--not-authorization-mode=Webhook --config=./config", authorizationModeNotSetConfig}, {"Unauthorized", "--not-authorization-mode=Webhook, --config=./config", authorizationModeNotSetConfig}},
 			[][]error{{nil, nil, nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("Option authorization.mode not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
-				rule.PassedCheckResult("Option authorization.mode not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
+				rule.FailedCheckResult("Option authorization.mode not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
+				rule.FailedCheckResult("Option authorization.mode not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
 				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
 			}),
 		Entry("should return correct checkResults when execute errors",
