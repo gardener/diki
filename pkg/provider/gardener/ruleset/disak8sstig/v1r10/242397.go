@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"log/slog"
 	"slices"
-	"strings"
 
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -98,8 +97,6 @@ func (r *Rule242397) Run(ctx context.Context) (rule.RuleResult, error) {
 		switch {
 		case kubeletConfig.StaticPodPath == nil:
 			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", staticPodPathConfigOption), target))
-		case strings.TrimSpace(*kubeletConfig.StaticPodPath) == "":
-			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s is empty.", staticPodPathConfigOption), target))
 		default:
 			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Option %s set.", staticPodPathConfigOption), target))
 		}
@@ -156,10 +153,6 @@ func (r *Rule242397) checkWorkerGroup(ctx context.Context, workerGroup string, n
 
 	if kubeletConfig.StaticPodPath == nil {
 		return rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", staticPodPathConfigOption), target)
-	}
-
-	if strings.TrimSpace(*kubeletConfig.StaticPodPath) == "" {
-		return rule.PassedCheckResult(fmt.Sprintf("Option %s is empty.", staticPodPathConfigOption), target)
 	}
 
 	return rule.FailedCheckResult(fmt.Sprintf("Option %s set.", staticPodPathConfigOption), target)
