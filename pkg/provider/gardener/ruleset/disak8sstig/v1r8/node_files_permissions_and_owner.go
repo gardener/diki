@@ -38,7 +38,7 @@ func (r *RuleNodeFiles) ID() string {
 }
 
 func (r *RuleNodeFiles) Name() string {
-	return "(MEDIUM NodeFiles)"
+	return "Config files for node kubelet and PKI must have required permissions and owners (242406, 242407, 242449, 242450, 242452, 242453 as well as 242451, 242466, 242467)"
 }
 
 func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
