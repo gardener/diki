@@ -94,8 +94,7 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 			kubeletFilePaths = append(kubeletFilePaths, kubeconfigPath)
 		}
 
-		kubeletConfigPath, err := r.getKubeletFlagValue(rawKubeletCommand, "config")
-		if err != nil {
+		if kubeletConfigPath, err := r.getKubeletFlagValue(rawKubeletCommand, "config"); err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find kubelet config path: %s", err.Error()), execPodTarget))
 		} else {
 			kubeletFilePaths = append(kubeletFilePaths, kubeletConfigPath)
