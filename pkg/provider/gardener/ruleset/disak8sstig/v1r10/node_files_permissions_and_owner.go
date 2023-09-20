@@ -71,24 +71,22 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not retrieve kubelet command: %s", err.Error()), execPodTarget))
 	}
 
-	kubeletConfig, err := kubeutils.GetKubeletConfig(ctx, podExecutor, rawKubeletCommand)
-	if err != nil {
-		checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not retrieve kubelet config: %s", err.Error()), execPodTarget))
-	} else {
-		switch {
-		case kubeletConfig.Authentication.X509.ClientCAFile == nil:
-			checkResults = append(checkResults, rule.FailedCheckResult("could not find client ca path: client-ca-file not set.", execPodTarget))
-		case strings.TrimSpace(*kubeletConfig.Authentication.X509.ClientCAFile) == "":
-			checkResults = append(checkResults, rule.FailedCheckResult("could not find client ca path: client-ca-file is empty.", execPodTarget))
-		default:
-			kubeletFilePaths = append(kubeletFilePaths, *kubeletConfig.Authentication.X509.ClientCAFile)
-		}
-	}
-
 	var kubeconfigPath string
 	if len(rawKubeletCommand) > 0 {
-		kubeconfigPath, err = r.getKubeletFlagValue(rawKubeletCommand, "kubeconfig")
-		if err != nil {
+		if kubeletConfig, err := kubeutils.GetKubeletConfig(ctx, podExecutor, rawKubeletCommand); err != nil {
+			checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not retrieve kubelet config: %s", err.Error()), execPodTarget))
+		} else {
+			switch {
+			case kubeletConfig.Authentication.X509.ClientCAFile == nil:
+				checkResults = append(checkResults, rule.FailedCheckResult("could not find client ca path: client-ca-file not set.", execPodTarget))
+			case strings.TrimSpace(*kubeletConfig.Authentication.X509.ClientCAFile) == "":
+				checkResults = append(checkResults, rule.FailedCheckResult("could not find client ca path: client-ca-file is empty.", execPodTarget))
+			default:
+				kubeletFilePaths = append(kubeletFilePaths, *kubeletConfig.Authentication.X509.ClientCAFile)
+			}
+		}
+
+		if kubeconfigPath, err = r.getKubeletFlagValue(rawKubeletCommand, "kubeconfig"); err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find kubeconfig path: %s", err.Error()), execPodTarget))
 		} else {
 			kubeletFilePaths = append(kubeletFilePaths, kubeconfigPath)
@@ -99,10 +97,13 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		} else {
 			kubeletFilePaths = append(kubeletFilePaths, kubeletConfigPath)
 		}
+	} else {
+		checkResults = append(checkResults, rule.ErroredCheckResult("could not retrieve kubelet config: kubelet command not retrived", execPodTarget),
+			rule.ErroredCheckResult("could not find kubeconfig path: kubelet command not retrived", execPodTarget),
+			rule.ErroredCheckResult("could not find kubelet config path: kubelet command not retrived", execPodTarget))
 	}
 
-	kubeletServicePath, err := podExecutor.Execute(ctx, "/bin/sh", "systemctl show -P FragmentPath kubelet.service")
-	if err != nil {
+	if kubeletServicePath, err := podExecutor.Execute(ctx, "/bin/sh", "systemctl show -P FragmentPath kubelet.service"); err != nil {
 		checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find kubelet.service path: %s", err.Error()), execPodTarget))
 	} else {
 		kubeletFilePaths = append(kubeletFilePaths, kubeletServicePath)
