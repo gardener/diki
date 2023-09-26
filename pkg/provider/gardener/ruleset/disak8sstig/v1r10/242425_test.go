@@ -42,6 +42,7 @@ var _ = Describe("#242425", func() {
 		tlsCertFileSetNodeConfig    = `{"kubeletconfig":{"tlsCertFile":"/foo/bar"}}`
 		tlsCertFileEmptyNodeConfig  = `{"kubeletconfig":{"tlsCertFile":""}}`
 		tlsCertFileNotSetNodeConfig = `{"kubeletconfig":{"authentication":{"webhook":{"enabled":true,"cacheTTL":"2m0s"}}}}`
+		serverTLSBootstrapSetTrue   = `serverTLSBootstrap: true`
 	)
 
 	var (

@@ -25,6 +25,40 @@ import (
 )
 
 var _ = Describe("#RuleNodeFiles", func() {
+	const (
+		rawKubeletCommand = `--config=/var/lib/kubelet/config/kubelet --kubeconfig=/var/lib/kubelet/kubeconfig-real`
+		kubeletConfig     = `authentication:
+  x509:
+    clientCAFile: /var/lib/kubelet/ca.crt
+`
+		kubeletServicePath               = `/etc/systemd/system/kubelet.service`
+		emptyFileStats                   = ``
+		compliantCAFileStats             = `644 0 0 /var/lib/kubelet/ca.crt`
+		compliantKubeconfigRealFileStats = `600 0 0 /var/lib/kubelet/kubeconfig-real`
+		compliantKubeletFileStats        = `644 0 0 /var/lib/kubelet/config/kubelet`
+		compliantKubeletServiceFileStats = `644 0 0 /etc/systemd/system/kubelet.service`
+		compliantPKIAllFilesStats        = `755 0 0 /var/lib/kubelet/pki
+600 0 0 /var/lib/kubelet/pki/key.key
+644 0 0 /var/lib/kubelet/pki/crt.crt
+600 0 0 /var/lib/kubelet/pki/kubelet-server-2023.pem`
+		compliantPKIKeyFilesStats           = `600 0 0 /var/lib/kubelet/pki/key.key`
+		compliantPKICRTFilesStats           = `644 0 0 /var/lib/kubelet/pki/crt.crt`
+		compliantKubeletServerFilesStats    = `600 0 0 /var/lib/kubelet/pki/kubelet-server-2023.pem`
+		nonCompliantCAFileStats             = `664 0 0 /var/lib/kubelet/ca.crt`
+		nonCompliantKubeconfigRealFileStats = `644 0 0 /var/lib/kubelet/kubeconfig-real`
+		nonCompliantKubeletFileStats        = `644 1000 0 /var/lib/kubelet/config/kubelet`
+		nonCompliantKubeletServiceFileStats = `644 0 2000 /etc/systemd/system/kubelet.service`
+		nonCompliantPKIAllFilesStats        = `766 0 0 /var/lib/kubelet/pki
+644 0 0 /var/lib/kubelet/pki/key.key
+664 0 0 /var/lib/kubelet/pki/crt.crt
+644 0 0 /var/lib/kubelet/pki/kubelet-server-2023.pem`
+		nonCompliantPKIKeyFilesStats        = `644 0 0 /var/lib/kubelet/pki/key.key`
+		nonCompliantPKICRTFilesStats        = `664 0 0 /var/lib/kubelet/pki/crt.crt`
+		nonCompliantKubeletServerFilesStats = `644 0 0 /var/lib/kubelet/pki/kubelet-server-2023.pem`
+		serverTLSBootstrapSetTrue           = `serverTLSBootstrap: true`
+		serverTLSBootstrapSetFalse          = `serverTLSBootstrap: false`
+	)
+
 	var (
 		instanceID             = "1"
 		fakeClusterClient      client.Client
@@ -166,37 +200,3 @@ var _ = Describe("#RuleNodeFiles", func() {
 			}),
 	)
 })
-
-const (
-	rawKubeletCommand = `--config=/var/lib/kubelet/config/kubelet --kubeconfig=/var/lib/kubelet/kubeconfig-real`
-	kubeletConfig     = `authentication:
-  x509:
-    clientCAFile: /var/lib/kubelet/ca.crt
-`
-	kubeletServicePath               = `/etc/systemd/system/kubelet.service`
-	emptyFileStats                   = ``
-	compliantCAFileStats             = `644 0 0 /var/lib/kubelet/ca.crt`
-	compliantKubeconfigRealFileStats = `600 0 0 /var/lib/kubelet/kubeconfig-real`
-	compliantKubeletFileStats        = `644 0 0 /var/lib/kubelet/config/kubelet`
-	compliantKubeletServiceFileStats = `644 0 0 /etc/systemd/system/kubelet.service`
-	compliantPKIAllFilesStats        = `755 0 0 /var/lib/kubelet/pki
-600 0 0 /var/lib/kubelet/pki/key.key
-644 0 0 /var/lib/kubelet/pki/crt.crt
-600 0 0 /var/lib/kubelet/pki/kubelet-server-2023.pem`
-	compliantPKIKeyFilesStats           = `600 0 0 /var/lib/kubelet/pki/key.key`
-	compliantPKICRTFilesStats           = `644 0 0 /var/lib/kubelet/pki/crt.crt`
-	compliantKubeletServerFilesStats    = `600 0 0 /var/lib/kubelet/pki/kubelet-server-2023.pem`
-	nonCompliantCAFileStats             = `664 0 0 /var/lib/kubelet/ca.crt`
-	nonCompliantKubeconfigRealFileStats = `644 0 0 /var/lib/kubelet/kubeconfig-real`
-	nonCompliantKubeletFileStats        = `644 1000 0 /var/lib/kubelet/config/kubelet`
-	nonCompliantKubeletServiceFileStats = `644 0 2000 /etc/systemd/system/kubelet.service`
-	nonCompliantPKIAllFilesStats        = `766 0 0 /var/lib/kubelet/pki
-644 0 0 /var/lib/kubelet/pki/key.key
-664 0 0 /var/lib/kubelet/pki/crt.crt
-644 0 0 /var/lib/kubelet/pki/kubelet-server-2023.pem`
-	nonCompliantPKIKeyFilesStats        = `644 0 0 /var/lib/kubelet/pki/key.key`
-	nonCompliantPKICRTFilesStats        = `664 0 0 /var/lib/kubelet/pki/crt.crt`
-	nonCompliantKubeletServerFilesStats = `644 0 0 /var/lib/kubelet/pki/kubelet-server-2023.pem`
-	serverTLSBootstrapSetTrue           = `serverTLSBootstrap: true`
-	serverTLSBootstrapSetFalse          = `serverTLSBootstrap: false`
-)
