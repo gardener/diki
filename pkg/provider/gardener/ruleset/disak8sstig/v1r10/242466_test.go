@@ -29,7 +29,7 @@ var _ = Describe("#242466", func() {
 		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
 			{
 				Status:  rule.Skipped,
-				Message: `Rule implemented by "node-files" for correctness, consistency, deduplication, reliability, and performance reasons.`,
+				Message: `Rule implemented by "node-files" and "pod-files" for correctness, consistency, deduplication, reliability, and performance reasons.`,
 				Target:  gardener.NewTarget(),
 			},
 		},
