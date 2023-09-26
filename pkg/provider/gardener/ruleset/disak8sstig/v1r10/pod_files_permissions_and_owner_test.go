@@ -24,6 +24,24 @@ import (
 )
 
 var _ = Describe("#RulePodFiles", func() {
+	const (
+		mounts = `[
+  {
+    "destination": "/destination",
+    "source": "/source"
+  }
+]`
+		emptyMounts    = `[]`
+		mountsWithETCD = `[
+  {
+    "destination": "/destination/etcd/data",
+    "source": "/source"
+  }
+]`
+		compliantStats = `600 0 0 /compliant/file1.txt
+644 0 65534 /foo/bar/file2.txt`
+	)
+
 	var (
 		instanceID                 = "1"
 		fakeClusterClient          client.Client
@@ -349,21 +367,3 @@ var _ = Describe("#RulePodFiles", func() {
 			}),
 	)
 })
-
-const (
-	mounts = `[
-  {
-    "destination": "/destination",
-	"source": "/source"
-  }
-]`
-	emptyMounts    = `[]`
-	mountsWithETCD = `[
-  {
-    "destination": "/destination/etcd/data",
-	"source": "/source"
-  }
-]`
-	compliantStats = `600 0 0 /compliant/file1.txt
-644 0 65534 /foo/bar/file2.txt`
-)

@@ -45,8 +45,7 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults := []rule.CheckResult{}
 	expectedFileOwnerUsers := []string{"0"}
 	expectedFileOwnerGroups := []string{"0", "65534"}
-	kubeletFilePaths := []string{"/var/lib/kubelet/ca.crt", "/var/lib/kubelet/kubeconfig-real",
-		"/var/lib/kubelet/config/kubelet", "/etc/systemd/system/kubelet.service"}
+	kubeletFilePaths := []string{}
 
 	podName := fmt.Sprintf("diki-%s-%s", IDNodeFiles, Generator.Generate(10))
 	execPodTarget := gardener.NewTarget("cluster", "shoot", "name", podName, "namespace", "kube-system", "kind", "pod")
@@ -67,6 +66,49 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), execPodTarget)), nil
 	}
 
+	rawKubeletCommand, err := kubeutils.GetKubeletCommand(ctx, podExecutor)
+	if err != nil {
+		checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not retrieve kubelet command: %s", err.Error()), execPodTarget))
+	}
+
+	var kubeconfigPath string
+	if len(rawKubeletCommand) > 0 {
+		if kubeletConfig, err := kubeutils.GetKubeletConfig(ctx, podExecutor, rawKubeletCommand); err != nil {
+			checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not retrieve kubelet config: %s", err.Error()), execPodTarget))
+		} else {
+			switch {
+			case kubeletConfig.Authentication.X509.ClientCAFile == nil:
+				checkResults = append(checkResults, rule.FailedCheckResult("could not find client ca path: client-ca-file not set.", execPodTarget))
+			case strings.TrimSpace(*kubeletConfig.Authentication.X509.ClientCAFile) == "":
+				checkResults = append(checkResults, rule.FailedCheckResult("could not find client ca path: client-ca-file is empty.", execPodTarget))
+			default:
+				kubeletFilePaths = append(kubeletFilePaths, *kubeletConfig.Authentication.X509.ClientCAFile) // rules 242449, 242450
+			}
+		}
+
+		if kubeconfigPath, err = r.getKubeletFlagValue(rawKubeletCommand, "kubeconfig"); err != nil {
+			checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find kubeconfig path: %s", err.Error()), execPodTarget))
+		} else {
+			kubeletFilePaths = append(kubeletFilePaths, kubeconfigPath) // not demanded, but similar in nature to rules 242452, 242453 and 242467
+		}
+
+		if kubeletConfigPath, err := r.getKubeletFlagValue(rawKubeletCommand, "config"); err != nil {
+			checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find kubelet config path: %s", err.Error()), execPodTarget))
+		} else {
+			kubeletFilePaths = append(kubeletFilePaths, kubeletConfigPath) // rules 242452, 242453
+		}
+	} else {
+		checkResults = append(checkResults, rule.ErroredCheckResult("could not retrieve kubelet config: kubelet command not retrived", execPodTarget),
+			rule.ErroredCheckResult("could not find kubeconfig path: kubelet command not retrived", execPodTarget),
+			rule.ErroredCheckResult("could not find kubelet config path: kubelet command not retrived", execPodTarget))
+	}
+
+	if kubeletServicePath, err := podExecutor.Execute(ctx, "/bin/sh", "systemctl show -P FragmentPath kubelet.service"); err != nil {
+		checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find kubelet.service path: %s", err.Error()), execPodTarget))
+	} else {
+		kubeletFilePaths = append(kubeletFilePaths, kubeletServicePath) // rules 242406, 242407
+	}
+
 	for _, kubeletFilePath := range kubeletFilePaths {
 		target := gardener.NewTarget("cluster", "shoot", "details", fmt.Sprintf("filePath: %s", kubeletFilePath))
 		statsRaw, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`stat -Lc "%%a %%u %%g %%n" %s`, kubeletFilePath))
@@ -81,7 +123,7 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		stats := strings.Split(strings.TrimSpace(statsRaw), "\n")
 
 		expectedFilePermissionsMax := "644"
-		if kubeletFilePath == "/var/lib/kubelet/kubeconfig-real" {
+		if kubeletFilePath == kubeconfigPath {
 			expectedFilePermissionsMax = "600"
 		}
 
@@ -92,7 +134,7 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 	}
 
-	if pkiAllStatsRaw, err := podExecutor.Execute(ctx, "/bin/sh", `find /var/lib/kubelet/pki -exec stat -Lc "%a %u %g %n" {} \;`); err != nil {
+	if pkiAllStatsRaw, err := podExecutor.Execute(ctx, "/bin/sh", `find /var/lib/kubelet/pki -exec stat -Lc "%a %u %g %n" {} \;`); err != nil { // rule 242451
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 	} else if len(pkiAllStatsRaw) == 0 {
 		checkResults = append(checkResults, rule.ErroredCheckResult("Stats not found", gardener.NewTarget("cluster", "shoot", "details", "filePath: /var/lib/kubelet/pki")))
@@ -207,7 +249,7 @@ func (r *RuleNodeFiles) checkWorkerGroup(ctx context.Context, image, workerGroup
 		}
 		pkiCrtStats := strings.Split(strings.TrimSpace(pkiCRTStatsRaw), "\n")
 
-		for _, pkiCrtStat := range pkiCrtStats {
+		for _, pkiCrtStat := range pkiCrtStats { // rule 242466
 			statSlice := strings.Split(pkiCrtStat, " ")
 			checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(statSlice[0], statSlice[1], statSlice[2], strings.Join(statSlice[3:], " "),
 				"644", expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
@@ -218,11 +260,23 @@ func (r *RuleNodeFiles) checkWorkerGroup(ctx context.Context, image, workerGroup
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execNodePodTarget))
 		}
 		pkiKeyStats := strings.Split(strings.TrimSpace(pkiKeyStatsRaw), "\n")
-		for _, pkiServerStat := range pkiKeyStats {
+		for _, pkiServerStat := range pkiKeyStats { // rule 242467
 			statSlice := strings.Split(pkiServerStat, " ")
 			checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(statSlice[0], statSlice[1], statSlice[2], strings.Join(statSlice[3:], " "),
 				"600", expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
 		}
 	}
 	return checkResults
+}
+
+func (r *RuleNodeFiles) getKubeletFlagValue(rawKubeletCommand, flag string) (string, error) {
+	valueSlice := kubeutils.FindFlagValueRaw(strings.Split(rawKubeletCommand, " "), flag)
+
+	if len(valueSlice) == 0 {
+		return "", fmt.Errorf("kubelet %s flag has not been set", flag)
+	}
+	if len(valueSlice) > 1 {
+		return "", fmt.Errorf("kubelet %s flag has been set more than once", flag)
+	}
+	return valueSlice[0], nil
 }

@@ -42,6 +42,7 @@ var _ = Describe("#242424", func() {
 		tlsPrivateKeyFileSetNodeConfig    = `{"kubeletconfig":{"tlsPrivateKeyFile":"/foo/bar"}}`
 		tlsPrivateKeyFileEmptyNodeConfig  = `{"kubeletconfig":{"tlsPrivateKeyFile":""}}`
 		tlsPrivateKeyFileNotSetNodeConfig = `{"kubeletconfig":{"authentication":{"webhook":{"enabled":true,"cacheTTL":"2m0s"}}}}`
+		serverTLSBootstrapSetTrue         = `serverTLSBootstrap: true`
 	)
 
 	var (
