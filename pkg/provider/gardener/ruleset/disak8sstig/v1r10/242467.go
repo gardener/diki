@@ -24,5 +24,5 @@ func (r *Rule242467) Name() string {
 }
 
 func (r *Rule242467) Run(_ context.Context) (rule.RuleResult, error) {
-	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Rule implemented by "node-files" for correctness, consistency, deduplication, reliability, and performance reasons.`, gardener.NewTarget())), nil
+	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Rule implemented by "node-files" and "pod-files" for correctness, consistency, deduplication, reliability, and performance reasons.`, gardener.NewTarget())), nil
 }
