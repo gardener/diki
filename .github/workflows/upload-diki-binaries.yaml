@@ -1,0 +1,27 @@
+name: diki-uploader
+
+on:
+  release:
+    types:
+      - published
+jobs:
+  upload_diki_binaries_to_release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # pin@v3.3.0
+      - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # pin@v3.5.0
+        with:
+          go-version: '1.21.1'
+      - name: Build the binary-files
+        id: build_binary_files
+        run: |
+          sudo apt-get update
+          sudo apt-get install make -y
+          make build
+          echo "latest_release_filtered_tag=${GITHUB_REF##*/}" >> $GITHUB_ENV
+      - name: Upload binaries to release
+        uses: AButler/upload-release-assets@c94805dc72e4b20745f543da0f62eaee7722df7a # pin@v2.0.2
+        with:
+          files: 'bin/diki-darwin-amd64;bin/diki-darwin-arm64;bin/diki-linux-amd64;bin/diki-linux-arm64;bin/diki-windows-amd64'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          release-tag: ${{ env.latest_release_filtered_tag }}
