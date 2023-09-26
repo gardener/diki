@@ -82,20 +82,20 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 			case strings.TrimSpace(*kubeletConfig.Authentication.X509.ClientCAFile) == "":
 				checkResults = append(checkResults, rule.FailedCheckResult("could not find client ca path: client-ca-file is empty.", execPodTarget))
 			default:
-				kubeletFilePaths = append(kubeletFilePaths, *kubeletConfig.Authentication.X509.ClientCAFile)
+				kubeletFilePaths = append(kubeletFilePaths, *kubeletConfig.Authentication.X509.ClientCAFile) // rules 242449, 242450
 			}
 		}
 
 		if kubeconfigPath, err = r.getKubeletFlagValue(rawKubeletCommand, "kubeconfig"); err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find kubeconfig path: %s", err.Error()), execPodTarget))
 		} else {
-			kubeletFilePaths = append(kubeletFilePaths, kubeconfigPath)
+			kubeletFilePaths = append(kubeletFilePaths, kubeconfigPath) // not demanded, but similar in nature to rules 242452, 242453 and 242467
 		}
 
 		if kubeletConfigPath, err := r.getKubeletFlagValue(rawKubeletCommand, "config"); err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find kubelet config path: %s", err.Error()), execPodTarget))
 		} else {
-			kubeletFilePaths = append(kubeletFilePaths, kubeletConfigPath)
+			kubeletFilePaths = append(kubeletFilePaths, kubeletConfigPath) // rules 242452, 242453
 		}
 	} else {
 		checkResults = append(checkResults, rule.ErroredCheckResult("could not retrieve kubelet config: kubelet command not retrived", execPodTarget),
@@ -106,7 +106,7 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 	if kubeletServicePath, err := podExecutor.Execute(ctx, "/bin/sh", "systemctl show -P FragmentPath kubelet.service"); err != nil {
 		checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find kubelet.service path: %s", err.Error()), execPodTarget))
 	} else {
-		kubeletFilePaths = append(kubeletFilePaths, kubeletServicePath)
+		kubeletFilePaths = append(kubeletFilePaths, kubeletServicePath) // rules 242406, 242407
 	}
 
 	for _, kubeletFilePath := range kubeletFilePaths {
@@ -134,7 +134,7 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 	}
 
-	if pkiAllStatsRaw, err := podExecutor.Execute(ctx, "/bin/sh", `find /var/lib/kubelet/pki -exec stat -Lc "%a %u %g %n" {} \;`); err != nil {
+	if pkiAllStatsRaw, err := podExecutor.Execute(ctx, "/bin/sh", `find /var/lib/kubelet/pki -exec stat -Lc "%a %u %g %n" {} \;`); err != nil { // rule 242451
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 	} else if len(pkiAllStatsRaw) == 0 {
 		checkResults = append(checkResults, rule.ErroredCheckResult("Stats not found", gardener.NewTarget("cluster", "shoot", "details", "filePath: /var/lib/kubelet/pki")))
@@ -248,7 +248,7 @@ func (r *RuleNodeFiles) checkWorkerGroup(ctx context.Context, image, workerGroup
 		}
 		pkiCrtStats := strings.Split(strings.TrimSpace(pkiCRTStatsRaw), "\n")
 
-		for _, pkiCrtStat := range pkiCrtStats {
+		for _, pkiCrtStat := range pkiCrtStats { // rule 242466
 			statSlice := strings.Split(pkiCrtStat, " ")
 			checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(statSlice[0], statSlice[1], statSlice[2], strings.Join(statSlice[3:], " "),
 				"644", expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
@@ -259,7 +259,7 @@ func (r *RuleNodeFiles) checkWorkerGroup(ctx context.Context, image, workerGroup
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execNodePodTarget))
 		}
 		pkiKeyStats := strings.Split(strings.TrimSpace(pkiKeyStatsRaw), "\n")
-		for _, pkiServerStat := range pkiKeyStats {
+		for _, pkiServerStat := range pkiKeyStats { // rule 242467
 			statSlice := strings.Split(pkiServerStat, " ")
 			checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(statSlice[0], statSlice[1], statSlice[2], strings.Join(statSlice[3:], " "),
 				"600", expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
