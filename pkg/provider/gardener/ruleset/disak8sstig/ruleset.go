@@ -95,6 +95,10 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, shootConfig, seedConf
 		if err := ruleset.registerV1R8Rules(ruleOptions); err != nil {
 			return nil, err
 		}
+	case "v1r10":
+		if err := ruleset.registerV1R10Rules(ruleOptions); err != nil {
+			return nil, err
+		}
 	default:
 		return nil, fmt.Errorf("unknown ruleset %s version: %s", rulesetConfig.ID, rulesetConfig.Version)
 	}
