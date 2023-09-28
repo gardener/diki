@@ -83,7 +83,7 @@
                                                         class="arrow right"></i></button>
                                                 <span class="font-medium">{{ .Message }}</span>
                                                 <ul class="list-disc list-inside pl-5 hidden">
-                                                    {{ range .Targets }}{{ if . }}<li>{{ range $key, $value := . }}<span class="font-medium">{{ $key }}</span>: {{ $value }};{{ end }}</li>
+                                                    {{ range .Targets }}{{ if . }}<li>{{ range $key, $value := . }}{{ $key }}: {{ $value }};{{ end }}</li>
                                                     {{ end }}{{ end }}
                                                 </ul>
                                             </li>{{ end }}
