@@ -87,7 +87,7 @@
                                                     {{ range $id, $targets := .ReportsTargets }}<li>
                                                         <span class="font-semibold">{{ $id }}</span>
                                                         <ul class="list-disc list-inside pl-5">
-                                                            {{ range $targets }}{{ if . }}<li>{{ range $key, $value := . }}<span class="font-medium">{{ $key }}</span>: {{ $value }} {{ end }}</li>
+                                                            {{ range $targets }}{{ if . }}<li>{{ range $key, $value := . }}{{ $key }}: {{ $value }} {{ end }}</li>
                                                             {{ end }}{{ end }}
                                                         </ul>
                                                     </li>{{ end }}
