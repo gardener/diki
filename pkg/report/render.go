@@ -45,6 +45,7 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 		"Time":               convTimeFunc,
 		"RulesetSummaryText": rulesetSummaryText,
 		"RulesWithStatus":    rulesWithStatus,
+		"SortedMapKeys":      sortedKeys[string],
 	}).ParseFS(files, tmplReportPath, tmplStylesPath)
 	if err != nil {
 		return nil, err
@@ -58,6 +59,7 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 		"MergedMetadataTexts":      metadataTextForMergedProvider,
 		"MergedRulesetSummaryText": mergedRulesetSummaryText,
 		"MergedRulesWithStatus":    mergedRulesWithStatus,
+		"SortedMapKeys":            sortedKeys[string],
 	}).ParseFS(files, tmplMergedReportPath, tmplStylesPath)
 	if err != nil {
 		return nil, err

@@ -243,7 +243,8 @@ func metadataTextForMergedProvider(mp MergedProvider) map[string]string {
 	for id, metadata := range mp.Metadata {
 		var sb strings.Builder
 		empty := true
-		for key, value := range metadata {
+		keys := sortedKeys(metadata)
+		for _, key := range keys {
 			if key == mp.DistinctBy {
 				continue
 			}
@@ -251,7 +252,7 @@ func metadataTextForMergedProvider(mp MergedProvider) map[string]string {
 				sb.WriteString("(")
 				empty = false
 			}
-			sb.WriteString(fmt.Sprintf("%s: %s, ", key, value))
+			sb.WriteString(fmt.Sprintf("%s: %s, ", key, metadata[key]))
 		}
 
 		metadataText := sb.String()
