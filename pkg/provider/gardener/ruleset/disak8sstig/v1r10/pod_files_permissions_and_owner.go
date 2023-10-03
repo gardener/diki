@@ -177,6 +177,7 @@ func (r *RulePodFiles) checkNodePods(ctx context.Context, clusterTarget gardener
 	for _, nodePod := range nodePods {
 		nodePodTarget := clusterTarget.With("name", nodePod.Name, "namespace", nodePod.Namespace, "kind", "pod")
 		for _, container := range nodePod.Spec.Containers {
+			containerTraget := nodePodTarget.With("containerName", container.Name)
 			found := false
 			for _, status := range nodePod.Status.ContainerStatuses {
 				if status.Name == container.Name {
@@ -184,13 +185,14 @@ func (r *RulePodFiles) checkNodePods(ctx context.Context, clusterTarget gardener
 					containerID := status.ContainerID
 					switch {
 					case len(containerID) == 0:
-						checkResults = append(checkResults, rule.ErroredCheckResult("Container not (yet) running", nodePodTarget))
+						checkResults = append(checkResults, rule.ErroredCheckResult("Container not (yet) running", containerTraget))
 					case strings.HasPrefix(containerID, "containerd://"):
 						baseContainerID := strings.Split(containerID, "//")[1]
 						checkResults = append(checkResults, r.checkContainerd(
 							ctx,
 							podExecutor,
 							nodePod,
+							container.Name,
 							baseContainerID,
 							execContainerPath,
 							clusterTarget,
@@ -198,14 +200,14 @@ func (r *RulePodFiles) checkNodePods(ctx context.Context, clusterTarget gardener
 							execPodTarget)...,
 						)
 					default:
-						checkResults = append(checkResults, rule.ErroredCheckResult("Cannot handle container", nodePodTarget))
+						checkResults = append(checkResults, rule.ErroredCheckResult("Cannot handle container", containerTraget))
 					}
 
 				}
 			}
 
 			if !found {
-				checkResults = append(checkResults, rule.ErroredCheckResult("Container not (yet) in status", nodePodTarget))
+				checkResults = append(checkResults, rule.ErroredCheckResult("Container not (yet) in status", containerTraget))
 			}
 		}
 	}
@@ -216,6 +218,7 @@ func (r *RulePodFiles) checkContainerd(
 	ctx context.Context,
 	podExecutor pod.PodExecutor,
 	pod corev1.Pod,
+	containerName string,
 	containerID string,
 	execContainerPath string,
 	clusterTarget gardener.Target,
@@ -248,7 +251,7 @@ func (r *RulePodFiles) checkContainerd(
 
 	for _, mount := range mounts {
 		expectedFilePermissionsMax := "644"
-		if strings.HasPrefix(mount.Source, "/") && mount.Destination != "/dev/termination-log" {
+		if strings.HasPrefix(mount.Source, "/") && r.isPathMounted(mount.Source, containerName, pod) && mount.Destination != "/dev/termination-log" {
 			stats, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`find %s -type f -exec stat -Lc "%%a %%u %%g %%n" {} \;`, mount.Source))
 			if err != nil {
 				return append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
@@ -273,4 +276,17 @@ func (r *RulePodFiles) checkContainerd(
 	}
 
 	return checkResults
+}
+
+func (r *RulePodFiles) isPathMounted(mount, containerName string, pod corev1.Pod) bool {
+	for _, container := range pod.Spec.Containers {
+		if container.Name == containerName {
+			for _, mountVolume := range container.VolumeMounts {
+				if strings.HasPrefix(mount, mountVolume.MountPath) {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }

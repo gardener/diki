@@ -29,6 +29,10 @@ var _ = Describe("#RulePodFiles", func() {
   {
     "destination": "/destination",
     "source": "/source"
+  }, 
+  {
+    "destination": "/destination",
+    "source": "/foo"
   }
 ]`
 		emptyMounts    = `[]`
@@ -38,8 +42,8 @@ var _ = Describe("#RulePodFiles", func() {
     "source": "/source"
   }
 ]`
-		compliantStats = `600 0 0 /compliant/file1.txt
-644 0 65534 /foo/bar/file2.txt`
+		compliantStats = `600 0 0 /source/file1.txt
+644 0 65534 /source/bar/file2.txt`
 	)
 
 	var (
@@ -80,6 +84,11 @@ var _ = Describe("#RulePodFiles", func() {
 				Containers: []corev1.Container{
 					{
 						Name: "test",
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								MountPath: "/source",
+							},
+						},
 					},
 				},
 			},
@@ -107,6 +116,11 @@ var _ = Describe("#RulePodFiles", func() {
 				Containers: []corev1.Container{
 					{
 						Name: "test",
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								MountPath: "/source",
+							},
+						},
 					},
 				},
 			},
@@ -133,6 +147,11 @@ var _ = Describe("#RulePodFiles", func() {
 				Containers: []corev1.Container{
 					{
 						Name: "test",
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								MountPath: "/source",
+							},
+						},
 					},
 				},
 			},
@@ -159,6 +178,11 @@ var _ = Describe("#RulePodFiles", func() {
 				Containers: []corev1.Container{
 					{
 						Name: "test",
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								MountPath: "/source",
+							},
+						},
 					},
 				},
 			},
@@ -185,6 +209,11 @@ var _ = Describe("#RulePodFiles", func() {
 				Containers: []corev1.Container{
 					{
 						Name: "test",
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								MountPath: "/source",
+							},
+						},
 					},
 				},
 			},
@@ -212,6 +241,11 @@ var _ = Describe("#RulePodFiles", func() {
 				Containers: []corev1.Container{
 					{
 						Name: "test",
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								MountPath: "/source",
+							},
+						},
 					},
 				},
 			},
@@ -235,6 +269,11 @@ var _ = Describe("#RulePodFiles", func() {
 				Containers: []corev1.Container{
 					{
 						Name: "test",
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								MountPath: "/source",
+							},
+						},
 					},
 				},
 			},
@@ -260,6 +299,11 @@ var _ = Describe("#RulePodFiles", func() {
 				Containers: []corev1.Container{
 					{
 						Name: "test",
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								MountPath: "/source",
+							},
+						},
 					},
 				},
 			},
@@ -283,6 +327,11 @@ var _ = Describe("#RulePodFiles", func() {
 				Containers: []corev1.Container{
 					{
 						Name: "test",
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								MountPath: "/source",
+							},
+						},
 					},
 				},
 			},
@@ -340,17 +389,17 @@ var _ = Describe("#RulePodFiles", func() {
 			[][]string{{mounts, compliantStats}}, [][]string{{mounts, compliantStats}},
 			[][]error{{nil, nil}}, [][]error{{nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /compliant/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /foo/bar/file2.txt, permissions: 644, ownerUser: 0, ownerGroup: 65534")),
-				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "shoot", "name", "1-shoot-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /compliant/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "shoot", "name", "1-shoot-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /foo/bar/file2.txt, permissions: 644, ownerUser: 0, ownerGroup: 65534")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /source/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /source/bar/file2.txt, permissions: 644, ownerUser: 0, ownerGroup: 65534")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "shoot", "name", "1-shoot-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /source/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "shoot", "name", "1-shoot-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /source/bar/file2.txt, permissions: 644, ownerUser: 0, ownerGroup: 65534")),
 			}),
 		Entry("should return correct checkResult when container is etcd", "",
 			[][]string{{mountsWithETCD, compliantStats}}, [][]string{{emptyMounts}},
 			[][]error{{nil, nil}}, [][]error{{nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /compliant/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
-				rule.FailedCheckResult("File has too wide permissions", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /foo/bar/file2.txt, permissions: 644, expectedPermissionsMax: 600")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /source/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
+				rule.FailedCheckResult("File has too wide permissions", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /source/bar/file2.txt, permissions: 644, expectedPermissionsMax: 600")),
 			}),
 		Entry("should return errored checkResults when podExecutor errors", "",
 			[][]string{{mounts}}, [][]string{{mounts, compliantStats}},
