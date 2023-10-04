@@ -59,8 +59,11 @@
             {{ range .Providers }}<div>
                 <label class="font-bold text-2xl">Provider {{ .Name }}</label>
                 <ul class="list-disc  list-inside">
-                    {{ range $key, $value := .Metadata }}<li><span class="font-semibold">{{ $key }}</span>: {{ $value }}</li>
-                    {{ end }}
+                    {{- $keys := SortedMapKeys .Metadata }}
+                    {{- $meta := .Metadata }}
+                    {{- range $key := $keys }}
+                    <li><span class="font-semibold">{{ $key }}</span>: {{ index $meta $key }}</li>
+                    {{- end }}
                 </ul>
                 <ul class="list-none list-inside">
                     {{ range .Rulesets }}{{ $statuses := Statuses }}{{ $ruleset := . }}<li>
