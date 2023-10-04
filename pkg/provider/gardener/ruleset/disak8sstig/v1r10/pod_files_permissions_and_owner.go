@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"slices"
 	"strings"
 
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
@@ -17,6 +18,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/imagevector"
@@ -248,10 +250,14 @@ func (r *RulePodFiles) checkContainerd(
 	if err != nil {
 		return append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 	}
+	excludedSources := sets.New("/lib/modules", "/usr/share/ca-certificates", "/var/log/journal")
 
 	for _, mount := range mounts {
 		expectedFilePermissionsMax := "644"
-		if strings.HasPrefix(mount.Source, "/") && r.isPathMounted(mount.Source, containerName, pod) && mount.Destination != "/dev/termination-log" {
+		if strings.HasPrefix(mount.Source, "/") &&
+			!r.matchHostPathSources(excludedSources, mount.Destination, containerName, &pod) &&
+			r.isMountRequiredByContainer(mount.Destination, containerName, &pod) &&
+			mount.Destination != "/dev/termination-log" {
 			stats, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`find %s -type f -exec stat -Lc "%%a %%u %%g %%n" {} \;`, mount.Source))
 			if err != nil {
 				return append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
@@ -278,15 +284,43 @@ func (r *RulePodFiles) checkContainerd(
 	return checkResults
 }
 
-func (r *RulePodFiles) isPathMounted(mount, containerName string, pod corev1.Pod) bool {
+func (r *RulePodFiles) isMountRequiredByContainer(destination, containerName string, pod *corev1.Pod) bool {
 	for _, container := range pod.Spec.Containers {
 		if container.Name == containerName {
-			for _, mountVolume := range container.VolumeMounts {
-				if strings.HasPrefix(mount, mountVolume.MountPath) {
-					return true
-				}
+			if containsDestination := slices.ContainsFunc(container.VolumeMounts, func(volumeMount corev1.VolumeMount) bool {
+				return volumeMount.MountPath == destination
+			}); containsDestination {
+				return true
 			}
 		}
+	}
+	return false
+}
+
+func (r *RulePodFiles) matchHostPathSources(sources sets.Set[string], destination, containerName string, pod *corev1.Pod) bool {
+	for _, container := range pod.Spec.Containers {
+		if container.Name != containerName {
+			continue
+		}
+		volumeMountIdx := slices.IndexFunc(container.VolumeMounts, func(volumeMount corev1.VolumeMount) bool {
+			return volumeMount.MountPath == destination
+		})
+
+		if volumeMountIdx < 0 {
+			return false
+		}
+
+		volumeIdx := slices.IndexFunc(pod.Spec.Volumes, func(volume corev1.Volume) bool {
+			return volume.Name == container.VolumeMounts[volumeMountIdx].Name
+		})
+
+		if volumeIdx < 0 {
+			return false
+		}
+
+		volume := pod.Spec.Volumes[volumeIdx]
+
+		return volume.HostPath != nil && sources.Has(volume.HostPath.Path)
 	}
 	return false
 }
