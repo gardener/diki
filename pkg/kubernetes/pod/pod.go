@@ -7,6 +7,7 @@ package pod
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -179,7 +180,11 @@ func (spc *SimplePodContext) waitPodHealthy(ctx context.Context, name, namespace
 		}
 
 		if pod.Status.Phase != corev1.PodRunning {
-			return retry.MinorError(fmt.Errorf("pod %s is not yet Running", client.ObjectKeyFromObject(pod).String()))
+			conditions, err := json.Marshal(pod.Status.Conditions)
+			if err != nil {
+				return retry.MinorError(fmt.Errorf("failed parsing pod %s status conditions: %w", client.ObjectKeyFromObject(pod).String(), err))
+			}
+			return retry.MinorError(fmt.Errorf("pod %s is not yet Running, pod conditions: %s", client.ObjectKeyFromObject(pod).String(), string(conditions)))
 		}
 
 		return retry.Ok()
