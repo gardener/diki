@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"slices"
 	"strings"
 
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
@@ -17,6 +18,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/imagevector"
@@ -177,6 +179,7 @@ func (r *RulePodFiles) checkNodePods(ctx context.Context, clusterTarget gardener
 	for _, nodePod := range nodePods {
 		nodePodTarget := clusterTarget.With("name", nodePod.Name, "namespace", nodePod.Namespace, "kind", "pod")
 		for _, container := range nodePod.Spec.Containers {
+			containerTraget := nodePodTarget.With("containerName", container.Name)
 			found := false
 			for _, status := range nodePod.Status.ContainerStatuses {
 				if status.Name == container.Name {
@@ -184,13 +187,14 @@ func (r *RulePodFiles) checkNodePods(ctx context.Context, clusterTarget gardener
 					containerID := status.ContainerID
 					switch {
 					case len(containerID) == 0:
-						checkResults = append(checkResults, rule.ErroredCheckResult("Container not (yet) running", nodePodTarget))
+						checkResults = append(checkResults, rule.ErroredCheckResult("Container not (yet) running", containerTraget))
 					case strings.HasPrefix(containerID, "containerd://"):
 						baseContainerID := strings.Split(containerID, "//")[1]
 						checkResults = append(checkResults, r.checkContainerd(
 							ctx,
 							podExecutor,
 							nodePod,
+							container.Name,
 							baseContainerID,
 							execContainerPath,
 							clusterTarget,
@@ -198,14 +202,14 @@ func (r *RulePodFiles) checkNodePods(ctx context.Context, clusterTarget gardener
 							execPodTarget)...,
 						)
 					default:
-						checkResults = append(checkResults, rule.ErroredCheckResult("Cannot handle container", nodePodTarget))
+						checkResults = append(checkResults, rule.ErroredCheckResult("Cannot handle container", containerTraget))
 					}
 
 				}
 			}
 
 			if !found {
-				checkResults = append(checkResults, rule.ErroredCheckResult("Container not (yet) in status", nodePodTarget))
+				checkResults = append(checkResults, rule.ErroredCheckResult("Container not (yet) in status", containerTraget))
 			}
 		}
 	}
@@ -216,6 +220,7 @@ func (r *RulePodFiles) checkContainerd(
 	ctx context.Context,
 	podExecutor pod.PodExecutor,
 	pod corev1.Pod,
+	containerName string,
 	containerID string,
 	execContainerPath string,
 	clusterTarget gardener.Target,
@@ -245,10 +250,14 @@ func (r *RulePodFiles) checkContainerd(
 	if err != nil {
 		return append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 	}
+	excludedSources := sets.New("/lib/modules", "/usr/share/ca-certificates", "/var/log/journal")
 
 	for _, mount := range mounts {
 		expectedFilePermissionsMax := "644"
-		if strings.HasPrefix(mount.Source, "/") && mount.Destination != "/dev/termination-log" {
+		if strings.HasPrefix(mount.Source, "/") &&
+			!r.matchHostPathSources(excludedSources, mount.Destination, containerName, &pod) &&
+			r.isMountRequiredByContainer(mount.Destination, containerName, &pod) &&
+			mount.Destination != "/dev/termination-log" {
 			stats, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`find %s -type f -exec stat -Lc "%%a %%u %%g %%n" {} \;`, mount.Source))
 			if err != nil {
 				return append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
@@ -273,4 +282,46 @@ func (r *RulePodFiles) checkContainerd(
 	}
 
 	return checkResults
+}
+
+func (r *RulePodFiles) isMountRequiredByContainer(destination, containerName string, pod *corev1.Pod) bool {
+	for _, container := range pod.Spec.Containers {
+		if container.Name != containerName {
+			continue
+		}
+		if containsDestination := slices.ContainsFunc(container.VolumeMounts, func(volumeMount corev1.VolumeMount) bool {
+			return volumeMount.MountPath == destination
+		}); containsDestination {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *RulePodFiles) matchHostPathSources(sources sets.Set[string], destination, containerName string, pod *corev1.Pod) bool {
+	for _, container := range pod.Spec.Containers {
+		if container.Name != containerName {
+			continue
+		}
+		volumeMountIdx := slices.IndexFunc(container.VolumeMounts, func(volumeMount corev1.VolumeMount) bool {
+			return volumeMount.MountPath == destination
+		})
+
+		if volumeMountIdx < 0 {
+			return false
+		}
+
+		volumeIdx := slices.IndexFunc(pod.Spec.Volumes, func(volume corev1.Volume) bool {
+			return volume.Name == container.VolumeMounts[volumeMountIdx].Name
+		})
+
+		if volumeIdx < 0 {
+			return false
+		}
+
+		volume := pod.Spec.Volumes[volumeIdx]
+
+		return volume.HostPath != nil && sources.Has(volume.HostPath.Path)
+	}
+	return false
 }
