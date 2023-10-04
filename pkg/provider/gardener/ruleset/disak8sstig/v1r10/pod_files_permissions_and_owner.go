@@ -286,12 +286,13 @@ func (r *RulePodFiles) checkContainerd(
 
 func (r *RulePodFiles) isMountRequiredByContainer(destination, containerName string, pod *corev1.Pod) bool {
 	for _, container := range pod.Spec.Containers {
-		if container.Name == containerName {
-			if containsDestination := slices.ContainsFunc(container.VolumeMounts, func(volumeMount corev1.VolumeMount) bool {
-				return volumeMount.MountPath == destination
-			}); containsDestination {
-				return true
-			}
+		if container.Name != containerName {
+			continue
+		}
+		if containsDestination := slices.ContainsFunc(container.VolumeMounts, func(volumeMount corev1.VolumeMount) bool {
+			return volumeMount.MountPath == destination
+		}); containsDestination {
+			return true
 		}
 	}
 	return false
