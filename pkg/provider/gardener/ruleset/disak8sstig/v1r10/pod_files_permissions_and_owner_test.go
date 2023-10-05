@@ -13,6 +13,7 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -57,13 +58,16 @@ var _ = Describe("#RulePodFiles", func() {
 		controlPlaneNamespace      = "foo"
 		fakeClusterPodContext      pod.PodContext
 		fakeControlPlanePodContext pod.PodContext
-		controlPlanePod            *corev1.Pod
+		plainPod                   *corev1.Pod
+		plainControlPlanePod       *corev1.Pod
+		etcdMainPod                *corev1.Pod
 		etcdEventsPod              *corev1.Pod
 		kubeAPIPod                 *corev1.Pod
 		kubeSchedulerPod           *corev1.Pod
 		kubeControllerManagerPod   *corev1.Pod
 		kubeProxyPod               *corev1.Pod
 		controlPlaneDikiPod        *corev1.Pod
+		plainClusterPod            *corev1.Pod
 		clusterPod                 *corev1.Pod
 		clusterDikiPod             *corev1.Pod
 		ctx                        = context.TODO()
@@ -73,15 +77,9 @@ var _ = Describe("#RulePodFiles", func() {
 		v1r10.Generator = &FakeRandString{CurrentChar: 'a'}
 		fakeClusterClient = fakeclient.NewClientBuilder().Build()
 		fakeControlPlaneClient = fakeclient.NewClientBuilder().Build()
-		controlPlanePod = &corev1.Pod{
+		plainPod = &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "1-seed-pod",
-				Namespace: controlPlaneNamespace,
-				Labels: map[string]string{
-					"name":                "etcd",
-					"instance":            "etcd-main",
-					"gardener.cloud/role": "controlplane",
-				},
+				Labels: map[string]string{},
 			},
 			Spec: corev1.PodSpec{
 				NodeName: "node01",
@@ -122,252 +120,274 @@ var _ = Describe("#RulePodFiles", func() {
 				},
 			},
 		}
-		etcdEventsPod = &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "etcd-events",
-				Namespace: controlPlaneNamespace,
-				Labels: map[string]string{
-					"name":                "etcd",
-					"instance":            "etcd-events",
-					"gardener.cloud/role": "controlplane",
+
+		plainControlPlanePod = plainPod.DeepCopy()
+		plainControlPlanePod.Namespace = controlPlaneNamespace
+		plainControlPlanePod.Labels["gardener.cloud/role"] = "controlplane"
+
+		etcdMainPod = plainControlPlanePod.DeepCopy()
+		etcdMainPod.Name = "1-seed-pod"
+		etcdMainPod.Labels["name"] = "etcd"
+		etcdMainPod.Labels["instance"] = "etcd-main"
+
+		etcdEventsPod = plainControlPlanePod.DeepCopy()
+		etcdEventsPod.Name = "etcd-events"
+		etcdEventsPod.Labels["name"] = "etcd"
+		etcdEventsPod.Labels["instance"] = "etcd-events"
+
+		kubeAPIPod = plainControlPlanePod.DeepCopy()
+		kubeAPIPod.Name = "kube-api"
+		kubeAPIPod.Labels["role"] = "apiserver"
+
+		kubeControllerManagerPod = plainControlPlanePod.DeepCopy()
+		kubeControllerManagerPod.Name = "kube-controller-manager"
+		kubeControllerManagerPod.Labels["role"] = "controller-manager"
+
+		kubeSchedulerPod = plainControlPlanePod.DeepCopy()
+		kubeSchedulerPod.Name = "kube-scheduler"
+		kubeSchedulerPod.Labels["role"] = "scheduler"
+
+		plainClusterPod = plainPod.DeepCopy()
+		plainClusterPod.Namespace = "kube-system"
+		plainClusterPod.Labels["resources.gardener.cloud/managed-by"] = "gardener"
+		plainClusterPod.Labels["gardener.cloud/role"] = "system-component"
+
+		kubeProxyPod = plainClusterPod.DeepCopy()
+		kubeProxyPod.Name = "kube-proxy"
+		kubeProxyPod.Labels["role"] = "proxy"
+
+		controlPlaneDikiPod = plainControlPlanePod.DeepCopy()
+		controlPlaneDikiPod.Name = fmt.Sprintf("diki-%s-%s", v1r10.IDPodFiles, "aaaaaaaaaa")
+		controlPlaneDikiPod.Namespace = "kube-system"
+		controlPlaneDikiPod.Labels = map[string]string{}
+
+		clusterPod = plainClusterPod.DeepCopy()
+		clusterPod.Name = "1-shoot-pod"
+
+		clusterDikiPod = plainClusterPod.DeepCopy()
+		clusterDikiPod.Name = fmt.Sprintf("diki-%s-%s", v1r10.IDPodFiles, "bbbbbbbbbb")
+		clusterDikiPod.Labels = map[string]string{}
+	})
+
+	Describe("#GroupMinimalPodsByNodes", func() {
+		It("should group single pods by nodes", func() {
+			pod1 := plainPod.DeepCopy()
+			pod1.Name = "pod1"
+			pod1.Spec.NodeName = "node1"
+
+			pod2 := plainPod.DeepCopy()
+			pod2.Name = "pod2"
+			pod2.Spec.NodeName = "node2"
+
+			pod3 := plainPod.DeepCopy()
+			pod3.Name = "pod3"
+			pod3.Spec.NodeName = "node1"
+
+			pod4 := plainPod.DeepCopy()
+			pod4.Name = "pod4"
+			pod4.Spec.NodeName = "node2"
+
+			pod5 := plainPod.DeepCopy()
+			pod5.Name = "pod5"
+			pod5.Spec.NodeName = "node3"
+
+			pods := []corev1.Pod{*pod1, *pod2, *pod3, *pod4, *pod5}
+
+			expectedRes := map[string][]corev1.Pod{
+				"node1": {*pod1, *pod3},
+				"node2": {*pod2, *pod4},
+				"node3": {*pod5},
+			}
+
+			groupedPods, checkResult := v1r10.GroupMinimalPodsByNodes(pods, gardener.Target{})
+
+			Expect(groupedPods).To(Equal(expectedRes))
+			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+		})
+
+		It("should correclty select pods when reference groups are present", func() {
+			pod1 := plainPod.DeepCopy()
+			pod1.Name = "pod1"
+			pod1.Spec.NodeName = "node3"
+			pod1.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
 				},
-			},
-			Spec: corev1.PodSpec{
-				NodeName: "node01",
-				Containers: []corev1.Container{
-					{
-						Name: "test",
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/destination",
-							},
-						},
-					},
+			}
+
+			pod2 := plainPod.DeepCopy()
+			pod2.Name = "pod2"
+			pod2.Spec.NodeName = "node2"
+
+			pod3 := plainPod.DeepCopy()
+			pod3.Name = "pod3"
+			pod3.Spec.NodeName = "node1"
+
+			pod4 := plainPod.DeepCopy()
+			pod4.Name = "pod4"
+			pod4.Spec.NodeName = "node2"
+			pod4.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
 				},
-			},
-			Status: corev1.PodStatus{
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:        "test",
-						ContainerID: "containerd://bar",
-					},
+			}
+
+			pod5 := plainPod.DeepCopy()
+			pod5.Name = "pod5"
+			pod5.Spec.NodeName = "node1"
+			pod5.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
 				},
-			},
-		}
-		kubeAPIPod = &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "kube-api",
-				Namespace: controlPlaneNamespace,
-				Labels: map[string]string{
-					"role":                "apiserver",
-					"gardener.cloud/role": "controlplane",
+			}
+
+			pods := []corev1.Pod{*pod1, *pod2, *pod3, *pod4, *pod5}
+
+			expectedRes := map[string][]corev1.Pod{
+				"node1": {*pod3},
+				"node2": {*pod2, *pod4},
+			}
+
+			groupedPods, checkResult := v1r10.GroupMinimalPodsByNodes(pods, gardener.Target{})
+
+			Expect(groupedPods).To(Equal(expectedRes))
+			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+		})
+
+		It("should correclty select minimal groups", func() {
+			pod1 := plainPod.DeepCopy()
+			pod1.Name = "pod1"
+			pod1.Spec.NodeName = "node2"
+			pod1.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
 				},
-			},
-			Spec: corev1.PodSpec{
-				NodeName: "node01",
-				Containers: []corev1.Container{
-					{
-						Name: "test",
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/destination",
-							},
-						},
-					},
+			}
+
+			pod2 := plainPod.DeepCopy()
+			pod2.Name = "pod2"
+			pod2.Spec.NodeName = "node1"
+
+			pod3 := plainPod.DeepCopy()
+			pod3.Name = "pod3"
+			pod3.Spec.NodeName = "node3"
+			pod3.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("2"),
 				},
-			},
-			Status: corev1.PodStatus{
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:        "test",
-						ContainerID: "containerd://bar",
-					},
+			}
+
+			pod4 := plainPod.DeepCopy()
+			pod4.Name = "pod4"
+			pod4.Spec.NodeName = "node3"
+			pod4.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
 				},
-			},
-		}
-		kubeControllerManagerPod = &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "kube-controller-manager",
-				Namespace: controlPlaneNamespace,
-				Labels: map[string]string{
-					"role":                "controller-manager",
-					"gardener.cloud/role": "controlplane",
+			}
+
+			pod5 := plainPod.DeepCopy()
+			pod5.Name = "pod5"
+			pod5.Spec.NodeName = "node4"
+			pod5.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
 				},
-			},
-			Spec: corev1.PodSpec{
-				NodeName: "node01",
-				Containers: []corev1.Container{
-					{
-						Name: "test",
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/destination",
-							},
-						},
-					},
+			}
+
+			pods := []corev1.Pod{*pod1, *pod2, *pod3, *pod4, *pod5}
+
+			expectedRes := map[string][]corev1.Pod{
+				"node1": {*pod2},
+				"node3": {*pod3, *pod4},
+			}
+
+			groupedPods, checkResult := v1r10.GroupMinimalPodsByNodes(pods, gardener.Target{})
+
+			Expect(groupedPods).To(Equal(expectedRes))
+			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+		})
+
+		It("should correctly select minimal groups", func() {
+			pod1 := plainPod.DeepCopy()
+			pod1.Name = "pod1"
+			pod1.Spec.NodeName = "node2"
+			pod1.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
 				},
-			},
-			Status: corev1.PodStatus{
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:        "test",
-						ContainerID: "containerd://bar",
-					},
+			}
+
+			pod2 := plainPod.DeepCopy()
+			pod2.Name = "pod2"
+			pod2.Spec.NodeName = "node1"
+
+			pod3 := plainPod.DeepCopy()
+			pod3.Name = "pod3"
+			pod3.Spec.NodeName = "node3"
+			pod3.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("2"),
 				},
-			},
-		}
-		kubeSchedulerPod = &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "kube-scheduler",
-				Namespace: controlPlaneNamespace,
-				Labels: map[string]string{
-					"role":                "scheduler",
-					"gardener.cloud/role": "controlplane",
+			}
+
+			pod4 := plainPod.DeepCopy()
+			pod4.Name = "pod4"
+			pod4.Spec.NodeName = "node3"
+			pod4.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
 				},
-			},
-			Spec: corev1.PodSpec{
-				NodeName: "node01",
-				Containers: []corev1.Container{
-					{
-						Name: "test",
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/destination",
-							},
-						},
-					},
+			}
+
+			pod5 := plainPod.DeepCopy()
+			pod5.Name = "pod5"
+			pod5.Spec.NodeName = "node4"
+			pod5.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
 				},
-			},
-			Status: corev1.PodStatus{
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:        "test",
-						ContainerID: "containerd://bar",
-					},
+			}
+
+			pods := []corev1.Pod{*pod1, *pod2, *pod3, *pod4, *pod5}
+
+			expectedRes := map[string][]corev1.Pod{
+				"node1": {*pod2},
+				"node3": {*pod3, *pod4},
+			}
+
+			groupedPods, checkResult := v1r10.GroupMinimalPodsByNodes(pods, gardener.Target{})
+
+			Expect(groupedPods).To(Equal(expectedRes))
+			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+		})
+
+		It("should return checkResults when pod is not scheduled", func() {
+			pod1 := plainPod.DeepCopy()
+			pod1.Name = "pod1"
+			pod1.Spec.NodeName = ""
+
+			pods := []corev1.Pod{*pod1}
+
+			expectedRes := map[string][]corev1.Pod{}
+			expectedCheckResults := []rule.CheckResult{
+				{
+					Status:  rule.Warning,
+					Message: "Pod not (yet) scheduled",
+					Target:  gardener.NewTarget("name", "pod1", "namespace", "", "kind", "pod"),
 				},
-			},
-		}
-		kubeProxyPod = &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "kube-proxy",
-				Namespace: "kube-system",
-				Labels: map[string]string{
-					"role":                                "proxy",
-					"resources.gardener.cloud/managed-by": "gardener",
-					"gardener.cloud/role":                 "system-component",
-				},
-			},
-			Spec: corev1.PodSpec{
-				NodeName: "node01",
-				Containers: []corev1.Container{
-					{
-						Name: "test",
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/destination",
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:        "test",
-						ContainerID: "containerd://bar",
-					},
-				},
-			},
-		}
-		controlPlaneDikiPodName := fmt.Sprintf("diki-%s-%s", v1r10.IDPodFiles, "aaaaaaaaaa")
-		controlPlaneDikiPod = &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      controlPlaneDikiPodName,
-				Namespace: "kube-system",
-			},
-			Spec: corev1.PodSpec{
-				NodeName: "node01",
-				Containers: []corev1.Container{
-					{
-						Name: "test",
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/destination",
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						ContainerID: "containerd://foo",
-					},
-				},
-			},
-		}
-		clusterPod = &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "1-shoot-pod",
-				Namespace: "kube-system",
-				Labels: map[string]string{
-					"resources.gardener.cloud/managed-by": "gardener",
-					"gardener.cloud/role":                 "system-component",
-				},
-			},
-			Spec: corev1.PodSpec{
-				NodeName: "node01",
-				Containers: []corev1.Container{
-					{
-						Name: "test",
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/destination",
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:        "test",
-						ContainerID: "containerd://bar",
-					},
-				},
-			},
-		}
-		clusterDikiPodName := fmt.Sprintf("diki-%s-%s", v1r10.IDPodFiles, "bbbbbbbbbb")
-		clusterDikiPod = &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      clusterDikiPodName,
-				Namespace: "kube-system",
-			},
-			Spec: corev1.PodSpec{
-				NodeName: "node01",
-				Containers: []corev1.Container{
-					{
-						Name: "test",
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/destination",
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						ContainerID: "containerd://foo",
-					},
-				},
-			},
-		}
+			}
+
+			groupedPods, checkResult := v1r10.GroupMinimalPodsByNodes(pods, gardener.Target{})
+
+			Expect(groupedPods).To(Equal(expectedRes))
+			Expect(checkResult).To(Equal(expectedCheckResults))
+		})
+
 	})
 
 	DescribeTable("Run cases",
-		func(controlPlanePodLabelInstance string, controlPlaneExecuteReturnString, clusterExecuteReturnString [][]string, controlPlaneExecuteReturnError, clusterExecuteReturnError [][]error, expectedCheckResults []rule.CheckResult) {
+		func(etcdMainPodLabelInstance string, controlPlaneExecuteReturnString, clusterExecuteReturnString [][]string, controlPlaneExecuteReturnError, clusterExecuteReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			clusterExecuteReturnString[0] = append(clusterExecuteReturnString[0], emptyMounts)
 			clusterExecuteReturnError[0] = append(clusterExecuteReturnError[0], nil)
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(clusterExecuteReturnString, clusterExecuteReturnError)
@@ -386,11 +406,11 @@ var _ = Describe("#RulePodFiles", func() {
 				ControlPlanePodContext: fakeControlPlanePodContext,
 			}
 
-			if len(controlPlanePodLabelInstance) > 0 {
-				controlPlanePod.Labels["instance"] = controlPlanePodLabelInstance
+			if len(etcdMainPodLabelInstance) > 0 {
+				etcdMainPod.Labels["instance"] = etcdMainPodLabelInstance
 			}
 			Expect(fakeControlPlaneClient.Create(ctx, kubeControllerManagerPod)).To(Succeed())
-			Expect(fakeControlPlaneClient.Create(ctx, controlPlanePod)).To(Succeed())
+			Expect(fakeControlPlaneClient.Create(ctx, etcdMainPod)).To(Succeed())
 			Expect(fakeControlPlaneClient.Create(ctx, etcdEventsPod)).To(Succeed())
 			Expect(fakeControlPlaneClient.Create(ctx, kubeAPIPod)).To(Succeed())
 			Expect(fakeControlPlaneClient.Create(ctx, kubeSchedulerPod)).To(Succeed())

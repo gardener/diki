@@ -5,6 +5,7 @@
 package v1r10
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -122,18 +123,10 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 }
 
 func (r *RulePodFiles) checkPods(ctx context.Context, clusterTarget gardener.Target, image string, c client.Client, podContext pod.PodContext, pods []corev1.Pod, mandatoryComponents map[string][]string) []rule.CheckResult {
-	checkResults := []rule.CheckResult{}
-	nodePodMap := map[string][]corev1.Pod{}
-	for _, pod := range pods {
-		target := clusterTarget.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
-		if pod.Spec.NodeName != "" {
-			nodePodMap[pod.Spec.NodeName] = append(nodePodMap[pod.Spec.NodeName], pod)
-		} else {
-			checkResults = append(checkResults, rule.WarningCheckResult("Pod not (yet) scheduled", target))
-		}
-	}
-	for nodeName, nodePods := range nodePodMap {
-		checkResultsForNodePods := r.checkNodePods(ctx, clusterTarget, image, nodeName, c, podContext, nodePods, mandatoryComponents)
+	groupedPods, checkResults := GroupMinimalPodsByNodes(pods, clusterTarget)
+
+	for nodeName, pods := range groupedPods {
+		checkResultsForNodePods := r.checkNodePods(ctx, clusterTarget, image, nodeName, c, podContext, pods, mandatoryComponents)
 		checkResults = append(checkResults, checkResultsForNodePods...)
 	}
 	return checkResults
@@ -324,4 +317,55 @@ func (r *RulePodFiles) matchHostPathSources(sources sets.Set[string], destinatio
 		return volume.HostPath != nil && sources.Has(volume.HostPath.Path)
 	}
 	return false
+}
+
+// GroupMinimalPodsByNodes groups pods by their nodes. Includes only one pod per reference group while trying
+// to return a minimal number of groups.
+func GroupMinimalPodsByNodes(pods []corev1.Pod, target gardener.Target) (map[string][]corev1.Pod, []rule.CheckResult) {
+	checkResults := []rule.CheckResult{}
+	groupedPodsByNodes := map[string][]corev1.Pod{}
+	groupedPodsByReferences := map[string][]corev1.Pod{}
+	for _, pod := range pods {
+		podTarget := target.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
+		if pod.Spec.NodeName != "" {
+			if len(pod.OwnerReferences) == 0 {
+				groupedPodsByNodes[pod.Spec.NodeName] = append(groupedPodsByNodes[pod.Spec.NodeName], pod)
+				continue
+			}
+
+			ownerReferenceUID := string(pod.OwnerReferences[0].UID)
+			groupedPodsByReferences[ownerReferenceUID] = append(groupedPodsByReferences[ownerReferenceUID], pod)
+			continue
+		}
+
+		checkResults = append(checkResults, rule.WarningCheckResult("Pod not (yet) scheduled", podTarget))
+	}
+
+	keys := make([]string, 0, len(groupedPodsByReferences))
+	for key := range groupedPodsByReferences {
+		keys = append(keys, key)
+	}
+	// sort reference keys by number of pods to minimize groups.
+	slices.SortFunc(keys, func(i, j string) int {
+		return cmp.Compare(len(groupedPodsByReferences[i]), len(groupedPodsByReferences[j]))
+	})
+
+	for _, key := range keys {
+		pods := groupedPodsByReferences[key]
+
+		podOnUsedNodeIdx := slices.IndexFunc(pods, func(pod corev1.Pod) bool {
+			_, ok := groupedPodsByNodes[pod.Spec.NodeName]
+			return ok
+		})
+
+		if podOnUsedNodeIdx < 0 {
+			groupedPodsByNodes[pods[0].Spec.NodeName] = []corev1.Pod{pods[0]}
+			continue
+		}
+
+		pod := pods[podOnUsedNodeIdx]
+		groupedPodsByNodes[pod.Spec.NodeName] = append(groupedPodsByNodes[pod.Spec.NodeName], pod)
+	}
+
+	return groupedPodsByNodes, checkResults
 }
