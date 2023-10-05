@@ -15,7 +15,9 @@ Diki is the Greek word for "trial". You can also memorise it as "Detective Inves
 
 #### Installation
 
-TODO
+```bash
+go install github.com/gardener/diki/cmd/diki@latest
+```
 
 #### Run
 
