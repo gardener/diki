@@ -290,7 +290,7 @@ var _ = Describe("utils", func() {
 		)
 	})
 
-	Describe("#GroupMinimalPodsByNodes", func() {
+	Describe("#SelectPodOfReferenceGroup", func() {
 		It("should group single pods by nodes", func() {
 			pod1 := &corev1.Pod{}
 			pod1.Name = "pod1"
