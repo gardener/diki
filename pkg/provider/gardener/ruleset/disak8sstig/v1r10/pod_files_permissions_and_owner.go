@@ -5,7 +5,6 @@
 package v1r10
 
 import (
-	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -123,7 +122,7 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 }
 
 func (r *RulePodFiles) checkPods(ctx context.Context, clusterTarget gardener.Target, image string, c client.Client, podContext pod.PodContext, pods []corev1.Pod, mandatoryComponents map[string][]string) []rule.CheckResult {
-	groupedPods, checkResults := SelectPodOfReferenceGroup(pods, clusterTarget)
+	groupedPods, checkResults := utils.SelectPodOfReferenceGroup(pods, clusterTarget)
 
 	for nodeName, pods := range groupedPods {
 		checkResultsForNodePods := r.checkNodePods(ctx, clusterTarget, image, nodeName, c, podContext, pods, mandatoryComponents)
@@ -317,62 +316,4 @@ func (r *RulePodFiles) matchHostPathSources(sources sets.Set[string], destinatio
 		return volume.HostPath != nil && sources.Has(volume.HostPath.Path)
 	}
 	return false
-}
-
-// SelectPodOfReferenceGroup returns a single pod per owner reference group
-// as well as groups the returned pods by the nodes they are scheduled on.
-// Pods that do not have an owner reference will always be selected.
-// It tries to pick the pods in a way that fewer nodes will be selected.
-func SelectPodOfReferenceGroup(pods []corev1.Pod, target gardener.Target) (map[string][]corev1.Pod, []rule.CheckResult) {
-	checkResults := []rule.CheckResult{}
-	groupedPodsByNodes := map[string][]corev1.Pod{}
-	groupedPodsByReferences := map[string][]corev1.Pod{}
-	for _, pod := range pods {
-		if pod.Spec.NodeName != "" {
-			if len(pod.OwnerReferences) == 0 {
-				groupedPodsByNodes[pod.Spec.NodeName] = append(groupedPodsByNodes[pod.Spec.NodeName], pod)
-				continue
-			}
-
-			ownerReferenceUID := fmt.Sprintf("%s-%s", pod.OwnerReferences[0].Name, string((pod.OwnerReferences[0].UID)))
-			groupedPodsByReferences[ownerReferenceUID] = append(groupedPodsByReferences[ownerReferenceUID], pod)
-			continue
-		}
-
-		podTarget := target.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
-		checkResults = append(checkResults, rule.WarningCheckResult("Pod not (yet) scheduled", podTarget))
-	}
-
-	keys := make([]string, 0, len(groupedPodsByReferences))
-	for key := range groupedPodsByReferences {
-		keys = append(keys, key)
-	}
-	// sort reference keys by number of pods to minimize groups
-	slices.SortFunc(keys, func(i, j string) int {
-		return cmp.Compare(len(groupedPodsByReferences[i]), len(groupedPodsByReferences[j]))
-	})
-
-	for _, key := range keys {
-		// we start from the smaller ref group because of fewer options to chose nodes from
-		pods := groupedPodsByReferences[key]
-
-		podOnUsedNodeIdx := slices.IndexFunc(pods, func(pod corev1.Pod) bool {
-			_, ok := groupedPodsByNodes[pod.Spec.NodeName]
-			return ok
-		})
-
-		// if none of the pods match already selected node then
-		// select the node and add a single pod of the reference group for checking
-		if podOnUsedNodeIdx < 0 {
-			groupedPodsByNodes[pods[0].Spec.NodeName] = []corev1.Pod{pods[0]}
-			continue
-		}
-
-		// if there is a pod of the reference group which is scheduled on a selected node
-		// then add this pod to the "to-be-checked" pods
-		pod := pods[podOnUsedNodeIdx]
-		groupedPodsByNodes[pod.Spec.NodeName] = append(groupedPodsByNodes[pod.Spec.NodeName], pod)
-	}
-
-	return groupedPodsByNodes, checkResults
 }
