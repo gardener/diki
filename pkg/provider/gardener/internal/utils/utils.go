@@ -292,17 +292,17 @@ func SelectPodOfReferenceGroup(pods []corev1.Pod, nodesAllocatablePods map[strin
 		// if none of the pods match already selected node then
 		// select the node and add a single pod of the reference group for checking
 		maxAllocatablePods := 0
-		var podToUse *corev1.Pod
+		podToUse := corev1.Pod{}
 		for _, pod := range pods {
 			nodeName := pod.Spec.NodeName
 			if nodesAllocatablePods[nodeName] > maxAllocatablePods {
 				maxAllocatablePods = nodesAllocatablePods[nodeName]
-				podToUse = &pod
+				podToUse = pod
 			}
 		}
 
 		if maxAllocatablePods > 0 {
-			groupedPodsByNodes[podToUse.Spec.NodeName] = []corev1.Pod{*podToUse}
+			groupedPodsByNodes[podToUse.Spec.NodeName] = []corev1.Pod{podToUse}
 			continue
 		}
 
