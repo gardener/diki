@@ -15,6 +15,7 @@ import (
 	gomegatypes "github.com/onsi/gomega/types"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -287,5 +288,222 @@ var _ = Describe("utils", func() {
 					rule.FailedCheckResult("File has too wide permissions", gardener.NewTarget("details", "fileName: /foo/bar/file.txt, permissions: 664, expectedPermissionsMax: 644")),
 				}),
 		)
+	})
+
+	Describe("#SelectPodOfReferenceGroup", func() {
+		It("should group single pods by nodes", func() {
+			pod1 := &corev1.Pod{}
+			pod1.Name = "pod1"
+			pod1.Spec.NodeName = "node1"
+
+			pod2 := &corev1.Pod{}
+			pod2.Name = "pod2"
+			pod2.Spec.NodeName = "node2"
+
+			pod3 := &corev1.Pod{}
+			pod3.Name = "pod3"
+			pod3.Spec.NodeName = "node1"
+
+			pod4 := &corev1.Pod{}
+			pod4.Name = "pod4"
+			pod4.Spec.NodeName = "node2"
+
+			pod5 := &corev1.Pod{}
+			pod5.Name = "pod5"
+			pod5.Spec.NodeName = "node3"
+
+			pods := []corev1.Pod{*pod1, *pod2, *pod3, *pod4, *pod5}
+
+			expectedRes := map[string][]corev1.Pod{
+				"node1": {*pod1, *pod3},
+				"node2": {*pod2, *pod4},
+				"node3": {*pod5},
+			}
+
+			groupedPods, checkResult := utils.SelectPodOfReferenceGroup(pods, gardener.Target{})
+
+			Expect(groupedPods).To(Equal(expectedRes))
+			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+		})
+
+		It("should correclty select pods when reference groups are present", func() {
+			pod1 := &corev1.Pod{}
+			pod1.Name = "pod1"
+			pod1.Spec.NodeName = "node3"
+			pod1.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
+				},
+			}
+
+			pod2 := &corev1.Pod{}
+			pod2.Name = "pod2"
+			pod2.Spec.NodeName = "node2"
+
+			pod3 := &corev1.Pod{}
+			pod3.Name = "pod3"
+			pod3.Spec.NodeName = "node1"
+
+			pod4 := &corev1.Pod{}
+			pod4.Name = "pod4"
+			pod4.Spec.NodeName = "node2"
+			pod4.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
+				},
+			}
+
+			pod5 := &corev1.Pod{}
+			pod5.Name = "pod5"
+			pod5.Spec.NodeName = "node1"
+			pod5.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
+				},
+			}
+
+			pods := []corev1.Pod{*pod1, *pod2, *pod3, *pod4, *pod5}
+
+			expectedRes := map[string][]corev1.Pod{
+				"node1": {*pod3},
+				"node2": {*pod2, *pod4},
+			}
+
+			groupedPods, checkResult := utils.SelectPodOfReferenceGroup(pods, gardener.Target{})
+
+			Expect(groupedPods).To(Equal(expectedRes))
+			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+		})
+
+		It("should correclty select minimal groups", func() {
+			pod1 := &corev1.Pod{}
+			pod1.Name = "pod1"
+			pod1.Spec.NodeName = "node2"
+			pod1.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
+				},
+			}
+
+			pod2 := &corev1.Pod{}
+			pod2.Name = "pod2"
+			pod2.Spec.NodeName = "node1"
+
+			pod3 := &corev1.Pod{}
+			pod3.Name = "pod3"
+			pod3.Spec.NodeName = "node3"
+			pod3.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("2"),
+				},
+			}
+
+			pod4 := &corev1.Pod{}
+			pod4.Name = "pod4"
+			pod4.Spec.NodeName = "node3"
+			pod4.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
+				},
+			}
+
+			pod5 := &corev1.Pod{}
+			pod5.Name = "pod5"
+			pod5.Spec.NodeName = "node4"
+			pod5.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
+				},
+			}
+
+			pods := []corev1.Pod{*pod1, *pod2, *pod3, *pod4, *pod5}
+
+			expectedRes := map[string][]corev1.Pod{
+				"node1": {*pod2},
+				"node3": {*pod3, *pod4},
+			}
+
+			groupedPods, checkResult := utils.SelectPodOfReferenceGroup(pods, gardener.Target{})
+
+			Expect(groupedPods).To(Equal(expectedRes))
+			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+		})
+
+		It("should correctly select minimal groups", func() {
+			pod1 := &corev1.Pod{}
+			pod1.Name = "pod1"
+			pod1.Spec.NodeName = "node2"
+			pod1.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
+				},
+			}
+
+			pod2 := &corev1.Pod{}
+			pod2.Name = "pod2"
+			pod2.Spec.NodeName = "node1"
+
+			pod3 := &corev1.Pod{}
+			pod3.Name = "pod3"
+			pod3.Spec.NodeName = "node3"
+			pod3.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("2"),
+				},
+			}
+
+			pod4 := &corev1.Pod{}
+			pod4.Name = "pod4"
+			pod4.Spec.NodeName = "node3"
+			pod4.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
+				},
+			}
+
+			pod5 := &corev1.Pod{}
+			pod5.Name = "pod5"
+			pod5.Spec.NodeName = "node4"
+			pod5.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
+				},
+			}
+
+			pods := []corev1.Pod{*pod1, *pod2, *pod3, *pod4, *pod5}
+
+			expectedRes := map[string][]corev1.Pod{
+				"node1": {*pod2},
+				"node3": {*pod3, *pod4},
+			}
+
+			groupedPods, checkResult := utils.SelectPodOfReferenceGroup(pods, gardener.Target{})
+
+			Expect(groupedPods).To(Equal(expectedRes))
+			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+		})
+
+		It("should return checkResults when pod is not scheduled", func() {
+			pod1 := &corev1.Pod{}
+			pod1.Name = "pod1"
+			pod1.Spec.NodeName = ""
+
+			pods := []corev1.Pod{*pod1}
+
+			expectedRes := map[string][]corev1.Pod{}
+			expectedCheckResults := []rule.CheckResult{
+				{
+					Status:  rule.Warning,
+					Message: "Pod not (yet) scheduled",
+					Target:  gardener.NewTarget("name", "pod1", "namespace", "", "kind", "pod"),
+				},
+			}
+
+			groupedPods, checkResult := utils.SelectPodOfReferenceGroup(pods, gardener.Target{})
+
+			Expect(groupedPods).To(Equal(expectedRes))
+			Expect(checkResult).To(Equal(expectedCheckResults))
+		})
+
 	})
 })

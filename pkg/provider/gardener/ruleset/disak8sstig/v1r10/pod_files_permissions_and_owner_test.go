@@ -57,13 +57,16 @@ var _ = Describe("#RulePodFiles", func() {
 		controlPlaneNamespace      = "foo"
 		fakeClusterPodContext      pod.PodContext
 		fakeControlPlanePodContext pod.PodContext
-		controlPlanePod            *corev1.Pod
+		plainPod                   *corev1.Pod
+		plainControlPlanePod       *corev1.Pod
+		etcdMainPod                *corev1.Pod
 		etcdEventsPod              *corev1.Pod
 		kubeAPIPod                 *corev1.Pod
 		kubeSchedulerPod           *corev1.Pod
 		kubeControllerManagerPod   *corev1.Pod
 		kubeProxyPod               *corev1.Pod
 		controlPlaneDikiPod        *corev1.Pod
+		plainClusterPod            *corev1.Pod
 		clusterPod                 *corev1.Pod
 		clusterDikiPod             *corev1.Pod
 		ctx                        = context.TODO()
@@ -73,15 +76,9 @@ var _ = Describe("#RulePodFiles", func() {
 		v1r10.Generator = &FakeRandString{CurrentChar: 'a'}
 		fakeClusterClient = fakeclient.NewClientBuilder().Build()
 		fakeControlPlaneClient = fakeclient.NewClientBuilder().Build()
-		controlPlanePod = &corev1.Pod{
+		plainPod = &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "1-seed-pod",
-				Namespace: controlPlaneNamespace,
-				Labels: map[string]string{
-					"name":                "etcd",
-					"instance":            "etcd-main",
-					"gardener.cloud/role": "controlplane",
-				},
+				Labels: map[string]string{},
 			},
 			Spec: corev1.PodSpec{
 				NodeName: "node01",
@@ -122,252 +119,57 @@ var _ = Describe("#RulePodFiles", func() {
 				},
 			},
 		}
-		etcdEventsPod = &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "etcd-events",
-				Namespace: controlPlaneNamespace,
-				Labels: map[string]string{
-					"name":                "etcd",
-					"instance":            "etcd-events",
-					"gardener.cloud/role": "controlplane",
-				},
-			},
-			Spec: corev1.PodSpec{
-				NodeName: "node01",
-				Containers: []corev1.Container{
-					{
-						Name: "test",
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/destination",
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:        "test",
-						ContainerID: "containerd://bar",
-					},
-				},
-			},
-		}
-		kubeAPIPod = &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "kube-api",
-				Namespace: controlPlaneNamespace,
-				Labels: map[string]string{
-					"role":                "apiserver",
-					"gardener.cloud/role": "controlplane",
-				},
-			},
-			Spec: corev1.PodSpec{
-				NodeName: "node01",
-				Containers: []corev1.Container{
-					{
-						Name: "test",
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/destination",
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:        "test",
-						ContainerID: "containerd://bar",
-					},
-				},
-			},
-		}
-		kubeControllerManagerPod = &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "kube-controller-manager",
-				Namespace: controlPlaneNamespace,
-				Labels: map[string]string{
-					"role":                "controller-manager",
-					"gardener.cloud/role": "controlplane",
-				},
-			},
-			Spec: corev1.PodSpec{
-				NodeName: "node01",
-				Containers: []corev1.Container{
-					{
-						Name: "test",
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/destination",
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:        "test",
-						ContainerID: "containerd://bar",
-					},
-				},
-			},
-		}
-		kubeSchedulerPod = &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "kube-scheduler",
-				Namespace: controlPlaneNamespace,
-				Labels: map[string]string{
-					"role":                "scheduler",
-					"gardener.cloud/role": "controlplane",
-				},
-			},
-			Spec: corev1.PodSpec{
-				NodeName: "node01",
-				Containers: []corev1.Container{
-					{
-						Name: "test",
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/destination",
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:        "test",
-						ContainerID: "containerd://bar",
-					},
-				},
-			},
-		}
-		kubeProxyPod = &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "kube-proxy",
-				Namespace: "kube-system",
-				Labels: map[string]string{
-					"role":                                "proxy",
-					"resources.gardener.cloud/managed-by": "gardener",
-					"gardener.cloud/role":                 "system-component",
-				},
-			},
-			Spec: corev1.PodSpec{
-				NodeName: "node01",
-				Containers: []corev1.Container{
-					{
-						Name: "test",
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/destination",
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:        "test",
-						ContainerID: "containerd://bar",
-					},
-				},
-			},
-		}
-		controlPlaneDikiPodName := fmt.Sprintf("diki-%s-%s", v1r10.IDPodFiles, "aaaaaaaaaa")
-		controlPlaneDikiPod = &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      controlPlaneDikiPodName,
-				Namespace: "kube-system",
-			},
-			Spec: corev1.PodSpec{
-				NodeName: "node01",
-				Containers: []corev1.Container{
-					{
-						Name: "test",
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/destination",
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						ContainerID: "containerd://foo",
-					},
-				},
-			},
-		}
-		clusterPod = &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "1-shoot-pod",
-				Namespace: "kube-system",
-				Labels: map[string]string{
-					"resources.gardener.cloud/managed-by": "gardener",
-					"gardener.cloud/role":                 "system-component",
-				},
-			},
-			Spec: corev1.PodSpec{
-				NodeName: "node01",
-				Containers: []corev1.Container{
-					{
-						Name: "test",
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/destination",
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:        "test",
-						ContainerID: "containerd://bar",
-					},
-				},
-			},
-		}
-		clusterDikiPodName := fmt.Sprintf("diki-%s-%s", v1r10.IDPodFiles, "bbbbbbbbbb")
-		clusterDikiPod = &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      clusterDikiPodName,
-				Namespace: "kube-system",
-			},
-			Spec: corev1.PodSpec{
-				NodeName: "node01",
-				Containers: []corev1.Container{
-					{
-						Name: "test",
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/destination",
-							},
-						},
-					},
-				},
-			},
-			Status: corev1.PodStatus{
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						ContainerID: "containerd://foo",
-					},
-				},
-			},
-		}
+
+		plainControlPlanePod = plainPod.DeepCopy()
+		plainControlPlanePod.Namespace = controlPlaneNamespace
+		plainControlPlanePod.Labels["gardener.cloud/role"] = "controlplane"
+
+		etcdMainPod = plainControlPlanePod.DeepCopy()
+		etcdMainPod.Name = "1-seed-pod"
+		etcdMainPod.Labels["name"] = "etcd"
+		etcdMainPod.Labels["instance"] = "etcd-main"
+
+		etcdEventsPod = plainControlPlanePod.DeepCopy()
+		etcdEventsPod.Name = "etcd-events"
+		etcdEventsPod.Labels["name"] = "etcd"
+		etcdEventsPod.Labels["instance"] = "etcd-events"
+
+		kubeAPIPod = plainControlPlanePod.DeepCopy()
+		kubeAPIPod.Name = "kube-api"
+		kubeAPIPod.Labels["role"] = "apiserver"
+
+		kubeControllerManagerPod = plainControlPlanePod.DeepCopy()
+		kubeControllerManagerPod.Name = "kube-controller-manager"
+		kubeControllerManagerPod.Labels["role"] = "controller-manager"
+
+		kubeSchedulerPod = plainControlPlanePod.DeepCopy()
+		kubeSchedulerPod.Name = "kube-scheduler"
+		kubeSchedulerPod.Labels["role"] = "scheduler"
+
+		plainClusterPod = plainPod.DeepCopy()
+		plainClusterPod.Namespace = "kube-system"
+		plainClusterPod.Labels["resources.gardener.cloud/managed-by"] = "gardener"
+		plainClusterPod.Labels["gardener.cloud/role"] = "system-component"
+
+		kubeProxyPod = plainClusterPod.DeepCopy()
+		kubeProxyPod.Name = "kube-proxy"
+		kubeProxyPod.Labels["role"] = "proxy"
+
+		controlPlaneDikiPod = plainControlPlanePod.DeepCopy()
+		controlPlaneDikiPod.Name = fmt.Sprintf("diki-%s-%s", v1r10.IDPodFiles, "aaaaaaaaaa")
+		controlPlaneDikiPod.Namespace = "kube-system"
+		controlPlaneDikiPod.Labels = map[string]string{}
+
+		clusterPod = plainClusterPod.DeepCopy()
+		clusterPod.Name = "1-shoot-pod"
+
+		clusterDikiPod = plainClusterPod.DeepCopy()
+		clusterDikiPod.Name = fmt.Sprintf("diki-%s-%s", v1r10.IDPodFiles, "bbbbbbbbbb")
+		clusterDikiPod.Labels = map[string]string{}
 	})
 
 	DescribeTable("Run cases",
-		func(controlPlanePodLabelInstance string, controlPlaneExecuteReturnString, clusterExecuteReturnString [][]string, controlPlaneExecuteReturnError, clusterExecuteReturnError [][]error, expectedCheckResults []rule.CheckResult) {
+		func(etcdMainPodLabelInstance string, controlPlaneExecuteReturnString, clusterExecuteReturnString [][]string, controlPlaneExecuteReturnError, clusterExecuteReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			clusterExecuteReturnString[0] = append(clusterExecuteReturnString[0], emptyMounts)
 			clusterExecuteReturnError[0] = append(clusterExecuteReturnError[0], nil)
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(clusterExecuteReturnString, clusterExecuteReturnError)
@@ -386,11 +188,11 @@ var _ = Describe("#RulePodFiles", func() {
 				ControlPlanePodContext: fakeControlPlanePodContext,
 			}
 
-			if len(controlPlanePodLabelInstance) > 0 {
-				controlPlanePod.Labels["instance"] = controlPlanePodLabelInstance
+			if len(etcdMainPodLabelInstance) > 0 {
+				etcdMainPod.Labels["instance"] = etcdMainPodLabelInstance
 			}
 			Expect(fakeControlPlaneClient.Create(ctx, kubeControllerManagerPod)).To(Succeed())
-			Expect(fakeControlPlaneClient.Create(ctx, controlPlanePod)).To(Succeed())
+			Expect(fakeControlPlaneClient.Create(ctx, etcdMainPod)).To(Succeed())
 			Expect(fakeControlPlaneClient.Create(ctx, etcdEventsPod)).To(Succeed())
 			Expect(fakeControlPlaneClient.Create(ctx, kubeAPIPod)).To(Succeed())
 			Expect(fakeControlPlaneClient.Create(ctx, kubeSchedulerPod)).To(Succeed())

@@ -122,18 +122,10 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 }
 
 func (r *RulePodFiles) checkPods(ctx context.Context, clusterTarget gardener.Target, image string, c client.Client, podContext pod.PodContext, pods []corev1.Pod, mandatoryComponents map[string][]string) []rule.CheckResult {
-	checkResults := []rule.CheckResult{}
-	nodePodMap := map[string][]corev1.Pod{}
-	for _, pod := range pods {
-		target := clusterTarget.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
-		if pod.Spec.NodeName != "" {
-			nodePodMap[pod.Spec.NodeName] = append(nodePodMap[pod.Spec.NodeName], pod)
-		} else {
-			checkResults = append(checkResults, rule.WarningCheckResult("Pod not (yet) scheduled", target))
-		}
-	}
-	for nodeName, nodePods := range nodePodMap {
-		checkResultsForNodePods := r.checkNodePods(ctx, clusterTarget, image, nodeName, c, podContext, nodePods, mandatoryComponents)
+	groupedPods, checkResults := utils.SelectPodOfReferenceGroup(pods, clusterTarget)
+
+	for nodeName, pods := range groupedPods {
+		checkResultsForNodePods := r.checkNodePods(ctx, clusterTarget, image, nodeName, c, podContext, pods, mandatoryComponents)
 		checkResults = append(checkResults, checkResultsForNodePods...)
 	}
 	return checkResults
