@@ -74,13 +74,21 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget())), nil
 	}
 
-	seedPodSelector := labels.NewSelector().Add(*gardenerRoleControlplaneReq)
-	seedPods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, seedPodSelector, 300)
+	seedAllPods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, "", labels.NewSelector(), 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
 	}
+	seedPodSelector := labels.NewSelector().Add(*gardenerRoleControlplaneReq)
+	seedControlPlanePods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, seedPodSelector, 300)
+	if err != nil {
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
+	}
+	seedNodes, err := kubeutils.GetNodes(ctx, r.ControlPlaneClient, 300)
+	if err != nil {
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "nodeList"))), nil
+	}
 
-	checkResults := r.checkPods(ctx, seedTarget, image.String(), r.ControlPlaneClient, r.ControlPlanePodContext, seedPods, mandatoryComponentsSeed)
+	checkResults := r.checkPods(ctx, seedTarget, image.String(), r.ControlPlaneClient, r.ControlPlanePodContext, seedAllPods, seedControlPlanePods, seedNodes, mandatoryComponentsSeed)
 
 	managedByGardenerReq, err := labels.NewRequirement(resourcesv1alpha1.ManagedBy, selection.Equals, []string{"gardener"})
 	if err != nil {
@@ -92,13 +100,21 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget())), nil
 	}
 
-	shootPodSelector := labels.NewSelector().Add(*managedByGardenerReq).Add(*gardenerRoleSystemComponentReq)
-	shootPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", shootPodSelector, 300)
+	shootAllPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList"))), nil
 	}
+	shootPodSelector := labels.NewSelector().Add(*managedByGardenerReq).Add(*gardenerRoleSystemComponentReq)
+	shootSystemComponetPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", shootPodSelector, 300)
+	if err != nil {
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList"))), nil
+	}
+	shootNodes, err := kubeutils.GetNodes(ctx, r.ClusterClient, 300)
+	if err != nil {
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "nodeList"))), nil
+	}
 
-	shootCheckResults := r.checkPods(ctx, shootTarget, image.String(), r.ClusterClient, r.ClusterPodContext, shootPods, mandatoryComponentsShoot)
+	shootCheckResults := r.checkPods(ctx, shootTarget, image.String(), r.ClusterClient, r.ClusterPodContext, shootAllPods, shootSystemComponetPods, shootNodes, mandatoryComponentsShoot)
 
 	checkResults = append(checkResults, shootCheckResults...)
 
@@ -121,8 +137,17 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (r *RulePodFiles) checkPods(ctx context.Context, clusterTarget gardener.Target, image string, c client.Client, podContext pod.PodContext, pods []corev1.Pod, mandatoryComponents map[string][]string) []rule.CheckResult {
-	groupedPods, checkResults := utils.SelectPodOfReferenceGroup(pods, clusterTarget)
+func (r *RulePodFiles) checkPods(ctx context.Context, clusterTarget gardener.Target, image string, c client.Client, podContext pod.PodContext, pods, selectedPods []corev1.Pod, nodes []corev1.Node, mandatoryComponents map[string][]string) []rule.CheckResult {
+	nodesAllocatablePods := utils.GetNodesAllocatablePods(pods, nodes)
+	groupedPods, checkResults := utils.SelectPodOfReferenceGroup(selectedPods, nodesAllocatablePods, clusterTarget)
+
+	for node, pods := range groupedPods {
+		out := fmt.Sprintf("%s: ", node)
+		for _, pod := range pods {
+			out = fmt.Sprintf("%s%s; ", out, pod.Name)
+		}
+		fmt.Printf("%s\n", out)
+	}
 
 	for nodeName, pods := range groupedPods {
 		checkResultsForNodePods := r.checkNodePods(ctx, clusterTarget, image, nodeName, c, podContext, pods, mandatoryComponents)

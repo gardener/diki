@@ -214,18 +214,43 @@ func MatchFilePermissionsAndOwnersCases(
 	return checkResults
 }
 
+// GetNodesAllocatablePods return the number of free
+// allocatable spots of pods for all nodes.
+func GetNodesAllocatablePods(pods []corev1.Pod, nodes []corev1.Node) map[string]int {
+	nodesAllocatablePods := map[string]int{}
+
+	for _, node := range nodes {
+		nodesAllocatablePods[node.Name] = int(node.Status.Allocatable.Pods().Value())
+	}
+	for _, pod := range pods {
+		if pod.Spec.NodeName != "" && pod.Status.Phase != corev1.PodFailed && pod.Status.Phase != corev1.PodSucceeded {
+			nodesAllocatablePods[pod.Spec.NodeName]--
+		}
+	}
+
+	return nodesAllocatablePods
+}
+
 // SelectPodOfReferenceGroup returns a single pod per owner reference group
 // as well as groups the returned pods by the nodes they are scheduled on.
 // Pods that do not have an owner reference will always be selected.
+// Pods will not be grouped to nodes, which have reached their allocation limit.
 // It tries to pick the pods in a way that fewer nodes will be selected.
-func SelectPodOfReferenceGroup(pods []corev1.Pod, target gardener.Target) (map[string][]corev1.Pod, []rule.CheckResult) {
+func SelectPodOfReferenceGroup(pods []corev1.Pod, nodesAllocatablePods map[string]int, target gardener.Target) (map[string][]corev1.Pod, []rule.CheckResult) {
 	checkResults := []rule.CheckResult{}
 	groupedPodsByNodes := map[string][]corev1.Pod{}
 	groupedPodsByReferences := map[string][]corev1.Pod{}
+
 	for _, pod := range pods {
+		podTarget := target.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
+
 		if pod.Spec.NodeName != "" {
 			if len(pod.OwnerReferences) == 0 {
-				groupedPodsByNodes[pod.Spec.NodeName] = append(groupedPodsByNodes[pod.Spec.NodeName], pod)
+				if nodesAllocatablePods[pod.Spec.NodeName] > 0 {
+					groupedPodsByNodes[pod.Spec.NodeName] = append(groupedPodsByNodes[pod.Spec.NodeName], pod)
+					continue
+				}
+				checkResults = append(checkResults, rule.WarningCheckResult("Pod cannon be tested, since it is scheduled on a fully allocated node.", podTarget.With("node", pod.Spec.NodeName)))
 				continue
 			}
 
@@ -234,7 +259,6 @@ func SelectPodOfReferenceGroup(pods []corev1.Pod, target gardener.Target) (map[s
 			continue
 		}
 
-		podTarget := target.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
 		checkResults = append(checkResults, rule.WarningCheckResult("Pod not (yet) scheduled", podTarget))
 	}
 
@@ -256,18 +280,37 @@ func SelectPodOfReferenceGroup(pods []corev1.Pod, target gardener.Target) (map[s
 			return ok
 		})
 
-		// if none of the pods match already selected node then
-		// select the node and add a single pod of the reference group for checking
-		if podOnUsedNodeIdx < 0 {
-			groupedPodsByNodes[pods[0].Spec.NodeName] = []corev1.Pod{pods[0]}
+		// if there is a pod of the reference group which is scheduled on a selected node
+		// then add this pod to the "to-be-checked" pods
+		if podOnUsedNodeIdx >= 0 {
+			pod := pods[podOnUsedNodeIdx]
+			groupedPodsByNodes[pod.Spec.NodeName] = append(groupedPodsByNodes[pod.Spec.NodeName], pod)
+
 			continue
 		}
 
-		// if there is a pod of the reference group which is scheduled on a selected node
-		// then add this pod to the "to-be-checked" pods
-		pod := pods[podOnUsedNodeIdx]
-		groupedPodsByNodes[pod.Spec.NodeName] = append(groupedPodsByNodes[pod.Spec.NodeName], pod)
-	}
+		// if none of the pods match already selected node then
+		// select the node and add a single pod of the reference group for checking
+		maxAllocatablePods := 0
+		var podToUse *corev1.Pod
+		for _, pod := range pods {
+			nodeName := pod.Spec.NodeName
+			if nodesAllocatablePods[nodeName] > maxAllocatablePods {
+				maxAllocatablePods = nodesAllocatablePods[nodeName]
+				podToUse = &pod
+			}
+		}
 
+		if maxAllocatablePods > 0 {
+			groupedPodsByNodes[podToUse.Spec.NodeName] = []corev1.Pod{*podToUse}
+			continue
+		}
+
+		referenceGroupTarget := target.With("name", pods[0].OwnerReferences[0].Name, "uid", string((pods[0].OwnerReferences[0].UID)), "kind", "referenceGroup")
+		checkResults = append(
+			checkResults,
+			rule.WarningCheckResult("Reference group cannon be tested, since all pods of the group are scheduled on a fully allocated node.", referenceGroupTarget),
+		)
+	}
 	return groupedPodsByNodes, checkResults
 }

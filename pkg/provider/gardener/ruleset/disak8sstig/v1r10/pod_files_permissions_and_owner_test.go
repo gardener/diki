@@ -12,6 +12,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -57,6 +58,10 @@ var _ = Describe("#RulePodFiles", func() {
 		controlPlaneNamespace      = "foo"
 		fakeClusterPodContext      pod.PodContext
 		fakeControlPlanePodContext pod.PodContext
+		nodeName                   = "node01"
+		plainNode                  *corev1.Node
+		controlPlaneNode           *corev1.Node
+		clusterNode                *corev1.Node
 		plainPod                   *corev1.Pod
 		plainControlPlanePod       *corev1.Pod
 		etcdMainPod                *corev1.Pod
@@ -76,12 +81,27 @@ var _ = Describe("#RulePodFiles", func() {
 		v1r10.Generator = &FakeRandString{CurrentChar: 'a'}
 		fakeClusterClient = fakeclient.NewClientBuilder().Build()
 		fakeControlPlaneClient = fakeclient.NewClientBuilder().Build()
+
+		plainNode = &corev1.Node{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: nodeName,
+			},
+			Status: corev1.NodeStatus{
+				Allocatable: corev1.ResourceList{
+					"pods": resource.MustParse("100.0"),
+				},
+			},
+		}
+
+		controlPlaneNode = plainNode.DeepCopy()
+		clusterNode = plainNode.DeepCopy()
+
 		plainPod = &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{},
 			},
 			Spec: corev1.PodSpec{
-				NodeName: "node01",
+				NodeName: nodeName,
 				Containers: []corev1.Container{
 					{
 						Name: "test",
@@ -188,6 +208,8 @@ var _ = Describe("#RulePodFiles", func() {
 				ControlPlanePodContext: fakeControlPlanePodContext,
 			}
 
+			Expect(fakeClusterClient.Create(ctx, clusterNode)).To(Succeed())
+			Expect(fakeControlPlaneClient.Create(ctx, controlPlaneNode)).To(Succeed())
 			if len(etcdMainPodLabelInstance) > 0 {
 				etcdMainPod.Labels["instance"] = etcdMainPodLabelInstance
 			}

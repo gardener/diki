@@ -14,6 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 	gomegatypes "github.com/onsi/gomega/types"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -290,7 +291,130 @@ var _ = Describe("utils", func() {
 		)
 	})
 
+	Describe("#GetNodesAllocatablePods", func() {
+		It("should correct number of allocatable pods", func() {
+			pod1 := &corev1.Pod{}
+			pod1.Name = "pod1"
+			pod1.Spec.NodeName = "node1"
+
+			pod2 := &corev1.Pod{}
+			pod2.Name = "pod2"
+			pod2.Spec.NodeName = "node2"
+
+			pod3 := &corev1.Pod{}
+			pod3.Name = "pod3"
+			pod3.Spec.NodeName = "node1"
+
+			pod4 := &corev1.Pod{}
+			pod4.Name = "pod4"
+			pod4.Spec.NodeName = "node2"
+
+			pod5 := &corev1.Pod{}
+			pod5.Name = "pod5"
+			pod5.Spec.NodeName = "node3"
+
+			pods := []corev1.Pod{*pod1, *pod2, *pod3, *pod4, *pod5}
+
+			node1 := &corev1.Node{}
+			node1.Name = "node1"
+			node1.Status.Allocatable = corev1.ResourceList{
+				"pods": resource.MustParse("2.0"),
+			}
+
+			node2 := &corev1.Node{}
+			node2.Name = "node2"
+			node2.Status.Allocatable = corev1.ResourceList{
+				"pods": resource.MustParse("5.0"),
+			}
+
+			node3 := &corev1.Node{}
+			node3.Name = "node3"
+			node3.Status.Allocatable = corev1.ResourceList{
+				"pods": resource.MustParse("10.0"),
+			}
+
+			nodes := []corev1.Node{*node1, *node2, *node3}
+
+			expectedRes := map[string]int{
+				"node1": 0,
+				"node2": 3,
+				"node3": 9,
+			}
+
+			res := utils.GetNodesAllocatablePods(pods, nodes)
+
+			Expect(res).To(Equal(expectedRes))
+		})
+
+		It("should correct number of allocatable pods when some pods are in failed or succeeded phase or not scheduled.", func() {
+			pod1 := &corev1.Pod{}
+			pod1.Name = "pod1"
+			pod1.Spec.NodeName = "node1"
+			pod1.Status.Phase = corev1.PodFailed
+
+			pod2 := &corev1.Pod{}
+			pod2.Name = "pod2"
+			pod2.Spec.NodeName = "node2"
+
+			pod3 := &corev1.Pod{}
+			pod3.Name = "pod3"
+			pod3.Spec.NodeName = "node1"
+
+			pod4 := &corev1.Pod{}
+			pod4.Name = "pod4"
+			pod4.Spec.NodeName = "node2"
+			pod4.Status.Phase = corev1.PodSucceeded
+
+			pod5 := &corev1.Pod{}
+			pod5.Name = "pod5"
+
+			pods := []corev1.Pod{*pod1, *pod2, *pod3, *pod4, *pod5}
+
+			node1 := &corev1.Node{}
+			node1.Name = "node1"
+			node1.Status.Allocatable = corev1.ResourceList{
+				"pods": resource.MustParse("2.0"),
+			}
+
+			node2 := &corev1.Node{}
+			node2.Name = "node2"
+			node2.Status.Allocatable = corev1.ResourceList{
+				"pods": resource.MustParse("5.0"),
+			}
+
+			node3 := &corev1.Node{}
+			node3.Name = "node3"
+			node3.Status.Allocatable = corev1.ResourceList{
+				"pods": resource.MustParse("10.0"),
+			}
+
+			nodes := []corev1.Node{*node1, *node2, *node3}
+
+			expectedRes := map[string]int{
+				"node1": 1,
+				"node2": 4,
+				"node3": 10,
+			}
+
+			res := utils.GetNodesAllocatablePods(pods, nodes)
+
+			Expect(res).To(Equal(expectedRes))
+		})
+	})
+
 	Describe("#SelectPodOfReferenceGroup", func() {
+		var (
+			nodesAllocatablePods map[string]int
+		)
+
+		BeforeEach(func() {
+			nodesAllocatablePods = map[string]int{
+				"node1": 10,
+				"node2": 10,
+				"node3": 10,
+			}
+		})
+
 		It("should group single pods by nodes", func() {
 			pod1 := &corev1.Pod{}
 			pod1.Name = "pod1"
@@ -320,9 +444,9 @@ var _ = Describe("utils", func() {
 				"node3": {*pod5},
 			}
 
-			groupedPods, checkResult := utils.SelectPodOfReferenceGroup(pods, gardener.Target{})
+			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, gardener.Target{})
 
-			Expect(groupedPods).To(Equal(expectedRes))
+			Expect(res).To(Equal(expectedRes))
 			Expect(checkResult).To(Equal([]rule.CheckResult{}))
 		})
 
@@ -369,9 +493,9 @@ var _ = Describe("utils", func() {
 				"node2": {*pod2, *pod4},
 			}
 
-			groupedPods, checkResult := utils.SelectPodOfReferenceGroup(pods, gardener.Target{})
+			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, gardener.Target{})
 
-			Expect(groupedPods).To(Equal(expectedRes))
+			Expect(res).To(Equal(expectedRes))
 			Expect(checkResult).To(Equal([]rule.CheckResult{}))
 		})
 
@@ -423,9 +547,9 @@ var _ = Describe("utils", func() {
 				"node3": {*pod3, *pod4},
 			}
 
-			groupedPods, checkResult := utils.SelectPodOfReferenceGroup(pods, gardener.Target{})
+			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, gardener.Target{})
 
-			Expect(groupedPods).To(Equal(expectedRes))
+			Expect(res).To(Equal(expectedRes))
 			Expect(checkResult).To(Equal([]rule.CheckResult{}))
 		})
 
@@ -477,13 +601,13 @@ var _ = Describe("utils", func() {
 				"node3": {*pod3, *pod4},
 			}
 
-			groupedPods, checkResult := utils.SelectPodOfReferenceGroup(pods, gardener.Target{})
+			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, gardener.Target{})
 
-			Expect(groupedPods).To(Equal(expectedRes))
+			Expect(res).To(Equal(expectedRes))
 			Expect(checkResult).To(Equal([]rule.CheckResult{}))
 		})
 
-		It("should return checkResults when pod is not scheduled", func() {
+		It("should return correct checkResults when pod is not scheduled", func() {
 			pod1 := &corev1.Pod{}
 			pod1.Name = "pod1"
 			pod1.Spec.NodeName = ""
@@ -499,9 +623,78 @@ var _ = Describe("utils", func() {
 				},
 			}
 
-			groupedPods, checkResult := utils.SelectPodOfReferenceGroup(pods, gardener.Target{})
+			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, gardener.Target{})
 
-			Expect(groupedPods).To(Equal(expectedRes))
+			Expect(res).To(Equal(expectedRes))
+			Expect(checkResult).To(Equal(expectedCheckResults))
+		})
+
+		It("should return correct checkResults when nodes are fully allocated", func() {
+			pod1 := &corev1.Pod{}
+			pod1.Name = "pod1"
+			pod1.Spec.NodeName = "node3"
+			pod1.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
+				},
+			}
+
+			pod2 := &corev1.Pod{}
+			pod2.Name = "pod2"
+			pod2.Spec.NodeName = "node2"
+
+			pod3 := &corev1.Pod{}
+			pod3.Name = "pod3"
+			pod3.Spec.NodeName = "node1"
+
+			pod4 := &corev1.Pod{}
+			pod4.Name = "pod4"
+			pod4.Spec.NodeName = "node2"
+			pod4.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
+				},
+			}
+
+			pod5 := &corev1.Pod{}
+			pod5.Name = "pod5"
+			pod5.Spec.NodeName = "node1"
+			pod5.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: types.UID("1"),
+				},
+			}
+
+			pods := []corev1.Pod{*pod1, *pod2, *pod3, *pod4, *pod5}
+
+			nodesAllocatablePods = map[string]int{
+				"node1": 0,
+				"node2": 0,
+				"node3": 0,
+			}
+
+			expectedRes := map[string][]corev1.Pod{}
+			expectedCheckResults := []rule.CheckResult{
+				{
+					Status:  rule.Warning,
+					Message: "Pod cannon be tested, since it is scheduled on a fully allocated node.",
+					Target:  gardener.NewTarget("name", "pod2", "namespace", "", "kind", "pod", "node", "node2"),
+				},
+				{
+					Status:  rule.Warning,
+					Message: "Pod cannon be tested, since it is scheduled on a fully allocated node.",
+					Target:  gardener.NewTarget("name", "pod3", "namespace", "", "kind", "pod", "node", "node1"),
+				},
+				{
+					Status:  rule.Warning,
+					Message: "Reference group cannon be tested, since all pods of the group are scheduled on a fully allocated node.",
+					Target:  gardener.NewTarget("name", "", "uid", "1", "kind", "referenceGroup"),
+				},
+			}
+
+			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, gardener.Target{})
+
+			Expect(res).To(Equal(expectedRes))
 			Expect(checkResult).To(Equal(expectedCheckResults))
 		})
 
