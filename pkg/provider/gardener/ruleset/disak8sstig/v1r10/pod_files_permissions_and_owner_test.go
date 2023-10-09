@@ -199,7 +199,7 @@ var _ = Describe("#RulePodFiles", func() {
 				"node3": {*pod5},
 			}
 
-			groupedPods, checkResult := v1r10.GroupMinimalPodsByNodes(pods, gardener.Target{})
+			groupedPods, checkResult := v1r10.SelectPodOfReferenceGroup(pods, gardener.Target{})
 
 			Expect(groupedPods).To(Equal(expectedRes))
 			Expect(checkResult).To(Equal([]rule.CheckResult{}))
@@ -248,7 +248,7 @@ var _ = Describe("#RulePodFiles", func() {
 				"node2": {*pod2, *pod4},
 			}
 
-			groupedPods, checkResult := v1r10.GroupMinimalPodsByNodes(pods, gardener.Target{})
+			groupedPods, checkResult := v1r10.SelectPodOfReferenceGroup(pods, gardener.Target{})
 
 			Expect(groupedPods).To(Equal(expectedRes))
 			Expect(checkResult).To(Equal([]rule.CheckResult{}))
@@ -302,7 +302,7 @@ var _ = Describe("#RulePodFiles", func() {
 				"node3": {*pod3, *pod4},
 			}
 
-			groupedPods, checkResult := v1r10.GroupMinimalPodsByNodes(pods, gardener.Target{})
+			groupedPods, checkResult := v1r10.SelectPodOfReferenceGroup(pods, gardener.Target{})
 
 			Expect(groupedPods).To(Equal(expectedRes))
 			Expect(checkResult).To(Equal([]rule.CheckResult{}))
@@ -356,7 +356,7 @@ var _ = Describe("#RulePodFiles", func() {
 				"node3": {*pod3, *pod4},
 			}
 
-			groupedPods, checkResult := v1r10.GroupMinimalPodsByNodes(pods, gardener.Target{})
+			groupedPods, checkResult := v1r10.SelectPodOfReferenceGroup(pods, gardener.Target{})
 
 			Expect(groupedPods).To(Equal(expectedRes))
 			Expect(checkResult).To(Equal([]rule.CheckResult{}))
@@ -378,7 +378,7 @@ var _ = Describe("#RulePodFiles", func() {
 				},
 			}
 
-			groupedPods, checkResult := v1r10.GroupMinimalPodsByNodes(pods, gardener.Target{})
+			groupedPods, checkResult := v1r10.SelectPodOfReferenceGroup(pods, gardener.Target{})
 
 			Expect(groupedPods).To(Equal(expectedRes))
 			Expect(checkResult).To(Equal(expectedCheckResults))
