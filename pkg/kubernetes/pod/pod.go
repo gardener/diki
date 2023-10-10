@@ -148,11 +148,11 @@ func (spe *SimplePodExecutor) Execute(ctx context.Context, command string, comma
 	}
 
 	if len(stderrByte) > 0 {
-		return "", fmt.Errorf("command stderr output: %s", string(stderrByte))
+		return "", fmt.Errorf("command %s %s stderr output: %s", command, commandArg, string(stderrByte))
 	}
 
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("command %s %s errored: %s", command, commandArg, err.Error())
 	}
 
 	result, err := io.ReadAll(&stdout)
