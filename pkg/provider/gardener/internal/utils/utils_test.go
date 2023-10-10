@@ -291,7 +291,7 @@ var _ = Describe("utils", func() {
 		)
 	})
 
-	Describe("#GetNodesAllocatablePods", func() {
+	Describe("#GetNodesAllocatablePodsNum", func() {
 		It("should correct number of allocatable pods", func() {
 			pod1 := &corev1.Pod{}
 			pod1.Name = "pod1"
@@ -341,7 +341,7 @@ var _ = Describe("utils", func() {
 				"node3": 9,
 			}
 
-			res := utils.GetNodesAllocatablePods(pods, nodes)
+			res := utils.GetNodesAllocatablePodsNum(pods, nodes)
 
 			Expect(res).To(Equal(expectedRes))
 		})
@@ -392,7 +392,7 @@ var _ = Describe("utils", func() {
 				"node3": 10,
 			}
 
-			res := utils.GetNodesAllocatablePods(pods, nodes)
+			res := utils.GetNodesAllocatablePodsNum(pods, nodes)
 
 			Expect(res).To(Equal(expectedRes))
 		})

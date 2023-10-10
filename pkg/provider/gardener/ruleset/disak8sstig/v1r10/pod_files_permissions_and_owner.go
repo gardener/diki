@@ -138,7 +138,7 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 }
 
 func (r *RulePodFiles) checkPods(ctx context.Context, clusterTarget gardener.Target, image string, c client.Client, podContext pod.PodContext, pods, selectedPods []corev1.Pod, nodes []corev1.Node, mandatoryComponents map[string][]string) []rule.CheckResult {
-	nodesAllocatablePods := utils.GetNodesAllocatablePods(pods, nodes)
+	nodesAllocatablePods := utils.GetNodesAllocatablePodsNum(pods, nodes)
 	groupedPods, checkResults := utils.SelectPodOfReferenceGroup(selectedPods, nodesAllocatablePods, clusterTarget)
 
 	for nodeName, pods := range groupedPods {

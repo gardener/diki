@@ -214,9 +214,9 @@ func MatchFilePermissionsAndOwnersCases(
 	return checkResults
 }
 
-// GetNodesAllocatablePods return the number of free
+// GetNodesAllocatablePodsNum return the number of free
 // allocatable spots of pods for all nodes.
-func GetNodesAllocatablePods(pods []corev1.Pod, nodes []corev1.Node) map[string]int {
+func GetNodesAllocatablePodsNum(pods []corev1.Pod, nodes []corev1.Node) map[string]int {
 	nodesAllocatablePods := map[string]int{}
 
 	for _, node := range nodes {
