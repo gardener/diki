@@ -228,7 +228,7 @@ func (r *RulePodFiles) checkContainerd(
 		if metav1.HasLabel(pod.ObjectMeta, key) && pod.Labels[key] == value {
 			delete(mandatoryComponents, component)
 			expectedFileOwnerUsers = []string{"0", "65532"}
-			expectedFileOwnerGroups = []string{"0", "65532", "65534"}
+			expectedFileOwnerGroups = []string{"0", "65532"}
 		}
 	}
 

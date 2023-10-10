@@ -47,7 +47,7 @@ var _ = Describe("#RulePodFiles", func() {
   }
 ]`
 		compliantStats = `600 0 0 /destination/file1.txt
-644 0 65534 /destination/bar/file2.txt`
+644 0 65532 /destination/bar/file2.txt`
 	)
 
 	var (
@@ -213,9 +213,9 @@ var _ = Describe("#RulePodFiles", func() {
 			[][]error{{nil, nil}}, [][]error{{nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 644, ownerUser: 0, ownerGroup: 65534")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 644, ownerUser: 0, ownerGroup: 65532")),
 				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "shoot", "name", "1-shoot-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "shoot", "name", "1-shoot-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 644, ownerUser: 0, ownerGroup: 65534")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "shoot", "name", "1-shoot-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 644, ownerUser: 0, ownerGroup: 65532")),
 			}),
 		Entry("should return correct checkResult when container is etcd", "",
 			[][]string{{mountsWithETCD, compliantStats}}, [][]string{{emptyMounts}},
