@@ -79,10 +79,13 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
 	}
 	seedPodSelector := labels.NewSelector().Add(*gardenerRoleControlplaneReq)
-	seedControlPlanePods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, seedPodSelector, 300)
-	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
+	seedControlPlanePods := []corev1.Pod{}
+	for _, p := range seedAllPods {
+		if seedPodSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.ControlPlaneNamespace {
+			seedControlPlanePods = append(seedControlPlanePods, p)
+		}
 	}
+
 	seedNodes, err := kubeutils.GetNodes(ctx, r.ControlPlaneClient, 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "nodeList"))), nil
@@ -104,11 +107,15 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList"))), nil
 	}
-	shootPodSelector := labels.NewSelector().Add(*managedByGardenerReq).Add(*gardenerRoleSystemComponentReq)
-	shootSystemComponetPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", shootPodSelector, 300)
-	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList"))), nil
+
+	shootSystemPodSelector := labels.NewSelector().Add(*managedByGardenerReq).Add(*gardenerRoleSystemComponentReq)
+	shootSystemComponetPods := []corev1.Pod{}
+	for _, p := range shootAllPods {
+		if shootSystemPodSelector.Matches(labels.Set(p.Labels)) {
+			shootSystemComponetPods = append(shootSystemComponetPods, p)
+		}
 	}
+
 	shootNodes, err := kubeutils.GetNodes(ctx, r.ClusterClient, 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "nodeList"))), nil
