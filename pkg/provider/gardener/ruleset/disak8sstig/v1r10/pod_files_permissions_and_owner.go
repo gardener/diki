@@ -141,14 +141,6 @@ func (r *RulePodFiles) checkPods(ctx context.Context, clusterTarget gardener.Tar
 	nodesAllocatablePods := utils.GetNodesAllocatablePods(pods, nodes)
 	groupedPods, checkResults := utils.SelectPodOfReferenceGroup(selectedPods, nodesAllocatablePods, clusterTarget)
 
-	for node, pods := range groupedPods {
-		out := fmt.Sprintf("%s: ", node)
-		for _, pod := range pods {
-			out = fmt.Sprintf("%s%s; ", out, pod.Name)
-		}
-		fmt.Printf("%s\n", out)
-	}
-
 	for nodeName, pods := range groupedPods {
 		checkResultsForNodePods := r.checkNodePods(ctx, clusterTarget, image, nodeName, c, podContext, pods, mandatoryComponents)
 		checkResults = append(checkResults, checkResultsForNodePods...)
