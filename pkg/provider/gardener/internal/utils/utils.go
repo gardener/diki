@@ -250,7 +250,7 @@ func SelectPodOfReferenceGroup(pods []corev1.Pod, nodesAllocatablePods map[strin
 					groupedPodsByNodes[pod.Spec.NodeName] = append(groupedPodsByNodes[pod.Spec.NodeName], pod)
 					continue
 				}
-				checkResults = append(checkResults, rule.WarningCheckResult("Pod cannon be tested, since it is scheduled on a fully allocated node.", podTarget.With("node", pod.Spec.NodeName)))
+				checkResults = append(checkResults, rule.WarningCheckResult("Pod cannot be tested since it is scheduled on a fully allocated node.", podTarget.With("node", pod.Spec.NodeName)))
 				continue
 			}
 
@@ -309,7 +309,7 @@ func SelectPodOfReferenceGroup(pods []corev1.Pod, nodesAllocatablePods map[strin
 		referenceGroupTarget := target.With("name", pods[0].OwnerReferences[0].Name, "uid", string((pods[0].OwnerReferences[0].UID)), "kind", "referenceGroup")
 		checkResults = append(
 			checkResults,
-			rule.WarningCheckResult("Reference group cannon be tested, since all pods of the group are scheduled on a fully allocated node.", referenceGroupTarget),
+			rule.WarningCheckResult("Reference group cannot be tested since all pods of the group are scheduled on a fully allocated node.", referenceGroupTarget),
 		)
 	}
 	return groupedPodsByNodes, checkResults

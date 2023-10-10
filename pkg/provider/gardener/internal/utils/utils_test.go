@@ -673,17 +673,17 @@ var _ = Describe("utils", func() {
 			expectedCheckResults := []rule.CheckResult{
 				{
 					Status:  rule.Warning,
-					Message: "Pod cannon be tested, since it is scheduled on a fully allocated node.",
+					Message: "Pod cannot be tested since it is scheduled on a fully allocated node.",
 					Target:  gardener.NewTarget("name", "pod2", "namespace", "", "kind", "pod", "node", "node2"),
 				},
 				{
 					Status:  rule.Warning,
-					Message: "Pod cannon be tested, since it is scheduled on a fully allocated node.",
+					Message: "Pod cannot be tested since it is scheduled on a fully allocated node.",
 					Target:  gardener.NewTarget("name", "pod3", "namespace", "", "kind", "pod", "node", "node1"),
 				},
 				{
 					Status:  rule.Warning,
-					Message: "Reference group cannon be tested, since all pods of the group are scheduled on a fully allocated node.",
+					Message: "Reference group cannot be tested since all pods of the group are scheduled on a fully allocated node.",
 					Target:  gardener.NewTarget("name", "", "uid", "1", "kind", "referenceGroup"),
 				},
 			}
