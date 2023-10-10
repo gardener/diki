@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -142,17 +143,21 @@ func (spe *SimplePodExecutor) Execute(ctx context.Context, command string, comma
 		Stderr: &stderr,
 		Tty:    false,
 	})
-	if err != nil {
-		return "", err
+	stderrByte, otherErr := io.ReadAll(&stderr)
+	if err != nil && otherErr != nil {
+		return "", errors.Join(err, otherErr)
+	} else if otherErr != nil {
+		return "", otherErr
 	}
 
-	stderrByte, err := io.ReadAll(&stderr)
-	if err != nil {
-		return "", err
+	if err != nil && len(stderrByte) > 0 {
+		return "", fmt.Errorf("err: %w, command %s %s stderr output: %s", err, command, commandArg, string(stderrByte))
+	} else if len(stderrByte) > 0 {
+		return "", fmt.Errorf("command %s %s stderr output: %s", command, commandArg, string(stderrByte))
 	}
 
-	if len(stderrByte) > 0 {
-		return "", fmt.Errorf("command stderr output: %s", string(stderrByte))
+	if err != nil {
+		return "", fmt.Errorf("err: %w, command %s %s", err, command, commandArg)
 	}
 
 	result, err := io.ReadAll(&stdout)
