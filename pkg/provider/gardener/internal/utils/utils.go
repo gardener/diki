@@ -223,7 +223,7 @@ func GetNodesAllocatablePods(pods []corev1.Pod, nodes []corev1.Node) map[string]
 		nodesAllocatablePods[node.Name] = int(node.Status.Allocatable.Pods().Value())
 	}
 	for _, pod := range pods {
-		if pod.Spec.NodeName != "" && pod.Status.Phase != corev1.PodFailed && pod.Status.Phase != corev1.PodSucceeded {
+		if pod.Spec.NodeName != "" {
 			nodesAllocatablePods[pod.Spec.NodeName]--
 		}
 	}

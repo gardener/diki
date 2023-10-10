@@ -346,11 +346,9 @@ var _ = Describe("utils", func() {
 			Expect(res).To(Equal(expectedRes))
 		})
 
-		It("should correct number of allocatable pods when some pods are in failed or succeeded phase or not scheduled.", func() {
+		It("should correct number of allocatable pods when some pods are not scheduled.", func() {
 			pod1 := &corev1.Pod{}
 			pod1.Name = "pod1"
-			pod1.Spec.NodeName = "node1"
-			pod1.Status.Phase = corev1.PodFailed
 
 			pod2 := &corev1.Pod{}
 			pod2.Name = "pod2"
@@ -362,8 +360,6 @@ var _ = Describe("utils", func() {
 
 			pod4 := &corev1.Pod{}
 			pod4.Name = "pod4"
-			pod4.Spec.NodeName = "node2"
-			pod4.Status.Phase = corev1.PodSucceeded
 
 			pod5 := &corev1.Pod{}
 			pod5.Name = "pod5"
