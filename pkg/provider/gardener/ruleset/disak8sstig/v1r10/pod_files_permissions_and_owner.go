@@ -251,8 +251,10 @@ func (r *RulePodFiles) checkContainerd(
 		value := pair[1]
 		if metav1.HasLabel(pod.ObjectMeta, key) && pod.Labels[key] == value {
 			delete(mandatoryComponents, component)
-			expectedFileOwnerUsers = []string{"0"}
-			expectedFileOwnerGroups = []string{"0", "65534"}
+			// Gardener images use distroless nonroot user with ID 65532
+			// https://github.com/GoogleContainerTools/distroless/blob/main/base/base.bzl#L8
+			expectedFileOwnerUsers = []string{"0", "65532"}
+			expectedFileOwnerGroups = []string{"0", "65532"}
 		}
 	}
 
