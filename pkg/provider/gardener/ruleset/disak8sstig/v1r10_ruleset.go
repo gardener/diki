@@ -103,6 +103,11 @@ func (r *Ruleset) registerV1R10Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
+	optsPodFiles, err := getV1R10OptionOrNil[v1r10.OptionsPodFiles](ruleOptions[v1r10.IDPodFiles].Args)
+	if err != nil {
+		return err
+	}
+
 	rules := []rule.Rule{
 		&v1r10.Rule242376{Logger: r.Logger().With("rule", v1r10.ID242376), Client: seedClient, Namespace: r.shootNamespace},
 		&v1r10.Rule242377{Logger: r.Logger().With("rule", v1r10.ID242377), Client: seedClient, Namespace: r.shootNamespace},
@@ -323,6 +328,7 @@ func (r *Ruleset) registerV1R10Rules(ruleOptions map[string]config.RuleOptionsCo
 			ControlPlanePodContext: seedPodContext,
 			ClusterPodContext:      shootPodContext,
 			ControlPlaneNamespace:  r.shootNamespace,
+			Options:                optsPodFiles,
 		},
 	}
 

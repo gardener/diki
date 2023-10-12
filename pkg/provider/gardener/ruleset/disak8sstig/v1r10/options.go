@@ -103,5 +103,5 @@ const (
 )
 
 type RuleOption interface {
-	Options242414 | Options245543 | Options254800
+	Options242414 | Options245543 | Options254800 | OptionsPodFiles
 }

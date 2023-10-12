@@ -44,6 +44,19 @@ providers:             # contains information about known providers
     - ruleID: "254800"
       args:
         minPodSecurityLevel: "baseline"
+    - ruleID: "pod-files"
+      args:
+        # expecedFileOwner for mandatory components:
+        # `etcd`, `kube-apiserver` , `kube-scheduler`,
+        # `kube-controller-manager` and `kube-proxy`
+        expectedFileOwner:
+          # users and groups default to ["0"]
+          # when set to empty array [] allow all
+          #
+          # Gardener images use distroless nonroot user with ID 65532
+          # https://github.com/GoogleContainerTools/distroless/blob/main/base/base.bzl#L8
+          users: ["0", "65532"]
+          groups: ["0", "65532"]
 output:
   path: /tmp/test-output.json          #  optional, path to summary json report
   minStatus: Passed
