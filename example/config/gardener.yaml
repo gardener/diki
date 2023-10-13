@@ -51,7 +51,6 @@ providers:             # contains information about known providers
         # `kube-controller-manager` and `kube-proxy`
         expectedFileOwner:
           # users and groups default to ["0"]
-          # when set to empty array [] allow all
           #
           # Gardener images use distroless nonroot user with ID 65532
           # https://github.com/GoogleContainerTools/distroless/blob/main/base/base.bzl#L8

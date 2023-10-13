@@ -45,7 +45,7 @@ type RulePodFiles struct {
 }
 
 type OptionsPodFiles struct {
-	ExpectedFileOwner *ExpectedFileOwner `yaml:"expectedFileOwner"`
+	ExpectedFileOwner ExpectedFileOwner `yaml:"expectedFileOwner"`
 }
 
 type ExpectedFileOwner struct {
@@ -75,11 +75,11 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 	if r.Options == nil {
 		r.Options = &OptionsPodFiles{}
 	}
-	if r.Options.ExpectedFileOwner == nil {
-		r.Options.ExpectedFileOwner = &ExpectedFileOwner{
-			Users:  []string{"0"},
-			Groups: []string{"0"},
-		}
+	if len(r.Options.ExpectedFileOwner.Users) == 0 {
+		r.Options.ExpectedFileOwner.Users = []string{"0"}
+	}
+	if len(r.Options.ExpectedFileOwner.Groups) == 0 {
+		r.Options.ExpectedFileOwner.Groups = []string{"0"}
 	}
 
 	image, err := imagevector.ImageVector().FindImage(ruleset.OpsToolbeltImageName)
