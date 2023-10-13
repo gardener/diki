@@ -40,7 +40,7 @@ func (r *Rule245541) ID() string {
 }
 
 func (r *Rule245541) Name() string {
-	return "Kubernetes Kubelet must enable kernel protection (HIGH 245541)"
+	return "Kubernetes Kubelet must not disable timeouts (HIGH 245541)"
 }
 
 func (r *Rule245541) Run(ctx context.Context) (rule.RuleResult, error) {
