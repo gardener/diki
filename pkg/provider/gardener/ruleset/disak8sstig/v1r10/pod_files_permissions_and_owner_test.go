@@ -269,9 +269,9 @@ var _ = Describe("#RulePodFiles", func() {
 				rule.ErroredCheckResult("foo", gardener.NewTarget("cluster", "seed", "name", "diki-pod-files-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
 				rule.ErroredCheckResult("bar", gardener.NewTarget("cluster", "shoot", "name", "diki-pod-files-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
 			}),
-		Entry("should return failed checkResults when mandatory component not present", "not-etcd-main",
-			[][]string{{mounts}}, [][]string{{mounts, compliantStats}},
-			[][]error{{errors.New("foo")}}, [][]error{{nil, errors.New("bar")}}, &v1r10.OptionsPodFiles{},
+		Entry("should return failed checkResult when mandatory component not present", "not-etcd-main",
+			[][]string{{emptyMounts}}, [][]string{{emptyMounts}},
+			[][]error{{nil}}, [][]error{{nil}}, nil,
 			[]rule.CheckResult{
 				rule.FailedCheckResult("Mandatory Component not found!", gardener.NewTarget("cluster", "seed", "details", "missing ETCD Main")),
 			}),
