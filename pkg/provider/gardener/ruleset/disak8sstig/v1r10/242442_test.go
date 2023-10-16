@@ -55,6 +55,9 @@ var _ = Describe("#242442", func() {
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "shoot-pod",
 				Namespace: namespace,
+				Labels: map[string]string{
+					"resources.gardener.cloud/managed-by": "gardener",
+				},
 			},
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
