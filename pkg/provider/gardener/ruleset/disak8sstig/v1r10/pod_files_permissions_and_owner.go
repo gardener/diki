@@ -40,7 +40,17 @@ type RulePodFiles struct {
 	ControlPlanePodContext pod.PodContext
 	ClusterClient          client.Client
 	ClusterPodContext      pod.PodContext
+	Options                *OptionsPodFiles
 	Logger                 *slog.Logger
+}
+
+type OptionsPodFiles struct {
+	ExpectedFileOwner ExpectedFileOwner `yaml:"expectedFileOwner"`
+}
+
+type ExpectedFileOwner struct {
+	Users  []string `yaml:"users"`
+	Groups []string `yaml:"groups"`
 }
 
 func (r *RulePodFiles) ID() string {
@@ -62,6 +72,16 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 	mandatoryComponentsShoot := map[string][]string{
 		"Kube Proxy": {"role", "proxy"}, // rules 242447, 242448
 	}
+	if r.Options == nil {
+		r.Options = &OptionsPodFiles{}
+	}
+	if len(r.Options.ExpectedFileOwner.Users) == 0 {
+		r.Options.ExpectedFileOwner.Users = []string{"0"}
+	}
+	if len(r.Options.ExpectedFileOwner.Groups) == 0 {
+		r.Options.ExpectedFileOwner.Groups = []string{"0"}
+	}
+
 	image, err := imagevector.ImageVector().FindImage(ruleset.OpsToolbeltImageName)
 	if err != nil {
 		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", ruleset.OpsToolbeltImageName, err)
@@ -251,10 +271,8 @@ func (r *RulePodFiles) checkContainerd(
 		value := pair[1]
 		if metav1.HasLabel(pod.ObjectMeta, key) && pod.Labels[key] == value {
 			delete(mandatoryComponents, component)
-			// Gardener images use distroless nonroot user with ID 65532
-			// https://github.com/GoogleContainerTools/distroless/blob/main/base/base.bzl#L8
-			expectedFileOwnerUsers = []string{"0", "65532"}
-			expectedFileOwnerGroups = []string{"0", "65532"}
+			expectedFileOwnerUsers = r.Options.ExpectedFileOwner.Users
+			expectedFileOwnerGroups = r.Options.ExpectedFileOwner.Groups
 		}
 	}
 
