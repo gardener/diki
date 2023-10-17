@@ -16,6 +16,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -63,6 +64,9 @@ var _ = Describe("#242387", func() {
 					{
 						Name: "pool3",
 					},
+					{
+						Name: "pool4",
+					},
 				},
 			},
 		}
@@ -83,6 +87,9 @@ var _ = Describe("#242387", func() {
 						Status: corev1.ConditionTrue,
 					},
 				},
+				Allocatable: corev1.ResourceList{
+					"pods": resource.MustParse("100.0"),
+				},
 			},
 		}
 		Expect(fakeClusterClient.Create(ctx, node1)).To(Succeed())
@@ -100,6 +107,9 @@ var _ = Describe("#242387", func() {
 						Type:   corev1.NodeReady,
 						Status: corev1.ConditionTrue,
 					},
+				},
+				Allocatable: corev1.ResourceList{
+					"pods": resource.MustParse("100.0"),
 				},
 			},
 		}
@@ -119,6 +129,9 @@ var _ = Describe("#242387", func() {
 						Status: corev1.ConditionFalse,
 					},
 				},
+				Allocatable: corev1.ResourceList{
+					"pods": resource.MustParse("100.0"),
+				},
 			},
 		}
 		Expect(fakeClusterClient.Create(ctx, node3)).To(Succeed())
@@ -137,9 +150,33 @@ var _ = Describe("#242387", func() {
 						Status: corev1.ConditionTrue,
 					},
 				},
+				Allocatable: corev1.ResourceList{
+					"pods": resource.MustParse("100.0"),
+				},
 			},
 		}
 		Expect(fakeClusterClient.Create(ctx, node4)).To(Succeed())
+
+		node5 := &corev1.Node{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "node5",
+				Labels: map[string]string{
+					"worker.gardener.cloud/pool": "pool4",
+				},
+			},
+			Status: corev1.NodeStatus{
+				Conditions: []corev1.NodeCondition{
+					{
+						Type:   corev1.NodeReady,
+						Status: corev1.ConditionTrue,
+					},
+				},
+				Allocatable: corev1.ResourceList{
+					"pods": resource.MustParse("0.0"),
+				},
+			},
+		}
+		Expect(fakeClusterClient.Create(ctx, node5)).To(Succeed())
 
 		fakeClusterRESTClient = &manualfake.RESTClient{
 			GroupVersion:         schema.GroupVersion{Group: "", Version: "v1"},
@@ -152,6 +189,8 @@ var _ = Describe("#242387", func() {
 					return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(readOnlyPortNotAllowedNodeConfig)))}, nil
 				case "https://localhost/nodes/node4/proxy/configz":
 					return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(readOnlyPortNotSetNodeConfig)))}, nil
+				case "https://localhost/nodes/node5/proxy/configz":
+					return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(readOnlyPortAllowedNodeConfig)))}, nil
 				default:
 					return &http.Response{StatusCode: http.StatusNotFound, Body: io.NopCloser(&bytes.Buffer{})}, nil
 				}
@@ -166,6 +205,7 @@ var _ = Describe("#242387", func() {
 				rule.FailedCheckResult("Option readOnlyPort set to not allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node2", "details", "Read only port set to 10255")),
 				rule.WarningCheckResult("Node is not in Ready state.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
 				rule.PassedCheckResult("Option readOnlyPort not set.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node4")),
+				rule.PassedCheckResult("Option readOnlyPort set to allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node5")),
 			}
 			expectedCheckResults = append(expectedCheckResults, alwaysExpectedCheckResults...)
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
@@ -190,7 +230,8 @@ var _ = Describe("#242387", func() {
 			[]rule.CheckResult{
 				rule.FailedCheckResult("Kubelet read-only port 10255 open.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Use of deprecated kubelet config flag read-only-port.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes have readOnlyPort set",
 			[][]string{{"", "--not-read-only-port=bar --config=./config", readOnlyPortAllowedConfig}, {"", "--not-read-only-port=bar --config=./config", readOnlyPortNotAllowedConfig}},
@@ -198,7 +239,8 @@ var _ = Describe("#242387", func() {
 			[]rule.CheckResult{
 				rule.PassedCheckResult("Option readOnlyPort set to allowed value.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option readOnlyPort set to not allowed value.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "Read only port set to 10255")),
-				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes do not have readOnlyPort set",
 			[][]string{{"", "--not-read-only-port=bar --config=./config", readOnlyPortNotSetConfig}, {"", "--not-read-only-port=bar, --config=./config", readOnlyPortNotSetConfig}},
@@ -206,7 +248,8 @@ var _ = Describe("#242387", func() {
 			[]rule.CheckResult{
 				rule.PassedCheckResult("Option readOnlyPort not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.PassedCheckResult("Option readOnlyPort not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when execute errors",
 			[][]string{{""}, {"", ""}},
@@ -214,7 +257,8 @@ var _ = Describe("#242387", func() {
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", gardener.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
 				rule.ErroredCheckResult("command stderr output: sh: 1: netstat: not found", gardener.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-bbbbbbbbbb")),
-				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 	)
 })
