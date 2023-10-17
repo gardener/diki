@@ -9,8 +9,10 @@ import (
 	"log/slog"
 	"strings"
 
+	resourcesv1alpha1 "github.com/gardener/gardener/pkg/apis/resources/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
@@ -45,7 +47,13 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	checkResults := r.checkImages(seedPods, images, reportedImages)
 
-	shootPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
+	managedByGardenerReq, err := labels.NewRequirement(resourcesv1alpha1.ManagedBy, selection.Equals, []string{"gardener"})
+	if err != nil {
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget())), nil
+	}
+
+	managedByGardenerSelector := labels.NewSelector().Add(*managedByGardenerReq)
+	shootPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", managedByGardenerSelector, 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "shoot", "kind", "podList"))), nil
 	}
