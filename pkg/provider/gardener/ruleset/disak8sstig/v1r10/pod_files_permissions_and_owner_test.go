@@ -269,10 +269,18 @@ var _ = Describe("#RulePodFiles", func() {
 				rule.ErroredCheckResult("foo", gardener.NewTarget("cluster", "seed", "name", "diki-pod-files-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
 				rule.ErroredCheckResult("bar", gardener.NewTarget("cluster", "shoot", "name", "diki-pod-files-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
 			}),
-		Entry("should return failed checkResults when mandatory component not present", "not-etcd-main",
-			[][]string{{mounts}}, [][]string{{mounts, compliantStats}},
-			[][]error{{errors.New("foo")}}, [][]error{{nil, errors.New("bar")}}, &v1r10.OptionsPodFiles{},
+		Entry("should return failed checkResult when mandatory component not present", "not-etcd-main",
+			[][]string{{emptyMounts}}, [][]string{{emptyMounts}},
+			[][]error{{nil}}, [][]error{{nil}}, nil,
 			[]rule.CheckResult{
+				rule.FailedCheckResult("Mandatory Component not found!", gardener.NewTarget("cluster", "seed", "details", "missing ETCD Main")),
+			}),
+		Entry("should return all checkResult when mandatory component not present", "not-etcd-main",
+			[][]string{{mountsWithETCD, compliantStats}}, [][]string{{emptyMounts}},
+			[][]error{{nil, nil}}, [][]error{{nil}}, nil,
+			[]rule.CheckResult{
+				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
+				rule.FailedCheckResult("File has too wide permissions", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 644, expectedPermissionsMax: 600")),
 				rule.FailedCheckResult("Mandatory Component not found!", gardener.NewTarget("cluster", "seed", "details", "missing ETCD Main")),
 			}),
 	)

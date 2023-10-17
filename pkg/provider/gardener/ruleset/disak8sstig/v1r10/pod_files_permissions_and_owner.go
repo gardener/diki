@@ -146,8 +146,6 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults = append(checkResults, shootCheckResults...)
 
 	if len(mandatoryComponentsSeed)+len(mandatoryComponentsShoot) > 0 {
-		checkResults = make([]rule.CheckResult, 0, len(mandatoryComponentsSeed)+len(mandatoryComponentsShoot))
-
 		for mandatoryComponentSeed := range mandatoryComponentsSeed {
 			checkResults = append(checkResults, rule.FailedCheckResult("Mandatory Component not found!", seedTarget.With("details", fmt.Sprintf("missing %s", mandatoryComponentSeed))))
 		}
