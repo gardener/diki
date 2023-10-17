@@ -42,7 +42,7 @@ func GetWorkers(ctx context.Context, c client.Client, namespace string, limit in
 }
 
 // AllocatableNode contains a single Node and whether it is in allocatable or not.
-// A allocatable node is a node that is in ready state and has at least 1 allocatable spot.
+// An allocatable node is a node that is in ready state and has at least 1 allocatable spot.
 type AllocatableNode struct {
 	Node        *corev1.Node
 	Allocatable bool
@@ -62,7 +62,7 @@ func GetSingleAllocatableNodePerWorker(workers []extensionsv1alpha1.Worker, node
 			var allocatableNode *corev1.Node
 			maxAllocatablePods := 0
 			for _, node := range nodes {
-				// find a allocatable node with the most allocatable spots for pods
+				// find an allocatable node with the most allocatable spots for pods
 				if node.ObjectMeta.Labels[v1beta1constants.LabelWorkerPool] == workerGroup.Name && kubeutils.NodeReadyStatus(node) &&
 					maxAllocatablePods < nodesAllocatablePods[node.Name] {
 					maxAllocatablePods = nodesAllocatablePods[node.Name]
@@ -73,7 +73,7 @@ func GetSingleAllocatableNodePerWorker(workers []extensionsv1alpha1.Worker, node
 
 			result[workerGroup.Name] = AllocatableNode{
 				Node:        allocatableNode,
-				Allocatable: allocatableNode != nil, // assign a nil not allocatable entry for the worker group if we could not find a allocatable node
+				Allocatable: allocatableNode != nil, // assign a nil not allocatable entry for the worker group if we could not find an allocatable node
 			}
 		}
 	}
