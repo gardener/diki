@@ -124,7 +124,7 @@ func (r *Rule242387) Run(ctx context.Context) (rule.RuleResult, error) {
 func (r *Rule242387) checkWorkerGroup(ctx context.Context, workerGroup string, node utils.AllocatableNode, privPodImage string) rule.CheckResult {
 	target := gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", workerGroup)
 	if !node.Allocatable {
-		return rule.WarningCheckResult("There are no nodes with at least 1 allocatable spot for worker group.", target)
+		return rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", target)
 	}
 
 	podName := fmt.Sprintf("diki-%s-%s", IDNodeFiles, Generator.Generate(10))
