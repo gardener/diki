@@ -50,6 +50,19 @@ var _ = Describe("#242442", func() {
 					},
 				},
 			},
+			Status: corev1.PodStatus{
+				ContainerStatuses: []corev1.ContainerStatus{
+					{
+						Name: "foo",
+					},
+					{
+						Name: "bar",
+					},
+					{
+						Name: "foobar",
+					},
+				},
+			},
 		}
 		shootPod = &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
@@ -72,18 +85,31 @@ var _ = Describe("#242442", func() {
 					},
 				},
 			},
+			Status: corev1.PodStatus{
+				ContainerStatuses: []corev1.ContainerStatus{
+					{
+						Name: "foo",
+					},
+					{
+						Name: "bar",
+					},
+					{
+						Name: "foobar",
+					},
+				},
+			},
 		}
 	})
 
 	It("should return correct results when all images use only 1 version", func() {
 		r := &v1r10.Rule242442{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace}
-		seedPod.Spec.Containers[0].Image = "eu.gcr.io/image1@sha256:foobar"
-		seedPod.Spec.Containers[1].Image = "eu.gcr.io/image2@sha256:foo"
-		seedPod.Spec.Containers[2].Image = "eu.gcr.io/image3@sha256:bar"
+		seedPod.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:foobar"
+		seedPod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:foo"
+		seedPod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:bar"
 		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
-		shootPod.Spec.Containers[0].Image = "eu.gcr.io/image2@sha256:foo"
-		shootPod.Spec.Containers[1].Image = "eu.gcr.io/image3@sha256:bar"
-		shootPod.Spec.Containers[2].Image = "eu.gcr.io/image4@sha256:foobar"
+		shootPod.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:foo"
+		shootPod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:bar"
+		shootPod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:foobar"
 		Expect(fakeShootClient.Create(ctx, shootPod)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
@@ -97,13 +123,13 @@ var _ = Describe("#242442", func() {
 	})
 	It("should return correct results when a image uses more than 1 version", func() {
 		r := &v1r10.Rule242442{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace}
-		seedPod.Spec.Containers[0].Image = "eu.gcr.io/image1@sha256:foobar"
-		seedPod.Spec.Containers[1].Image = "eu.gcr.io/image2@sha256:foo"
-		seedPod.Spec.Containers[2].Image = "eu.gcr.io/image3@sha256:bar"
+		seedPod.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:foobar"
+		seedPod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:foo"
+		seedPod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:bar"
 		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
-		shootPod.Spec.Containers[0].Image = "eu.gcr.io/image2@sha256:bar"
-		shootPod.Spec.Containers[1].Image = "eu.gcr.io/image3@sha256:foo"
-		shootPod.Spec.Containers[2].Image = "eu.gcr.io/image4@sha256:foobar"
+		shootPod.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:bar"
+		shootPod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:foo"
+		shootPod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:foobar"
 		Expect(fakeShootClient.Create(ctx, shootPod)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
@@ -112,6 +138,22 @@ var _ = Describe("#242442", func() {
 		expectedCheckResults := []rule.CheckResult{
 			rule.FailedCheckResult("Image is used with more than one versions.", gardener.NewTarget("image", "eu.gcr.io/image2")),
 			rule.FailedCheckResult("Image is used with more than one versions.", gardener.NewTarget("image", "eu.gcr.io/image3")),
+		}
+
+		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+	})
+	It("should return errored results when containerStatus cannot be found for a given container", func() {
+		r := &v1r10.Rule242442{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace}
+		seedPod.Status.ContainerStatuses[0].Name = "not-foo"
+		seedPod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:foo"
+		seedPod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:bar"
+		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+
+		expectedCheckResults := []rule.CheckResult{
+			rule.ErroredCheckResult("containerStatus not found for container", gardener.NewTarget("cluster", "seed", "container", "foo", "name", "seed-pod", "kind", "pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
