@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/imagevector"
@@ -152,21 +153,27 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "shoot", "kind", "nodeList"))), nil
 	}
 
+	clusterPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
+	if err != nil {
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "shoot", "kind", "podList"))), nil
+	}
+
 	clusterWorkers, err := utils.GetWorkers(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, 512)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "seed", "kind", "workerList"))), nil
 	}
 
-	singleRunningNodePerWorkerMap := utils.GetSingleRunningNodePerWorker(clusterWorkers, clusterNodes)
+	nodesAllocatablePodsNum := utils.GetNodesAllocatablePodsNum(clusterPods, clusterNodes)
+	workerGroupNodes := utils.GetSingleAllocatableNodePerWorker(clusterWorkers, clusterNodes, nodesAllocatablePodsNum)
 
 	orderedWorkerGroups := []string{}
-	for workerGroup := range singleRunningNodePerWorkerMap {
+	for workerGroup := range workerGroupNodes {
 		orderedWorkerGroups = append(orderedWorkerGroups, workerGroup)
 	}
 	sort.Strings(orderedWorkerGroups)
 
 	for _, workerGroup := range orderedWorkerGroups {
-		checkResultsForWorkerGroup := r.checkWorkerGroup(ctx, image.String(), workerGroup, singleRunningNodePerWorkerMap, expectedFileOwnerUsers, expectedFileOwnerGroups)
+		checkResultsForWorkerGroup := r.checkWorkerGroup(ctx, image.String(), workerGroup, workerGroupNodes, expectedFileOwnerUsers, expectedFileOwnerGroups)
 		checkResults = append(checkResults, checkResultsForWorkerGroup...)
 	}
 
@@ -177,12 +184,12 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (r *RuleNodeFiles) checkWorkerGroup(ctx context.Context, image, workerGroup string, singleRunningNodePerWorkerMap map[string]utils.ReadyNode, expectedFileOwnerUsers, expectedFileOwnerGroups []string) []rule.CheckResult {
+func (r *RuleNodeFiles) checkWorkerGroup(ctx context.Context, image, workerGroup string, workerGroupNodes map[string]utils.AllocatableNode, expectedFileOwnerUsers, expectedFileOwnerGroups []string) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
-	runningNode := singleRunningNodePerWorkerMap[workerGroup]
+	runningNode := workerGroupNodes[workerGroup]
 	target := gardener.NewTarget("cluster", "shoot", "name", workerGroup, "kind", "workerGroup")
-	if !runningNode.Ready {
-		return []rule.CheckResult{rule.WarningCheckResult("There are no nodes in Ready state", target)}
+	if !runningNode.Allocatable {
+		return []rule.CheckResult{rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", target)}
 	}
 
 	nodePodName := fmt.Sprintf("diki-%s-%s", IDNodeFiles, Generator.Generate(10))

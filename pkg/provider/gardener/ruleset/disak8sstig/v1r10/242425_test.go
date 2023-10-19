@@ -16,6 +16,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -76,18 +77,17 @@ var _ = Describe("#242425", func() {
 					{
 						Name: "pool3",
 					},
+					{
+						Name: "pool4",
+					},
 				},
 			},
 		}
-
 		Expect(fakeControlPlaneClient.Create(ctx, workers)).To(Succeed())
 
-		node1 := &corev1.Node{
+		plainAllocatableNode := &corev1.Node{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "node1",
-				Labels: map[string]string{
-					"worker.gardener.cloud/pool": "pool1",
-				},
+				Labels: map[string]string{},
 			},
 			Status: corev1.NodeStatus{
 				Conditions: []corev1.NodeCondition{
@@ -96,63 +96,39 @@ var _ = Describe("#242425", func() {
 						Status: corev1.ConditionTrue,
 					},
 				},
+				Allocatable: corev1.ResourceList{
+					"pods": resource.MustParse("100.0"),
+				},
 			},
 		}
+
+		node1 := plainAllocatableNode.DeepCopy()
+		node1.ObjectMeta.Name = "node1"
+		node1.ObjectMeta.Labels["worker.gardener.cloud/pool"] = "pool1"
 		Expect(fakeClusterClient.Create(ctx, node1)).To(Succeed())
 
-		node2 := &corev1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "node2",
-				Labels: map[string]string{
-					"worker.gardener.cloud/pool": "pool2",
-				},
-			},
-			Status: corev1.NodeStatus{
-				Conditions: []corev1.NodeCondition{
-					{
-						Type:   corev1.NodeReady,
-						Status: corev1.ConditionTrue,
-					},
-				},
-			},
-		}
+		node2 := plainAllocatableNode.DeepCopy()
+		node2.ObjectMeta.Name = "node2"
+		node2.ObjectMeta.Labels["worker.gardener.cloud/pool"] = "pool2"
 		Expect(fakeClusterClient.Create(ctx, node2)).To(Succeed())
 
-		node3 := &corev1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "node3",
-				Labels: map[string]string{
-					"worker.gardener.cloud/pool": "pool3",
-				},
-			},
-			Status: corev1.NodeStatus{
-				Conditions: []corev1.NodeCondition{
-					{
-						Type:   corev1.NodeReady,
-						Status: corev1.ConditionFalse,
-					},
-				},
-			},
-		}
+		node3 := plainAllocatableNode.DeepCopy()
+		node3.ObjectMeta.Name = "node3"
+		node3.ObjectMeta.Labels["worker.gardener.cloud/pool"] = "pool3"
+		node3.Status.Conditions[0].Type = corev1.NodeReady
+		node3.Status.Conditions[0].Status = corev1.ConditionFalse
 		Expect(fakeClusterClient.Create(ctx, node3)).To(Succeed())
 
-		node4 := &corev1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "node4",
-				Labels: map[string]string{
-					"worker.gardener.cloud/pool": "pool2",
-				},
-			},
-			Status: corev1.NodeStatus{
-				Conditions: []corev1.NodeCondition{
-					{
-						Type:   corev1.NodeReady,
-						Status: corev1.ConditionTrue,
-					},
-				},
-			},
-		}
+		node4 := plainAllocatableNode.DeepCopy()
+		node4.ObjectMeta.Name = "node4"
+		node4.ObjectMeta.Labels["worker.gardener.cloud/pool"] = "pool2"
 		Expect(fakeClusterClient.Create(ctx, node4)).To(Succeed())
+
+		node5 := plainAllocatableNode.DeepCopy()
+		node5.ObjectMeta.Name = "node5"
+		node5.ObjectMeta.Labels["worker.gardener.cloud/pool"] = "pool4"
+		node5.Status.Allocatable["pods"] = resource.MustParse("0.0")
+		Expect(fakeClusterClient.Create(ctx, node5)).To(Succeed())
 
 		fakeClusterRESTClient = &manualfake.RESTClient{
 			GroupVersion:         schema.GroupVersion{Group: "", Version: "v1"},
@@ -165,6 +141,8 @@ var _ = Describe("#242425", func() {
 					return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(tlsCertFileEmptyNodeConfig)))}, nil
 				case "https://localhost/nodes/node4/proxy/configz":
 					return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(tlsCertFileNotSetNodeConfig)))}, nil
+				case "https://localhost/nodes/node5/proxy/configz":
+					return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(tlsCertFileSetNodeConfig)))}, nil
 				default:
 					return &http.Response{StatusCode: http.StatusNotFound, Body: io.NopCloser(&bytes.Buffer{})}, nil
 				}
@@ -180,6 +158,7 @@ var _ = Describe("#242425", func() {
 				rule.FailedCheckResult("Option tlsCertFile is empty.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node2")),
 				rule.WarningCheckResult("Node is not in Ready state.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
 				rule.FailedCheckResult("Option tlsCertFile not set.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node4")),
+				rule.PassedCheckResult("Option tlsCertFile set.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node5")),
 			}
 			expectedCheckResults = append(expectedCheckResults, alwaysExpectedCheckResults...)
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
@@ -204,7 +183,8 @@ var _ = Describe("#242425", func() {
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", gardener.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
 				rule.PassedCheckResult("Kubelet rotates server certificates automatically itself.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes have tlsCertFile set",
 			[][]string{{"--not-tls-cert-file=/foo/bar --config=./config", tlsCertFileSetConfig}, {"--not-tls-cert-file=/foo/bar --config=./config", tlsCertFileEmptyConfig}},
@@ -212,7 +192,8 @@ var _ = Describe("#242425", func() {
 			[]rule.CheckResult{
 				rule.PassedCheckResult("Option tlsCertFile set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option tlsCertFile is empty.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes do not have tlsCertFile set",
 			[][]string{{"--not-tls-cert-file=/foo/bar --config=./config", tlsCertFileNotSetConfig}, {"--not-tls-cert-file=/foo/bar, --config=./config", tlsCertFileNotSetConfig}},
@@ -220,7 +201,8 @@ var _ = Describe("#242425", func() {
 			[]rule.CheckResult{
 				rule.FailedCheckResult("Option tlsCertFile not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option tlsCertFile not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when deprecated flags are used",
 			[][]string{{"--feature-gates=RotateKubeletServerCertificate=true"}, {"--tls-cert-file=/foo/bar"}},
@@ -228,7 +210,8 @@ var _ = Describe("#242425", func() {
 			[]rule.CheckResult{
 				rule.FailedCheckResult("Use of deprecated kubelet config flag feature-gates.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Use of deprecated kubelet config flag tls-cert-file.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no nodes in Ready state for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 	)
 })

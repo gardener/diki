@@ -13,6 +13,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -91,15 +92,11 @@ var _ = Describe("#RuleNodeFiles", func() {
 				},
 			},
 		}
-
 		Expect(fakeControlPlaneClient.Create(ctx, workers)).To(Succeed())
 
-		node1 := &corev1.Node{
+		plainAllocatableNode := &corev1.Node{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "node1",
-				Labels: map[string]string{
-					"worker.gardener.cloud/pool": "pool1",
-				},
+				Labels: map[string]string{},
 			},
 			Status: corev1.NodeStatus{
 				Conditions: []corev1.NodeCondition{
@@ -108,26 +105,20 @@ var _ = Describe("#RuleNodeFiles", func() {
 						Status: corev1.ConditionTrue,
 					},
 				},
+				Allocatable: corev1.ResourceList{
+					"pods": resource.MustParse("100.0"),
+				},
 			},
 		}
+
+		node1 := plainAllocatableNode.DeepCopy()
+		node1.ObjectMeta.Name = "node1"
+		node1.ObjectMeta.Labels["worker.gardener.cloud/pool"] = "pool1"
 		Expect(fakeClusterClient.Create(ctx, node1)).To(Succeed())
 
-		node2 := &corev1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "node2",
-				Labels: map[string]string{
-					"worker.gardener.cloud/pool": "pool2",
-				},
-			},
-			Status: corev1.NodeStatus{
-				Conditions: []corev1.NodeCondition{
-					{
-						Type:   corev1.NodeReady,
-						Status: corev1.ConditionTrue,
-					},
-				},
-			},
-		}
+		node2 := plainAllocatableNode.DeepCopy()
+		node2.ObjectMeta.Name = "node2"
+		node2.ObjectMeta.Labels["worker.gardener.cloud/pool"] = "pool2"
 		Expect(fakeClusterClient.Create(ctx, node2)).To(Succeed())
 	})
 

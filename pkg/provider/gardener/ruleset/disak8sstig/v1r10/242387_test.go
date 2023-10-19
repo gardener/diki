@@ -33,6 +33,18 @@ import (
 )
 
 var _ = Describe("#242387", func() {
+	const (
+		readOnlyPortAllowedConfig = `readOnlyPort: 0
+`
+		readOnlyPortNotAllowedConfig = `readOnlyPort: 10255
+`
+		readOnlyPortNotSetConfig = `maxPods: 100
+`
+		readOnlyPortAllowedNodeConfig    = `{"kubeletconfig":{"readOnlyPort":0}}`
+		readOnlyPortNotAllowedNodeConfig = `{"kubeletconfig":{"readOnlyPort":10255}}`
+		readOnlyPortNotSetNodeConfig     = `{"kubeletconfig":{"maxPods":100}}`
+	)
+
 	var (
 		fakeControlPlaneClient client.Client
 		fakeClusterClient      client.Client
@@ -70,7 +82,6 @@ var _ = Describe("#242387", func() {
 				},
 			},
 		}
-
 		Expect(fakeControlPlaneClient.Create(ctx, workers)).To(Succeed())
 
 		plainAllocatableNode := &corev1.Node{
@@ -202,15 +213,3 @@ var _ = Describe("#242387", func() {
 			}),
 	)
 })
-
-const (
-	readOnlyPortAllowedConfig = `readOnlyPort: 0
-`
-	readOnlyPortNotAllowedConfig = `readOnlyPort: 10255
-`
-	readOnlyPortNotSetConfig = `maxPods: 100
-`
-	readOnlyPortAllowedNodeConfig    = `{"kubeletconfig":{"readOnlyPort":0}}`
-	readOnlyPortNotAllowedNodeConfig = `{"kubeletconfig":{"readOnlyPort":10255}}`
-	readOnlyPortNotSetNodeConfig     = `{"kubeletconfig":{"maxPods":100}}`
-)
