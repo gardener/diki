@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"slices"
 
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -49,6 +50,11 @@ func (r *Rule242434) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "nodeList"))), nil
 	}
 
+	clusterPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
+	if err != nil {
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList"))), nil
+	}
+
 	clusterWorkers, err := utils.GetWorkers(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "seed", "kind", "workerList"))), nil
@@ -59,7 +65,8 @@ func (r *Rule242434) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", ruleset.OpsToolbeltImageName, err)
 	}
 
-	workerGroupNodes := utils.GetSingleRunningNodePerWorker(clusterWorkers, clusterNodes)
+	nodesAllocatablePodsNum := utils.GetNodesAllocatablePodsNum(clusterPods, clusterNodes)
+	workerGroupNodes := utils.GetSingleAllocatableNodePerWorker(clusterWorkers, clusterNodes, nodesAllocatablePodsNum)
 
 	// TODO use maps.Keys when released with go 1.21 or 1.22
 	workerGroups := make([]string, 0, len(workerGroupNodes))
@@ -112,10 +119,10 @@ func (r *Rule242434) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (r *Rule242434) checkWorkerGroup(ctx context.Context, workerGroup string, node utils.ReadyNode, privPodImage string) rule.CheckResult {
+func (r *Rule242434) checkWorkerGroup(ctx context.Context, workerGroup string, node utils.AllocatableNode, privPodImage string) rule.CheckResult {
 	target := gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", workerGroup)
-	if !node.Ready {
-		return rule.WarningCheckResult("There are no nodes in Ready state for worker group.", target)
+	if !node.Allocatable {
+		return rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", target)
 	}
 
 	podName := fmt.Sprintf("diki-%s-%s", IDNodeFiles, Generator.Generate(10))
