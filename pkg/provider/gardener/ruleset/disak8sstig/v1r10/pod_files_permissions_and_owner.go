@@ -322,8 +322,10 @@ func (r *RulePodFiles) checkContainerd(
 
 				if isMandatoryComponent && strings.HasSuffix(strings.Join(statSlice[3:], " "), ".key") {
 					// rule 242467
+					// Gardener control plane components run as `nonroot` user `65532`, since we can change the group owener but
+					// cannot easily change the user owner of secret files we do not check for `0600` permission but instead for `0640`.
 					checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(statSlice[0], statSlice[1], statSlice[2], strings.Join(statSlice[3:], " "),
-						"600", expectedFileOwnerUsers, expectedFileOwnerGroups, fileTarget)...)
+						"640", expectedFileOwnerUsers, expectedFileOwnerGroups, fileTarget)...)
 					continue
 				}
 
