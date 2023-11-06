@@ -94,6 +94,10 @@ func (r *Ruleset) registerV1R10Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
+	opts242415, err := getV1R10OptionOrNil[v1r10.Options242415](ruleOptions[v1r10.ID242415].Args)
+	if err != nil {
+		return err
+	}
 	opts245543, err := getV1R10OptionOrNil[v1r10.Options245543](ruleOptions[v1r10.ID245543].Args)
 	if err != nil {
 		return err
@@ -202,7 +206,13 @@ func (r *Ruleset) registerV1R10Rules(ruleOptions map[string]config.RuleOptionsCo
 			ControlPlaneNamespace: r.shootNamespace,
 			Options:               opts242414,
 		},
-		&v1r10.Rule242415{Logger: r.Logger().With("rule", v1r10.ID242415), ClusterClient: shootClient, ControlPlaneClient: seedClient, ControlPlaneNamespace: r.shootNamespace},
+		&v1r10.Rule242415{
+			Logger:                r.Logger().With("rule", v1r10.ID242415),
+			ClusterClient:         shootClient,
+			ControlPlaneClient:    seedClient,
+			ControlPlaneNamespace: r.shootNamespace,
+			Options:               opts242415,
+		},
 		&v1r10.Rule242417{Logger: r.Logger().With("rule", v1r10.ID242417), Client: shootClient},
 		&v1r10.Rule242418{Logger: r.Logger().With("rule", v1r10.ID242418), Client: seedClient, Namespace: r.shootNamespace},
 		&v1r10.Rule242419{Logger: r.Logger().With("rule", v1r10.ID242419), Client: seedClient, Namespace: r.shootNamespace},

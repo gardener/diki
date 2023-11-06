@@ -116,6 +116,10 @@ func (r *Rule242414) checkPods(pods []corev1.Pod, namespaces map[string]corev1.N
 }
 
 func (r *Rule242414) accepted(pod corev1.Pod, namespace corev1.Namespace, hostPort int32) (bool, string) {
+	if r.Options == nil {
+		return false, ""
+	}
+
 	for _, acceptedPod := range r.Options.AcceptedPods {
 		if utils.MatchLabels(pod.Labels, acceptedPod.PodMatchLabels) &&
 			utils.MatchLabels(namespace.Labels, acceptedPod.NamespaceMatchLabels) {
