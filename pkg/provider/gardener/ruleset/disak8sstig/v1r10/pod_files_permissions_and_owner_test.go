@@ -290,7 +290,7 @@ var _ = Describe("#RulePodFiles", func() {
 			[][]error{{nil, nil}}, [][]error{{nil}}, nil,
 			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 600, ownerUser: 0, ownerGroup: 0")),
-				rule.FailedCheckResult("File has too wide permissions", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.key, permissions: 644, expectedPermissionsMax: 600")),
+				rule.FailedCheckResult("File has too wide permissions", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.key, permissions: 644, expectedPermissionsMax: 640")),
 			}),
 	)
 })
