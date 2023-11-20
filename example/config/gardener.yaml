@@ -35,6 +35,16 @@ providers:             # contains information about known providers
           ports:
           - 1011
           - 1012
+    # - ruleID: "242415"
+    #   args:
+    #     acceptedPods:
+    #     - podMatchLabels:
+    #         label: foo
+    #       namespaceMatchLabels:
+    #         label: foo
+    #       justification: "justification"
+    #       environmentVariables:
+    #       - FOO_BAR
     - ruleID: "245543"
       args:
         acceptedTokens:
