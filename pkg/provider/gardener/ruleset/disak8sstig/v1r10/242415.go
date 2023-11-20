@@ -86,21 +86,19 @@ func (r *Rule242415) checkPods(pods []corev1.Pod, namespaces map[string]corev1.N
 		target := clusterTarget.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
 		passed := true
 		for _, container := range pod.Spec.Containers {
-			if container.Env != nil {
-				for _, env := range container.Env {
-					if env.ValueFrom != nil && env.ValueFrom.SecretKeyRef != nil {
-						target = target.With("details", fmt.Sprintf("containerName: %s, variableName: %s, keyRef: %s", container.Name, env.Name, env.ValueFrom.SecretKeyRef.Key))
-						if accepted, justification := r.accepted(pod.Labels, namespaces[pod.Namespace], env.Name); accepted {
-							msg := "Pod accepted to use environment to inject secret."
-							if justification != "" {
-								msg = justification
-							}
-							checkResults = append(checkResults, rule.AcceptedCheckResult(msg, target))
-						} else {
-							checkResults = append(checkResults, rule.FailedCheckResult("Pod uses environment to inject secret.", target))
+			for _, env := range container.Env {
+				if env.ValueFrom != nil && env.ValueFrom.SecretKeyRef != nil {
+					target = target.With("details", fmt.Sprintf("containerName: %s, variableName: %s, keyRef: %s", container.Name, env.Name, env.ValueFrom.SecretKeyRef.Key))
+					if accepted, justification := r.accepted(pod.Labels, namespaces[pod.Namespace], env.Name); accepted {
+						msg := "Pod accepted to use environment to inject secret."
+						if justification != "" {
+							msg = justification
 						}
-						passed = false
+						checkResults = append(checkResults, rule.AcceptedCheckResult(msg, target))
+					} else {
+						checkResults = append(checkResults, rule.FailedCheckResult("Pod uses environment to inject secret.", target))
 					}
+					passed = false
 				}
 			}
 		}

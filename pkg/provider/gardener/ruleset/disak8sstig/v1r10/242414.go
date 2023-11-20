@@ -90,21 +90,19 @@ func (r *Rule242414) checkPods(pods []corev1.Pod, namespaces map[string]corev1.N
 		target := clusterTarget.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
 		for _, container := range pod.Spec.Containers {
 			uses := false
-			if container.Ports != nil {
-				for _, port := range container.Ports {
-					if port.HostPort != 0 && port.HostPort < 1024 {
-						target = target.With("details", fmt.Sprintf("containerName: %s, port: %d", container.Name, port.HostPort))
-						if accepted, justification := r.accepted(pod, namespaces[pod.Namespace], port.HostPort); accepted {
-							msg := "Container accepted to use hostPort < 1024."
-							if justification != "" {
-								msg = justification
-							}
-							checkResults = append(checkResults, rule.AcceptedCheckResult(msg, target))
-						} else {
-							checkResults = append(checkResults, rule.FailedCheckResult("Container may not use hostPort < 1024.", target))
+			for _, port := range container.Ports {
+				if port.HostPort != 0 && port.HostPort < 1024 {
+					target = target.With("details", fmt.Sprintf("containerName: %s, port: %d", container.Name, port.HostPort))
+					if accepted, justification := r.accepted(pod, namespaces[pod.Namespace], port.HostPort); accepted {
+						msg := "Container accepted to use hostPort < 1024."
+						if justification != "" {
+							msg = justification
 						}
-						uses = true
+						checkResults = append(checkResults, rule.AcceptedCheckResult(msg, target))
+					} else {
+						checkResults = append(checkResults, rule.FailedCheckResult("Container may not use hostPort < 1024.", target))
 					}
+					uses = true
 				}
 			}
 			if !uses {
