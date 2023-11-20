@@ -54,10 +54,10 @@ type ExpectedFileOwner struct {
 }
 
 type component struct {
-	Name  string
-	Label string
-	Value string
-	Num   int
+	name  string
+	label string
+	value string
+	found bool
 }
 
 func (r *RulePodFiles) ID() string {
@@ -70,14 +70,14 @@ func (r *RulePodFiles) Name() string {
 
 func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 	mandatoryComponentsSeed := []*component{
-		{Name: "ETCD Main", Label: "instance", Value: "etcd-main"},                    // rules 242445, 242459
-		{Name: "ETCD Events", Label: "instance", Value: "etcd-events"},                // rules 242445, 242459
-		{Name: "Kube API Server", Label: "role", Value: "apiserver"},                  // rule 242446
-		{Name: "Kube Controller Manager", Label: "role", Value: "controller-manager"}, // rule 242446
-		{Name: "Kube Scheduler", Label: "role", Value: "scheduler"},                   // rule 242446
+		{name: "ETCD Main", label: "instance", value: "etcd-main"},                    // rules 242445, 242459
+		{name: "ETCD Events", label: "instance", value: "etcd-events"},                // rules 242445, 242459
+		{name: "Kube API Server", label: "role", value: "apiserver"},                  // rule 242446
+		{name: "Kube Controller Manager", label: "role", value: "controller-manager"}, // rule 242446
+		{name: "Kube Scheduler", label: "role", value: "scheduler"},                   // rule 242446
 	}
 	mandatoryComponentsShoot := []*component{
-		{Name: "Kube Proxy", Label: "role", Value: "proxy"}, // rules 242447, 242448
+		{name: "Kube Proxy", label: "role", value: "proxy"}, // rules 242447, 242448
 	}
 	if r.Options == nil {
 		r.Options = &OptionsPodFiles{}
@@ -153,14 +153,14 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults = append(checkResults, shootCheckResults...)
 
 	for _, mandatoryComponentSeed := range mandatoryComponentsSeed {
-		if mandatoryComponentSeed.Num == 0 {
-			checkResults = append(checkResults, rule.FailedCheckResult("Mandatory Component not found!", seedTarget.With("details", fmt.Sprintf("missing %s", mandatoryComponentSeed.Name))))
+		if !mandatoryComponentSeed.found {
+			checkResults = append(checkResults, rule.FailedCheckResult("Mandatory Component not found!", seedTarget.With("details", fmt.Sprintf("missing %s", mandatoryComponentSeed.name))))
 		}
 	}
 
 	for _, mandatoryComponentShoot := range mandatoryComponentsShoot {
-		if mandatoryComponentShoot.Num == 0 {
-			checkResults = append(checkResults, rule.FailedCheckResult("Mandatory Component not found!", shootTarget.With("details", fmt.Sprintf("missing %s", mandatoryComponentShoot.Name))))
+		if !mandatoryComponentShoot.found {
+			checkResults = append(checkResults, rule.FailedCheckResult("Mandatory Component not found!", shootTarget.With("details", fmt.Sprintf("missing %s", mandatoryComponentShoot.name))))
 		}
 	}
 
@@ -275,8 +275,8 @@ func (r *RulePodFiles) checkContainerd(
 	expectedFileOwnerGroups := []string{}
 	isMandatoryComponent := false
 	for _, mandatoryComponents := range mandatoryComponents {
-		if metav1.HasLabel(pod.ObjectMeta, mandatoryComponents.Label) && pod.Labels[mandatoryComponents.Label] == mandatoryComponents.Value {
-			mandatoryComponents.Num++
+		if metav1.HasLabel(pod.ObjectMeta, mandatoryComponents.label) && pod.Labels[mandatoryComponents.label] == mandatoryComponents.value {
+			mandatoryComponents.found = true
 			isMandatoryComponent = true
 			expectedFileOwnerUsers = r.Options.ExpectedFileOwner.Users
 			expectedFileOwnerGroups = r.Options.ExpectedFileOwner.Groups
