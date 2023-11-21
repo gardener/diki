@@ -53,6 +53,13 @@ type ExpectedFileOwner struct {
 	Groups []string `yaml:"groups"`
 }
 
+type component struct {
+	name  string
+	label string
+	value string
+	found bool
+}
+
 func (r *RulePodFiles) ID() string {
 	return IDPodFiles
 }
@@ -62,15 +69,15 @@ func (r *RulePodFiles) Name() string {
 }
 
 func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
-	mandatoryComponentsSeed := map[string][]string{
-		"ETCD Main":               {"instance", "etcd-main"},      // rules 242445, 242459
-		"ETCD Events":             {"instance", "etcd-events"},    // rules 242445, 242459
-		"Kube API Server":         {"role", "apiserver"},          // rule 242446
-		"Kube Controller Manager": {"role", "controller-manager"}, // rule 242446
-		"Kube Scheduler":          {"role", "scheduler"},          // rule 242446
+	mandatoryComponentsSeed := []*component{
+		{name: "ETCD Main", label: "instance", value: "etcd-main"},                    // rules 242445, 242459
+		{name: "ETCD Events", label: "instance", value: "etcd-events"},                // rules 242445, 242459
+		{name: "Kube API Server", label: "role", value: "apiserver"},                  // rule 242446
+		{name: "Kube Controller Manager", label: "role", value: "controller-manager"}, // rule 242446
+		{name: "Kube Scheduler", label: "role", value: "scheduler"},                   // rule 242446
 	}
-	mandatoryComponentsShoot := map[string][]string{
-		"Kube Proxy": {"role", "proxy"}, // rules 242447, 242448
+	mandatoryComponentsShoot := []*component{
+		{name: "Kube Proxy", label: "role", value: "proxy"}, // rules 242447, 242448
 	}
 	if r.Options == nil {
 		r.Options = &OptionsPodFiles{}
@@ -145,13 +152,15 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	checkResults = append(checkResults, shootCheckResults...)
 
-	if len(mandatoryComponentsSeed)+len(mandatoryComponentsShoot) > 0 {
-		for mandatoryComponentSeed := range mandatoryComponentsSeed {
-			checkResults = append(checkResults, rule.FailedCheckResult("Mandatory Component not found!", seedTarget.With("details", fmt.Sprintf("missing %s", mandatoryComponentSeed))))
+	for _, mandatoryComponentSeed := range mandatoryComponentsSeed {
+		if !mandatoryComponentSeed.found {
+			checkResults = append(checkResults, rule.FailedCheckResult("Mandatory Component not found!", seedTarget.With("details", fmt.Sprintf("missing %s", mandatoryComponentSeed.name))))
 		}
+	}
 
-		for mandatoryComponentShoot := range mandatoryComponentsShoot {
-			checkResults = append(checkResults, rule.FailedCheckResult("Mandatory Component not found!", shootTarget.With("details", fmt.Sprintf("missing %s", mandatoryComponentShoot))))
+	for _, mandatoryComponentShoot := range mandatoryComponentsShoot {
+		if !mandatoryComponentShoot.found {
+			checkResults = append(checkResults, rule.FailedCheckResult("Mandatory Component not found!", shootTarget.With("details", fmt.Sprintf("missing %s", mandatoryComponentShoot.name))))
 		}
 	}
 
@@ -162,7 +171,7 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (r *RulePodFiles) checkPods(ctx context.Context, clusterTarget gardener.Target, image string, c client.Client, podContext pod.PodContext, pods, selectedPods []corev1.Pod, nodes []corev1.Node, mandatoryComponents map[string][]string) []rule.CheckResult {
+func (r *RulePodFiles) checkPods(ctx context.Context, clusterTarget gardener.Target, image string, c client.Client, podContext pod.PodContext, pods, selectedPods []corev1.Pod, nodes []corev1.Node, mandatoryComponents []*component) []rule.CheckResult {
 	nodesAllocatablePods := utils.GetNodesAllocatablePodsNum(pods, nodes)
 	groupedPods, checkResults := utils.SelectPodOfReferenceGroup(selectedPods, nodesAllocatablePods, clusterTarget)
 
@@ -173,7 +182,7 @@ func (r *RulePodFiles) checkPods(ctx context.Context, clusterTarget gardener.Tar
 	return checkResults
 }
 
-func (r *RulePodFiles) checkNodePods(ctx context.Context, clusterTarget gardener.Target, image, nodeName string, c client.Client, podContext pod.PodContext, nodePods []corev1.Pod, mandatoryComponents map[string][]string) []rule.CheckResult {
+func (r *RulePodFiles) checkNodePods(ctx context.Context, clusterTarget gardener.Target, image, nodeName string, c client.Client, podContext pod.PodContext, nodePods []corev1.Pod, mandatoryComponents []*component) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
 	podName := fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
 	execPodTarget := clusterTarget.With("name", podName, "namespace", "kube-system", "kind", "pod")
@@ -258,19 +267,20 @@ func (r *RulePodFiles) checkContainerd(
 	containerID string,
 	execContainerPath string,
 	clusterTarget gardener.Target,
-	mandatoryComponents map[string][]string,
+	mandatoryComponents []*component,
 	execPodTarget gardener.Target,
 ) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
 	expectedFileOwnerUsers := []string{}
 	expectedFileOwnerGroups := []string{}
-	for component, pair := range mandatoryComponents {
-		key := pair[0]
-		value := pair[1]
-		if metav1.HasLabel(pod.ObjectMeta, key) && pod.Labels[key] == value {
-			delete(mandatoryComponents, component)
+	isMandatoryComponent := false
+	for _, mandatoryComponents := range mandatoryComponents {
+		if metav1.HasLabel(pod.ObjectMeta, mandatoryComponents.label) && pod.Labels[mandatoryComponents.label] == mandatoryComponents.value {
+			mandatoryComponents.found = true
+			isMandatoryComponent = true
 			expectedFileOwnerUsers = r.Options.ExpectedFileOwner.Users
 			expectedFileOwnerGroups = r.Options.ExpectedFileOwner.Groups
+			break
 		}
 	}
 
@@ -309,6 +319,16 @@ func (r *RulePodFiles) checkContainerd(
 
 			for _, stat := range statsSlice {
 				statSlice := strings.Split(stat, " ")
+
+				if isMandatoryComponent && strings.HasSuffix(strings.Join(statSlice[3:], " "), ".key") {
+					// rule 242467
+					// Gardener control plane components run as `nonroot` user `65532`, since we can change the group owener but
+					// cannot easily change the user owner of secret files we do not check for `0600` permission but instead for `0640`.
+					checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(statSlice[0], statSlice[1], statSlice[2], strings.Join(statSlice[3:], " "),
+						"640", expectedFileOwnerUsers, expectedFileOwnerGroups, fileTarget)...)
+					continue
+				}
+
 				checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(statSlice[0], statSlice[1], statSlice[2], strings.Join(statSlice[3:], " "),
 					expectedFilePermissionsMax, expectedFileOwnerUsers, expectedFileOwnerGroups, fileTarget)...)
 			}

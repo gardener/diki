@@ -49,6 +49,8 @@ var _ = Describe("#RulePodFiles", func() {
 ]`
 		compliantStats = `600 0 0 /destination/file1.txt
 644 0 65532 /destination/bar/file2.txt`
+		keyFileStats = `640 0 0 /destination/file1.key
+644 0 0 /destination/bar/file2.key`
 	)
 
 	var (
@@ -282,6 +284,13 @@ var _ = Describe("#RulePodFiles", func() {
 				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
 				rule.FailedCheckResult("File has too wide permissions", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 644, expectedPermissionsMax: 600")),
 				rule.FailedCheckResult("Mandatory Component not found!", gardener.NewTarget("cluster", "seed", "details", "missing ETCD Main")),
+			}),
+		Entry("should return correct checkResult when checked files are *.key", "",
+			[][]string{{mounts, keyFileStats}}, [][]string{{emptyMounts}},
+			[][]error{{nil, nil}}, [][]error{{nil}}, nil,
+			[]rule.CheckResult{
+				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 640, ownerUser: 0, ownerGroup: 0")),
+				rule.FailedCheckResult("File has too wide permissions", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.key, permissions: 644, expectedPermissionsMax: 640")),
 			}),
 	)
 })
