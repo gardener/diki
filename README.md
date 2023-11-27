@@ -30,12 +30,12 @@ diki run --config=config.yaml --all
 
 - Run a specific ruleset for a known provider
 ```bash
-diki run --config=config.yaml --provider=gardener --ruleset-id=disa-kubernetes-stig --ruleset-version=v1r8
+diki run --config=config.yaml --provider=gardener --ruleset-id=disa-kubernetes-stig --ruleset-version=v1r11
 ```
 
 - Run a specific rule defined in a ruleset for a known provider
 ```bash
-diki run --config=config.yaml --provider=gardener --ruleset-id=disa-kubernetes-stig --ruleset-version=v1r8 --rule-id=242414
+diki run --config=config.yaml --provider=gardener --ruleset-id=disa-kubernetes-stig --ruleset-version=v1r11 --rule-id=242414
 ```
 
 #### Report
