@@ -10,10 +10,11 @@ import (
 	"log/slog"
 	"strings"
 
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/rule"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ rule.Rule = &Rule242461{}
