@@ -13,7 +13,7 @@ providers:             # contains information about known providers
   rulesets:
   - id: disa-kubernetes-stig
     name: DISA Kubernetes Security Technical Implementation Guide
-    version: v1r8
+    version: v1r11
     ruleOptions:
     - ruleID: "242414"
       # skip:
