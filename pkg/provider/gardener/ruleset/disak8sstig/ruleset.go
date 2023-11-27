@@ -91,10 +91,6 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, shootConfig, seedConf
 	}
 
 	switch rulesetConfig.Version {
-	case "v1r8":
-		if err := ruleset.registerV1R8Rules(ruleOptions); err != nil {
-			return nil, err
-		}
 	case "v1r10":
 		if err := ruleset.registerV1R10Rules(ruleOptions); err != nil {
 			return nil, err
