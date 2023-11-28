@@ -14,7 +14,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -111,12 +110,12 @@ var _ = Describe("#242414", func() {
 			{
 				Status:  rule.Passed,
 				Message: "Container does not use hostPort < 1024.",
-				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
+				Target:  rule.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
 			},
 			{
 				Status:  rule.Passed,
 				Message: "Container does not use hostPort < 1024.",
-				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "shoot", "kind", "pod"),
+				Target:  rule.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "shoot", "kind", "pod"),
 			},
 		}
 
@@ -136,12 +135,12 @@ var _ = Describe("#242414", func() {
 			{
 				Status:  rule.Passed,
 				Message: "Container does not use hostPort < 1024.",
-				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
+				Target:  rule.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
 			},
 			{
 				Status:  rule.Failed,
 				Message: "Container may not use hostPort < 1024.",
-				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "shoot", "kind", "pod", "details", "containerName: test, port: 1011"),
+				Target:  rule.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "shoot", "kind", "pod", "details", "containerName: test, port: 1011"),
 			},
 		}
 
@@ -188,17 +187,17 @@ var _ = Describe("#242414", func() {
 			{
 				Status:  rule.Passed,
 				Message: "Container does not use hostPort < 1024.",
-				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
+				Target:  rule.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
 			},
 			{
 				Status:  rule.Accepted,
 				Message: "foo justify",
-				Target:  gardener.NewTarget("cluster", "shoot", "name", "accepted-shoot-pod", "namespace", "shoot", "kind", "pod", "details", "containerName: test, port: 53"),
+				Target:  rule.NewTarget("cluster", "shoot", "name", "accepted-shoot-pod", "namespace", "shoot", "kind", "pod", "details", "containerName: test, port: 53"),
 			},
 			{
 				Status:  rule.Failed,
 				Message: "Container may not use hostPort < 1024.",
-				Target:  gardener.NewTarget("cluster", "shoot", "name", "not-accepted-shoot-pod", "namespace", "shoot", "kind", "pod", "details", "containerName: test, port: 58"),
+				Target:  rule.NewTarget("cluster", "shoot", "name", "not-accepted-shoot-pod", "namespace", "shoot", "kind", "pod", "details", "containerName: test, port: 58"),
 			},
 		}
 

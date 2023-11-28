@@ -16,7 +16,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -31,9 +30,9 @@ var _ = Describe("#254800", func() {
 		configMapData     = "configMapData"
 		deployment        *appsv1.Deployment
 		configMap         *corev1.ConfigMap
-		deployTarget      = gardener.NewTarget("cluster", "seed", "name", "kube-apiserver", "namespace", namespace, "kind", "deployment")
-		podSecurityTarget = gardener.NewTarget("cluster", "shoot", "kind", "PodSecurityConfiguration")
-		genericTarget     = gardener.NewTarget("cluster", "shoot")
+		deployTarget      = rule.NewTarget("cluster", "seed", "name", "kube-apiserver", "namespace", namespace, "kind", "deployment")
+		podSecurityTarget = rule.NewTarget("cluster", "shoot", "kind", "PodSecurityConfiguration")
+		genericTarget     = rule.NewTarget("cluster", "shoot")
 	)
 
 	BeforeEach(func() {

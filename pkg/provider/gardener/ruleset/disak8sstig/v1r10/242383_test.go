@@ -10,7 +10,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r10"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -30,7 +29,7 @@ var _ = Describe("#242383", func() {
 			{
 				Status:  rule.Skipped,
 				Message: `By definition, all resources that Gardener creates are no end-user resources.`,
-				Target:  gardener.NewTarget(),
+				Target:  rule.NewTarget(),
 			},
 		},
 		))

@@ -14,7 +14,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r10"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -52,7 +51,7 @@ var _ = Describe("#242395", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("Kubernetes dashboard not installed", gardener.NewTarget("cluster", "shoot")),
+			rule.PassedCheckResult("Kubernetes dashboard not installed", rule.NewTarget("cluster", "shoot")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -75,8 +74,8 @@ var _ = Describe("#242395", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Kubernetes dashboard installed", gardener.NewTarget("cluster", "shoot", "name", pod1.Name, "namespace", pod1.Namespace, "kind", "pod")),
-			rule.FailedCheckResult("Kubernetes dashboard installed", gardener.NewTarget("cluster", "shoot", "name", pod2.Name, "namespace", pod2.Namespace, "kind", "pod")),
+			rule.FailedCheckResult("Kubernetes dashboard installed", rule.NewTarget("cluster", "shoot", "name", pod1.Name, "namespace", pod1.Namespace, "kind", "pod")),
+			rule.FailedCheckResult("Kubernetes dashboard installed", rule.NewTarget("cluster", "shoot", "name", pod2.Name, "namespace", pod2.Namespace, "kind", "pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))

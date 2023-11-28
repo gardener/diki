@@ -13,7 +13,6 @@ import (
 
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r10"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -44,37 +43,37 @@ var _ = Describe("#242393", func() {
 			[][]string{{"port used!"}},
 			[][]error{{nil}},
 			[]rule.CheckResult{
-				rule.FailedCheckResult("SSH daemon started on port 22", gardener.NewTarget("cluster", "shoot")),
+				rule.FailedCheckResult("SSH daemon started on port 22", rule.NewTarget("cluster", "shoot")),
 			}),
 		Entry("should return passed checkResult when sshd is inactive in systemctl",
 			[][]string{{"", "Inactive"}},
 			[][]error{{nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("SSH daemon service not installed", gardener.NewTarget("cluster", "shoot")),
+				rule.PassedCheckResult("SSH daemon service not installed", rule.NewTarget("cluster", "shoot")),
 			}),
 		Entry("should return failed checkResult when sshd is active in systemctl",
 			[][]string{{"", "Active"}},
 			[][]error{{nil, nil}},
 			[]rule.CheckResult{
-				rule.FailedCheckResult("SSH daemon active", gardener.NewTarget("cluster", "shoot")),
+				rule.FailedCheckResult("SSH daemon active", rule.NewTarget("cluster", "shoot")),
 			}),
 		Entry("should return passed checkResult in other cases",
 			[][]string{{"", "foo"}},
 			[][]error{{nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("SSH daemon inactive (or could not be probed)", gardener.NewTarget("cluster", "shoot")),
+				rule.PassedCheckResult("SSH daemon inactive (or could not be probed)", rule.NewTarget("cluster", "shoot")),
 			}),
 		Entry("should return errored checkResult when first execute errors",
 			[][]string{{""}},
 			[][]error{{errors.New("foo")}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("foo", gardener.NewTarget("cluster", "shoot")),
+				rule.ErroredCheckResult("foo", rule.NewTarget("cluster", "shoot")),
 			}),
 		Entry("should return errored checkResult when second execute errors",
 			[][]string{{"", "foo"}},
 			[][]error{{nil, errors.New("bar")}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("bar", gardener.NewTarget("cluster", "shoot")),
+				rule.ErroredCheckResult("bar", rule.NewTarget("cluster", "shoot")),
 			}),
 	)
 })

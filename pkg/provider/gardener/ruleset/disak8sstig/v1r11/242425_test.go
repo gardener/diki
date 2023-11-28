@@ -27,7 +27,6 @@ import (
 
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -154,11 +153,11 @@ var _ = Describe("#242425", func() {
 	DescribeTable("Run cases",
 		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			alwaysExpectedCheckResults := []rule.CheckResult{
-				rule.PassedCheckResult("Option tlsCertFile set.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
-				rule.FailedCheckResult("Option tlsCertFile is empty.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node2")),
-				rule.WarningCheckResult("Node is not in Ready state.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
-				rule.FailedCheckResult("Option tlsCertFile not set.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node4")),
-				rule.PassedCheckResult("Option tlsCertFile set.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node5")),
+				rule.PassedCheckResult("Option tlsCertFile set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
+				rule.FailedCheckResult("Option tlsCertFile is empty.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node2")),
+				rule.WarningCheckResult("Node is not in Ready state.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
+				rule.FailedCheckResult("Option tlsCertFile not set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node4")),
+				rule.PassedCheckResult("Option tlsCertFile set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node5")),
 			}
 			expectedCheckResults = append(expectedCheckResults, alwaysExpectedCheckResults...)
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
@@ -181,37 +180,37 @@ var _ = Describe("#242425", func() {
 			[][]string{{""}, {"--not-tls-cert-file=/foo/bar --config=./config", serverTLSBootstrapSetTrue}},
 			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", gardener.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
-				rule.PassedCheckResult("Kubelet rotates server certificates automatically itself.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
+				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", rule.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
+				rule.PassedCheckResult("Kubelet rotates server certificates automatically itself.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes have tlsCertFile set",
 			[][]string{{"--not-tls-cert-file=/foo/bar --config=./config", tlsCertFileSetConfig}, {"--not-tls-cert-file=/foo/bar --config=./config", tlsCertFileEmptyConfig}},
 			[][]error{{nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("Option tlsCertFile set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
-				rule.FailedCheckResult("Option tlsCertFile is empty.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
+				rule.PassedCheckResult("Option tlsCertFile set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
+				rule.FailedCheckResult("Option tlsCertFile is empty.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes do not have tlsCertFile set",
 			[][]string{{"--not-tls-cert-file=/foo/bar --config=./config", tlsCertFileNotSetConfig}, {"--not-tls-cert-file=/foo/bar, --config=./config", tlsCertFileNotSetConfig}},
 			[][]error{{nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.FailedCheckResult("Option tlsCertFile not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
-				rule.FailedCheckResult("Option tlsCertFile not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
+				rule.FailedCheckResult("Option tlsCertFile not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
+				rule.FailedCheckResult("Option tlsCertFile not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when deprecated flags are used",
 			[][]string{{"--feature-gates=RotateKubeletServerCertificate=true"}, {"--tls-cert-file=/foo/bar"}},
 			[][]error{{nil}, {nil}},
 			[]rule.CheckResult{
-				rule.FailedCheckResult("Use of deprecated kubelet config flag feature-gates.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
-				rule.FailedCheckResult("Use of deprecated kubelet config flag tls-cert-file.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
+				rule.FailedCheckResult("Use of deprecated kubelet config flag feature-gates.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
+				rule.FailedCheckResult("Use of deprecated kubelet config flag tls-cert-file.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 	)
 })

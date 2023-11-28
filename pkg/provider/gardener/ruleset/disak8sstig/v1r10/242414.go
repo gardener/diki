@@ -14,7 +14,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -50,8 +49,8 @@ func (r *Rule242414) Name() string {
 
 func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {
 	seedPods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, labels.NewSelector(), 300)
-	seedTarget := gardener.NewTarget("cluster", "seed")
-	shootTarget := gardener.NewTarget("cluster", "shoot")
+	seedTarget := rule.NewTarget("cluster", "seed")
+	shootTarget := rule.NewTarget("cluster", "shoot")
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
 	}
@@ -84,7 +83,7 @@ func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (r *Rule242414) checkPods(pods []corev1.Pod, namespaces map[string]corev1.Namespace, clusterTarget gardener.Target) []rule.CheckResult {
+func (r *Rule242414) checkPods(pods []corev1.Pod, namespaces map[string]corev1.Namespace, clusterTarget rule.Target) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
 	for _, pod := range pods {
 		target := clusterTarget.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")

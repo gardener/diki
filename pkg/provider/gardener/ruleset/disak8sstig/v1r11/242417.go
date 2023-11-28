@@ -16,7 +16,6 @@ import (
 
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -39,15 +38,15 @@ func (r *Rule242417) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults := []rule.CheckResult{}
 	systemNamespaces := []string{"kube-system", "kube-public", "kube-node-lease"}
 
-	shootTarget := gardener.NewTarget("cluster", "shoot")
+	shootTarget := rule.NewTarget("cluster", "shoot")
 	notManagedByGardenerReq, err := labels.NewRequirement(resourcesv1alpha1.ManagedBy, selection.NotEquals, []string{"gardener"})
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget())), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 	}
 
 	notDikiPodReq, err := labels.NewRequirement(pod.LabelComplianceRoleKey, selection.NotEquals, []string{pod.LabelComplianceRolePrivPod})
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget())), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 	}
 	for _, namespace := range systemNamespaces {
 		selector := labels.NewSelector().Add(*notManagedByGardenerReq).Add(*notDikiPodReq)

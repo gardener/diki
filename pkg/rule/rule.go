@@ -6,6 +6,7 @@ package rule
 
 import (
 	"context"
+	"maps"
 	"slices"
 )
 
@@ -22,8 +23,38 @@ type RuleResult struct {
 	CheckResults     []CheckResult
 }
 
-// Target is the thing that a check is performed against.
-type Target any
+// Target is used to describe the things that were checked during ruleset runs.
+type Target map[string]string
+
+// NewTarget creates a new Target with the given key values.
+// Panics if the number of arguments is an odd number.
+func NewTarget(keyValuePairs ...string) Target {
+	if len(keyValuePairs)%2 != 0 {
+		panic("NewTarget: odd number of arguments")
+	}
+	t := Target{}
+
+	for i := 0; i < len(keyValuePairs); i += 2 {
+		t[keyValuePairs[i]] = keyValuePairs[i+1]
+	}
+
+	return t
+}
+
+// With creates a new Target with additional key values.
+// It does not modify the original one.
+// Panics if the number of arguments is an odd number.
+func (t Target) With(keyValuePairs ...string) Target {
+	if len(keyValuePairs)%2 != 0 {
+		panic("With: odd number of arguments")
+	}
+
+	newTarget := maps.Clone(t)
+	for i := 0; i < len(keyValuePairs); i += 2 {
+		newTarget[keyValuePairs[i]] = keyValuePairs[i+1]
+	}
+	return newTarget
+}
 
 // CheckResult contains information about a Rule check. Returned from Rule runs.
 type CheckResult struct {

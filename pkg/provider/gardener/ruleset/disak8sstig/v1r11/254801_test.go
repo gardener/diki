@@ -28,7 +28,6 @@ import (
 
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -159,15 +158,15 @@ var _ = Describe("#254801", func() {
 
 	It("should return correct checkResults when nodes do not have featureGates.PodSecurity set and cluster version is = v1.22", func() {
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Option featureGates.PodSecurity not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1", "details", "Cluster uses Kubernetes 1.22.0.")),
-			rule.FailedCheckResult("Option featureGates.PodSecurity not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "Cluster uses Kubernetes 1.22.0.")),
-			rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-			rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
-			rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
-			rule.FailedCheckResult("Option featureGates.PodSecurity set to not allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node2")),
-			rule.WarningCheckResult("Node is not in Ready state.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
-			rule.FailedCheckResult("Option featureGates.PodSecurity not set.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node4", "details", "Cluster uses Kubernetes 1.22.0.")),
-			rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node5")),
+			rule.FailedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1", "details", "Cluster uses Kubernetes 1.22.0.")),
+			rule.FailedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "Cluster uses Kubernetes 1.22.0.")),
+			rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+			rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
+			rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
+			rule.FailedCheckResult("Option featureGates.PodSecurity set to not allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node2")),
+			rule.WarningCheckResult("Node is not in Ready state.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
+			rule.FailedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node4", "details", "Cluster uses Kubernetes 1.22.0.")),
+			rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node5")),
 		}
 		executeReturnString := [][]string{{"--not-feature-gates=PodSecurity=true --config=./config", podSecurityNotSetConfig}, {"--not-feature-gates=PodSecurity=true, --config=./config", podSecurityNotSetConfig}}
 		executeReturnError := [][]error{{nil, nil}, {nil, nil}}
@@ -191,11 +190,11 @@ var _ = Describe("#254801", func() {
 	DescribeTable("Run cases",
 		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			alwaysExpectedCheckResults := []rule.CheckResult{
-				rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
-				rule.FailedCheckResult("Option featureGates.PodSecurity set to not allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node2")),
-				rule.WarningCheckResult("Node is not in Ready state.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
-				rule.PassedCheckResult("Option featureGates.PodSecurity not set.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node4", "details", "Cluster uses Kubernetes 1.26.0.")),
-				rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node5")),
+				rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
+				rule.FailedCheckResult("Option featureGates.PodSecurity set to not allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node2")),
+				rule.WarningCheckResult("Node is not in Ready state.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
+				rule.PassedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node4", "details", "Cluster uses Kubernetes 1.26.0.")),
+				rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node5")),
 			}
 			expectedCheckResults = append(expectedCheckResults, alwaysExpectedCheckResults...)
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
@@ -219,28 +218,28 @@ var _ = Describe("#254801", func() {
 			[][]string{{""}, {"--feature-gates=PodSecurity=true"}},
 			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", gardener.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
-				rule.FailedCheckResult("Use of deprecated kubelet config flag feature-gates.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
+				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", rule.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
+				rule.FailedCheckResult("Use of deprecated kubelet config flag feature-gates.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes have featureGates.PodSecurity set",
 			[][]string{{"--not-feature-gates=PodSecurity=true --config=./config", podSecurityAllowedConfig}, {"--not-feature-gates=PodSecurity=true --config=./config", podSecurityNotAllowedConfig}},
 			[][]error{{nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
-				rule.FailedCheckResult("Option featureGates.PodSecurity set to not allowed value.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
+				rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
+				rule.FailedCheckResult("Option featureGates.PodSecurity set to not allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes do not have featureGates.PodSecurity set and cluster version is > v1.22",
 			[][]string{{"--not-feature-gates=PodSecurity=true --config=./config", podSecurityNotSetConfig}, {"--not-feature-gates=PodSecurity=true, --config=./config", podSecurityNotSetConfig}},
 			[][]error{{nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("Option featureGates.PodSecurity not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1", "details", "Cluster uses Kubernetes 1.26.0.")),
-				rule.PassedCheckResult("Option featureGates.PodSecurity not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "Cluster uses Kubernetes 1.26.0.")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
+				rule.PassedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1", "details", "Cluster uses Kubernetes 1.26.0.")),
+				rule.PassedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "Cluster uses Kubernetes 1.26.0.")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 	)
 })

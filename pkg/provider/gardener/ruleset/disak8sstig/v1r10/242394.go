@@ -12,7 +12,6 @@ import (
 
 	"github.com/gardener/diki/imagevector"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -34,7 +33,7 @@ func (r *Rule242394) Name() string {
 }
 
 func (r *Rule242394) Run(ctx context.Context) (rule.RuleResult, error) {
-	target := gardener.NewTarget("cluster", "shoot")
+	target := rule.NewTarget("cluster", "shoot")
 	podName := fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
 	image, err := imagevector.ImageVector().FindImage(ruleset.OpsToolbeltImageName)
 	if err != nil {

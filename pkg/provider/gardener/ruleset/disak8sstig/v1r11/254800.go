@@ -20,7 +20,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -46,7 +45,7 @@ func (r *Rule254800) Name() string {
 }
 
 func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
-	target := gardener.NewTarget("cluster", "seed", "name", "kube-apiserver", "namespace", r.Namespace, "kind", "deployment")
+	target := rule.NewTarget("cluster", "seed", "name", "kube-apiserver", "namespace", r.Namespace, "kind", "deployment")
 
 	admissionControlConfigFileOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, "kube-apiserver", "kube-apiserver", r.Namespace, "admission-control-config-file")
 	if err != nil {
@@ -120,7 +119,7 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 	}
 
-	return rule.SingleCheckResult(r, rule.FailedCheckResult("PodSecurity is not configured", gardener.NewTarget("cluster", "shoot"))), nil
+	return rule.SingleCheckResult(r, rule.FailedCheckResult("PodSecurity is not configured", rule.NewTarget("cluster", "shoot"))), nil
 }
 
 func privilegeLevel(privilege string) int {
@@ -137,7 +136,7 @@ func privilegeLevel(privilege string) int {
 func (r *Rule254800) checkPodSecurityConfiguration(pluginConfig *runtime.Unknown) []rule.CheckResult {
 	podSecurityConfig := admissionapiv1.PodSecurityConfiguration{}
 	if _, _, err := serializer.NewCodecFactory(scheme.Scheme).UniversalDeserializer().Decode(pluginConfig.Raw, nil, &podSecurityConfig); err != nil {
-		return []rule.CheckResult{rule.FailedCheckResult(err.Error(), gardener.NewTarget("cluster", "shoot"))}
+		return []rule.CheckResult{rule.FailedCheckResult(err.Error(), rule.NewTarget("cluster", "shoot"))}
 	}
 
 	return r.checkPrivilegeLevel(podSecurityConfig)
@@ -145,7 +144,7 @@ func (r *Rule254800) checkPodSecurityConfiguration(pluginConfig *runtime.Unknown
 
 func (r *Rule254800) checkPrivilegeLevel(podSecurityConfig admissionapiv1.PodSecurityConfiguration) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
-	target := gardener.NewTarget("cluster", "shoot", "kind", "PodSecurityConfiguration")
+	target := rule.NewTarget("cluster", "shoot", "kind", "PodSecurityConfiguration")
 	if privilegeLevel(podSecurityConfig.Defaults.Enforce) < privilegeLevel(r.Options.MinPodSecurityLevel) {
 		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Enforce level is lower than the minimum pod security level allowed: %s", r.Options.MinPodSecurityLevel), target))
 	}

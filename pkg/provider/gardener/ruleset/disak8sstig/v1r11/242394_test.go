@@ -13,7 +13,6 @@ import (
 
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -23,7 +22,7 @@ var _ = Describe("#242394", func() {
 		instanceID            = "1"
 		fakeClusterPodContext pod.PodContext
 		ctx                   = context.TODO()
-		target                = gardener.NewTarget("cluster", "shoot")
+		target                = rule.NewTarget("cluster", "shoot")
 	)
 
 	DescribeTable("Run cases",

@@ -17,7 +17,6 @@ import (
 	"github.com/gardener/diki/imagevector"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset"
 	"github.com/gardener/diki/pkg/rule"
@@ -49,7 +48,7 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 	kubeletFilePaths := []string{}
 
 	podName := fmt.Sprintf("diki-%s-%s", IDNodeFiles, Generator.Generate(10))
-	execPodTarget := gardener.NewTarget("cluster", "shoot", "name", podName, "namespace", "kube-system", "kind", "pod")
+	execPodTarget := rule.NewTarget("cluster", "shoot", "name", podName, "namespace", "kube-system", "kind", "pod")
 	image, err := imagevector.ImageVector().FindImage(ruleset.OpsToolbeltImageName)
 	if err != nil {
 		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", ruleset.OpsToolbeltImageName, err)
@@ -111,7 +110,7 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	for _, kubeletFilePath := range kubeletFilePaths {
-		target := gardener.NewTarget("cluster", "shoot", "details", fmt.Sprintf("filePath: %s", kubeletFilePath))
+		target := rule.NewTarget("cluster", "shoot", "details", fmt.Sprintf("filePath: %s", kubeletFilePath))
 		statsRaw, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`stat -Lc "%%a %%u %%g %%n" %s`, kubeletFilePath))
 		if err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
@@ -138,29 +137,29 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 	if pkiAllStatsRaw, err := podExecutor.Execute(ctx, "/bin/sh", `find /var/lib/kubelet/pki -exec stat -Lc "%a %u %g %n" {} \;`); err != nil { // rule 242451
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 	} else if len(pkiAllStatsRaw) == 0 {
-		checkResults = append(checkResults, rule.ErroredCheckResult("Stats not found", gardener.NewTarget("cluster", "shoot", "details", "filePath: /var/lib/kubelet/pki")))
+		checkResults = append(checkResults, rule.ErroredCheckResult("Stats not found", rule.NewTarget("cluster", "shoot", "details", "filePath: /var/lib/kubelet/pki")))
 	} else {
 		pkiAllStats := strings.Split(strings.TrimSpace(pkiAllStatsRaw), "\n")
 		for _, pkiAllStat := range pkiAllStats {
 			pkiAllStatSlice := strings.Split(pkiAllStat, " ")
 			checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(pkiAllStatSlice[0], pkiAllStatSlice[1], pkiAllStatSlice[2], strings.Join(pkiAllStatSlice[3:], " "),
-				"755", expectedFileOwnerUsers, expectedFileOwnerGroups, gardener.NewTarget("cluster", "shoot"))...)
+				"755", expectedFileOwnerUsers, expectedFileOwnerGroups, rule.NewTarget("cluster", "shoot"))...)
 		}
 	}
 
 	clusterNodes, err := kubeutils.GetNodes(ctx, r.ClusterClient, 512)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "shoot", "kind", "nodeList"))), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "shoot", "kind", "nodeList"))), nil
 	}
 
 	clusterPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "shoot", "kind", "podList"))), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "shoot", "kind", "podList"))), nil
 	}
 
 	clusterWorkers, err := utils.GetWorkers(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, 512)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "seed", "kind", "workerList"))), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "seed", "kind", "workerList"))), nil
 	}
 
 	nodesAllocatablePodsNum := utils.GetNodesAllocatablePodsNum(clusterPods, clusterNodes)
@@ -187,13 +186,13 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 func (r *RuleNodeFiles) checkWorkerGroup(ctx context.Context, image, workerGroup string, workerGroupNodes map[string]utils.AllocatableNode, expectedFileOwnerUsers, expectedFileOwnerGroups []string) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
 	runningNode := workerGroupNodes[workerGroup]
-	target := gardener.NewTarget("cluster", "shoot", "name", workerGroup, "kind", "workerGroup")
+	target := rule.NewTarget("cluster", "shoot", "name", workerGroup, "kind", "workerGroup")
 	if !runningNode.Allocatable {
 		return []rule.CheckResult{rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", target)}
 	}
 
 	nodePodName := fmt.Sprintf("diki-%s-%s", IDNodeFiles, Generator.Generate(10))
-	execNodePodTarget := gardener.NewTarget("cluster", "shoot", "name", nodePodName, "namespace", "kube-system", "kind", "pod")
+	execNodePodTarget := rule.NewTarget("cluster", "shoot", "name", nodePodName, "namespace", "kube-system", "kind", "pod")
 	defer func() {
 		if err := r.ClusterPodContext.Delete(ctx, nodePodName, "kube-system"); err != nil {
 			r.Logger.Error(err.Error())

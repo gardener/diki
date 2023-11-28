@@ -7,7 +7,6 @@ package v1r10
 import (
 	"context"
 
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -25,5 +24,5 @@ func (r *Rule242398) Name() string {
 
 func (r *Rule242398) Run(_ context.Context) (rule.RuleResult, error) {
 	// feature-gates.DynamicAuditing removed in v1.19. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
-	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Option feature-gates.DynamicAuditing removed in Kubernetes v1.19.`, gardener.NewTarget())), nil
+	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Option feature-gates.DynamicAuditing removed in Kubernetes v1.19.`, rule.NewTarget())), nil
 }

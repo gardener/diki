@@ -19,7 +19,6 @@ import (
 
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r10"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -242,55 +241,55 @@ var _ = Describe("#RulePodFiles", func() {
 				},
 			},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 644, ownerUser: 0, ownerGroup: 65532")),
-				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "shoot", "name", "1-shoot-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "shoot", "name", "1-shoot-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 644, ownerUser: 0, ownerGroup: 65532")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 644, ownerUser: 0, ownerGroup: 65532")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "1-shoot-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "1-shoot-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 644, ownerUser: 0, ownerGroup: 65532")),
 			}),
 		Entry("should return correct checkResults when options are nil", "",
 			[][]string{{mounts, compliantStats}}, [][]string{{mounts, compliantStats}},
 			[][]error{{nil, nil}}, [][]error{{nil, nil}}, nil,
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
-				rule.FailedCheckResult("File has unexpected owner group", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, ownerGroup: 65532, expectedOwnerGroups: [0]")),
-				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "shoot", "name", "1-shoot-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "shoot", "name", "1-shoot-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 644, ownerUser: 0, ownerGroup: 65532")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
+				rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, ownerGroup: 65532, expectedOwnerGroups: [0]")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "1-shoot-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "1-shoot-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 644, ownerUser: 0, ownerGroup: 65532")),
 			}),
 		Entry("should return correct checkResult when container is etcd", "",
 			[][]string{{mountsWithETCD, compliantStats}}, [][]string{{emptyMounts}},
 			[][]error{{nil, nil}}, [][]error{{nil}}, &v1r10.OptionsPodFiles{},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
-				rule.FailedCheckResult("File has too wide permissions", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 644, expectedPermissionsMax: 600")),
-				rule.FailedCheckResult("File has unexpected owner group", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, ownerGroup: 65532, expectedOwnerGroups: [0]")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 644, expectedPermissionsMax: 600")),
+				rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, ownerGroup: 65532, expectedOwnerGroups: [0]")),
 			}),
 		Entry("should return errored checkResults when podExecutor errors", "",
 			[][]string{{mounts}}, [][]string{{mounts, compliantStats}},
 			[][]error{{errors.New("foo")}}, [][]error{{nil, errors.New("bar")}}, &v1r10.OptionsPodFiles{},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("foo", gardener.NewTarget("cluster", "seed", "name", "diki-pod-files-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.ErroredCheckResult("bar", gardener.NewTarget("cluster", "shoot", "name", "diki-pod-files-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
+				rule.ErroredCheckResult("foo", rule.NewTarget("cluster", "seed", "name", "diki-pod-files-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
+				rule.ErroredCheckResult("bar", rule.NewTarget("cluster", "shoot", "name", "diki-pod-files-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
 			}),
 		Entry("should return failed checkResult when mandatory component not present", "not-etcd-main",
 			[][]string{{emptyMounts}}, [][]string{{emptyMounts}},
 			[][]error{{nil}}, [][]error{{nil}}, nil,
 			[]rule.CheckResult{
-				rule.FailedCheckResult("Mandatory Component not found!", gardener.NewTarget("cluster", "seed", "details", "missing ETCD Main")),
+				rule.FailedCheckResult("Mandatory Component not found!", rule.NewTarget("cluster", "seed", "details", "missing ETCD Main")),
 			}),
 		Entry("should return all checkResult when mandatory component not present", "not-etcd-main",
 			[][]string{{mountsWithETCD, compliantStats}}, [][]string{{emptyMounts}},
 			[][]error{{nil, nil}}, [][]error{{nil}}, nil,
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
-				rule.FailedCheckResult("File has too wide permissions", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 644, expectedPermissionsMax: 600")),
-				rule.FailedCheckResult("Mandatory Component not found!", gardener.NewTarget("cluster", "seed", "details", "missing ETCD Main")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 644, expectedPermissionsMax: 600")),
+				rule.FailedCheckResult("Mandatory Component not found!", rule.NewTarget("cluster", "seed", "details", "missing ETCD Main")),
 			}),
 		Entry("should return correct checkResult when checked files are *.key", "",
 			[][]string{{mounts, keyFileStats}}, [][]string{{emptyMounts}},
 			[][]error{{nil, nil}}, [][]error{{nil}}, nil,
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 640, ownerUser: 0, ownerGroup: 0")),
-				rule.FailedCheckResult("File has too wide permissions", gardener.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.key, permissions: 644, expectedPermissionsMax: 640")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 640, ownerUser: 0, ownerGroup: 0")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.key, permissions: 644, expectedPermissionsMax: 640")),
 			}),
 	)
 })

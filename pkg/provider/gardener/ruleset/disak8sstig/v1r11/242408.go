@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -24,5 +23,5 @@ func (r *Rule242408) Name() string {
 }
 
 func (r *Rule242408) Run(_ context.Context) (rule.RuleResult, error) {
-	return rule.SingleCheckResult(r, rule.SkippedCheckResult("Gardener does not deploy any control plane component as systemd processes or static pod.", gardener.NewTarget())), nil
+	return rule.SingleCheckResult(r, rule.SkippedCheckResult("Gardener does not deploy any control plane component as systemd processes or static pod.", rule.NewTarget())), nil
 }

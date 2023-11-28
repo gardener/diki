@@ -13,7 +13,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -38,7 +37,7 @@ func (r *Rule242376) Run(ctx context.Context) (rule.RuleResult, error) {
 		kcmName = "kube-controller-manager"
 		option  = "tls-min-version"
 	)
-	target := gardener.NewTarget("cluster", "seed", "name", kcmName, "namespace", r.Namespace, "kind", "deployment")
+	target := rule.NewTarget("cluster", "seed", "name", kcmName, "namespace", r.Namespace, "kind", "deployment")
 
 	optSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, kcmName, kcmName, r.Namespace, option)
 	if err != nil {

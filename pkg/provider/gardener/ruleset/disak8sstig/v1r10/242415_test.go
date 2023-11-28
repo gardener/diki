@@ -14,7 +14,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r10"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -104,12 +103,12 @@ var _ = Describe("#242415", func() {
 			{
 				Status:  rule.Passed,
 				Message: "Pod does not use environment to inject secret.",
-				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
+				Target:  rule.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
 			},
 			{
 				Status:  rule.Passed,
 				Message: "Pod does not use environment to inject secret.",
-				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "shoot", "kind", "pod"),
+				Target:  rule.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "shoot", "kind", "pod"),
 			},
 		}
 
@@ -137,12 +136,12 @@ var _ = Describe("#242415", func() {
 			{
 				Status:  rule.Passed,
 				Message: "Pod does not use environment to inject secret.",
-				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
+				Target:  rule.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
 			},
 			{
 				Status:  rule.Failed,
 				Message: "Pod uses environment to inject secret.",
-				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "shoot", "kind", "pod", "details", "containerName: test, variableName: SECRET_TEST, keyRef: secret_test"),
+				Target:  rule.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "shoot", "kind", "pod", "details", "containerName: test, variableName: SECRET_TEST, keyRef: secret_test"),
 			},
 		}
 
@@ -182,12 +181,12 @@ var _ = Describe("#242415", func() {
 			{
 				Status:  rule.Passed,
 				Message: "Pod does not use environment to inject secret.",
-				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
+				Target:  rule.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
 			},
 			{
 				Status:  rule.Accepted,
 				Message: "Pod accepted to use environment to inject secret.",
-				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "shoot", "kind", "pod", "details", "containerName: test, variableName: SECRET_TEST, keyRef: secret_test"),
+				Target:  rule.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "shoot", "kind", "pod", "details", "containerName: test, variableName: SECRET_TEST, keyRef: secret_test"),
 			},
 		}
 
