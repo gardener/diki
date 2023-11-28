@@ -60,7 +60,7 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 	}()
 	additionalLabels := map[string]string{
-		gardener.LabelInstanceID: r.InstanceID,
+		pod.LabelInstanceID: r.InstanceID,
 	}
 	podExecutor, err := r.ClusterPodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", image.String(), "", additionalLabels))
 	if err != nil {
@@ -200,7 +200,7 @@ func (r *RuleNodeFiles) checkWorkerGroup(ctx context.Context, image, workerGroup
 		}
 	}()
 	additionalLabels := map[string]string{
-		gardener.LabelInstanceID: r.InstanceID,
+		pod.LabelInstanceID: r.InstanceID,
 	}
 	nodePodExecutor, err := r.ClusterPodContext.Create(
 		ctx,

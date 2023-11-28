@@ -47,7 +47,7 @@ func (r *Rule242393) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 	}()
 	additionalLabels := map[string]string{
-		gardener.LabelInstanceID: r.InstanceID,
+		pod.LabelInstanceID: r.InstanceID,
 	}
 	clusterPodExecutor, err := r.ClusterPodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", image.String(), "", additionalLabels))
 	if err != nil {

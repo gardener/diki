@@ -153,7 +153,7 @@ func (r *Rule242424) checkWorkerGroup(ctx context.Context, workerGroup string, n
 	}()
 
 	additionalLabels := map[string]string{
-		gardener.LabelInstanceID: r.InstanceID,
+		pod.LabelInstanceID: r.InstanceID,
 	}
 	clusterPodExecutor, err := r.ClusterPodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", privPodImage, node.Node.Name, additionalLabels))
 	if err != nil {

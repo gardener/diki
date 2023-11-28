@@ -10,11 +10,20 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
-
-	"github.com/gardener/diki/pkg/provider/gardener"
 )
 
-const maxNameLength = 63
+const (
+	// LabelInstanceID is used to group all pods created by a single ruleset.
+	LabelInstanceID = "compliance.gardener.cloud/instanceID"
+
+	// LabelComplianceRoleKey is used to label pods related to compliance operations in the cluster.
+	LabelComplianceRoleKey = "compliance.gardener.cloud/role"
+
+	// LabelComplianceRolePrivPod is used as the label value for LabelComplianceRoleKey indicating privileged diki pods.
+	LabelComplianceRolePrivPod = "diki-privileged-pod"
+
+	maxNameLength = 63
+)
 
 // NewPrivilegedPod creates a new privileged Pod.
 func NewPrivilegedPod(name, namespace, image, nodeName string, additionalLabels map[string]string) func() *corev1.Pod {
@@ -82,7 +91,7 @@ func NewPrivilegedPod(name, namespace, image, nodeName string, additionalLabels 
 	}
 
 	// Labels that will always be applied to the pod and cannot be overwritten
-	pod.Labels[gardener.LabelComplianceRoleKey] = gardener.LabelComplianceRolePrivPod
+	pod.Labels[LabelComplianceRoleKey] = LabelComplianceRolePrivPod
 
 	return func() *corev1.Pod {
 		return pod

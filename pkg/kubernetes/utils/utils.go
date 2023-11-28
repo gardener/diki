@@ -9,6 +9,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -20,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/kubernetes/config"
@@ -385,4 +388,18 @@ func getVolumeMountFromContainerByPath(container corev1.Container, volumePath st
 		}
 	}
 	return corev1.VolumeMount{}, fmt.Errorf("cannot find volume with path %s", volumePath)
+}
+
+// RESTConfigFromFile builds a [*rest.Config] from a file.
+func RESTConfigFromFile(filePath string) (*rest.Config, error) {
+	data, err := os.ReadFile(filepath.Clean(filePath))
+	if err != nil {
+		return nil, err
+	}
+	config, err := clientcmd.RESTConfigFromKubeConfig(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return config, nil
 }
