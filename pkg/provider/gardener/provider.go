@@ -12,10 +12,10 @@ import (
 	"log/slog"
 	"maps"
 
-	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"k8s.io/client-go/rest"
 
 	"github.com/gardener/diki/pkg/config"
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
