@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -24,5 +23,5 @@ func (r *Rule242453) Name() string {
 }
 
 func (r *Rule242453) Run(_ context.Context) (rule.RuleResult, error) {
-	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Rule implemented by "node-files" for correctness, consistency, deduplication, reliability, and performance reasons.`, gardener.NewTarget())), nil
+	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Rule implemented by "node-files" for correctness, consistency, deduplication, reliability, and performance reasons.`, rule.NewTarget())), nil
 }

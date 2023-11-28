@@ -15,7 +15,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -42,11 +41,11 @@ func (r *Rule242437) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults := []rule.CheckResult{}
 	if versionutils.ConstraintK8sGreaterEqual125.Check(r.ControlPlaneVersion) {
 		checkResults = append(checkResults, rule.SkippedCheckResult("Pod security policies dropped with Kubernetes v1.25.",
-			gardener.NewTarget("cluster", "seed", "details", fmt.Sprintf("Cluster uses Kubernetes %s.", r.ControlPlaneVersion.String()))))
+			rule.NewTarget("cluster", "seed", "details", fmt.Sprintf("Cluster uses Kubernetes %s.", r.ControlPlaneVersion.String()))))
 	} else {
 		seedPodSecurityPolicies, err := kubeutils.GetPodSecurityPolicies(ctx, r.ControlPlaneClient, 300)
 		if err != nil {
-			return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "seed", "namespace", r.ControlPlaneNamespace, "kind", "podSecurityPolicyList"))), nil
+			return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "seed", "namespace", r.ControlPlaneNamespace, "kind", "podSecurityPolicyList"))), nil
 		}
 
 		checkResults = r.checkPodSecurityPolicies(seedPodSecurityPolicies, "seed")
@@ -54,11 +53,11 @@ func (r *Rule242437) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	if versionutils.ConstraintK8sGreaterEqual125.Check(r.ClusterVersion) {
 		checkResults = append(checkResults, rule.SkippedCheckResult("Pod security policies dropped with Kubernetes v1.25.",
-			gardener.NewTarget("cluster", "shoot", "details", fmt.Sprintf("Cluster uses Kubernetes %s.", r.ControlPlaneVersion.String()))))
+			rule.NewTarget("cluster", "shoot", "details", fmt.Sprintf("Cluster uses Kubernetes %s.", r.ControlPlaneVersion.String()))))
 	} else {
 		shootPodSecurityPolicies, err := kubeutils.GetPodSecurityPolicies(ctx, r.ClusterClient, 300)
 		if err != nil {
-			return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "shoot", "namespace", r.ControlPlaneNamespace, "kind", "podSecurityPolicyList"))), nil
+			return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "shoot", "namespace", r.ControlPlaneNamespace, "kind", "podSecurityPolicyList"))), nil
 		}
 
 		checkResults = append(checkResults, r.checkPodSecurityPolicies(shootPodSecurityPolicies, "shoot")...)
@@ -73,7 +72,7 @@ func (r *Rule242437) Run(ctx context.Context) (rule.RuleResult, error) {
 
 func (*Rule242437) checkPodSecurityPolicies(podSecurityPolicies []policyv1beta1.PodSecurityPolicy, cluster string) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
-	target := gardener.NewTarget("cluster", cluster)
+	target := rule.NewTarget("cluster", cluster)
 	if len(podSecurityPolicies) == 0 {
 		return []rule.CheckResult{rule.FailedCheckResult("No pod security policies(PSPs) found.", target)}
 	}

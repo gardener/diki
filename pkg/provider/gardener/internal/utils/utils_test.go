@@ -20,7 +20,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -470,10 +469,10 @@ var _ = Describe("utils", func() {
 
 	Describe("#MatchFilePermissionsAndOwnersCases", func() {
 		var (
-			target = gardener.NewTarget()
+			target = rule.NewTarget()
 		)
 		DescribeTable("#MatchCases",
-			func(filePermissions, fileOwnerUser, fileOwnerGroup, fileName string, expectedFilePermissionsMax string, expectedFileOwnerUsers, expectedFileOwnerGroups []string, target gardener.Target, expectedResults []rule.CheckResult) {
+			func(filePermissions, fileOwnerUser, fileOwnerGroup, fileName string, expectedFilePermissionsMax string, expectedFileOwnerUsers, expectedFileOwnerGroups []string, target rule.Target, expectedResults []rule.CheckResult) {
 				result := utils.MatchFilePermissionsAndOwnersCases(filePermissions, fileOwnerUser, fileOwnerGroup, fileName, expectedFilePermissionsMax, expectedFileOwnerUsers, expectedFileOwnerGroups, target)
 
 				Expect(result).To(Equal(expectedResults))
@@ -481,20 +480,20 @@ var _ = Describe("utils", func() {
 			Entry("should return passed when all checks pass",
 				"600", "0", "2000", "/foo/bar/file.txt", "644", []string{"0"}, []string{"0", "2000"}, target,
 				[]rule.CheckResult{
-					rule.PassedCheckResult("File has expected permissions and expected owner", gardener.NewTarget("details", "fileName: /foo/bar/file.txt, permissions: 600, ownerUser: 0, ownerGroup: 2000")),
+					rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("details", "fileName: /foo/bar/file.txt, permissions: 600, ownerUser: 0, ownerGroup: 2000")),
 				}),
 			Entry("should return failed results when all checks fail",
 				"466", "1000", "2000", "/foo/bar/file.txt", "644", []string{"0"}, []string{"0", "1000"}, target,
 				[]rule.CheckResult{
 
-					rule.FailedCheckResult("File has too wide permissions", gardener.NewTarget("details", "fileName: /foo/bar/file.txt, permissions: 466, expectedPermissionsMax: 644")),
-					rule.FailedCheckResult("File has unexpected owner user", gardener.NewTarget("details", "fileName: /foo/bar/file.txt, ownerUser: 1000, expectedOwnerUsers: [0]")),
-					rule.FailedCheckResult("File has unexpected owner group", gardener.NewTarget("details", "fileName: /foo/bar/file.txt, ownerGroup: 2000, expectedOwnerGroups: [0 1000]")),
+					rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("details", "fileName: /foo/bar/file.txt, permissions: 466, expectedPermissionsMax: 644")),
+					rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("details", "fileName: /foo/bar/file.txt, ownerUser: 1000, expectedOwnerUsers: [0]")),
+					rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("details", "fileName: /foo/bar/file.txt, ownerGroup: 2000, expectedOwnerGroups: [0 1000]")),
 				}),
 			Entry("should not check owners when expected slices are empty",
 				"664", "1000", "2000", "/foo/bar/file.txt", "644", []string{}, []string{}, target,
 				[]rule.CheckResult{
-					rule.FailedCheckResult("File has too wide permissions", gardener.NewTarget("details", "fileName: /foo/bar/file.txt, permissions: 664, expectedPermissionsMax: 644")),
+					rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("details", "fileName: /foo/bar/file.txt, permissions: 664, expectedPermissionsMax: 644")),
 				}),
 		)
 	})
@@ -648,7 +647,7 @@ var _ = Describe("utils", func() {
 				"node3": {*pod5},
 			}
 
-			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, gardener.Target{})
+			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.Target{})
 
 			Expect(res).To(Equal(expectedRes))
 			Expect(checkResult).To(Equal([]rule.CheckResult{}))
@@ -697,7 +696,7 @@ var _ = Describe("utils", func() {
 				"node2": {*pod2, *pod4},
 			}
 
-			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, gardener.Target{})
+			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.Target{})
 
 			Expect(res).To(Equal(expectedRes))
 			Expect(checkResult).To(Equal([]rule.CheckResult{}))
@@ -751,7 +750,7 @@ var _ = Describe("utils", func() {
 				"node3": {*pod3, *pod4},
 			}
 
-			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, gardener.Target{})
+			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.Target{})
 
 			Expect(res).To(Equal(expectedRes))
 			Expect(checkResult).To(Equal([]rule.CheckResult{}))
@@ -805,7 +804,7 @@ var _ = Describe("utils", func() {
 				"node3": {*pod3, *pod4},
 			}
 
-			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, gardener.Target{})
+			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.Target{})
 
 			Expect(res).To(Equal(expectedRes))
 			Expect(checkResult).To(Equal([]rule.CheckResult{}))
@@ -823,11 +822,11 @@ var _ = Describe("utils", func() {
 				{
 					Status:  rule.Warning,
 					Message: "Pod not (yet) scheduled",
-					Target:  gardener.NewTarget("name", "pod1", "namespace", "", "kind", "pod"),
+					Target:  rule.NewTarget("name", "pod1", "namespace", "", "kind", "pod"),
 				},
 			}
 
-			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, gardener.Target{})
+			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.Target{})
 
 			Expect(res).To(Equal(expectedRes))
 			Expect(checkResult).To(Equal(expectedCheckResults))
@@ -882,21 +881,21 @@ var _ = Describe("utils", func() {
 				{
 					Status:  rule.Warning,
 					Message: "Pod cannot be tested since it is scheduled on a fully allocated node.",
-					Target:  gardener.NewTarget("name", "pod2", "namespace", "", "kind", "pod", "node", "node2"),
+					Target:  rule.NewTarget("name", "pod2", "namespace", "", "kind", "pod", "node", "node2"),
 				},
 				{
 					Status:  rule.Warning,
 					Message: "Pod cannot be tested since it is scheduled on a fully allocated node.",
-					Target:  gardener.NewTarget("name", "pod3", "namespace", "", "kind", "pod", "node", "node1"),
+					Target:  rule.NewTarget("name", "pod3", "namespace", "", "kind", "pod", "node", "node1"),
 				},
 				{
 					Status:  rule.Warning,
 					Message: "Reference group cannot be tested since all pods of the group are scheduled on a fully allocated node.",
-					Target:  gardener.NewTarget("name", "", "uid", "1", "kind", "referenceGroup"),
+					Target:  rule.NewTarget("name", "", "uid", "1", "kind", "referenceGroup"),
 				},
 			}
 
-			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, gardener.Target{})
+			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.Target{})
 
 			Expect(res).To(Equal(expectedRes))
 			Expect(checkResult).To(Equal(expectedCheckResults))

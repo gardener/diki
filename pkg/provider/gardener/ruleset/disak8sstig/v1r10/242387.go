@@ -19,7 +19,6 @@ import (
 	"github.com/gardener/diki/imagevector"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset"
 	"github.com/gardener/diki/pkg/rule"
@@ -46,7 +45,7 @@ func (r *Rule242387) Name() string {
 }
 
 func (r *Rule242387) Run(ctx context.Context) (rule.RuleResult, error) {
-	shootTarget := gardener.NewTarget("cluster", "shoot")
+	shootTarget := rule.NewTarget("cluster", "shoot")
 	clusterNodes, err := kubeutils.GetNodes(ctx, r.ClusterClient, 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "nodeList"))), nil
@@ -59,7 +58,7 @@ func (r *Rule242387) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	clusterWorkers, err := utils.GetWorkers(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget("cluster", "seed", "kind", "workerList"))), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "seed", "kind", "workerList"))), nil
 	}
 
 	image, err := imagevector.ImageVector().FindImage(ruleset.OpsToolbeltImageName)
@@ -82,7 +81,7 @@ func (r *Rule242387) Run(ctx context.Context) (rule.RuleResult, error) {
 		node, ok := workerGroupNodes[workerGroup]
 		if !ok {
 			// this should never happen
-			checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("Failed retrieving node for worker group %s", workerGroup), gardener.NewTarget()))
+			checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("Failed retrieving node for worker group %s", workerGroup), rule.NewTarget()))
 			continue
 		}
 		checkResult := r.checkWorkerGroup(ctx, workerGroup, node, image.String())
@@ -122,13 +121,13 @@ func (r *Rule242387) Run(ctx context.Context) (rule.RuleResult, error) {
 }
 
 func (r *Rule242387) checkWorkerGroup(ctx context.Context, workerGroup string, node utils.AllocatableNode, privPodImage string) rule.CheckResult {
-	target := gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", workerGroup)
+	target := rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", workerGroup)
 	if !node.Allocatable {
 		return rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", target)
 	}
 
 	podName := fmt.Sprintf("diki-%s-%s", IDNodeFiles, Generator.Generate(10))
-	podTarget := gardener.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", podName)
+	podTarget := rule.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", podName)
 
 	defer func() {
 		if err := r.ClusterPodContext.Delete(ctx, podName, "kube-system"); err != nil {

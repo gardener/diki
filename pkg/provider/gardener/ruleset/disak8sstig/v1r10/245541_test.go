@@ -27,7 +27,6 @@ import (
 
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r10"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -156,11 +155,11 @@ var _ = Describe("#245541", func() {
 	DescribeTable("Run cases",
 		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			alwaysExpectedCheckResults := []rule.CheckResult{
-				rule.PassedCheckResult("Option streamingConnectionIdleTimeout set to allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
-				rule.FailedCheckResult("Option streamingConnectionIdleTimeout set to not allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node2", "details", "streamingConnectionIdleTimeout set to 30s.")),
-				rule.WarningCheckResult("Node is not in Ready state.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
-				rule.FailedCheckResult("Option streamingConnectionIdleTimeout not set.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node4")),
-				rule.PassedCheckResult("Option streamingConnectionIdleTimeout set to allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node5")),
+				rule.PassedCheckResult("Option streamingConnectionIdleTimeout set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
+				rule.FailedCheckResult("Option streamingConnectionIdleTimeout set to not allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node2", "details", "streamingConnectionIdleTimeout set to 30s.")),
+				rule.WarningCheckResult("Node is not in Ready state.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
+				rule.FailedCheckResult("Option streamingConnectionIdleTimeout not set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node4")),
+				rule.PassedCheckResult("Option streamingConnectionIdleTimeout set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node5")),
 			}
 			expectedCheckResults = append(expectedCheckResults, alwaysExpectedCheckResults...)
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
@@ -183,37 +182,37 @@ var _ = Describe("#245541", func() {
 			[][]string{{""}, {"--streaming-connection-idle-timeout=true"}},
 			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", gardener.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
-				rule.FailedCheckResult("Use of deprecated kubelet config flag streaming-connection-idle-timeout.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
+				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", rule.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
+				rule.FailedCheckResult("Use of deprecated kubelet config flag streaming-connection-idle-timeout.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes have streamingConnectionIdleTimeout set",
 			[][]string{{"--not-streaming-connection-idle-timeout=true --config=./config", streamingConnectionIdleTimeoutAllowedConfig}, {"--not-streaming-connection-idle-timeout=true --config=./config", streamingConnectionIdleTimeoutNotAllowedConfig}},
 			[][]error{{nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("Option streamingConnectionIdleTimeout set to allowed value.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
-				rule.FailedCheckResult("Option streamingConnectionIdleTimeout set to not allowed value.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "streamingConnectionIdleTimeout set to 30s.")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
+				rule.PassedCheckResult("Option streamingConnectionIdleTimeout set to allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
+				rule.FailedCheckResult("Option streamingConnectionIdleTimeout set to not allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "streamingConnectionIdleTimeout set to 30s.")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes do not have streamingConnectionIdleTimeout set or is set to not recommended value",
 			[][]string{{"--not-streaming-connection-idle-timeout=true --config=./config", streamingConnectionIdleTimeoutNotSetConfig}, {"--not-streaming-connection-idle-timeout=true, --config=./config", streamingConnectionIdleTimeoutNotRecommendedConfig}},
 			[][]error{{nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.FailedCheckResult("Option streamingConnectionIdleTimeout not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
-				rule.PassedCheckResult("Option streamingConnectionIdleTimeout set to allowed, but not recommended value (should be 5m).", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "streamingConnectionIdleTimeout set to 1h0m0s.")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
+				rule.FailedCheckResult("Option streamingConnectionIdleTimeout not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
+				rule.PassedCheckResult("Option streamingConnectionIdleTimeout set to allowed, but not recommended value (should be 5m).", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "streamingConnectionIdleTimeout set to 1h0m0s.")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes do not have streamingConnectionIdleTimeout set or is set to not recommended value over 4 hours",
 			[][]string{{"--not-streaming-connection-idle-timeout=true --config=./config", streamingConnectionIdleTimeoutNotAllowedConfigOver4Hours}, {"--not-streaming-connection-idle-timeout=true, --config=./config", streamingConnectionIdleTimeoutNotRecommendedConfig}},
 			[][]error{{nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.FailedCheckResult("Option streamingConnectionIdleTimeout set to not allowed value.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1", "details", "streamingConnectionIdleTimeout set to 5h0m0s.")),
-				rule.PassedCheckResult("Option streamingConnectionIdleTimeout set to allowed, but not recommended value (should be 5m).", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "streamingConnectionIdleTimeout set to 1h0m0s.")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
+				rule.FailedCheckResult("Option streamingConnectionIdleTimeout set to not allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1", "details", "streamingConnectionIdleTimeout set to 5h0m0s.")),
+				rule.PassedCheckResult("Option streamingConnectionIdleTimeout set to allowed, but not recommended value (should be 5m).", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "streamingConnectionIdleTimeout set to 1h0m0s.")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 	)
 })

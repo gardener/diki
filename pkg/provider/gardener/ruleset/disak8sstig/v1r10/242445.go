@@ -7,7 +7,6 @@ package v1r10
 import (
 	"context"
 
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -24,5 +23,5 @@ func (r *Rule242445) Name() string {
 }
 
 func (r *Rule242445) Run(_ context.Context) (rule.RuleResult, error) {
-	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Gardener does not deploy any control plane component as systemd processes or static pod. It is deployed as regular pod under root:root, not readable by non-root users, which is checked by "pod-files" for correctness, consistency, deduplication, reliability, and performance reasons.`, gardener.NewTarget())), nil
+	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Gardener does not deploy any control plane component as systemd processes or static pod. It is deployed as regular pod under root:root, not readable by non-root users, which is checked by "pod-files" for correctness, consistency, deduplication, reliability, and performance reasons.`, rule.NewTarget())), nil
 }

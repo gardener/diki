@@ -25,7 +25,6 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/config"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset"
 	"github.com/gardener/diki/pkg/rule"
@@ -94,11 +93,11 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", ruleset.OpsToolbeltImageName, err)
 	}
 
-	seedTarget := gardener.NewTarget("cluster", "seed")
-	shootTarget := gardener.NewTarget("cluster", "shoot")
+	seedTarget := rule.NewTarget("cluster", "seed")
+	shootTarget := rule.NewTarget("cluster", "shoot")
 	gardenerRoleControlplaneReq, err := labels.NewRequirement(v1beta1constants.GardenRole, selection.Equals, []string{"controlplane"})
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget())), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 	}
 
 	seedAllPods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, "", labels.NewSelector(), 300)
@@ -122,12 +121,12 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	managedByGardenerReq, err := labels.NewRequirement(resourcesv1alpha1.ManagedBy, selection.Equals, []string{"gardener"})
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget())), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 	}
 
 	gardenerRoleSystemComponentReq, err := labels.NewRequirement(v1beta1constants.GardenRole, selection.Equals, []string{"system-component"})
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget())), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 	}
 
 	shootAllPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
@@ -171,7 +170,7 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (r *RulePodFiles) checkPods(ctx context.Context, clusterTarget gardener.Target, image string, c client.Client, podContext pod.PodContext, pods, selectedPods []corev1.Pod, nodes []corev1.Node, mandatoryComponents []*component) []rule.CheckResult {
+func (r *RulePodFiles) checkPods(ctx context.Context, clusterTarget rule.Target, image string, c client.Client, podContext pod.PodContext, pods, selectedPods []corev1.Pod, nodes []corev1.Node, mandatoryComponents []*component) []rule.CheckResult {
 	nodesAllocatablePods := utils.GetNodesAllocatablePodsNum(pods, nodes)
 	groupedPods, checkResults := utils.SelectPodOfReferenceGroup(selectedPods, nodesAllocatablePods, clusterTarget)
 
@@ -182,7 +181,7 @@ func (r *RulePodFiles) checkPods(ctx context.Context, clusterTarget gardener.Tar
 	return checkResults
 }
 
-func (r *RulePodFiles) checkNodePods(ctx context.Context, clusterTarget gardener.Target, image, nodeName string, c client.Client, podContext pod.PodContext, nodePods []corev1.Pod, mandatoryComponents []*component) []rule.CheckResult {
+func (r *RulePodFiles) checkNodePods(ctx context.Context, clusterTarget rule.Target, image, nodeName string, c client.Client, podContext pod.PodContext, nodePods []corev1.Pod, mandatoryComponents []*component) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
 	podName := fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
 	execPodTarget := clusterTarget.With("name", podName, "namespace", "kube-system", "kind", "pod")
@@ -266,9 +265,9 @@ func (r *RulePodFiles) checkContainerd(
 	containerName string,
 	containerID string,
 	execContainerPath string,
-	clusterTarget gardener.Target,
+	clusterTarget rule.Target,
 	mandatoryComponents []*component,
-	execPodTarget gardener.Target,
+	execPodTarget rule.Target,
 ) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
 	expectedFileOwnerUsers := []string{}

@@ -27,7 +27,6 @@ import (
 
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r10"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -154,11 +153,11 @@ var _ = Describe("#242392", func() {
 	DescribeTable("Run cases",
 		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			alwaysExpectedCheckResults := []rule.CheckResult{
-				rule.PassedCheckResult("Option authorization.mode set to allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
-				rule.FailedCheckResult("Option authorization.mode set to not allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node2", "details", "Authorization Mode set to AlwaysAllow")),
-				rule.WarningCheckResult("Node is not in Ready state.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
-				rule.FailedCheckResult("Option authorization.mode not set.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node4")),
-				rule.PassedCheckResult("Option authorization.mode set to allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node5")),
+				rule.PassedCheckResult("Option authorization.mode set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
+				rule.FailedCheckResult("Option authorization.mode set to not allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node2", "details", "Authorization Mode set to AlwaysAllow")),
+				rule.WarningCheckResult("Node is not in Ready state.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
+				rule.FailedCheckResult("Option authorization.mode not set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node4")),
+				rule.PassedCheckResult("Option authorization.mode set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node5")),
 			}
 			expectedCheckResults = append(expectedCheckResults, alwaysExpectedCheckResults...)
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
@@ -181,37 +180,37 @@ var _ = Describe("#242392", func() {
 			[][]string{{"healthy"}, {"Unauthorized", "--authorization-mode=AlwaysAllow"}},
 			[][]error{{nil}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.FailedCheckResult("Kubelet always allows access (or could not be probed).", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
-				rule.FailedCheckResult("Use of deprecated kubelet config flag authorization-mode.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
+				rule.FailedCheckResult("Kubelet always allows access (or could not be probed).", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
+				rule.FailedCheckResult("Use of deprecated kubelet config flag authorization-mode.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes have authorization.mode set",
 			[][]string{{"Unauthorized", "--not-authorization-mode=Webhook --config=./config", authorizationModeAllowedConfig}, {"Unauthorized", "--not-authorization-mode=Webhook --config=./config", authorizationModeNotAllowedConfig}},
 			[][]error{{nil, nil, nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("Option authorization.mode set to allowed value.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
-				rule.FailedCheckResult("Option authorization.mode set to not allowed value.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "Authorization Mode set to AlwaysAllow")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
+				rule.PassedCheckResult("Option authorization.mode set to allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
+				rule.FailedCheckResult("Option authorization.mode set to not allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "Authorization Mode set to AlwaysAllow")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes do not have authorization.mode set",
 			[][]string{{"Unauthorized", "--not-authorization-mode=Webhook --config=./config", authorizationModeNotSetConfig}, {"Unauthorized", "--not-authorization-mode=Webhook, --config=./config", authorizationModeNotSetConfig}},
 			[][]error{{nil, nil, nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.FailedCheckResult("Option authorization.mode not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
-				rule.FailedCheckResult("Option authorization.mode not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
+				rule.FailedCheckResult("Option authorization.mode not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
+				rule.FailedCheckResult("Option authorization.mode not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when execute errors",
 			[][]string{{""}, {"Unauthorized", ""}},
 			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil, fmt.Errorf("command stderr output: sh: 1: netstat: not found")}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", gardener.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
-				rule.ErroredCheckResult("command stderr output: sh: 1: netstat: not found", gardener.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-bbbbbbbbbb")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
+				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", rule.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
+				rule.ErroredCheckResult("command stderr output: sh: 1: netstat: not found", rule.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-bbbbbbbbbb")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 	)
 })

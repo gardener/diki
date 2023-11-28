@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -24,5 +23,5 @@ func (r *Rule242454) Name() string {
 }
 
 func (r *Rule242454) Run(_ context.Context) (rule.RuleResult, error) {
-	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Gardener does not use "kubeadm" and also does not store any "main config" anywhere in seed or shoot (flow/component logic built-in/in-code).`, gardener.NewTarget())), nil
+	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Gardener does not use "kubeadm" and also does not store any "main config" anywhere in seed or shoot (flow/component logic built-in/in-code).`, rule.NewTarget())), nil
 }

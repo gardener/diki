@@ -18,7 +18,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -201,7 +200,7 @@ func MatchFilePermissionsAndOwnersCases(
 	expectedFilePermissionsMax string,
 	expectedFileOwnerUsers,
 	expectedFileOwnerGroups []string,
-	target gardener.Target,
+	target rule.Target,
 ) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
 	if len(expectedFilePermissionsMax) > 0 {
@@ -276,7 +275,7 @@ func GetNodesAllocatablePodsNum(pods []corev1.Pod, nodes []corev1.Node) map[stri
 // Pods that do not have an owner reference will always be selected.
 // Pods will not be grouped to nodes, which have reached their allocation limit.
 // It tries to pick the pods in a way that fewer nodes will be selected.
-func SelectPodOfReferenceGroup(pods []corev1.Pod, nodesAllocatablePods map[string]int, target gardener.Target) (map[string][]corev1.Pod, []rule.CheckResult) {
+func SelectPodOfReferenceGroup(pods []corev1.Pod, nodesAllocatablePods map[string]int, target rule.Target) (map[string][]corev1.Pod, []rule.CheckResult) {
 	checkResults := []rule.CheckResult{}
 	groupedPodsByNodes := map[string][]corev1.Pod{}
 	groupedPodsByReferences := map[string][]corev1.Pod{}

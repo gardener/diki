@@ -15,7 +15,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -107,12 +106,12 @@ var _ = Describe("#242437", func() {
 			{
 				Status:  rule.Passed,
 				Message: "Pod security policy correctly configured.",
-				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
+				Target:  rule.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
 			},
 			{
 				Status:  rule.Passed,
 				Message: "Pod security policy correctly configured.",
-				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
+				Target:  rule.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
 			},
 		}
 
@@ -151,12 +150,12 @@ var _ = Describe("#242437", func() {
 			{
 				Status:  rule.Failed,
 				Message: "Pod security policy fs group range not excluding 0.",
-				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
+				Target:  rule.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
 			},
 			{
 				Status:  rule.Failed,
 				Message: "Pod security policy fs group range not excluding 0.",
-				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
+				Target:  rule.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
 			},
 		}
 
@@ -184,12 +183,12 @@ var _ = Describe("#242437", func() {
 			{
 				Status:  rule.Failed,
 				Message: "Pod security policy fs group ranges are not set.",
-				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
+				Target:  rule.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
 			},
 			{
 				Status:  rule.Failed,
 				Message: "Pod security policy supplemental group ranges are not set.",
-				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
+				Target:  rule.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
 			},
 		}
 
@@ -228,12 +227,12 @@ var _ = Describe("#242437", func() {
 			{
 				Status:  rule.Failed,
 				Message: "Pod security policy supplemental group range not excluding 0.",
-				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
+				Target:  rule.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
 			},
 			{
 				Status:  rule.Failed,
 				Message: "Pod security policy supplemental group range not excluding 0.",
-				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
+				Target:  rule.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
 			},
 		}
 
@@ -261,12 +260,12 @@ var _ = Describe("#242437", func() {
 			{
 				Status:  rule.Failed,
 				Message: "Pod security policy run user not defined as MustRunAsNonRoot.",
-				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
+				Target:  rule.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
 			},
 			{
 				Status:  rule.Failed,
 				Message: "Pod security policy run user not defined as MustRunAsNonRoot.",
-				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
+				Target:  rule.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
 			},
 		}
 
@@ -304,22 +303,22 @@ var _ = Describe("#242437", func() {
 			{
 				Status:  rule.Failed,
 				Message: "Pod security policy fs group range not excluding 0.",
-				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
+				Target:  rule.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
 			},
 			{
 				Status:  rule.Failed,
 				Message: "Pod security policy run user not defined as MustRunAsNonRoot.",
-				Target:  gardener.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
+				Target:  rule.NewTarget("cluster", "seed", "name", "seed-psp", "kind", "podSecurityPolicy"),
 			},
 			{
 				Status:  rule.Failed,
 				Message: "Pod security policy supplemental group range not excluding 0.",
-				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
+				Target:  rule.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
 			},
 			{
 				Status:  rule.Failed,
 				Message: "Pod security policy run user not defined as MustRunAsNonRoot.",
-				Target:  gardener.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
+				Target:  rule.NewTarget("cluster", "shoot", "name", "shoot-psp", "kind", "podSecurityPolicy"),
 			},
 		}
 
@@ -343,12 +342,12 @@ var _ = Describe("#242437", func() {
 			{
 				Status:  rule.Skipped,
 				Message: "Pod security policies dropped with Kubernetes v1.25.",
-				Target:  gardener.NewTarget("cluster", "seed", "details", "Cluster uses Kubernetes 1.25.0."),
+				Target:  rule.NewTarget("cluster", "seed", "details", "Cluster uses Kubernetes 1.25.0."),
 			},
 			{
 				Status:  rule.Skipped,
 				Message: "Pod security policies dropped with Kubernetes v1.25.",
-				Target:  gardener.NewTarget("cluster", "shoot", "details", "Cluster uses Kubernetes 1.25.0."),
+				Target:  rule.NewTarget("cluster", "shoot", "details", "Cluster uses Kubernetes 1.25.0."),
 			},
 		}
 

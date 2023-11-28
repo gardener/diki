@@ -16,7 +16,6 @@ import (
 
 	"github.com/gardener/diki/pkg/kubernetes/config"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -57,7 +56,7 @@ func (r *Rule242428) checkStatefulSet(ctx context.Context, statefulSetName strin
 		},
 	}
 
-	target := gardener.NewTarget("cluster", "seed", "name", statefulSetName, "namespace", r.Namespace, "kind", "statefulSet")
+	target := rule.NewTarget("cluster", "seed", "name", statefulSetName, "namespace", r.Namespace, "kind", "statefulSet")
 
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(statefulSet), statefulSet); err != nil {
 		return rule.ErroredCheckResult(err.Error(), target)

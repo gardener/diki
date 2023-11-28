@@ -28,7 +28,6 @@ import (
 
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r10"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -159,7 +158,7 @@ var _ = Describe("#242399", func() {
 
 	It("should return skipped checkResults when cluster Kubernetes version is >= v1.26", func() {
 		expectedCheckResults := []rule.CheckResult{
-			rule.SkippedCheckResult("Option featureGates.DynamicKubeletConfig removed in Kubernetes v1.26.", gardener.NewTarget("cluster", "shoot", "details", "Cluster uses Kubernetes 1.26.0.")),
+			rule.SkippedCheckResult("Option featureGates.DynamicKubeletConfig removed in Kubernetes v1.26.", rule.NewTarget("cluster", "shoot", "details", "Cluster uses Kubernetes 1.26.0.")),
 		}
 		r := &v1r10.Rule242399{
 			ClusterVersion: clusterVersion126,
@@ -174,11 +173,11 @@ var _ = Describe("#242399", func() {
 	DescribeTable("Run cases",
 		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			alwaysExpectedCheckResults := []rule.CheckResult{
-				rule.PassedCheckResult("Option featureGates.DynamicKubeletConfig set to allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
-				rule.FailedCheckResult("Option featureGates.DynamicKubeletConfig set to not allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node2")),
-				rule.WarningCheckResult("Node is not in Ready state.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
-				rule.PassedCheckResult("Option featureGates.DynamicKubeletConfig not set.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node4")),
-				rule.PassedCheckResult("Option featureGates.DynamicKubeletConfig set to allowed value.", gardener.NewTarget("cluster", "shoot", "kind", "node", "name", "node5")),
+				rule.PassedCheckResult("Option featureGates.DynamicKubeletConfig set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
+				rule.FailedCheckResult("Option featureGates.DynamicKubeletConfig set to not allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node2")),
+				rule.WarningCheckResult("Node is not in Ready state.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
+				rule.PassedCheckResult("Option featureGates.DynamicKubeletConfig not set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node4")),
+				rule.PassedCheckResult("Option featureGates.DynamicKubeletConfig set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node5")),
 			}
 			expectedCheckResults = append(expectedCheckResults, alwaysExpectedCheckResults...)
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
@@ -202,28 +201,28 @@ var _ = Describe("#242399", func() {
 			[][]string{{""}, {"--feature-gates=DynamicKubeletConfig=true"}},
 			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", gardener.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
-				rule.FailedCheckResult("Use of deprecated kubelet config flag feature-gates.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
+				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", rule.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
+				rule.FailedCheckResult("Use of deprecated kubelet config flag feature-gates.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes have featureGates.DynamicKubeletConfig set",
 			[][]string{{"--not-feature-gates=DynamicKubeletConfig=true --config=./config", dynamicKubeletConfigAllowedConfig}, {"--not-feature-gates=DynamicKubeletConfig=true --config=./config", dynamicKubeletConfigNotAllowedConfig}},
 			[][]error{{nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("Option featureGates.DynamicKubeletConfig set to allowed value.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
-				rule.FailedCheckResult("Option featureGates.DynamicKubeletConfig set to not allowed value.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
+				rule.PassedCheckResult("Option featureGates.DynamicKubeletConfig set to allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
+				rule.FailedCheckResult("Option featureGates.DynamicKubeletConfig set to not allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes do not have featureGates.DynamicKubeletConfig set",
 			[][]string{{"--not-feature-gates=DynamicKubeletConfig=true --config=./config", dynamicKubeletConfigNotSetConfig}, {"--not-feature-gates=DynamicKubeletConfig=true, --config=./config", dynamicKubeletConfigNotSetConfig}},
 			[][]error{{nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("Option featureGates.DynamicKubeletConfig not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
-				rule.PassedCheckResult("Option featureGates.DynamicKubeletConfig not set.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", gardener.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
+				rule.PassedCheckResult("Option featureGates.DynamicKubeletConfig not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
+				rule.PassedCheckResult("Option featureGates.DynamicKubeletConfig not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
+				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 	)
 })

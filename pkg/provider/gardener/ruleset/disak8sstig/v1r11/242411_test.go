@@ -10,7 +10,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -30,7 +29,7 @@ var _ = Describe("#242411", func() {
 			{
 				Status:  rule.Skipped,
 				Message: `Cannot be tested and should be enforced organizationally. Gardener uses a minimum of known and automatically opened/used/created ports/protocols/services (PPSM stands for Ports, Protocols, Service Management).`,
-				Target:  gardener.NewTarget(),
+				Target:  rule.NewTarget(),
 			},
 		},
 		))

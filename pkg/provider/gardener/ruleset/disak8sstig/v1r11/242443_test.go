@@ -10,7 +10,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -30,7 +29,7 @@ var _ = Describe("#242443", func() {
 			{
 				Status:  rule.Skipped,
 				Message: `Scanning/patching security vulnerabilities should be enforced organizationally. Security vulnerability scanning should be automated and maintainers should be informed by automatically.`,
-				Target:  gardener.NewTarget(),
+				Target:  rule.NewTarget(),
 			},
 		},
 		))

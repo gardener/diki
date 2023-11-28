@@ -13,7 +13,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -33,7 +32,7 @@ func (r *Rule242395) Name() string {
 }
 
 func (r *Rule242395) Run(ctx context.Context) (rule.RuleResult, error) {
-	shootTarget := gardener.NewTarget("cluster", "shoot")
+	shootTarget := rule.NewTarget("cluster", "shoot")
 	podsPartialMetadata, err := kubeutils.GetObjectsMetadata(ctx, r.Client, corev1.SchemeGroupVersion.WithKind("PodList"), "", labels.SelectorFromSet(labels.Set{"k8s-app": "kubernetes-dashboard"}), 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList"))), nil

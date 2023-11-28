@@ -14,7 +14,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r10"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -116,7 +115,7 @@ var _ = Describe("#242442", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("All found images use current versions.", &gardener.Target{}),
+			rule.PassedCheckResult("All found images use current versions.", rule.Target{}),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -136,8 +135,8 @@ var _ = Describe("#242442", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Image is used with more than one versions.", gardener.NewTarget("image", "eu.gcr.io/image2")),
-			rule.FailedCheckResult("Image is used with more than one versions.", gardener.NewTarget("image", "eu.gcr.io/image3")),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("image", "eu.gcr.io/image2")),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("image", "eu.gcr.io/image3")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -153,7 +152,7 @@ var _ = Describe("#242442", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.ErroredCheckResult("containerStatus not found for container", gardener.NewTarget("cluster", "seed", "container", "foo", "name", "seed-pod", "kind", "pod")),
+			rule.ErroredCheckResult("containerStatus not found for container", rule.NewTarget("cluster", "seed", "container", "foo", "name", "seed-pod", "kind", "pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))

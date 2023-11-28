@@ -7,7 +7,6 @@ package v1r10
 import (
 	"context"
 
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -24,5 +23,5 @@ func (r *Rule242461) Name() string {
 }
 
 func (r *Rule242461) Run(_ context.Context) (rule.RuleResult, error) {
-	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Rule is duplicate of "242401"`, gardener.NewTarget())), nil
+	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Rule is duplicate of "242401"`, rule.NewTarget())), nil
 }

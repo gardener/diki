@@ -21,7 +21,6 @@ import (
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/provider"
 	"github.com/gardener/diki/pkg/report"
-	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
 )
 
@@ -229,19 +228,6 @@ func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.Provide
 	}
 
 	return runRule(ctx, p, opts.rulesetID, opts.rulesetVersion, opts.ruleID)
-}
-
-// StringOrDefault returns the Target string if present or empty string if not.
-func StringOrDefault(t rule.Target) string {
-	if t == nil {
-		return ""
-	}
-
-	if str, ok := t.(fmt.Stringer); ok {
-		return str.String()
-	}
-
-	return ""
 }
 
 func runRule(ctx context.Context, p provider.Provider, rulesetID, rulesetVersion, ruleID string) error {

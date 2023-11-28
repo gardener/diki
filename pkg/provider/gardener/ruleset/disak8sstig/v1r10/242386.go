@@ -12,7 +12,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
-	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -37,7 +36,7 @@ func (r *Rule242386) Run(ctx context.Context) (rule.RuleResult, error) {
 		kapiName = "kube-apiserver"
 		optName  = "insecure-port"
 	)
-	target := gardener.NewTarget("cluster", "seed", "kind", "deployment", "name", kapiName, "namespace", r.Namespace)
+	target := rule.NewTarget("cluster", "seed", "kind", "deployment", "name", kapiName, "namespace", r.Namespace)
 
 	insecurePortOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, kapiName, kapiName, r.Namespace, optName)
 	if err != nil {
