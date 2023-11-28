@@ -190,7 +190,7 @@ func (r *RulePodFiles) checkNodePods(ctx context.Context, clusterTarget gardener
 	var podExecutor pod.PodExecutor
 	var err error
 	additionalLabels := map[string]string{
-		gardener.LabelInstanceID: r.InstanceID,
+		pod.LabelInstanceID: r.InstanceID,
 	}
 
 	defer func() {

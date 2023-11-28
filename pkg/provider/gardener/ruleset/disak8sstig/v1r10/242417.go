@@ -14,6 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/selection"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/rule"
@@ -44,7 +45,7 @@ func (r *Rule242417) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget())), nil
 	}
 
-	notDikiPodReq, err := labels.NewRequirement(gardener.LabelComplianceRoleKey, selection.NotEquals, []string{gardener.LabelComplianceRolePrivPod})
+	notDikiPodReq, err := labels.NewRequirement(pod.LabelComplianceRoleKey, selection.NotEquals, []string{pod.LabelComplianceRolePrivPod})
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), gardener.NewTarget())), nil
 	}

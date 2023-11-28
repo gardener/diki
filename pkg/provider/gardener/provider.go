@@ -11,11 +11,9 @@ import (
 	"fmt"
 	"log/slog"
 	"maps"
-	"os"
-	"path/filepath"
 
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/provider"
@@ -190,12 +188,12 @@ func FromGenericConfig(providerConf config.ProviderConfig) (*Provider, error) {
 		return nil, err
 	}
 
-	shootKubeConfig, err := getRESTConfigFromFile(providerGardenerArgs.ShootKubeconfigPath)
+	shootKubeConfig, err := kubeutils.RESTConfigFromFile(providerGardenerArgs.ShootKubeconfigPath)
 	if err != nil {
 		return nil, err
 	}
 
-	seedKubeConfig, err := getRESTConfigFromFile(providerGardenerArgs.SeedKubeconfigPath)
+	seedKubeConfig, err := kubeutils.RESTConfigFromFile(providerGardenerArgs.SeedKubeconfigPath)
 	if err != nil {
 		return nil, err
 	}
@@ -227,17 +225,4 @@ func (p *Provider) Logger() *slog.Logger {
 		p.logger = slog.Default().With("provider", p.ID())
 	}
 	return p.logger
-}
-
-func getRESTConfigFromFile(filePath string) (*rest.Config, error) {
-	data, err := os.ReadFile(filepath.Clean(filePath))
-	if err != nil {
-		return nil, err
-	}
-	config, err := clientcmd.RESTConfigFromKubeConfig(data)
-	if err != nil {
-		return nil, err
-	}
-
-	return config, nil
 }
