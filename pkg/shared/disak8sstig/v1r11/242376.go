@@ -60,7 +60,9 @@ func (r *Rule242376) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", option), target)), nil
 	case slices.Contains([]string{"VersionTLS10", "VersionTLS11"}, optSlice[0]):
 		return rule.SingleCheckResult(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", option), target)), nil
-	default:
+	case slices.Contains([]string{"VersionTLS12", "VersionTLS13"}, optSlice[0]):
 		return rule.SingleCheckResult(r, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", option), target)), nil
+	default:
+		return rule.SingleCheckResult(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set to unknown value.", option), target)), nil
 	}
 }
