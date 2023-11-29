@@ -16,7 +16,7 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
-	sharedv1r11 "github.com/gardener/diki/pkg/shared/disak8sstig/v1r11"
+	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
 func parseV1R11Options[O v1r11.RuleOption](options any) (*O, error) { //nolint:unused

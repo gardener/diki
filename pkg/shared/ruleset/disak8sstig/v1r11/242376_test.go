@@ -17,7 +17,7 @@ import (
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/disak8sstig/v1r11"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
 var _ = Describe("#242376", func() {
