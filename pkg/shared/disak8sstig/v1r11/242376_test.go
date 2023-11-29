@@ -16,8 +16,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/disak8sstig/v1r11"
 )
 
 var _ = Describe("#242376", func() {
@@ -27,7 +27,7 @@ var _ = Describe("#242376", func() {
 		namespace  = "foo"
 
 		kcmDeployment *appsv1.Deployment
-		target        = rule.NewTarget("cluster", "seed", "name", "kube-controller-manager", "namespace", namespace, "kind", "deployment")
+		target        = rule.NewTarget("name", "kube-controller-manager", "namespace", namespace, "kind", "deployment")
 	)
 
 	BeforeEach(func() {
@@ -54,7 +54,7 @@ var _ = Describe("#242376", func() {
 	})
 
 	It("should error when kube-controller-manager is not found", func() {
-		r := &v1r11.Rule242376{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+		r := &v1r11.Rule242376{Client: fakeClient, Namespace: namespace}
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
@@ -69,12 +69,29 @@ var _ = Describe("#242376", func() {
 		))
 	})
 
+	It("should correctly select kcm with non default name", func() {
+		r := &v1r11.Rule242376{Client: fakeClient, Namespace: namespace, DeploymentName: "foo", ContainerName: "bar"}
+		kcmDeployment.Name = "foo"
+		kcmDeployment.Spec.Template.Spec.Containers = []corev1.Container{
+			{
+				Name:    "bar",
+				Command: []string{"--tls-min-version=VersionTLS12"},
+			},
+		}
+		expectedTarget := rule.NewTarget("name", "foo", "namespace", namespace, "kind", "deployment")
+		Expect(fakeClient.Create(ctx, kcmDeployment)).To(Succeed())
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{{Status: rule.Passed, Message: "Option tls-min-version set to allowed value.", Target: expectedTarget}}))
+	})
+
 	DescribeTable("Run cases",
 		func(container corev1.Container, expectedCheckResults []rule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
 			kcmDeployment.Spec.Template.Spec.Containers = []corev1.Container{container}
 			Expect(fakeClient.Create(ctx, kcmDeployment)).To(Succeed())
 
-			r := &v1r11.Rule242376{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+			r := &v1r11.Rule242376{Client: fakeClient, Namespace: namespace}
 			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 

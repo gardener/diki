@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"slices"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -19,9 +18,10 @@ import (
 var _ rule.Rule = &Rule242376{}
 
 type Rule242376 struct {
-	Client    client.Client
-	Namespace string
-	Logger    *slog.Logger
+	Client         client.Client
+	Namespace      string
+	DeploymentName string
+	ContainerName  string
 }
 
 func (r *Rule242376) ID() string {
@@ -29,17 +29,25 @@ func (r *Rule242376) ID() string {
 }
 
 func (r *Rule242376) Name() string {
-	return "Kubernetes Controller Manager must use TLS 1.2, at a minimum, to protect the confidentiality of sensitive data during electronic dissemination (MEDIUM 242376)"
+	return "The Kubernetes Controller Manager must use TLS 1.2, at a minimum, to protect the confidentiality of sensitive data during electronic dissemination (MEDIUM 242376)"
 }
 
 func (r *Rule242376) Run(ctx context.Context) (rule.RuleResult, error) {
-	const (
-		kcmName = "kube-controller-manager"
-		option  = "tls-min-version"
-	)
-	target := rule.NewTarget("cluster", "seed", "name", kcmName, "namespace", r.Namespace, "kind", "deployment")
+	const option = "tls-min-version"
+	deploymentName := "kube-controller-manager"
+	containerName := "kube-controller-manager"
 
-	optSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, kcmName, kcmName, r.Namespace, option)
+	if r.DeploymentName != "" {
+		deploymentName = r.DeploymentName
+	}
+
+	if r.ContainerName != "" {
+		containerName = r.ContainerName
+	}
+
+	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
+
+	optSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, option)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}

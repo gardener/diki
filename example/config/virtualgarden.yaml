@@ -1,0 +1,16 @@
+providers:             # contains information about known providers
+- id: virtualgarden    # unique provider identifier
+  name: "Virtual Garden"       # user friendly name of the provider
+  metadata:
+    foo: bar
+  args:
+    gardenKubeconfigPath: /tmp/garden.config  # path to garden cluster admin kubeconfig
+    runtimeKubeconfigPath: /tmp/runtime.config  # path to runtime cluster admin kubeconfig
+  rulesets:
+  - id: disa-kubernetes-stig
+    name: DISA Kubernetes Security Technical Implementation Guide
+    version: v1r11
+    ruleOptions: []
+output:
+  path: /tmp/test-output.json          #  optional, path to summary json report
+  minStatus: Passed

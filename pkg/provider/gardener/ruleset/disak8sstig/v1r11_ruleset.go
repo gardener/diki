@@ -16,6 +16,7 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	sharedv1r11 "github.com/gardener/diki/pkg/shared/disak8sstig/v1r11"
 )
 
 func parseV1R11Options[O v1r11.RuleOption](options any) (*O, error) { //nolint:unused
@@ -113,7 +114,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	}
 
 	rules := []rule.Rule{
-		&v1r11.Rule242376{Logger: r.Logger().With("rule", v1r11.ID242376), Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242376{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242377{Logger: r.Logger().With("rule", v1r11.ID242377), Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242378{Logger: r.Logger().With("rule", v1r11.ID242378), Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242379{Logger: r.Logger().With("rule", v1r11.ID242379), Client: seedClient, Namespace: r.shootNamespace},

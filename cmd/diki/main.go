@@ -15,7 +15,8 @@ import (
 
 func main() {
 	cmd := app.NewDikiCommand(context.Background(), map[string]provider.ProviderFromConfigFunc{
-		"gardener": builder.GardenerProviderFromConfig,
+		"gardener":      builder.GardenerProviderFromConfig,
+		"virtualgarden": builder.VirtualGardenProviderFromConfig,
 	})
 
 	if err := cmd.Execute(); err != nil {
