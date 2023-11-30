@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"maps"
 
 	"k8s.io/client-go/rest"
 
@@ -19,6 +18,7 @@ import (
 	"github.com/gardener/diki/pkg/provider"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
+	sharedprovider "github.com/gardener/diki/pkg/shared/provider"
 )
 
 // Provider is a Garden Cluster Provider that can be used to implement rules
@@ -65,34 +65,7 @@ func New(options ...CreateOption) (*Provider, error) {
 
 // RunAll executes all Rulesets registered with the Provider.
 func (p *Provider) RunAll(ctx context.Context) (provider.ProviderResult, error) {
-	if len(p.rulesets) == 0 {
-		return provider.ProviderResult{}, fmt.Errorf("no rulests are registered with the provider")
-	}
-
-	result := provider.ProviderResult{
-		ProviderName:   p.Name(),
-		ProviderID:     p.ID(),
-		Metadata:       maps.Clone(p.Metadata()),
-		RulesetResults: make([]ruleset.RulesetResult, 0, len(p.rulesets)),
-	}
-
-	var errAgg error
-	p.Logger().Info(fmt.Sprintf("provider will run %d rulesets", len(p.rulesets)))
-	for _, rs := range p.rulesets {
-		p.Logger().Info(fmt.Sprintf("starting run of ruleset %s version %s", rs.ID(), rs.Version()))
-		if res, err := rs.Run(ctx); err != nil {
-			errAgg = errors.Join(errAgg, fmt.Errorf("ruleset with id %s and version %s errored: %w", res.RulesetID, res.RulesetVersion, err))
-			p.Logger().Error(fmt.Sprintf("finished ruleset %s version %s run", rs.ID(), rs.Version()), "error", err)
-		} else {
-			result.RulesetResults = append(result.RulesetResults, res)
-			p.Logger().Info(fmt.Sprintf("finished ruleset %s version %s run", rs.ID(), rs.Version()))
-		}
-	}
-
-	if errAgg != nil {
-		return provider.ProviderResult{}, errAgg
-	}
-	return result, nil
+	return sharedprovider.RunAll(ctx, p, p.rulesets, p.Logger())
 }
 
 func rulesetKey(rulesetID, rulesetVersion string) string {
