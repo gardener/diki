@@ -16,8 +16,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
 var _ = Describe("#242378", func() {
@@ -26,13 +26,13 @@ var _ = Describe("#242378", func() {
 		ctx        = context.TODO()
 		namespace  = "foo"
 
-		ksDeployment *appsv1.Deployment
-		target       = rule.NewTarget("cluster", "seed", "name", "kube-apiserver", "namespace", namespace, "kind", "deployment")
+		deployment *appsv1.Deployment
+		target     = rule.NewTarget("name", "kube-apiserver", "namespace", namespace, "kind", "deployment")
 	)
 
 	BeforeEach(func() {
 		fakeClient = fakeclient.NewClientBuilder().Build()
-		ksDeployment = &appsv1.Deployment{
+		deployment = &appsv1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "kube-apiserver",
 				Namespace: namespace,
@@ -54,7 +54,7 @@ var _ = Describe("#242378", func() {
 	})
 
 	It("should error when kube-apiserver is not found", func() {
-		r := &v1r11.Rule242378{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+		r := &v1r11.Rule242378{Client: fakeClient, Namespace: namespace}
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
@@ -69,12 +69,29 @@ var _ = Describe("#242378", func() {
 		))
 	})
 
+	It("should correctly select kcm with non default name", func() {
+		r := &v1r11.Rule242378{Client: fakeClient, Namespace: namespace, DeploymentName: "foo", ContainerName: "bar"}
+		deployment.Name = "foo"
+		deployment.Spec.Template.Spec.Containers = []corev1.Container{
+			{
+				Name:    "bar",
+				Command: []string{"--tls-min-version=VersionTLS12"},
+			},
+		}
+		expectedTarget := rule.NewTarget("name", "foo", "namespace", namespace, "kind", "deployment")
+		Expect(fakeClient.Create(ctx, deployment)).To(Succeed())
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{{Status: rule.Passed, Message: "Option tls-min-version set to allowed value.", Target: expectedTarget}}))
+	})
+
 	DescribeTable("Run cases",
 		func(container corev1.Container, expectedCheckResults []rule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
-			ksDeployment.Spec.Template.Spec.Containers = []corev1.Container{container}
-			Expect(fakeClient.Create(ctx, ksDeployment)).To(Succeed())
+			deployment.Spec.Template.Spec.Containers = []corev1.Container{container}
+			Expect(fakeClient.Create(ctx, deployment)).To(Succeed())
 
-			r := &v1r11.Rule242378{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+			r := &v1r11.Rule242378{Client: fakeClient, Namespace: namespace}
 			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 
@@ -100,6 +117,10 @@ var _ = Describe("#242378", func() {
 		Entry("should warn when tls-min-version is set more than once",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--tls-min-version=VersionTLS11"}, Args: []string{"--tls-min-version=VersionTLS12"}},
 			[]rule.CheckResult{{Status: rule.Warning, Message: "Option tls-min-version has been set more than once in container command.", Target: target}},
+			BeNil()),
+		Entry("should warn when tls-min-version is set to unknown value",
+			corev1.Container{Name: "kube-apiserver", Command: []string{"--tls-min-version=invalid"}},
+			[]rule.CheckResult{{Status: rule.Warning, Message: "Option tls-min-version has been set to unknown value.", Target: target}},
 			BeNil()),
 		Entry("should error when deployment does not have container 'kube-apiserver'",
 			corev1.Container{Name: "not-kube-apiserver", Command: []string{"--tls-min-version=VersionTLS12"}},
