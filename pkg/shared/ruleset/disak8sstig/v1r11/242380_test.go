@@ -16,8 +16,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
 var _ = Describe("#242380", func() {
@@ -46,8 +46,8 @@ peer-transport-security:
 
 		etcdMainStatefulSet   *appsv1.StatefulSet
 		etcdEventsStatefulSet *appsv1.StatefulSet
-		targetEtcdMain        = rule.NewTarget("cluster", "seed", "name", "etcd-main", "namespace", namespace, "kind", "statefulSet")
-		targetEtcdEvents      = rule.NewTarget("cluster", "seed", "name", "etcd-events", "namespace", namespace, "kind", "statefulSet")
+		targetEtcdMain        = rule.NewTarget("name", "etcd-main", "namespace", namespace, "kind", "statefulSet")
+		targetEtcdEvents      = rule.NewTarget("name", "etcd-events", "namespace", namespace, "kind", "statefulSet")
 	)
 
 	BeforeEach(func() {
@@ -81,7 +81,7 @@ peer-transport-security:
 	})
 
 	It("should return error check results when etcd-main and etcd-events are not found", func() {
-		r := &v1r11.Rule242380{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+		r := &v1r11.Rule242380{Client: fakeClient, Namespace: namespace}
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
@@ -112,7 +112,7 @@ peer-transport-security:
 			Expect(fakeClient.Create(ctx, etcdMainSecret)).To(Succeed())
 			Expect(fakeClient.Create(ctx, etcdEventsSecret)).To(Succeed())
 
-			r := &v1r11.Rule242380{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+			r := &v1r11.Rule242380{Client: fakeClient, Namespace: namespace}
 			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 

@@ -25,7 +25,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	}
 
 	const (
-		ns = "garden"
+		ns         = "garden"
+		etcdMain   = "virtual-garden-etcd-main"
+		etcdEvents = "virtual-garden-etcd-events"
 	)
 	rules := []rule.Rule{
 		&sharedv1r11.Rule242376{
@@ -49,8 +51,14 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedv1r11.Rule242379{
 			Client:                runtimeClient,
 			Namespace:             ns,
-			StatefulSetETCDMain:   "virtual-garden-etcd-main",
-			StatefulSetETCDEvents: "virtual-garden-etcd-events",
+			StatefulSetETCDMain:   etcdMain,
+			StatefulSetETCDEvents: etcdEvents,
+		},
+		&sharedv1r11.Rule242380{
+			Client:                runtimeClient,
+			Namespace:             ns,
+			StatefulSetETCDMain:   etcdMain,
+			StatefulSetETCDEvents: etcdEvents,
 		},
 	}
 
