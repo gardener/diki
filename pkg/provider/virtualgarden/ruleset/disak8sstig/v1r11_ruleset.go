@@ -46,6 +46,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			DeploymentName: "virtual-garden-kube-apiserver",
 			ContainerName:  "kube-apiserver",
 		},
+		&sharedv1r11.Rule242379{
+			Client:                runtimeClient,
+			Namespace:             ns,
+			StatefulSetETCDMain:   "virtual-garden-etcd-main",
+			StatefulSetETCDEvents: "virtual-garden-etcd-events",
+		},
 	}
 
 	for i, r := range rules {
