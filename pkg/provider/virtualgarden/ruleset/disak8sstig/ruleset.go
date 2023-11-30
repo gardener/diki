@@ -6,16 +6,15 @@ package disak8sstig
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
-	"sync"
 
 	"k8s.io/client-go/rest"
 
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
+	sharedruleset "github.com/gardener/diki/pkg/shared/ruleset"
 )
 
 const (
@@ -107,71 +106,7 @@ func (r *Ruleset) RunRule(ctx context.Context, id string) (rule.RuleResult, erro
 
 // Run executes all known Rules of the Ruleset.
 func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
-	if len(r.rules) == 0 {
-		return ruleset.RulesetResult{}, fmt.Errorf("no rules are registered in the ruleset")
-	}
-
-	result := ruleset.RulesetResult{
-		RulesetName:    r.Name(),
-		RulesetID:      r.ID(),
-		RulesetVersion: r.Version(),
-		RuleResults:    make([]rule.RuleResult, 0, len(r.rules)),
-	}
-
-	type run struct {
-		result rule.RuleResult
-		err    error
-	}
-
-	rulesCh := make(chan rule.Rule)
-	resultCh := make(chan run)
-	wg := sync.WaitGroup{}
-	r.Logger().Info(fmt.Sprintf("ruleset will run %d rules with %d concurrent workers", len(r.rules), r.numWorkers))
-	for i := 0; i < r.numWorkers; i++ {
-		wg.Add(1)
-		go func() {
-			for rule := range rulesCh {
-				r.Logger().Info(fmt.Sprintf("starting rule %s run", rule.ID()))
-				res, err := rule.Run(ctx)
-				res.RuleID = rule.ID()
-				res.RuleName = rule.Name()
-				resultCh <- run{result: res, err: err}
-			}
-			wg.Done()
-		}()
-	}
-
-	go func() {
-		for _, r := range r.rules {
-			rulesCh <- r
-		}
-		close(rulesCh)
-	}()
-
-	go func() {
-		wg.Wait()
-		close(resultCh)
-	}()
-
-	var err error
-	resultCount := 0
-	for run := range resultCh {
-		resultCount++
-		remaining := len(r.rules) - resultCount
-		finishMsg := fmt.Sprintf("finished rule %s run (%d remaining)", run.result.RuleID, remaining)
-		if run.err != nil {
-			r.Logger().Error(finishMsg, "error", run.err)
-			err = errors.Join(err, fmt.Errorf("rule with id %s errored: %w", run.result.RuleID, run.err))
-		} else {
-			r.Logger().Info(finishMsg)
-			result.RuleResults = append(result.RuleResults, run.result)
-		}
-	}
-	// TODO: maybe return both result and err
-	if err != nil {
-		return ruleset.RulesetResult{}, err
-	}
-	return result, nil
+	return sharedruleset.Run(ctx, r, r.rules, r.numWorkers, r.Logger())
 }
 
 // AddRules adds Rules to the Ruleset.
