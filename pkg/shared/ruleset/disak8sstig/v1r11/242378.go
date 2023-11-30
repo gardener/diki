@@ -29,7 +29,7 @@ func (r *Rule242378) ID() string {
 }
 
 func (r *Rule242378) Name() string {
-	return "Kubernetes API Server must use TLS 1.2, at a minimum, to protect the confidentiality of sensitive data during electronic dissemination (MEDIUM 242378)"
+	return "The Kubernetes API Server must use TLS 1.2, at a minimum, to protect the confidentiality of sensitive data during electronic dissemination (MEDIUM 242378)"
 }
 
 func (r *Rule242378) Run(ctx context.Context) (rule.RuleResult, error) {
