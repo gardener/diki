@@ -34,6 +34,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			DeploymentName: "virtual-garden-kube-controller-manager",
 			ContainerName:  "kube-controller-manager",
 		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242377,
+			"The Kubernetes Scheduler must use TLS 1.2, at a minimum, to protect the confidentiality of sensitive data during electronic dissemination (MEDIUM 242376)",
+			"The Virtual Garden cluster does not make use of a Kubernetes Scheduler.",
+			rule.Skipped,
+		),
 		&sharedv1r11.Rule242378{
 			Client:         runtimeClient,
 			Namespace:      ns,
