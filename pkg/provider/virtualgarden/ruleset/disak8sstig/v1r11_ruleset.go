@@ -142,6 +142,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"The Virtual Garden cluster does not have any nodes.",
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242394,
+			"Kubernetes Worker Nodes must not have the sshd service enabled (MEDIUM 242394)",
+			"The Virtual Garden cluster does not have any nodes.",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
