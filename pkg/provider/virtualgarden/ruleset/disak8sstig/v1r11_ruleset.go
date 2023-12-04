@@ -160,6 +160,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"The Virtual Garden cluster does not have any nodes therefore it does not install kubectl.",
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242397,
+			"Kubernetes kubelet static PodPath must not enable static pods (HIGH 242397)",
+			"The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check.",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
