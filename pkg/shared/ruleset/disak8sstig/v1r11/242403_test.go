@@ -16,8 +16,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
 var _ = Describe("#242403", func() {
@@ -71,7 +71,7 @@ rules:
 	})
 
 	It("should return error check results when kube-apiserver is not found", func() {
-		r := &v1r11.Rule242403{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+		r := &v1r11.Rule242403{Client: fakeClient, Namespace: namespace}
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
@@ -93,7 +93,7 @@ rules:
 
 			Expect(fakeClient.Create(ctx, auditPolicyConfigMap)).To(Succeed())
 
-			r := &v1r11.Rule242403{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+			r := &v1r11.Rule242403{Client: fakeClient, Namespace: namespace}
 			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 

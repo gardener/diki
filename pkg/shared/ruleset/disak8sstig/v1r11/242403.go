@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"reflect"
 
 	"gopkg.in/yaml.v3"
@@ -23,9 +22,9 @@ import (
 var _ rule.Rule = &Rule242403{}
 
 type Rule242403 struct {
-	Client    client.Client
-	Namespace string
-	Logger    *slog.Logger
+	Client         client.Client
+	Namespace      string
+	DeploymentName string
 }
 
 func (r *Rule242403) ID() string {
@@ -33,24 +32,28 @@ func (r *Rule242403) ID() string {
 }
 
 func (r *Rule242403) Name() string {
-	return "Kubernetes API Server must generate audit records that identify what type of event has occurred, identify the source of the event, contain the event results, identify any users, and identify any containers associated with the event (MEDIUM 242403)"
+	return "The Kubernetes API Server must generate audit records that identify what type of event has occurred, identify the source of the event, contain the event results, identify any users, and identify any containers associated with the event (MEDIUM 242403)"
 }
 
 func (r *Rule242403) Run(ctx context.Context) (rule.RuleResult, error) {
 	const (
-		kapiName  = "kube-apiserver"
 		mountName = "audit-policy-config"
 		fileName  = "audit-policy.yaml"
 	)
+	deploymentName := "kube-apiserver"
+
+	if r.DeploymentName != "" {
+		deploymentName = r.DeploymentName
+	}
 
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      kapiName,
+			Name:      deploymentName,
 			Namespace: r.Namespace,
 		},
 	}
 
-	target := rule.NewTarget("cluster", "seed", "kind", "deployment", "name", kapiName, "namespace", r.Namespace)
+	target := rule.NewTarget("kind", "deployment", "name", deploymentName, "namespace", r.Namespace)
 
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(deployment), deployment); err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
