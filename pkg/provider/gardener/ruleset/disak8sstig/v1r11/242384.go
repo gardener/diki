@@ -19,7 +19,7 @@ func (r *Rule242384) ID() string {
 }
 
 func (r *Rule242384) Name() string {
-	return "Kubernetes Scheduler must have secure binding (MEDIUM 242384)"
+	return "The Kubernetes Scheduler must have secure binding (MEDIUM 242384)"
 }
 
 func (r *Rule242384) Run(_ context.Context) (rule.RuleResult, error) {

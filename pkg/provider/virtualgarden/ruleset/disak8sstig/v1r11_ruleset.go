@@ -78,8 +78,14 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242383,
-			"User-managed resources must be created in dedicated namespaces",
+			"User-managed resources must be created in dedicated namespaces (HIGH 242383)",
 			"By design the Garden cluster provides separate namespaces for user projects and users do not have access to system namespaces.",
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242384,
+			"The Kubernetes Scheduler must have secure binding (MEDIUM 242384)",
+			"The Virtual Garden cluster does not make use of a Kubernetes Scheduler.",
 			rule.Skipped,
 		),
 	}
