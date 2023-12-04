@@ -197,6 +197,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Namespace:      ns,
 			DeploymentName: apiserverDeploymentName,
 		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242404,
+			"Kubernetes Kubelet must deny hostname override (MEDIUM 242404)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
