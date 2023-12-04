@@ -227,6 +227,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"Gardener does not deploy any control plane component as systemd processes or static pod.",
 			rule.Skipped,
 		),
+		&sharedv1r11.Rule242409{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: kcmDeploymentName,
+			ContainerName:  kcmContainerName,
+		},
 	}
 
 	for i, r := range rules {
