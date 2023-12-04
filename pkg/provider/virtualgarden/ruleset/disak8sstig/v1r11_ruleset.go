@@ -32,6 +32,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		kcmContainerName        = "kube-controller-manager"
 		apiserverDeploymentName = "virtual-garden-kube-apiserver"
 		apiserverContainerName  = "kube-apiserver"
+		noKubeletsMsg           = "The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check."
 	)
 	rules := []rule.Rule{
 		&sharedv1r11.Rule242376{
@@ -97,43 +98,43 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedv1r11.Rule242386{
 			Client:         runtimeClient,
 			Namespace:      ns,
-			DeploymentName: "virtual-garden-kube-apiserver",
-			ContainerName:  "kube-apiserver",
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
 		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242387,
 			"The Kubernetes Kubelet must have the read-only port flag disabled (HIGH 242387)",
-			"The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check.",
+			noKubeletsMsg,
 			rule.Skipped,
 		),
 		&sharedv1r11.Rule242388{
 			Client:         runtimeClient,
 			Namespace:      ns,
-			DeploymentName: "virtual-garden-kube-apiserver",
-			ContainerName:  "kube-apiserver",
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
 		},
 		&sharedv1r11.Rule242389{
 			Client:         runtimeClient,
 			Namespace:      ns,
-			DeploymentName: "virtual-garden-kube-apiserver",
-			ContainerName:  "kube-apiserver",
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
 		},
 		&sharedv1r11.Rule242390{
 			Client:         runtimeClient,
 			Namespace:      ns,
-			DeploymentName: "virtual-garden-kube-apiserver",
-			ContainerName:  "kube-apiserver",
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
 		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242391,
 			"The Kubernetes Kubelet must have anonymous authentication disabled (HIGH 242391)",
-			"The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check.",
+			noKubeletsMsg,
 			rule.Skipped,
 		),
 		rule.NewSkipRule(
 			sharedv1r11.ID242392,
 			"The Kubernetes kubelet must enable explicit authorization (HIGH 242392)",
-			"The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check.",
+			noKubeletsMsg,
 			rule.Skipped,
 		),
 		rule.NewSkipRule(
@@ -176,7 +177,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		rule.NewSkipRule(
 			sharedv1r11.ID242399,
 			"Kubernetes DynamicKubeletConfig must not be enabled (MEDIUM 242399)",
-			"The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check.",
+			noKubeletsMsg,
 			rule.Skipped,
 		),
 	}
