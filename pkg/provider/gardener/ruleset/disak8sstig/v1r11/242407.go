@@ -19,7 +19,7 @@ func (r *Rule242407) ID() string {
 }
 
 func (r *Rule242407) Name() string {
-	return "Kubernetes kubelet configuration files must have file permissions set to 644 or more restrictive (MEDIUM 242407)"
+	return "The Kubernetes KubeletConfiguration files must have file permissions set to 644 or more restrictive  (MEDIUM 242407)"
 }
 
 func (r *Rule242407) Run(_ context.Context) (rule.RuleResult, error) {
