@@ -136,7 +136,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		},
 		&sharedv1r11.Rule242388{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242389{Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule242390{Logger: r.Logger().With("rule", v1r11.ID242390), Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242390{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242391{
 			Logger:                  r.Logger().With("rule", v1r11.ID242391),
 			InstanceID:              r.instanceID,
