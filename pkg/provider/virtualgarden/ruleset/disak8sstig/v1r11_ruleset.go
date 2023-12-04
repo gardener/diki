@@ -203,6 +203,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noKubeletsMsg,
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242405,
+			"Kubernetes manifests must be owned by root (MEDIUM 242405)",
+			"Gardener does not deploy any control plane component as systemd processes or static pod.",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
