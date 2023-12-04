@@ -173,6 +173,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"Option feature-gates.DynamicAuditing was removed in Kubernetes v1.19.",
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242399,
+			"Kubernetes DynamicKubeletConfig must not be enabled (MEDIUM 242399)",
+			"The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check.",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
