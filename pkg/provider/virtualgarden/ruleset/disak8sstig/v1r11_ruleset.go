@@ -25,16 +25,18 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	}
 
 	const (
-		ns         = "garden"
-		etcdMain   = "virtual-garden-etcd-main"
-		etcdEvents = "virtual-garden-etcd-events"
+		ns                = "garden"
+		etcdMain          = "virtual-garden-etcd-main"
+		etcdEvents        = "virtual-garden-etcd-events"
+		kcmDeploymentName = "virtual-garden-kube-controller-manager"
+		kcmContainerName  = "kube-controller-manager"
 	)
 	rules := []rule.Rule{
 		&sharedv1r11.Rule242376{
 			Client:         runtimeClient,
 			Namespace:      ns,
-			DeploymentName: "virtual-garden-kube-controller-manager",
-			ContainerName:  "kube-controller-manager",
+			DeploymentName: kcmDeploymentName,
+			ContainerName:  kcmContainerName,
 		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242377,
@@ -59,6 +61,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Namespace:             ns,
 			StatefulSetETCDMain:   etcdMain,
 			StatefulSetETCDEvents: etcdEvents,
+		},
+		&sharedv1r11.Rule242381{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: kcmDeploymentName,
+			ContainerName:  kcmContainerName,
 		},
 	}
 
