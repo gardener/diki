@@ -88,6 +88,30 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"The Virtual Garden cluster does not make use of a Kubernetes Scheduler.",
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242385,
+			"The Kubernetes Controller Manager must have secure binding (MEDIUM 242385)",
+			"The Kubernetes Controller Manager runs in a container which already has limited access to network interfaces. In addition ingress traffic to the Kubernetes Controller Manager is restricted via network policies, making an unintended exposure less likely.",
+			rule.Skipped,
+		),
+		&sharedv1r11.Rule242386{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: "virtual-garden-kube-apiserver",
+			ContainerName:  "kube-apiserver",
+		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242387,
+			"The Kubernetes Kubelet must have the read-only port flag disabled (HIGH 242387)",
+			"The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check.",
+			rule.Skipped,
+		),
+		&sharedv1r11.Rule242388{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: "virtual-garden-kube-apiserver",
+			ContainerName:  "kube-apiserver",
+		},
 	}
 
 	for i, r := range rules {

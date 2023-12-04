@@ -41,7 +41,7 @@ func (r *Rule242387) ID() string {
 }
 
 func (r *Rule242387) Name() string {
-	return "Kubernetes Kubelet must have the read-only port flag disabled (HIGH 242387)"
+	return "The Kubernetes Kubelet must have the read-only port flag disabled (HIGH 242387)"
 }
 
 func (r *Rule242387) Run(ctx context.Context) (rule.RuleResult, error) {

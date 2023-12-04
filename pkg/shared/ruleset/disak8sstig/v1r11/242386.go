@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -18,9 +17,10 @@ import (
 var _ rule.Rule = &Rule242386{}
 
 type Rule242386 struct {
-	Client    client.Client
-	Namespace string
-	Logger    *slog.Logger
+	Client         client.Client
+	Namespace      string
+	DeploymentName string
+	ContainerName  string
 }
 
 func (r *Rule242386) ID() string {
@@ -28,17 +28,24 @@ func (r *Rule242386) ID() string {
 }
 
 func (r *Rule242386) Name() string {
-	return "Kubernetes API server must have the insecure port flag disabled (HIGH 242386)"
+	return "The Kubernetes API server must have the insecure port flag disabled (HIGH 242386)"
 }
 
 func (r *Rule242386) Run(ctx context.Context) (rule.RuleResult, error) {
-	const (
-		kapiName = "kube-apiserver"
-		optName  = "insecure-port"
-	)
-	target := rule.NewTarget("cluster", "seed", "kind", "deployment", "name", kapiName, "namespace", r.Namespace)
+	const optName = "insecure-port"
+	deploymentName := "kube-apiserver"
+	containerName := "kube-apiserver"
 
-	insecurePortOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, kapiName, kapiName, r.Namespace, optName)
+	if r.DeploymentName != "" {
+		deploymentName = r.DeploymentName
+	}
+
+	if r.ContainerName != "" {
+		containerName = r.ContainerName
+	}
+	target := rule.NewTarget("kind", "deployment", "name", deploymentName, "namespace", r.Namespace)
+
+	insecurePortOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, optName)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
