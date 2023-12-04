@@ -136,6 +136,36 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check.",
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242393,
+			"Kubernetes Worker Nodes must not have sshd service running (MEDIUM 242393)",
+			"The Virtual Garden cluster does not have any nodes.",
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242394,
+			"Kubernetes Worker Nodes must not have the sshd service enabled (MEDIUM 242394)",
+			"The Virtual Garden cluster does not have any nodes.",
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242395,
+			"Kubernetes dashboard must not be enabled (MEDIUM 242395)",
+			"The Virtual Garden cluster does not have any nodes therefore it does not deploy a Kubernetes dashboard.",
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242396,
+			"Kubernetes Kubectl cp command must give expected access and results (MEDIUM 242396)",
+			"The Virtual Garden cluster does not have any nodes therefore it does not install kubectl.",
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242397,
+			"Kubernetes kubelet static PodPath must not enable static pods (HIGH 242397)",
+			"The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check.",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
