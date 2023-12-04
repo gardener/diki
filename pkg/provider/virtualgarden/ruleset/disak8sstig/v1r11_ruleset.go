@@ -88,6 +88,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"The Virtual Garden cluster does not make use of a Kubernetes Scheduler.",
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242385,
+			"The Kubernetes Controller Manager must have secure binding (MEDIUM 242385)",
+			"The Kubernetes Controller Manager runs in a container which already has limited access to network interfaces. In addition ingress traffic to the Kubernetes Controller Manager is restricted via network policies, making an unintended exposure less likely.",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {

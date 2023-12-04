@@ -19,7 +19,7 @@ func (r *Rule242385) ID() string {
 }
 
 func (r *Rule242385) Name() string {
-	return "Kubernetes Controller Manager must have secure binding (MEDIUM 242385)"
+	return "The Kubernetes Controller Manager must have secure binding (MEDIUM 242385)"
 }
 
 func (r *Rule242385) Run(_ context.Context) (rule.RuleResult, error) {
