@@ -233,6 +233,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			DeploymentName: kcmDeploymentName,
 			ContainerName:  kcmContainerName,
 		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242410,
+			"The Kubernetes API Server must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242410)",
+			"Cannot be tested and should be enforced organizationally. Gardener uses a minimum of known and automatically opened/used/created ports/protocols/services (PPSM stands for Ports, Protocols, Service Management).",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
