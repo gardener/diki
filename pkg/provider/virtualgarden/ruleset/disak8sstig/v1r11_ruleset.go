@@ -112,6 +112,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			DeploymentName: "virtual-garden-kube-apiserver",
 			ContainerName:  "kube-apiserver",
 		},
+		&sharedv1r11.Rule242389{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: "virtual-garden-kube-apiserver",
+			ContainerName:  "kube-apiserver",
+		},
 	}
 
 	for i, r := range rules {
