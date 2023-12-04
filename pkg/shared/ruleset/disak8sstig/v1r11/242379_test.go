@@ -16,26 +16,19 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
-var _ = Describe("#242380", func() {
+var _ = Describe("#242379", func() {
 	const (
-		singleETCDCluster = `
-initial-cluster: etcd-main-0=foo
-peer-transport-security:
-  auto-tls: true`
-		ptsAutoTLSNotSetConfig = `
-initial-cluster: etcd-main-0=foo,etcd-main-1=bar
-peer-transport-security:`
-		ptsAutoTLSSetFalseConfig = `
-initial-cluster: etcd-main-0=foo,etcd-main-1=bar
-peer-transport-security:
+		ctsAutoTLSnotSetConfig = `
+client-transport-security:`
+		ctsAutoTLSsetFalseConfig = `
+client-transport-security:
   auto-tls: false`
-		ptsAutoTLSSetTrueConfig = `
-initial-cluster: etcd-main-0=foo,etcd-main-1=bar
-peer-transport-security:
+		ctsAutoTLSsetTrueConfig = `
+client-transport-security:
   auto-tls: true`
 	)
 
@@ -46,8 +39,8 @@ peer-transport-security:
 
 		etcdMainStatefulSet   *appsv1.StatefulSet
 		etcdEventsStatefulSet *appsv1.StatefulSet
-		targetEtcdMain        = rule.NewTarget("cluster", "seed", "name", "etcd-main", "namespace", namespace, "kind", "statefulSet")
-		targetEtcdEvents      = rule.NewTarget("cluster", "seed", "name", "etcd-events", "namespace", namespace, "kind", "statefulSet")
+		targetEtcdMain        = rule.NewTarget("name", "etcd-main", "namespace", namespace, "kind", "statefulSet")
+		targetEtcdEvents      = rule.NewTarget("name", "etcd-events", "namespace", namespace, "kind", "statefulSet")
 	)
 
 	BeforeEach(func() {
@@ -81,7 +74,7 @@ peer-transport-security:
 	})
 
 	It("should return error check results when etcd-main and etcd-events are not found", func() {
-		r := &v1r11.Rule242380{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+		r := &v1r11.Rule242379{Client: fakeClient, Namespace: namespace}
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
@@ -112,45 +105,45 @@ peer-transport-security:
 			Expect(fakeClient.Create(ctx, etcdMainSecret)).To(Succeed())
 			Expect(fakeClient.Create(ctx, etcdEventsSecret)).To(Succeed())
 
-			r := &v1r11.Rule242380{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+			r := &v1r11.Rule242379{Client: fakeClient, Namespace: namespace}
 			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 		},
 
-		Entry("should pass when peer-transport-security.auto-tls is set to allowed value",
+		Entry("should pass when client-transport-security.auto-tls is set to allowed value",
 			corev1.Volume{Name: "etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
 			corev1.Volume{Name: "etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "bar"}}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsAutoTLSNotSetConfig)}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "bar", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsAutoTLSSetFalseConfig)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ctsAutoTLSnotSetConfig)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "bar", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ctsAutoTLSsetFalseConfig)}},
 			[]rule.CheckResult{
 				{
 					Status:  rule.Warning,
-					Message: "Option peer-transport-security.auto-tls has not been set.",
+					Message: "Option client-transport-security.auto-tls has not been set.",
 					Target:  targetEtcdMain,
 				},
 				{
 					Status:  rule.Passed,
-					Message: "Option peer-transport-security.auto-tls set to allowed value.",
+					Message: "Option client-transport-security.auto-tls set to allowed value.",
 					Target:  targetEtcdEvents,
 				},
 			},
 			BeNil()),
-		Entry("should fail when peer-transport-security.auto-tls is set to not allowed value",
+		Entry("should fail when client-transport-security.auto-tls is set to not allowed value",
 			corev1.Volume{Name: "etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
 			corev1.Volume{Name: "etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "bar"}}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsAutoTLSSetTrueConfig)}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "bar", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsAutoTLSSetTrueConfig)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ctsAutoTLSsetTrueConfig)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "bar", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ctsAutoTLSsetTrueConfig)}},
 			[]rule.CheckResult{
 				{
 					Status:  rule.Failed,
-					Message: "Option peer-transport-security.auto-tls set to not allowed value.",
+					Message: "Option client-transport-security.auto-tls set to not allowed value.",
 					Target:  targetEtcdMain,
 				},
 				{
 					Status:  rule.Failed,
-					Message: "Option peer-transport-security.auto-tls set to not allowed value.",
+					Message: "Option client-transport-security.auto-tls set to not allowed value.",
 					Target:  targetEtcdEvents,
 				},
 			},
@@ -158,8 +151,8 @@ peer-transport-security:
 		Entry("should error when statefulSet does not have volume 'etcd-config-file' or secret is not found",
 			corev1.Volume{Name: "not-etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
 			corev1.Volume{Name: "etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "bar"}}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsAutoTLSSetTrueConfig)}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "not-bar", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ptsAutoTLSSetTrueConfig)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ctsAutoTLSsetTrueConfig)}},
+			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "not-bar", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(ctsAutoTLSsetTrueConfig)}},
 			[]rule.CheckResult{
 				{
 					Status:  rule.Errored,
@@ -169,24 +162,6 @@ peer-transport-security:
 				{
 					Status:  rule.Errored,
 					Message: "secrets \"bar\" not found",
-					Target:  targetEtcdEvents,
-				},
-			},
-			BeNil()),
-		Entry("should skip when initial-cluster is set with single value",
-			corev1.Volume{Name: "etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
-			corev1.Volume{Name: "etcd-config-file", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "bar"}}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(singleETCDCluster)}},
-			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "bar", Namespace: namespace}, Data: map[string][]byte{"etcd.conf.yaml": []byte(singleETCDCluster)}},
-			[]rule.CheckResult{
-				{
-					Status:  rule.Skipped,
-					Message: "ETCD runs as a single instance, peer communication options are not used.",
-					Target:  targetEtcdMain,
-				},
-				{
-					Status:  rule.Skipped,
-					Message: "ETCD runs as a single instance, peer communication options are not used.",
 					Target:  targetEtcdEvents,
 				},
 			},

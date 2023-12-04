@@ -6,7 +6,6 @@ package v1r11
 
 import (
 	"context"
-	"log/slog"
 
 	"gopkg.in/yaml.v3"
 	appsv1 "k8s.io/api/apps/v1"
@@ -21,9 +20,10 @@ import (
 var _ rule.Rule = &Rule242379{}
 
 type Rule242379 struct {
-	Client    client.Client
-	Namespace string
-	Logger    *slog.Logger
+	Client                client.Client
+	Namespace             string
+	StatefulSetETCDMain   string
+	StatefulSetETCDEvents string
 }
 
 func (r *Rule242379) ID() string {
@@ -31,14 +31,24 @@ func (r *Rule242379) ID() string {
 }
 
 func (r *Rule242379) Name() string {
-	return "Kubernetes etcd must use TLS to protect the confidentiality of sensitive data during electronic dissemination (MEDIUM 242379)"
+	return "The Kubernetes etcd must use TLS to protect the confidentiality of sensitive data during electronic dissemination (MEDIUM 242379)"
 }
 
 func (r *Rule242379) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults := []rule.CheckResult{}
+	etcdMain := "etcd-main"
+	etcdEvents := "etcd-events"
 
-	checkResults = append(checkResults, r.checkStatefulSet(ctx, "etcd-main"))
-	checkResults = append(checkResults, r.checkStatefulSet(ctx, "etcd-events"))
+	if r.StatefulSetETCDMain != "" {
+		etcdMain = r.StatefulSetETCDMain
+	}
+
+	if r.StatefulSetETCDEvents != "" {
+		etcdEvents = r.StatefulSetETCDEvents
+	}
+
+	checkResults = append(checkResults, r.checkStatefulSet(ctx, etcdMain))
+	checkResults = append(checkResults, r.checkStatefulSet(ctx, etcdEvents))
 
 	return rule.RuleResult{
 		RuleID:       r.ID(),
@@ -55,7 +65,7 @@ func (r *Rule242379) checkStatefulSet(ctx context.Context, statefulSetName strin
 		},
 	}
 
-	target := rule.NewTarget("cluster", "seed", "name", statefulSetName, "namespace", r.Namespace, "kind", "statefulSet")
+	target := rule.NewTarget("name", statefulSetName, "namespace", r.Namespace, "kind", "statefulSet")
 
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(statefulSet), statefulSet); err != nil {
 		return rule.ErroredCheckResult(err.Error(), target)
