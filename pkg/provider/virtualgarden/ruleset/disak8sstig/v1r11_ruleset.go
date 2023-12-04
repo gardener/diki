@@ -124,6 +124,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			DeploymentName: "virtual-garden-kube-apiserver",
 			ContainerName:  "kube-apiserver",
 		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242391,
+			"The Kubernetes Kubelet must have anonymous authentication disabled (HIGH 242391)",
+			"The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check.",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
