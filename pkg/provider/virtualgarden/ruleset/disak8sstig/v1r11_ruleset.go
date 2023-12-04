@@ -112,6 +112,30 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			DeploymentName: "virtual-garden-kube-apiserver",
 			ContainerName:  "kube-apiserver",
 		},
+		&sharedv1r11.Rule242389{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: "virtual-garden-kube-apiserver",
+			ContainerName:  "kube-apiserver",
+		},
+		&sharedv1r11.Rule242390{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: "virtual-garden-kube-apiserver",
+			ContainerName:  "kube-apiserver",
+		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242391,
+			"The Kubernetes Kubelet must have anonymous authentication disabled (HIGH 242391)",
+			"The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check.",
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242392,
+			"The Kubernetes kubelet must enable explicit authorization (HIGH 242392)",
+			"The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check.",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {

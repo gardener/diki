@@ -40,7 +40,7 @@ func (r *Rule242391) ID() string {
 }
 
 func (r *Rule242391) Name() string {
-	return "Kubernetes Kubelet must have anonymous authentication disabled (HIGH 242391)"
+	return "The Kubernetes Kubelet must have anonymous authentication disabled (HIGH 242391)"
 }
 
 func (r *Rule242391) Run(ctx context.Context) (rule.RuleResult, error) {

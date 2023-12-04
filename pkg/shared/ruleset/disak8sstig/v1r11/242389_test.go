@@ -16,18 +16,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
-var _ = Describe("#242390", func() {
+var _ = Describe("#242389", func() {
 	var (
 		fakeClient client.Client
 		ctx        = context.TODO()
 		namespace  = "foo"
 
 		ksDeployment *appsv1.Deployment
-		target       = rule.NewTarget("cluster", "seed", "name", "kube-apiserver", "namespace", namespace, "kind", "deployment")
+		target       = rule.NewTarget("name", "kube-apiserver", "namespace", namespace, "kind", "deployment")
 	)
 
 	BeforeEach(func() {
@@ -54,7 +54,7 @@ var _ = Describe("#242390", func() {
 	})
 
 	It("should error when kube-apiserver is not found", func() {
-		r := &v1r11.Rule242390{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+		r := &v1r11.Rule242389{Client: fakeClient, Namespace: namespace}
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
@@ -74,31 +74,35 @@ var _ = Describe("#242390", func() {
 			ksDeployment.Spec.Template.Spec.Containers = []corev1.Container{container}
 			Expect(fakeClient.Create(ctx, ksDeployment)).To(Succeed())
 
-			r := &v1r11.Rule242390{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+			r := &v1r11.Rule242389{Client: fakeClient, Namespace: namespace}
 			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 		},
 
-		Entry("should warn when anonymous-auth is not set",
+		Entry("should warn when secure-port is not set",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--flag1=value1", "--flag2=value2"}},
-			[]rule.CheckResult{{Status: rule.Warning, Message: "Option anonymous-auth has not been set.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Warning, Message: "Option secure-port has not been set.", Target: target}},
 			BeNil()),
-		Entry("should fail when anonymous-auth is set to not allowed value true",
-			corev1.Container{Name: "kube-apiserver", Command: []string{"--anonymous-auth=true"}},
-			[]rule.CheckResult{{Status: rule.Failed, Message: "Option anonymous-auth set to not allowed value.", Target: target}},
+		Entry("should fail when secure-port is set to not allowed value 0",
+			corev1.Container{Name: "kube-apiserver", Command: []string{"--secure-port=0"}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Option secure-port set to not allowed value.", Target: target}},
 			BeNil()),
-		Entry("should pass when anonymous-auth is set to allowed value false",
-			corev1.Container{Name: "kube-apiserver", Command: []string{"--anonymous-auth=false"}},
-			[]rule.CheckResult{{Status: rule.Passed, Message: "Option anonymous-auth set to allowed value.", Target: target}},
+		Entry("should fail when secure-port is set to not allowed value 0",
+			corev1.Container{Name: "kube-apiserver", Command: []string{"--secure-port=0 "}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Option secure-port set to not allowed value.", Target: target}},
 			BeNil()),
-		Entry("should warn when anonymous-auth is set more than once",
-			corev1.Container{Name: "kube-apiserver", Command: []string{"--anonymous-auth=false"}, Args: []string{"--anonymous-auth=true"}},
-			[]rule.CheckResult{{Status: rule.Warning, Message: "Option anonymous-auth has been set more than once in container command.", Target: target}},
+		Entry("should pass when secure-port is set to allowed value 6443",
+			corev1.Container{Name: "kube-apiserver", Command: []string{"--secure-port=6443"}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Option secure-port set to allowed value.", Target: target}},
+			BeNil()),
+		Entry("should warn when secure-port is set more than once",
+			corev1.Container{Name: "kube-apiserver", Command: []string{"--secure-port=0"}, Args: []string{"--secure-port=6443"}},
+			[]rule.CheckResult{{Status: rule.Warning, Message: "Option secure-port has been set more than once in container command.", Target: target}},
 			BeNil()),
 		Entry("should error when deployment does not have container 'kube-apiserver'",
-			corev1.Container{Name: "not-kube-apiserver", Command: []string{"--anonymous-auth=false"}},
+			corev1.Container{Name: "not-kube-apiserver", Command: []string{"--secure-port=6443"}},
 			[]rule.CheckResult{{Status: rule.Errored, Message: "deployment: kube-apiserver does not contain container: kube-apiserver", Target: target}},
 			BeNil()),
 	)
