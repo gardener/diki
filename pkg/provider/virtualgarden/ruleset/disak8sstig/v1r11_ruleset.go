@@ -25,11 +25,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	}
 
 	const (
-		ns                = "garden"
-		etcdMain          = "virtual-garden-etcd-main"
-		etcdEvents        = "virtual-garden-etcd-events"
-		kcmDeploymentName = "virtual-garden-kube-controller-manager"
-		kcmContainerName  = "kube-controller-manager"
+		ns                      = "garden"
+		etcdMain                = "virtual-garden-etcd-main"
+		etcdEvents              = "virtual-garden-etcd-events"
+		kcmDeploymentName       = "virtual-garden-kube-controller-manager"
+		kcmContainerName        = "kube-controller-manager"
+		apiserverDeploymentName = "virtual-garden-kube-apiserver"
+		apiserverContainerName  = "kube-apiserver"
 	)
 	rules := []rule.Rule{
 		&sharedv1r11.Rule242376{
@@ -47,8 +49,8 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedv1r11.Rule242378{
 			Client:         runtimeClient,
 			Namespace:      ns,
-			DeploymentName: "virtual-garden-kube-apiserver",
-			ContainerName:  "kube-apiserver",
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
 		},
 		&sharedv1r11.Rule242379{
 			Client:                runtimeClient,
@@ -67,6 +69,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Namespace:      ns,
 			DeploymentName: kcmDeploymentName,
 			ContainerName:  kcmContainerName,
+		},
+		&sharedv1r11.Rule242382{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
 		},
 	}
 
