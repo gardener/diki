@@ -76,6 +76,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			DeploymentName: apiserverDeploymentName,
 			ContainerName:  apiserverContainerName,
 		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242383,
+			"User-managed resources must be created in dedicated namespaces",
+			"By design the Garden cluster provides separate namespaces for user projects and users do not have access to system namespaces.",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
