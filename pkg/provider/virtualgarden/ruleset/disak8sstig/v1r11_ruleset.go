@@ -25,16 +25,20 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	}
 
 	const (
-		ns         = "garden"
-		etcdMain   = "virtual-garden-etcd-main"
-		etcdEvents = "virtual-garden-etcd-events"
+		ns                      = "garden"
+		etcdMain                = "virtual-garden-etcd-main"
+		etcdEvents              = "virtual-garden-etcd-events"
+		kcmDeploymentName       = "virtual-garden-kube-controller-manager"
+		kcmContainerName        = "kube-controller-manager"
+		apiserverDeploymentName = "virtual-garden-kube-apiserver"
+		apiserverContainerName  = "kube-apiserver"
 	)
 	rules := []rule.Rule{
 		&sharedv1r11.Rule242376{
 			Client:         runtimeClient,
 			Namespace:      ns,
-			DeploymentName: "virtual-garden-kube-controller-manager",
-			ContainerName:  "kube-controller-manager",
+			DeploymentName: kcmDeploymentName,
+			ContainerName:  kcmContainerName,
 		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242377,
@@ -45,8 +49,8 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedv1r11.Rule242378{
 			Client:         runtimeClient,
 			Namespace:      ns,
-			DeploymentName: "virtual-garden-kube-apiserver",
-			ContainerName:  "kube-apiserver",
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
 		},
 		&sharedv1r11.Rule242379{
 			Client:                runtimeClient,
@@ -60,6 +64,30 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			StatefulSetETCDMain:   etcdMain,
 			StatefulSetETCDEvents: etcdEvents,
 		},
+		&sharedv1r11.Rule242381{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: kcmDeploymentName,
+			ContainerName:  kcmContainerName,
+		},
+		&sharedv1r11.Rule242382{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242383,
+			"User-managed resources must be created in dedicated namespaces (HIGH 242383)",
+			"By design the Garden cluster provides separate namespaces for user projects and users do not have access to system namespaces.",
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242384,
+			"The Kubernetes Scheduler must have secure binding (MEDIUM 242384)",
+			"The Virtual Garden cluster does not make use of a Kubernetes Scheduler.",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
