@@ -100,6 +100,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			DeploymentName: "virtual-garden-kube-apiserver",
 			ContainerName:  "kube-apiserver",
 		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242387,
+			"The Kubernetes Kubelet must have the read-only port flag disabled (HIGH 242387)",
+			"The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check.",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
