@@ -40,7 +40,7 @@ func (r *Rule242392) ID() string {
 }
 
 func (r *Rule242392) Name() string {
-	return "Kubernetes kubelet must enable explicit authorization (HIGH 242392)"
+	return "The Kubernetes kubelet must enable explicit authorization (HIGH 242392)"
 }
 
 func (r *Rule242392) Run(ctx context.Context) (rule.RuleResult, error) {
