@@ -106,6 +106,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check.",
 			rule.Skipped,
 		),
+		&sharedv1r11.Rule242388{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: "virtual-garden-kube-apiserver",
+			ContainerName:  "kube-apiserver",
+		},
 	}
 
 	for i, r := range rules {

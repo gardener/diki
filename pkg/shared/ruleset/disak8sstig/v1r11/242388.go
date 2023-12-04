@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -18,9 +17,10 @@ import (
 var _ rule.Rule = &Rule242388{}
 
 type Rule242388 struct {
-	Client    client.Client
-	Namespace string
-	Logger    *slog.Logger
+	Client         client.Client
+	Namespace      string
+	DeploymentName string
+	ContainerName  string
 }
 
 func (r *Rule242388) ID() string {
@@ -28,17 +28,24 @@ func (r *Rule242388) ID() string {
 }
 
 func (r *Rule242388) Name() string {
-	return "Kubernetes API server must have the insecure bind address not set (HIGH 242388)"
+	return "The Kubernetes API server must have the insecure bind address not set (HIGH 242388)"
 }
 
 func (r *Rule242388) Run(ctx context.Context) (rule.RuleResult, error) {
-	const (
-		kapiName = "kube-apiserver"
-		optName  = "insecure-bind-address"
-	)
-	target := rule.NewTarget("cluster", "seed", "kind", "deployment", "name", kapiName, "namespace", r.Namespace)
+	const optName = "insecure-bind-address"
+	deploymentName := "kube-apiserver"
+	containerName := "kube-apiserver"
 
-	insecureBindAddressOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, kapiName, kapiName, r.Namespace, optName)
+	if r.DeploymentName != "" {
+		deploymentName = r.DeploymentName
+	}
+
+	if r.ContainerName != "" {
+		containerName = r.ContainerName
+	}
+	target := rule.NewTarget("kind", "deployment", "name", deploymentName, "namespace", r.Namespace)
+
+	insecureBindAddressOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, optName)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
