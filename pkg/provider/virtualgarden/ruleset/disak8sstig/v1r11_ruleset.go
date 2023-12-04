@@ -33,6 +33,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		apiserverDeploymentName = "virtual-garden-kube-apiserver"
 		apiserverContainerName  = "kube-apiserver"
 		noKubeletsMsg           = "The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check."
+		noPodsMsg               = "The Virtual Garden cluster does not have any nodes therefore there cluster does not have any pods."
 	)
 	rules := []rule.Rule{
 		&sharedv1r11.Rule242376{
@@ -255,6 +256,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			sharedv1r11.ID242413,
 			"The Kubernetes etcd must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242413)",
 			"Cannot be tested and should be enforced organizationally. Gardener uses a minimum of known and automatically opened/used/created ports/protocols/services (PPSM stands for Ports, Protocols, Service Management).",
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242414,
+			"The Kubernetes cluster must use non-privileged host ports for user pods (MEDIUM 242414)",
+			noPodsMsg,
 			rule.Skipped,
 		),
 	}
