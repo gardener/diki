@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -18,9 +17,10 @@ import (
 var _ rule.Rule = &Rule242400{}
 
 type Rule242400 struct {
-	Client    client.Client
-	Namespace string
-	Logger    *slog.Logger
+	Client         client.Client
+	Namespace      string
+	DeploymentName string
+	ContainerName  string
 }
 
 func (r *Rule242400) ID() string {
@@ -28,17 +28,24 @@ func (r *Rule242400) ID() string {
 }
 
 func (r *Rule242400) Name() string {
-	return "Kubernetes API server must have Alpha APIs disabled (MEDIUM 242400)"
+	return "The Kubernetes API server must have Alpha APIs disabled (MEDIUM 242400)"
 }
 
 func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
-	const (
-		kapiName = "kube-apiserver"
-		option   = "feature-gates.AllAlpha"
-	)
-	target := rule.NewTarget("cluster", "seed", "name", kapiName, "namespace", r.Namespace, "kind", "deployment")
+	const option = "feature-gates.AllAlpha"
+	deploymentName := "kube-apiserver"
+	containerName := "kube-apiserver"
 
-	fgOptSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, kapiName, kapiName, r.Namespace, "feature-gates")
+	if r.DeploymentName != "" {
+		deploymentName = r.DeploymentName
+	}
+
+	if r.ContainerName != "" {
+		containerName = r.ContainerName
+	}
+	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
+
+	fgOptSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, "feature-gates")
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
