@@ -94,6 +94,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"The Kubernetes Controller Manager runs in a container which already has limited access to network interfaces. In addition ingress traffic to the Kubernetes Controller Manager is restricted via network policies, making an unintended exposure less likely.",
 			rule.Skipped,
 		),
+		&sharedv1r11.Rule242386{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: "virtual-garden-kube-apiserver",
+			ContainerName:  "kube-apiserver",
+		},
 	}
 
 	for i, r := range rules {
