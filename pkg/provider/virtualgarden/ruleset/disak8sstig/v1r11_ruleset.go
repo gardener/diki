@@ -154,6 +154,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"The Virtual Garden cluster does not have any nodes therefore it does not deploy a Kubernetes dashboard.",
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242396,
+			"Kubernetes Kubectl cp command must give expected access and results (MEDIUM 242396)",
+			"The Virtual Garden cluster does not have any nodes therefore it does not install kubectl.",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
