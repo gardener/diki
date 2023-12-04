@@ -166,6 +166,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check.",
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			// feature-gates.DynamicAuditing removed in v1.19. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
+			sharedv1r11.ID242398,
+			"Kubernetes DynamicAuditing must not be enabled (MEDIUM 242398)",
+			"Option feature-gates.DynamicAuditing was removed in Kubernetes v1.19.",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
