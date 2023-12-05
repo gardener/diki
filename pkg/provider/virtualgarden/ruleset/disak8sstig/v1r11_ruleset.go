@@ -437,6 +437,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noPodsMsg,
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242449,
+			"The Kubernetes Kubelet certificate authority file must have file permissions set to 644 or more restrictive (MEDIUM 242449)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
