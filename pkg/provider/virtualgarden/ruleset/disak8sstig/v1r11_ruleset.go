@@ -366,6 +366,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			StatefulSetETCDMain:   etcdMain,
 			StatefulSetETCDEvents: etcdEvents,
 		},
+		&sharedv1r11.Rule242433{
+			Client:                runtimeClient,
+			Namespace:             ns,
+			StatefulSetETCDMain:   etcdMain,
+			StatefulSetETCDEvents: etcdEvents,
+		},
 	}
 
 	for i, r := range rules {
