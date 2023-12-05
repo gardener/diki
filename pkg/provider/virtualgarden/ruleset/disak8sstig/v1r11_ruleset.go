@@ -372,6 +372,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			StatefulSetETCDMain:   etcdMain,
 			StatefulSetETCDEvents: etcdEvents,
 		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242434,
+			"Kubernetes Kubelet must enable kernel protection (HIGH 242434)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
