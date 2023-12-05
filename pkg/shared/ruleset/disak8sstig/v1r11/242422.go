@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"strings"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -19,9 +18,10 @@ import (
 var _ rule.Rule = &Rule242422{}
 
 type Rule242422 struct {
-	Client    client.Client
-	Namespace string
-	Logger    *slog.Logger
+	Client         client.Client
+	Namespace      string
+	DeploymentName string
+	ContainerName  string
 }
 
 func (r *Rule242422) ID() string {
@@ -34,14 +34,23 @@ func (r *Rule242422) Name() string {
 
 func (r *Rule242422) Run(ctx context.Context) (rule.RuleResult, error) {
 	const (
-		kapiName    = "kube-apiserver"
 		certOptName = "tls-cert-file"
 		keyOptName  = "tls-private-key-file"
 	)
-	checkResults := []rule.CheckResult{}
-	target := rule.NewTarget("cluster", "seed", "name", kapiName, "namespace", r.Namespace, "kind", "deployment")
+	deploymentName := "kube-apiserver"
+	containerName := "kube-apiserver"
 
-	tlsCertFileOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, kapiName, kapiName, r.Namespace, certOptName)
+	if r.DeploymentName != "" {
+		deploymentName = r.DeploymentName
+	}
+
+	if r.ContainerName != "" {
+		containerName = r.ContainerName
+	}
+	checkResults := []rule.CheckResult{}
+	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
+
+	tlsCertFileOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, certOptName)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
@@ -57,7 +66,7 @@ func (r *Rule242422) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s set.", certOptName), target))
 	}
 
-	tlsPrivateKeyFileOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, kapiName, kapiName, r.Namespace, keyOptName)
+	tlsPrivateKeyFileOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, keyOptName)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
