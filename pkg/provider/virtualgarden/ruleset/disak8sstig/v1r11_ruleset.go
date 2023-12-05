@@ -390,6 +390,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"PSPs are removed in K8s version 1.25.",
 			rule.Skipped,
 		),
+		&sharedv1r11.Rule242438{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
 	}
 
 	for i, r := range rules {
