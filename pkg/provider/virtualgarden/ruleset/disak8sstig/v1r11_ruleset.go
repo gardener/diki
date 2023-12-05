@@ -312,6 +312,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			StatefulSetETCDMain:   etcdMain,
 			StatefulSetETCDEvents: etcdEvents,
 		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242424,
+			"Kubernetes Kubelet must enable tlsPrivateKeyFile for client authentication to secure service (MEDIUM 242424)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
