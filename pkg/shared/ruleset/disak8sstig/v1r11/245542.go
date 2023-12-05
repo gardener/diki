@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -18,9 +17,10 @@ import (
 var _ rule.Rule = &Rule245542{}
 
 type Rule245542 struct {
-	Client    client.Client
-	Namespace string
-	Logger    *slog.Logger
+	Client         client.Client
+	Namespace      string
+	DeploymentName string
+	ContainerName  string
 }
 
 func (r *Rule245542) ID() string {
@@ -32,13 +32,20 @@ func (r *Rule245542) Name() string {
 }
 
 func (r *Rule245542) Run(ctx context.Context) (rule.RuleResult, error) {
-	const (
-		kapiName = "kube-apiserver"
-		optName  = "basic-auth-file"
-	)
-	target := rule.NewTarget("cluster", "seed", "name", kapiName, "namespace", r.Namespace, "kind", "deployment")
+	const optName = "basic-auth-file"
+	deploymentName := "kube-apiserver"
+	containerName := "kube-apiserver"
 
-	basicAuthFileOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, kapiName, kapiName, r.Namespace, optName)
+	if r.DeploymentName != "" {
+		deploymentName = r.DeploymentName
+	}
+
+	if r.ContainerName != "" {
+		containerName = r.ContainerName
+	}
+	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
+
+	basicAuthFileOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, optName)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
