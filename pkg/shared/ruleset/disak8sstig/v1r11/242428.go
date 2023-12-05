@@ -6,7 +6,6 @@ package v1r11
 
 import (
 	"context"
-	"log/slog"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -22,9 +21,10 @@ import (
 var _ rule.Rule = &Rule242428{}
 
 type Rule242428 struct {
-	Client    client.Client
-	Namespace string
-	Logger    *slog.Logger
+	Client                client.Client
+	Namespace             string
+	StatefulSetETCDMain   string
+	StatefulSetETCDEvents string
 }
 
 func (r *Rule242428) ID() string {
@@ -37,9 +37,18 @@ func (r *Rule242428) Name() string {
 
 func (r *Rule242428) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults := []rule.CheckResult{}
+	etcdMain := "etcd-main"
+	etcdEvents := "etcd-events"
 
-	checkResults = append(checkResults, r.checkStatefulSet(ctx, "etcd-main"))
-	checkResults = append(checkResults, r.checkStatefulSet(ctx, "etcd-events"))
+	if r.StatefulSetETCDMain != "" {
+		etcdMain = r.StatefulSetETCDMain
+	}
+
+	if r.StatefulSetETCDEvents != "" {
+		etcdEvents = r.StatefulSetETCDEvents
+	}
+	checkResults = append(checkResults, r.checkStatefulSet(ctx, etcdMain))
+	checkResults = append(checkResults, r.checkStatefulSet(ctx, etcdEvents))
 
 	return rule.RuleResult{
 		RuleID:       r.ID(),
@@ -56,7 +65,7 @@ func (r *Rule242428) checkStatefulSet(ctx context.Context, statefulSetName strin
 		},
 	}
 
-	target := rule.NewTarget("cluster", "seed", "name", statefulSetName, "namespace", r.Namespace, "kind", "statefulSet")
+	target := rule.NewTarget("name", statefulSetName, "namespace", r.Namespace, "kind", "statefulSet")
 
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(statefulSet), statefulSet); err != nil {
 		return rule.ErroredCheckResult(err.Error(), target)
