@@ -467,6 +467,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noKubeletsMsg,
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242454,
+			"The Kubernetes kubeadm.conf must be owned by root (MEDIUM 242454)",
+			"Gardener does not use kubeadm and also does not store any main config anywhere (flow/component logic built-in/in-code).",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
