@@ -9,6 +9,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/config"
+	"github.com/gardener/diki/pkg/provider/virtualgarden/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
@@ -396,12 +397,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			DeploymentName: apiserverDeploymentName,
 			ContainerName:  apiserverContainerName,
 		},
-		rule.NewSkipRule(
-			sharedv1r11.ID242442,
-			"Kubernetes must remove old components after updated versions have been installed (MEDIUM 242442)",
-			noPodsMsg,
-			rule.Skipped,
-		),
+		&v1r11.Rule242442{
+			Client:    runtimeClient,
+			Namespace: ns,
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242443,
 			"Kubernetes must contain the latest updates as authorized by IAVMs, CTOs, DTMs, and STIGs (MEDIUM 242443)",
