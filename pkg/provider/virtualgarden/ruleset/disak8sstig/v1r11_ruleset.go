@@ -360,6 +360,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			DeploymentName: apiserverDeploymentName,
 			ContainerName:  apiserverContainerName,
 		},
+		&sharedv1r11.Rule242432{
+			Client:                runtimeClient,
+			Namespace:             ns,
+			StatefulSetETCDMain:   etcdMain,
+			StatefulSetETCDEvents: etcdEvents,
+		},
 	}
 
 	for i, r := range rules {
