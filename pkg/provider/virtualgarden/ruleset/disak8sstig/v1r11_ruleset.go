@@ -449,6 +449,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noKubeletsMsg,
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242451,
+			"The Kubernetes component PKI must be owned by root (MEDIUM 242451)",
+			"",
+			rule.NotImplemented,
+		),
 	}
 
 	for i, r := range rules {
