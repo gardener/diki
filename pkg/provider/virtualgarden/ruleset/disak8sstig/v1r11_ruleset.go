@@ -408,6 +408,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"Scanning/patching security vulnerabilities should be enforced organizationally. Security vulnerability scanning should be automated and maintainers should be informed automatically.",
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242444,
+			"Kubernetes component manifests must be owned by root (MEDIUM 242444)",
+			"Rule is duplicate of 242405. Gardener does not deploy any control plane component as systemd processes or static pod.",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
