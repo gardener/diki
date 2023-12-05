@@ -384,6 +384,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			DeploymentName: apiserverDeploymentName,
 			ContainerName:  apiserverContainerName,
 		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242437,
+			"Kubernetes must have a pod security policy set (HIGH 242437)",
+			"PSPs are removed in K8s version 1.25.",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
