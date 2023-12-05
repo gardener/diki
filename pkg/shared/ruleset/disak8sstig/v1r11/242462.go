@@ -29,7 +29,7 @@ func (r *Rule242462) ID() string {
 }
 
 func (r *Rule242462) Name() string {
-	return "Kubernetes API Server must be set to audit log max size (MEDIUM 242462)"
+	return "The Kubernetes API Server must be set to audit log max size (MEDIUM 242462)"
 }
 
 func (r *Rule242462) Run(ctx context.Context) (rule.RuleResult, error) {
