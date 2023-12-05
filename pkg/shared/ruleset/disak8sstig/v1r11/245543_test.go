@@ -16,8 +16,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
 var _ = Describe("#245543", func() {
@@ -39,7 +39,7 @@ bar,for,bar,`
 		namespace  = "foo"
 
 		kapiDeployment *appsv1.Deployment
-		target         = rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-apiserver", "namespace", namespace)
+		target         = rule.NewTarget("kind", "deployment", "name", "kube-apiserver", "namespace", namespace)
 		options        = v1r11.Options245543{
 			AcceptedTokens: []struct {
 				User   string `yaml:"user"`
@@ -95,7 +95,7 @@ bar,for,bar,`
 	})
 
 	It("should return error check results when kube-apiserver is not found", func() {
-		r := &v1r11.Rule245543{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+		r := &v1r11.Rule245543{Client: fakeClient, Namespace: namespace}
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
@@ -118,7 +118,7 @@ bar,for,bar,`
 
 			Expect(fakeClient.Create(ctx, staticTokenSecret)).To(Succeed())
 
-			r := &v1r11.Rule245543{Logger: testLogger, Client: fakeClient, Namespace: namespace, Options: options}
+			r := &v1r11.Rule245543{Client: fakeClient, Namespace: namespace, Options: options}
 			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 

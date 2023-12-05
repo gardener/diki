@@ -99,7 +99,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
-	opts245543, err := getV1R11OptionOrNil[v1r11.Options245543](ruleOptions[v1r11.ID245543].Args)
+	opts245543, err := getV1R11OptionOrNil[sharedv1r11.Options245543](ruleOptions[v1r11.ID245543].Args)
 	if err != nil {
 		return err
 	}
@@ -308,7 +308,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			ControlPlaneNamespace:   r.shootNamespace,
 		},
 		&sharedv1r11.Rule245542{Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule245543{Logger: r.Logger().With("rule", v1r11.ID245543), Client: seedClient, Namespace: r.shootNamespace, Options: opts245543},
+		&sharedv1r11.Rule245543{Client: seedClient, Namespace: r.shootNamespace, Options: opts245543},
 		&v1r11.Rule245544{Logger: r.Logger().With("rule", v1r11.ID245544), Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule254800{Logger: r.Logger().With("rule", v1r11.ID254800), Client: seedClient, Namespace: r.shootNamespace, Options: opts254800},
 		&v1r11.Rule254801{

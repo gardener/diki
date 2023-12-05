@@ -4,6 +4,10 @@
 
 package v1r11
 
+import (
+	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
+)
+
 const (
 	ID242376    = "242376"
 	ID242377    = "242377"
@@ -101,5 +105,5 @@ const (
 )
 
 type RuleOption interface {
-	Options242414 | Options242415 | Options245543 | Options254800 | OptionsPodFiles
+	Options242414 | Options242415 | sharedv1r11.Options245543 | Options254800 | OptionsPodFiles
 }

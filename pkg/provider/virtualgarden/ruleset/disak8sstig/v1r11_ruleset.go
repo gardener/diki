@@ -5,6 +5,8 @@
 package disak8sstig
 
 import (
+	"encoding/json"
+
 	kubernetesgardener "github.com/gardener/gardener/pkg/client/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -21,6 +23,11 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	}
 
 	_, err = client.New(r.GardenConfig, client.Options{Scheme: kubernetesgardener.GardenScheme})
+	if err != nil {
+		return err
+	}
+
+	opts245543, err := getV1R11OptionOrNil[sharedv1r11.Options245543](ruleOptions[sharedv1r11.ID245543].Args)
 	if err != nil {
 		return err
 	}
@@ -557,6 +564,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			DeploymentName: apiserverDeploymentName,
 			ContainerName:  apiserverContainerName,
 		},
+		&sharedv1r11.Rule245543{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			Options:        opts245543,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
 	}
 
 	for i, r := range rules {
@@ -567,4 +581,25 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	}
 
 	return r.AddRules(rules...)
+}
+
+func parseV1R11Options[O v1r11.RuleOption](options any) (*O, error) { //nolint:unused
+	optionsByte, err := json.Marshal(options)
+	if err != nil {
+		return nil, err
+	}
+
+	var parsedOptions O
+	if err := json.Unmarshal(optionsByte, &parsedOptions); err != nil {
+		return nil, err
+	}
+
+	return &parsedOptions, nil
+}
+
+func getV1R11OptionOrNil[O v1r11.RuleOption](options any) (*O, error) { //nolint:unused
+	if options == nil {
+		return nil, nil
+	}
+	return parseV1R11Options[O](options)
 }

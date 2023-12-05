@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -21,10 +20,11 @@ import (
 var _ rule.Rule = &Rule245543{}
 
 type Rule245543 struct {
-	Client    client.Client
-	Namespace string
-	Options   *Options245543
-	Logger    *slog.Logger
+	Client         client.Client
+	Namespace      string
+	Options        *Options245543
+	DeploymentName string
+	ContainerName  string
 }
 
 type Options245543 struct {
@@ -44,25 +44,32 @@ func (r *Rule245543) Name() string {
 }
 
 func (r *Rule245543) Run(ctx context.Context) (rule.RuleResult, error) {
-	const (
-		kapiName = "kube-apiserver"
-		option   = "token-auth-file"
-	)
+	const option = "token-auth-file"
+	deploymentName := "kube-apiserver"
+	containerName := "kube-apiserver"
+
+	if r.DeploymentName != "" {
+		deploymentName = r.DeploymentName
+	}
+
+	if r.ContainerName != "" {
+		containerName = r.ContainerName
+	}
 
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      kapiName,
+			Name:      deploymentName,
 			Namespace: r.Namespace,
 		},
 	}
 
-	target := rule.NewTarget("cluster", "seed", "kind", "deployment", "name", kapiName, "namespace", r.Namespace)
+	target := rule.NewTarget("kind", "deployment", "name", deploymentName, "namespace", r.Namespace)
 
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(deployment), deployment); err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
-	optSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, kapiName, kapiName, r.Namespace, option)
+	optSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, option)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
@@ -79,7 +86,7 @@ func (r *Rule245543) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", option), target)), nil
 	}
 
-	optionByteSlice, err := kubeutils.GetVolumeConfigByteSliceByMountPath(ctx, r.Client, deployment, kapiName, optSlice[0])
+	optionByteSlice, err := kubeutils.GetVolumeConfigByteSliceByMountPath(ctx, r.Client, deployment, containerName, optSlice[0])
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
