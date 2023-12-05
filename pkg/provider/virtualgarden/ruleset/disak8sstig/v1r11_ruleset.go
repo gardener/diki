@@ -503,6 +503,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"",
 			rule.NotImplemented,
 		),
+		&sharedv1r11.Rule242461{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
 	}
 
 	for i, r := range rules {
