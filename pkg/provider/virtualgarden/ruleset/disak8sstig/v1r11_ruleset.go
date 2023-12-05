@@ -461,6 +461,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noKubeletsMsg,
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242453,
+			"The Kubernetes kubelet KubeConfig file must be owned by root (MEDIUM 242453)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
