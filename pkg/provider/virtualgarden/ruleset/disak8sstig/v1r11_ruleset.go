@@ -485,6 +485,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"Duplicate of 242452. "+noKubeletsMsg,
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242457,
+			"The Kubernetes kubelet config must be owned by root (MEDIUM 242457)",
+			"Duplicate of 242453. "+noKubeletsMsg,
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
