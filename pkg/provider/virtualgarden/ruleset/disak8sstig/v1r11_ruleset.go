@@ -491,6 +491,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"Duplicate of 242453. "+noKubeletsMsg,
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242459,
+			"The Kubernetes etcd must have file permissions set to 644 or more restrictive (MEDIUM 242459)",
+			"",
+			rule.NotImplemented,
+		),
 	}
 
 	for i, r := range rules {
