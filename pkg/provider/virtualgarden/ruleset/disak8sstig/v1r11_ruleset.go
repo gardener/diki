@@ -527,6 +527,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			DeploymentName: apiserverDeploymentName,
 			ContainerName:  apiserverContainerName,
 		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242465,
+			"The Kubernetes API Server audit log path must be set (MEDIUM 242465)",
+			"Rule is duplicate of 242402.",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
