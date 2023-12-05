@@ -539,6 +539,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"",
 			rule.NotImplemented,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242467,
+			"The Kubernetes PKI keys must have file permissions set to 600 or more restrictive (MEDIUM 242467)",
+			"",
+			rule.NotImplemented,
+		),
 	}
 
 	for i, r := range rules {
