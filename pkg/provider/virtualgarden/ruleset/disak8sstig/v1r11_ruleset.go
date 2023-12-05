@@ -533,6 +533,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"Rule is duplicate of 242402.",
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242466,
+			"The Kubernetes PKI CRT must have file permissions set to 644 or more restrictive (MEDIUM 242466)",
+			"",
+			rule.NotImplemented,
+		),
 	}
 
 	for i, r := range rules {
