@@ -470,7 +470,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		rule.NewSkipRule(
 			sharedv1r11.ID242454,
 			"The Kubernetes kubeadm.conf must be owned by root (MEDIUM 242454)",
-			"Gardener does not use kubeadm and also does not store any main config anywhere (flow/component logic built-in/in-code).",
+			`Gardener does not use kubeadm and also does not store any "main config" anywhere (flow/component logic built-in/in-code).`,
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242455,
+			"The Kubernetes kubeadm.conf must have file permissions set to 644 or more restrictive (MEDIUM 242455)",
+			`Gardener does not use kubeadm and also does not store any "main config" anywhere (flow/component logic built-in/in-code).`,
 			rule.Skipped,
 		),
 	}
