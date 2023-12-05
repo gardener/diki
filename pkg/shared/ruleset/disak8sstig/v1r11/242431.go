@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"strings"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -19,9 +18,10 @@ import (
 var _ rule.Rule = &Rule242431{}
 
 type Rule242431 struct {
-	Client    client.Client
-	Namespace string
-	Logger    *slog.Logger
+	Client         client.Client
+	Namespace      string
+	DeploymentName string
+	ContainerName  string
 }
 
 func (r *Rule242431) ID() string {
@@ -33,13 +33,20 @@ func (r *Rule242431) Name() string {
 }
 
 func (r *Rule242431) Run(ctx context.Context) (rule.RuleResult, error) {
-	const (
-		kapiName = "kube-apiserver"
-		option   = "etcd-keyfile"
-	)
-	target := rule.NewTarget("cluster", "seed", "name", kapiName, "namespace", r.Namespace, "kind", "deployment")
+	const option = "etcd-keyfile"
+	deploymentName := "kube-apiserver"
+	containerName := "kube-apiserver"
 
-	optSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, kapiName, kapiName, r.Namespace, option)
+	if r.DeploymentName != "" {
+		deploymentName = r.DeploymentName
+	}
+
+	if r.ContainerName != "" {
+		containerName = r.ContainerName
+	}
+	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
+
+	optSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, option)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
