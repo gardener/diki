@@ -479,6 +479,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			`Gardener does not use kubeadm and also does not store any "main config" anywhere (flow/component logic built-in/in-code).`,
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242456,
+			"The Kubernetes kubelet config must have file permissions set to 644 or more restrictive (MEDIUM 242456)",
+			"Duplicate of 242452. "+noKubeletsMsg,
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
