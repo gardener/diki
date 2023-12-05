@@ -402,6 +402,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noPodsMsg,
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242443,
+			"Kubernetes must contain the latest updates as authorized by IAVMs, CTOs, DTMs, and STIGs (MEDIUM 242443)",
+			"Scanning/patching security vulnerabilities should be enforced organizationally. Security vulnerability scanning should be automated and maintainers should be informed automatically.",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
