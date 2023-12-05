@@ -21,6 +21,16 @@ import (
 )
 
 var _ = Describe("#242428", func() {
+	const (
+		ctsCertAuthNotSetConfig = `
+client-transport-security:`
+		ctsCertAuthSetFalseConfig = `
+client-transport-security:
+  client-cert-auth: false`
+		ctsCertAuthSetTrueConfig = `
+client-transport-security:
+  client-cert-auth: true`
+	)
 	var (
 		fakeClient client.Client
 		ctx        = context.TODO()

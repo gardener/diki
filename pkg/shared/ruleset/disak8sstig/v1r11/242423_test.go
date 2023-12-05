@@ -16,11 +16,22 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
 var _ = Describe("#242423", func() {
+	const (
+		ctsCertAuthNotSetConfig = `
+client-transport-security:`
+		ctsCertAuthSetFalseConfig = `
+client-transport-security:
+  client-cert-auth: false`
+		ctsCertAuthSetTrueConfig = `
+client-transport-security:
+  client-cert-auth: true`
+	)
+
 	var (
 		fakeClient client.Client
 		ctx        = context.TODO()
@@ -28,8 +39,8 @@ var _ = Describe("#242423", func() {
 
 		etcdMainStatefulSet   *appsv1.StatefulSet
 		etcdEventsStatefulSet *appsv1.StatefulSet
-		targetEtcdMain        = rule.NewTarget("cluster", "seed", "name", "etcd-main", "namespace", namespace, "kind", "statefulSet")
-		targetEtcdEvents      = rule.NewTarget("cluster", "seed", "name", "etcd-events", "namespace", namespace, "kind", "statefulSet")
+		targetEtcdMain        = rule.NewTarget("name", "etcd-main", "namespace", namespace, "kind", "statefulSet")
+		targetEtcdEvents      = rule.NewTarget("name", "etcd-events", "namespace", namespace, "kind", "statefulSet")
 	)
 
 	BeforeEach(func() {
@@ -63,7 +74,7 @@ var _ = Describe("#242423", func() {
 	})
 
 	It("should return error check results when etcd-main and etcd-events are not found", func() {
-		r := &v1r11.Rule242423{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+		r := &v1r11.Rule242423{Client: fakeClient, Namespace: namespace}
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
@@ -94,7 +105,7 @@ var _ = Describe("#242423", func() {
 			Expect(fakeClient.Create(ctx, etcdMainSecret)).To(Succeed())
 			Expect(fakeClient.Create(ctx, etcdEventsSecret)).To(Succeed())
 
-			r := &v1r11.Rule242423{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+			r := &v1r11.Rule242423{Client: fakeClient, Namespace: namespace}
 			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 
@@ -157,14 +168,3 @@ var _ = Describe("#242423", func() {
 			BeNil()),
 	)
 })
-
-const (
-	ctsCertAuthNotSetConfig = `
-client-transport-security:`
-	ctsCertAuthSetFalseConfig = `
-client-transport-security:
-  client-cert-auth: false`
-	ctsCertAuthSetTrueConfig = `
-client-transport-security:
-  client-cert-auth: true`
-)
