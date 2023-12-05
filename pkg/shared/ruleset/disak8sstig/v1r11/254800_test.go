@@ -16,8 +16,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
 var _ = Describe("#254800", func() {
@@ -30,9 +30,9 @@ var _ = Describe("#254800", func() {
 		configMapData     = "configMapData"
 		deployment        *appsv1.Deployment
 		configMap         *corev1.ConfigMap
-		deployTarget      = rule.NewTarget("cluster", "seed", "name", "kube-apiserver", "namespace", namespace, "kind", "deployment")
-		podSecurityTarget = rule.NewTarget("cluster", "shoot", "kind", "PodSecurityConfiguration")
-		genericTarget     = rule.NewTarget("cluster", "shoot")
+		deployTarget      = rule.NewTarget("name", "kube-apiserver", "namespace", namespace, "kind", "deployment")
+		podSecurityTarget = rule.NewTarget("kind", "PodSecurityConfiguration")
+		genericTarget     = rule.NewTarget()
 	)
 
 	BeforeEach(func() {
@@ -86,7 +86,7 @@ var _ = Describe("#254800", func() {
 	})
 
 	It("should error when kube-apiserver is not found", func() {
-		r := &v1r11.Rule254800{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+		r := &v1r11.Rule254800{Client: fakeClient, Namespace: namespace}
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
@@ -108,7 +108,7 @@ var _ = Describe("#254800", func() {
 			configMap.Data = configMapData
 			Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
 
-			r := &v1r11.Rule254800{Logger: testLogger, Client: fakeClient, Namespace: namespace, Options: options}
+			r := &v1r11.Rule254800{Client: fakeClient, Namespace: namespace, Options: options}
 			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 

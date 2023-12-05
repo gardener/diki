@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -26,10 +25,11 @@ import (
 var _ rule.Rule = &Rule254800{}
 
 type Rule254800 struct {
-	Client    client.Client
-	Namespace string
-	Options   *Options254800
-	Logger    *slog.Logger
+	Client         client.Client
+	Namespace      string
+	Options        *Options254800
+	DeploymentName string
+	ContainerName  string
 }
 
 type Options254800 struct {
@@ -45,9 +45,19 @@ func (r *Rule254800) Name() string {
 }
 
 func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
-	target := rule.NewTarget("cluster", "seed", "name", "kube-apiserver", "namespace", r.Namespace, "kind", "deployment")
+	deploymentName := "kube-apiserver"
+	containerName := "kube-apiserver"
 
-	admissionControlConfigFileOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, "kube-apiserver", "kube-apiserver", r.Namespace, "admission-control-config-file")
+	if r.DeploymentName != "" {
+		deploymentName = r.DeploymentName
+	}
+
+	if r.ContainerName != "" {
+		containerName = r.ContainerName
+	}
+	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
+
+	admissionControlConfigFileOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, "admission-control-config-file")
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
@@ -62,7 +72,7 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	kubeAPIDeployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "kube-apiserver",
+			Name:      deploymentName,
 			Namespace: r.Namespace,
 		},
 	}
@@ -72,7 +82,7 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	volumePath := admissionControlConfigFileOptionSlice[0]
 
-	admissionConfigByteSlice, err := kubeutils.GetVolumeConfigByteSliceByMountPath(ctx, r.Client, kubeAPIDeployment, "kube-apiserver", volumePath)
+	admissionConfigByteSlice, err := kubeutils.GetVolumeConfigByteSliceByMountPath(ctx, r.Client, kubeAPIDeployment, containerName, volumePath)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
@@ -119,7 +129,7 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 	}
 
-	return rule.SingleCheckResult(r, rule.FailedCheckResult("PodSecurity is not configured", rule.NewTarget("cluster", "shoot"))), nil
+	return rule.SingleCheckResult(r, rule.FailedCheckResult("PodSecurity is not configured", rule.NewTarget())), nil
 }
 
 func privilegeLevel(privilege string) int {
@@ -136,7 +146,7 @@ func privilegeLevel(privilege string) int {
 func (r *Rule254800) checkPodSecurityConfiguration(pluginConfig *runtime.Unknown) []rule.CheckResult {
 	podSecurityConfig := admissionapiv1.PodSecurityConfiguration{}
 	if _, _, err := serializer.NewCodecFactory(scheme.Scheme).UniversalDeserializer().Decode(pluginConfig.Raw, nil, &podSecurityConfig); err != nil {
-		return []rule.CheckResult{rule.FailedCheckResult(err.Error(), rule.NewTarget("cluster", "shoot"))}
+		return []rule.CheckResult{rule.FailedCheckResult(err.Error(), rule.NewTarget())}
 	}
 
 	return r.checkPrivilegeLevel(podSecurityConfig)
@@ -144,7 +154,7 @@ func (r *Rule254800) checkPodSecurityConfiguration(pluginConfig *runtime.Unknown
 
 func (r *Rule254800) checkPrivilegeLevel(podSecurityConfig admissionapiv1.PodSecurityConfiguration) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
-	target := rule.NewTarget("cluster", "shoot", "kind", "PodSecurityConfiguration")
+	target := rule.NewTarget("kind", "PodSecurityConfiguration")
 	if privilegeLevel(podSecurityConfig.Defaults.Enforce) < privilegeLevel(r.Options.MinPodSecurityLevel) {
 		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Enforce level is lower than the minimum pod security level allowed: %s", r.Options.MinPodSecurityLevel), target))
 	}

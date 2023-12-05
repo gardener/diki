@@ -9,5 +9,5 @@ import (
 )
 
 type RuleOption interface {
-	sharedv1r11.Options245543
+	sharedv1r11.Options245543 | sharedv1r11.Options254800
 }

@@ -31,6 +31,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
+	opts254800, err := getV1R11OptionOrNil[sharedv1r11.Options254800](ruleOptions[sharedv1r11.ID254800].Args)
+	if err != nil {
+		return err
+	}
 
 	const (
 		ns                      = "garden"
@@ -574,6 +578,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedv1r11.Rule245544{
 			Client:         runtimeClient,
 			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		&sharedv1r11.Rule254800{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			Options:        opts254800,
 			DeploymentName: apiserverDeploymentName,
 			ContainerName:  apiserverContainerName,
 		},
