@@ -431,6 +431,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noPodsMsg,
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242448,
+			"The Kubernetes Kube Proxy kubeconfig must be owned by root (MEDIUM 242448)",
+			noPodsMsg,
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
