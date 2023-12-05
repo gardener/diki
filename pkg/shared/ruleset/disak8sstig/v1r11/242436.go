@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"slices"
 	"strings"
 
@@ -20,9 +19,10 @@ import (
 var _ rule.Rule = &Rule242436{}
 
 type Rule242436 struct {
-	Client    client.Client
-	Namespace string
-	Logger    *slog.Logger
+	Client         client.Client
+	Namespace      string
+	DeploymentName string
+	ContainerName  string
 }
 
 func (r *Rule242436) ID() string {
@@ -30,18 +30,27 @@ func (r *Rule242436) ID() string {
 }
 
 func (r *Rule242436) Name() string {
-	return "Kubernetes API server must have the ValidatingAdmissionWebhook enabled (HIGH 242436)"
+	return "The Kubernetes API server must have the ValidatingAdmissionWebhook enabled (HIGH 242436)"
 }
 
 func (r *Rule242436) Run(ctx context.Context) (rule.RuleResult, error) {
 	const (
-		kapiName                = "kube-apiserver"
 		enableAdmissionPlugins  = "enable-admission-plugins"
 		disableAdmissionPlugins = "disable-admission-plugins"
 	)
-	target := rule.NewTarget("cluster", "seed", "name", kapiName, "namespace", r.Namespace, "kind", "deployment")
+	deploymentName := "kube-apiserver"
+	containerName := "kube-apiserver"
 
-	disableAdmissionPluginsSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, kapiName, kapiName, r.Namespace, disableAdmissionPlugins)
+	if r.DeploymentName != "" {
+		deploymentName = r.DeploymentName
+	}
+
+	if r.ContainerName != "" {
+		containerName = r.ContainerName
+	}
+	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
+
+	disableAdmissionPluginsSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, disableAdmissionPlugins)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
@@ -53,7 +62,7 @@ func (r *Rule242436) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", disableAdmissionPlugins), target)), nil
 	}
 
-	enableAdmissionPluginsSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, kapiName, kapiName, r.Namespace, enableAdmissionPlugins)
+	enableAdmissionPluginsSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, enableAdmissionPlugins)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
