@@ -497,6 +497,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"",
 			rule.NotImplemented,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242460,
+			"The Kubernetes admin kubeconfig must have file permissions set to 644 or more restrictive (MEDIUM 242460)",
+			"",
+			rule.NotImplemented,
+		),
 	}
 
 	for i, r := range rules {
