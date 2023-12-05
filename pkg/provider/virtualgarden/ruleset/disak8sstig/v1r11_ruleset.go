@@ -414,6 +414,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"Rule is duplicate of 242405. Gardener does not deploy any control plane component as systemd processes or static pod.",
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242445,
+			"Kubernetes component etcd must be owned by etcd (MEDIUM 242445)",
+			"Gardener does not deploy any control plane component as systemd processes or static pod.",
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
