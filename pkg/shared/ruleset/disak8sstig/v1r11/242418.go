@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"strings"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -20,9 +19,10 @@ import (
 var _ rule.Rule = &Rule242418{}
 
 type Rule242418 struct {
-	Client    client.Client
-	Namespace string
-	Logger    *slog.Logger
+	Client         client.Client
+	Namespace      string
+	DeploymentName string
+	ContainerName  string
 }
 
 func (r *Rule242418) ID() string {
@@ -30,17 +30,24 @@ func (r *Rule242418) ID() string {
 }
 
 func (r *Rule242418) Name() string {
-	return "Kubernetes API server must use approved cipher suites (MEDIUM 242418)"
+	return "The Kubernetes API server must use approved cipher suites (MEDIUM 242418)"
 }
 
 func (r *Rule242418) Run(ctx context.Context) (rule.RuleResult, error) {
-	const (
-		kapiName = "kube-apiserver"
-		option   = "tls-cipher-suites"
-	)
-	target := rule.NewTarget("cluster", "seed", "name", kapiName, "namespace", r.Namespace, "kind", "deployment")
+	const option = "tls-cipher-suites"
+	deploymentName := "kube-apiserver"
+	containerName := "kube-apiserver"
 
-	optSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, kapiName, kapiName, r.Namespace, option)
+	if r.DeploymentName != "" {
+		deploymentName = r.DeploymentName
+	}
+
+	if r.ContainerName != "" {
+		containerName = r.ContainerName
+	}
+	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
+
+	optSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, option)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}

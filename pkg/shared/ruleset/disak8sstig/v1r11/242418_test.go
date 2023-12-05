@@ -16,8 +16,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
 var _ = Describe("#242418", func() {
@@ -27,7 +27,7 @@ var _ = Describe("#242418", func() {
 		namespace  = "foo"
 
 		kcmDeployment *appsv1.Deployment
-		target        = rule.NewTarget("cluster", "seed", "name", "kube-apiserver", "namespace", namespace, "kind", "deployment")
+		target        = rule.NewTarget("name", "kube-apiserver", "namespace", namespace, "kind", "deployment")
 	)
 
 	BeforeEach(func() {
@@ -54,7 +54,7 @@ var _ = Describe("#242418", func() {
 	})
 
 	It("should error when kube-apiserver is not found", func() {
-		r := &v1r11.Rule242418{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+		r := &v1r11.Rule242418{Client: fakeClient, Namespace: namespace}
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -73,7 +73,7 @@ var _ = Describe("#242418", func() {
 			kcmDeployment.Spec.Template.Spec.Containers = []corev1.Container{container}
 			Expect(fakeClient.Create(ctx, kcmDeployment)).To(Succeed())
 
-			r := &v1r11.Rule242418{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+			r := &v1r11.Rule242418{Client: fakeClient, Namespace: namespace}
 			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 
