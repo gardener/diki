@@ -396,6 +396,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			DeploymentName: apiserverDeploymentName,
 			ContainerName:  apiserverContainerName,
 		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242442,
+			"Kubernetes must remove old components after updated versions have been installed (MEDIUM 242442)",
+			noPodsMsg,
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
