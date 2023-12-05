@@ -294,6 +294,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noKubeletsMsg,
 			rule.Skipped,
 		),
+		&sharedv1r11.Rule242421{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: kcmDeploymentName,
+			ContainerName:  kcmContainerName,
+		},
 	}
 
 	for i, r := range rules {
