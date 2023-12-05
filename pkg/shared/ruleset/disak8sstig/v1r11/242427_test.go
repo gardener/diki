@@ -16,8 +16,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
 var _ = Describe("#242427", func() {
@@ -30,7 +30,16 @@ client-transport-security:
 		ctsCertAuthSetTrueConfig = `
 client-transport-security:
   client-cert-auth: true`
+		ctsKeyFileNotSetConfig = `
+client-transport-security:`
+		ctsKeyFileSetConfig = `
+client-transport-security:
+  key-file: set`
+		ctsKeyFileSetEmptyConfig = `
+client-transport-security:
+  key-file: ""`
 	)
+
 	var (
 		fakeClient client.Client
 		ctx        = context.TODO()
@@ -38,8 +47,8 @@ client-transport-security:
 
 		etcdMainStatefulSet   *appsv1.StatefulSet
 		etcdEventsStatefulSet *appsv1.StatefulSet
-		targetEtcdMain        = rule.NewTarget("cluster", "seed", "name", "etcd-main", "namespace", namespace, "kind", "statefulSet")
-		targetEtcdEvents      = rule.NewTarget("cluster", "seed", "name", "etcd-events", "namespace", namespace, "kind", "statefulSet")
+		targetEtcdMain        = rule.NewTarget("name", "etcd-main", "namespace", namespace, "kind", "statefulSet")
+		targetEtcdEvents      = rule.NewTarget("name", "etcd-events", "namespace", namespace, "kind", "statefulSet")
 	)
 
 	BeforeEach(func() {
@@ -73,7 +82,7 @@ client-transport-security:
 	})
 
 	It("should return error check results when etcd-main and etcd-events are not found", func() {
-		r := &v1r11.Rule242427{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+		r := &v1r11.Rule242427{Client: fakeClient, Namespace: namespace}
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
@@ -104,7 +113,7 @@ client-transport-security:
 			Expect(fakeClient.Create(ctx, etcdMainSecret)).To(Succeed())
 			Expect(fakeClient.Create(ctx, etcdEventsSecret)).To(Succeed())
 
-			r := &v1r11.Rule242427{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+			r := &v1r11.Rule242427{Client: fakeClient, Namespace: namespace}
 			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 
@@ -167,14 +176,3 @@ client-transport-security:
 			BeNil()),
 	)
 })
-
-const (
-	ctsKeyFileNotSetConfig = `
-client-transport-security:`
-	ctsKeyFileSetConfig = `
-client-transport-security:
-  key-file: set`
-	ctsKeyFileSetEmptyConfig = `
-client-transport-security:
-  key-file: ""`
-)
