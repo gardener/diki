@@ -19,7 +19,7 @@ func (r *Rule242410) ID() string {
 }
 
 func (r *Rule242410) Name() string {
-	return "Kubernetes API Server must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242410)"
+	return "The Kubernetes API Server must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242410)"
 }
 
 func (r *Rule242410) Run(_ context.Context) (rule.RuleResult, error) {

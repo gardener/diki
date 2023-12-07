@@ -19,7 +19,7 @@ func (r *Rule242411) ID() string {
 }
 
 func (r *Rule242411) Name() string {
-	return "Kubernetes Scheduler must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242411)"
+	return "The Kubernetes Scheduler must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242411)"
 }
 
 func (r *Rule242411) Run(_ context.Context) (rule.RuleResult, error) {

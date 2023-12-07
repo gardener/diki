@@ -28,7 +28,7 @@ var _ = Describe("#242443", func() {
 		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
 			{
 				Status:  rule.Skipped,
-				Message: `Scanning/patching security vulnerabilities should be enforced organizationally. Security vulnerability scanning should be automated and maintainers should be informed by automatically.`,
+				Message: `Scanning/patching security vulnerabilities should be enforced organizationally. Security vulnerability scanning should be automated and maintainers should be informed automatically.`,
 				Target:  rule.NewTarget(),
 			},
 		},

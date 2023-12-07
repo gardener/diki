@@ -19,7 +19,7 @@ func (r *Rule242408) ID() string {
 }
 
 func (r *Rule242408) Name() string {
-	return "Kubernetes manifests must have least privileges (MEDIUM 242408)"
+	return "The Kubernetes manifest files must have least privileges  (MEDIUM 242408)"
 }
 
 func (r *Rule242408) Run(_ context.Context) (rule.RuleResult, error) {

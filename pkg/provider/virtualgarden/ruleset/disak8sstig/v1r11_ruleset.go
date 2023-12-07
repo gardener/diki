@@ -5,10 +5,13 @@
 package disak8sstig
 
 import (
+	"encoding/json"
+
 	kubernetesgardener "github.com/gardener/gardener/pkg/client/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/config"
+	"github.com/gardener/diki/pkg/provider/virtualgarden/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
@@ -24,6 +27,15 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
+	opts245543, err := getV1R11OptionOrNil[sharedv1r11.Options245543](ruleOptions[sharedv1r11.ID245543].Args)
+	if err != nil {
+		return err
+	}
+	opts254800, err := getV1R11OptionOrNil[sharedv1r11.Options254800](ruleOptions[sharedv1r11.ID254800].Args)
+	if err != nil {
+		return err
+	}
+
 	const (
 		ns                      = "garden"
 		etcdMain                = "virtual-garden-etcd-main"
@@ -32,6 +44,8 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		kcmContainerName        = "kube-controller-manager"
 		apiserverDeploymentName = "virtual-garden-kube-apiserver"
 		apiserverContainerName  = "kube-apiserver"
+		noKubeletsMsg           = "The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check."
+		noPodsMsg               = "The Virtual Garden cluster does not have any nodes therefore there cluster does not have any pods."
 	)
 	rules := []rule.Rule{
 		&sharedv1r11.Rule242376{
@@ -97,43 +111,43 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedv1r11.Rule242386{
 			Client:         runtimeClient,
 			Namespace:      ns,
-			DeploymentName: "virtual-garden-kube-apiserver",
-			ContainerName:  "kube-apiserver",
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
 		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242387,
 			"The Kubernetes Kubelet must have the read-only port flag disabled (HIGH 242387)",
-			"The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check.",
+			noKubeletsMsg,
 			rule.Skipped,
 		),
 		&sharedv1r11.Rule242388{
 			Client:         runtimeClient,
 			Namespace:      ns,
-			DeploymentName: "virtual-garden-kube-apiserver",
-			ContainerName:  "kube-apiserver",
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
 		},
 		&sharedv1r11.Rule242389{
 			Client:         runtimeClient,
 			Namespace:      ns,
-			DeploymentName: "virtual-garden-kube-apiserver",
-			ContainerName:  "kube-apiserver",
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
 		},
 		&sharedv1r11.Rule242390{
 			Client:         runtimeClient,
 			Namespace:      ns,
-			DeploymentName: "virtual-garden-kube-apiserver",
-			ContainerName:  "kube-apiserver",
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
 		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242391,
 			"The Kubernetes Kubelet must have anonymous authentication disabled (HIGH 242391)",
-			"The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check.",
+			noKubeletsMsg,
 			rule.Skipped,
 		),
 		rule.NewSkipRule(
 			sharedv1r11.ID242392,
 			"The Kubernetes kubelet must enable explicit authorization (HIGH 242392)",
-			"The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check.",
+			noKubeletsMsg,
 			rule.Skipped,
 		),
 		rule.NewSkipRule(
@@ -166,6 +180,420 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"The Virtual Garden cluster does not have any nodes therefore there are no kubelets to check.",
 			rule.Skipped,
 		),
+		rule.NewSkipRule(
+			// feature-gates.DynamicAuditing removed in v1.19. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
+			sharedv1r11.ID242398,
+			"Kubernetes DynamicAuditing must not be enabled (MEDIUM 242398)",
+			"Option feature-gates.DynamicAuditing was removed in Kubernetes v1.19.",
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242399,
+			"Kubernetes DynamicKubeletConfig must not be enabled (MEDIUM 242399)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
+		&sharedv1r11.Rule242400{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		&sharedv1r11.Rule242402{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		&sharedv1r11.Rule242403{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242404,
+			"Kubernetes Kubelet must deny hostname override (MEDIUM 242404)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242405,
+			"Kubernetes manifests must be owned by root (MEDIUM 242405)",
+			"Gardener does not deploy any control plane component as systemd processes or static pod.",
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242406,
+			"Kubernetes kubelet configuration file must be owned by root (MEDIUM 242406)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242407,
+			"The Kubernetes KubeletConfiguration files must have file permissions set to 644 or more restrictive (MEDIUM 242407)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242408,
+			"The Kubernetes manifest files must have least privileges (MEDIUM 242408)",
+			"Gardener does not deploy any control plane component as systemd processes or static pod.",
+			rule.Skipped,
+		),
+		&sharedv1r11.Rule242409{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: kcmDeploymentName,
+			ContainerName:  kcmContainerName,
+		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242410,
+			"The Kubernetes API Server must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242410)",
+			"Cannot be tested and should be enforced organizationally. Gardener uses a minimum of known and automatically opened/used/created ports/protocols/services (PPSM stands for Ports, Protocols, Service Management).",
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242411,
+			"The Kubernetes Scheduler must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242411)",
+			"The Virtual Garden cluster does not make use of a Kubernetes Scheduler.",
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242412,
+			"The Kubernetes Controllers must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242412)",
+			"Cannot be tested and should be enforced organizationally. Gardener uses a minimum of known and automatically opened/used/created ports/protocols/services (PPSM stands for Ports, Protocols, Service Management).",
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242413,
+			"The Kubernetes etcd must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242413)",
+			"Cannot be tested and should be enforced organizationally. Gardener uses a minimum of known and automatically opened/used/created ports/protocols/services (PPSM stands for Ports, Protocols, Service Management).",
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242414,
+			"The Kubernetes cluster must use non-privileged host ports for user pods (MEDIUM 242414)",
+			noPodsMsg,
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242415,
+			"Secrets in Kubernetes must not be stored as environment variables (HIGH 242415)",
+			noPodsMsg,
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242417,
+			"Kubernetes must separate user functionality (MEDIUM 242417)",
+			noPodsMsg,
+			rule.Skipped,
+		),
+		&sharedv1r11.Rule242418{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		&sharedv1r11.Rule242419{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242420,
+			"Kubernetes Kubelet must have the SSL Certificate Authority set (MEDIUM 242420)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
+		&sharedv1r11.Rule242421{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: kcmDeploymentName,
+			ContainerName:  kcmContainerName,
+		},
+		&sharedv1r11.Rule242422{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		&sharedv1r11.Rule242423{
+			Client:                runtimeClient,
+			Namespace:             ns,
+			StatefulSetETCDMain:   etcdMain,
+			StatefulSetETCDEvents: etcdEvents,
+		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242424,
+			"Kubernetes Kubelet must enable tlsPrivateKeyFile for client authentication to secure service (MEDIUM 242424)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242425,
+			"Kubernetes Kubelet must enable tlsCertFile for client authentication to secure service (MEDIUM 242425)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
+		&sharedv1r11.Rule242426{
+			Client:                runtimeClient,
+			Namespace:             ns,
+			StatefulSetETCDMain:   etcdMain,
+			StatefulSetETCDEvents: etcdEvents,
+		},
+		&sharedv1r11.Rule242427{
+			Client:                runtimeClient,
+			Namespace:             ns,
+			StatefulSetETCDMain:   etcdMain,
+			StatefulSetETCDEvents: etcdEvents,
+		},
+		&sharedv1r11.Rule242428{
+			Client:                runtimeClient,
+			Namespace:             ns,
+			StatefulSetETCDMain:   etcdMain,
+			StatefulSetETCDEvents: etcdEvents,
+		},
+		&sharedv1r11.Rule242429{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		&sharedv1r11.Rule242430{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		&sharedv1r11.Rule242431{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		&sharedv1r11.Rule242432{
+			Client:                runtimeClient,
+			Namespace:             ns,
+			StatefulSetETCDMain:   etcdMain,
+			StatefulSetETCDEvents: etcdEvents,
+		},
+		&sharedv1r11.Rule242433{
+			Client:                runtimeClient,
+			Namespace:             ns,
+			StatefulSetETCDMain:   etcdMain,
+			StatefulSetETCDEvents: etcdEvents,
+		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242434,
+			"Kubernetes Kubelet must enable kernel protection (HIGH 242434)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
+		&sharedv1r11.Rule242436{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242437,
+			"Kubernetes must have a pod security policy set (HIGH 242437)",
+			"PSPs are removed in K8s version 1.25.",
+			rule.Skipped,
+		),
+		&sharedv1r11.Rule242438{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		&v1r11.Rule242442{
+			Client:    runtimeClient,
+			Namespace: ns,
+		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242443,
+			"Kubernetes must contain the latest updates as authorized by IAVMs, CTOs, DTMs, and STIGs (MEDIUM 242443)",
+			"Scanning/patching security vulnerabilities should be enforced organizationally. Security vulnerability scanning should be automated and maintainers should be informed automatically.",
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242444,
+			"Kubernetes component manifests must be owned by root (MEDIUM 242444)",
+			"Rule is duplicate of 242405. Gardener does not deploy any control plane component as systemd processes or static pod.",
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242445,
+			"Kubernetes component etcd must be owned by etcd (MEDIUM 242445)",
+			"Gardener does not deploy any control plane component as systemd processes or static pod.",
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242446,
+			"The Kubernetes conf files must be owned by root (MEDIUM 242446)",
+			"",
+			rule.NotImplemented,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242447,
+			"The Kubernetes Kube Proxy kubeconfig must have file permissions set to 644 or more restrictive (MEDIUM 242447)",
+			noPodsMsg,
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242448,
+			"The Kubernetes Kube Proxy kubeconfig must be owned by root (MEDIUM 242448)",
+			noPodsMsg,
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242449,
+			"The Kubernetes Kubelet certificate authority file must have file permissions set to 644 or more restrictive (MEDIUM 242449)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242450,
+			"The Kubernetes Kubelet certificate authority must be owned by root (MEDIUM 242450)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242451,
+			"The Kubernetes component PKI must be owned by root (MEDIUM 242451)",
+			"",
+			rule.NotImplemented,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242452,
+			"The Kubernetes kubelet KubeConfig must have file permissions set to 644 or more restrictive (MEDIUM 242452)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242453,
+			"The Kubernetes kubelet KubeConfig file must be owned by root (MEDIUM 242453)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242454,
+			"The Kubernetes kubeadm.conf must be owned by root (MEDIUM 242454)",
+			`Gardener does not use kubeadm and also does not store any "main config" anywhere (flow/component logic built-in/in-code).`,
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242455,
+			"The Kubernetes kubeadm.conf must have file permissions set to 644 or more restrictive (MEDIUM 242455)",
+			`Gardener does not use kubeadm and also does not store any "main config" anywhere (flow/component logic built-in/in-code).`,
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242456,
+			"The Kubernetes kubelet config must have file permissions set to 644 or more restrictive (MEDIUM 242456)",
+			"Duplicate of 242452. "+noKubeletsMsg,
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242457,
+			"The Kubernetes kubelet config must be owned by root (MEDIUM 242457)",
+			"Duplicate of 242453. "+noKubeletsMsg,
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242459,
+			"The Kubernetes etcd must have file permissions set to 644 or more restrictive (MEDIUM 242459)",
+			"",
+			rule.NotImplemented,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242460,
+			"The Kubernetes admin kubeconfig must have file permissions set to 644 or more restrictive (MEDIUM 242460)",
+			"",
+			rule.NotImplemented,
+		),
+		&sharedv1r11.Rule242461{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		&sharedv1r11.Rule242462{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		&sharedv1r11.Rule242463{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		&sharedv1r11.Rule242464{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242465,
+			"The Kubernetes API Server audit log path must be set (MEDIUM 242465)",
+			"Rule is duplicate of 242402.",
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242466,
+			"The Kubernetes PKI CRT must have file permissions set to 644 or more restrictive (MEDIUM 242466)",
+			"",
+			rule.NotImplemented,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID242467,
+			"The Kubernetes PKI keys must have file permissions set to 600 or more restrictive (MEDIUM 242467)",
+			"",
+			rule.NotImplemented,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID245541,
+			"Kubernetes Kubelet must not disable timeouts (MEDIUM 245541)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
+		&sharedv1r11.Rule245542{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		&sharedv1r11.Rule245543{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			Options:        opts245543,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		&sharedv1r11.Rule245544{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		&sharedv1r11.Rule254800{
+			Client:         runtimeClient,
+			Namespace:      ns,
+			Options:        opts254800,
+			DeploymentName: apiserverDeploymentName,
+			ContainerName:  apiserverContainerName,
+		},
+		rule.NewSkipRule(
+			sharedv1r11.ID254801,
+			"Kubernetes must enable PodSecurity admission controller on static pods and Kubelets (HIGH 254801)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
 	}
 
 	for i, r := range rules {
@@ -176,4 +604,25 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	}
 
 	return r.AddRules(rules...)
+}
+
+func parseV1R11Options[O v1r11.RuleOption](options any) (*O, error) { //nolint:unused
+	optionsByte, err := json.Marshal(options)
+	if err != nil {
+		return nil, err
+	}
+
+	var parsedOptions O
+	if err := json.Unmarshal(optionsByte, &parsedOptions); err != nil {
+		return nil, err
+	}
+
+	return &parsedOptions, nil
+}
+
+func getV1R11OptionOrNil[O v1r11.RuleOption](options any) (*O, error) { //nolint:unused
+	if options == nil {
+		return nil, nil
+	}
+	return parseV1R11Options[O](options)
 }

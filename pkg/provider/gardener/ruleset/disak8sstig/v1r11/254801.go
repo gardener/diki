@@ -42,7 +42,7 @@ func (r *Rule254801) ID() string {
 }
 
 func (r *Rule254801) Name() string {
-	return "Kubernetes must have a Pod Security Admission feature gate set (HIGH 254801)"
+	return "Kubernetes must enable PodSecurity admission controller on static pods and Kubelets (HIGH 254801)"
 }
 
 func (r *Rule254801) Run(ctx context.Context) (rule.RuleResult, error) {

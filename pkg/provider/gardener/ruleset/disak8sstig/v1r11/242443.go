@@ -23,5 +23,5 @@ func (r *Rule242443) Name() string {
 }
 
 func (r *Rule242443) Run(_ context.Context) (rule.RuleResult, error) {
-	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Scanning/patching security vulnerabilities should be enforced organizationally. Security vulnerability scanning should be automated and maintainers should be informed by automatically.`, rule.NewTarget())), nil
+	return rule.SingleCheckResult(r, rule.SkippedCheckResult(`Scanning/patching security vulnerabilities should be enforced organizationally. Security vulnerability scanning should be automated and maintainers should be informed automatically.`, rule.NewTarget())), nil
 }

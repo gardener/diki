@@ -44,7 +44,7 @@ func (r *Rule242414) ID() string {
 }
 
 func (r *Rule242414) Name() string {
-	return "Kubernetes cluster must use non-privileged host ports for user pods (MEDIUM 242414)"
+	return "The Kubernetes cluster must use non-privileged host ports for user pods (MEDIUM 242414)"
 }
 
 func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {

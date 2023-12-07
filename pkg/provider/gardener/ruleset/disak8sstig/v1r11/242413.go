@@ -19,7 +19,7 @@ func (r *Rule242413) ID() string {
 }
 
 func (r *Rule242413) Name() string {
-	return "Kubernetes etcd must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242413)"
+	return "The Kubernetes etcd must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242413)"
 }
 
 func (r *Rule242413) Run(_ context.Context) (rule.RuleResult, error) {

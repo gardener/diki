@@ -25,6 +25,10 @@ issues:
       linters:
         - revive
       text: "exported: exported"
+    - path: 'pkg/provider/virtualgarden/ruleset/disak8sstig/v1r11/'
+      linters:
+        - revive
+      text: "exported: exported"
     - path: 'pkg/shared/ruleset/disak8sstig/v1r11/'
       linters:
         - revive

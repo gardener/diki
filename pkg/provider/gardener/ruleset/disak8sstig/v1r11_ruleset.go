@@ -99,11 +99,11 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
-	opts245543, err := getV1R11OptionOrNil[v1r11.Options245543](ruleOptions[v1r11.ID245543].Args)
+	opts245543, err := getV1R11OptionOrNil[sharedv1r11.Options245543](ruleOptions[v1r11.ID245543].Args)
 	if err != nil {
 		return err
 	}
-	opts254800, err := getV1R11OptionOrNil[v1r11.Options254800](ruleOptions[v1r11.ID254800].Args)
+	opts254800, err := getV1R11OptionOrNil[sharedv1r11.Options254800](ruleOptions[v1r11.ID254800].Args)
 	if err != nil {
 		return err
 	}
@@ -179,9 +179,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			ClusterPodContext:       shootPodContext,
 			ControlPlaneNamespace:   r.shootNamespace,
 		},
-		&v1r11.Rule242400{Logger: r.Logger().With("rule", v1r11.ID242400), Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule242402{Logger: r.Logger().With("rule", v1r11.ID242402), Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule242403{Logger: r.Logger().With("rule", v1r11.ID242402), Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242400{Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242402{Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242403{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242404{
 			Logger:                r.Logger().With("rule", v1r11.ID242404),
 			InstanceID:            r.instanceID,
@@ -194,7 +194,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&v1r11.Rule242406{},
 		&v1r11.Rule242407{},
 		&v1r11.Rule242408{},
-		&v1r11.Rule242409{Logger: r.Logger().With("rule", v1r11.ID242409), Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242409{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242410{},
 		&v1r11.Rule242411{},
 		&v1r11.Rule242412{},
@@ -214,8 +214,8 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Options:               opts242415,
 		},
 		&v1r11.Rule242417{Logger: r.Logger().With("rule", v1r11.ID242417), Client: shootClient},
-		&v1r11.Rule242418{Logger: r.Logger().With("rule", v1r11.ID242418), Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule242419{Logger: r.Logger().With("rule", v1r11.ID242419), Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242418{Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242419{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242420{
 			Logger:                  r.Logger().With("rule", v1r11.ID242420),
 			InstanceID:              r.instanceID,
@@ -225,9 +225,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			ClusterPodContext:       shootPodContext,
 			ControlPlaneNamespace:   r.shootNamespace,
 		},
-		&v1r11.Rule242421{Logger: r.Logger().With("rule", v1r11.ID242421), Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule242422{Logger: r.Logger().With("rule", v1r11.ID242422), Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule242423{Logger: r.Logger().With("rule", v1r11.ID242423), Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242421{Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242422{Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242423{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242424{
 			Logger:                  r.Logger().With("rule", v1r11.ID242424),
 			InstanceID:              r.instanceID,
@@ -246,14 +246,14 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			ClusterPodContext:       shootPodContext,
 			ControlPlaneNamespace:   r.shootNamespace,
 		},
-		&v1r11.Rule242426{Logger: r.Logger().With("rule", v1r11.ID242426), Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule242427{Logger: r.Logger().With("rule", v1r11.ID242427), Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule242428{Logger: r.Logger().With("rule", v1r11.ID242428), Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule242429{Logger: r.Logger().With("rule", v1r11.ID242429), Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule242430{Logger: r.Logger().With("rule", v1r11.ID242430), Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule242431{Logger: r.Logger().With("rule", v1r11.ID242431), Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule242432{Logger: r.Logger().With("rule", v1r11.ID242432), Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule242433{Logger: r.Logger().With("rule", v1r11.ID242433), Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242426{Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242427{Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242428{Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242429{Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242430{Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242431{Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242432{Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242433{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242434{
 			Logger:                  r.Logger().With("rule", v1r11.ID242434),
 			InstanceID:              r.instanceID,
@@ -263,7 +263,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			ClusterPodContext:       shootPodContext,
 			ControlPlaneNamespace:   r.shootNamespace,
 		},
-		&v1r11.Rule242436{Logger: r.Logger().With("rule", v1r11.ID242436), Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242436{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242437{
 			Logger:                r.Logger().With("rule", v1r11.ID242437),
 			ClusterClient:         shootClient,
@@ -272,7 +272,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			ControlPlaneVersion:   semverSeedKubernetesVersion,
 			ControlPlaneNamespace: r.shootNamespace,
 		},
-		&v1r11.Rule242438{Logger: r.Logger().With("rule", v1r11.ID242438), Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242438{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242442{Logger: r.Logger().With("rule", v1r11.ID242442), ClusterClient: shootClient, ControlPlaneClient: seedClient, ControlPlaneNamespace: r.shootNamespace},
 		&v1r11.Rule242443{},
 		&v1r11.Rule242444{},
@@ -291,10 +291,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&v1r11.Rule242457{},
 		&v1r11.Rule242459{},
 		&v1r11.Rule242460{},
-		&v1r11.Rule242461{},
-		&v1r11.Rule242462{Logger: r.Logger().With("rule", v1r11.ID242462), Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule242463{Logger: r.Logger().With("rule", v1r11.ID242463), Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule242464{Logger: r.Logger().With("rule", v1r11.ID242464), Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242461{Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242462{Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242463{Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule242464{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242465{},
 		&v1r11.Rule242466{},
 		&v1r11.Rule242467{},
@@ -307,10 +307,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			ClusterPodContext:       shootPodContext,
 			ControlPlaneNamespace:   r.shootNamespace,
 		},
-		&v1r11.Rule245542{Logger: r.Logger().With("rule", v1r11.ID245542), Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule245543{Logger: r.Logger().With("rule", v1r11.ID245543), Client: seedClient, Namespace: r.shootNamespace, Options: opts245543},
-		&v1r11.Rule245544{Logger: r.Logger().With("rule", v1r11.ID245544), Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule254800{Logger: r.Logger().With("rule", v1r11.ID254800), Client: seedClient, Namespace: r.shootNamespace, Options: opts254800},
+		&sharedv1r11.Rule245542{Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule245543{Client: seedClient, Namespace: r.shootNamespace, Options: opts245543},
+		&sharedv1r11.Rule245544{Client: seedClient, Namespace: r.shootNamespace},
+		&sharedv1r11.Rule254800{Client: seedClient, Namespace: r.shootNamespace, Options: opts254800},
 		&v1r11.Rule254801{
 			Logger:                  r.Logger().With("rule", v1r11.ID254801),
 			InstanceID:              r.instanceID,
