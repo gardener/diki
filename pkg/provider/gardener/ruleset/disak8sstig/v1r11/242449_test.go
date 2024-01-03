@@ -62,13 +62,13 @@ var _ = Describe("#242449", func() {
 			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "shoot", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 644")),
 			}),
-		Entry("should return failed checkResults when file does not comply",
+		Entry("should return failed checkResult when file does not comply",
 			[][]string{{rawKubeletCommand, kubeletConfig, nonCompliantCAFileStats}},
 			[][]error{{nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 700, expectedPermissionsMax: 644")),
 			}),
-		Entry("should return failed checkResults when clientCAFile is not set",
+		Entry("should return failed checkResult when clientCAFile is not set",
 			[][]string{{rawKubeletCommand, notSetClientCAFileConfig}},
 			[][]error{{nil, nil}},
 			[]rule.CheckResult{
