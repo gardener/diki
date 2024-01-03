@@ -30,10 +30,6 @@ var _ = Describe("#242406", func() {
 		ctx                   = context.TODO()
 	)
 
-	BeforeEach(func() {
-		v1r11.Generator = &FakeRandString{CurrentChar: 'a'}
-	})
-
 	DescribeTable("Run cases",
 		func(clusterExecuteReturnString [][]string, clusterExecuteReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(clusterExecuteReturnString, clusterExecuteReturnError)
