@@ -28,10 +28,6 @@ var _ = Describe("#242407", func() {
 		ctx                   = context.TODO()
 	)
 
-	BeforeEach(func() {
-		v1r11.Generator = &FakeRandString{CurrentChar: 'a'}
-	})
-
 	DescribeTable("Run cases",
 		func(clusterExecuteReturnString [][]string, clusterExecuteReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(clusterExecuteReturnString, clusterExecuteReturnError)
@@ -53,7 +49,7 @@ var _ = Describe("#242407", func() {
 			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "shoot", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 644")),
 			}),
-		Entry("should return failed checkResults when file does not comply",
+		Entry("should return failed checkResult when file does not comply",
 			[][]string{{kubeletServicePath, nonCompliantKubeletServiceFileStats}},
 			[][]error{{nil, nil}},
 			[]rule.CheckResult{
