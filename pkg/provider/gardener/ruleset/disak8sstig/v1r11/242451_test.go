@@ -33,10 +33,6 @@ var _ = Describe("#242451", func() {
 		ctx                   = context.TODO()
 	)
 
-	BeforeEach(func() {
-		v1r11.Generator = &FakeRandString{CurrentChar: 'a'}
-	})
-
 	DescribeTable("Run cases",
 		func(clusterExecuteReturnString [][]string, clusterExecuteReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(clusterExecuteReturnString, clusterExecuteReturnError)
@@ -52,7 +48,7 @@ var _ = Describe("#242451", func() {
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 		},
 
-		Entry("should return passed checkResult when file complies",
+		Entry("should return passed checkResults when file complies",
 			[][]string{{compliantPKIAllFilesStats}},
 			[][]error{{nil}},
 			[]rule.CheckResult{
