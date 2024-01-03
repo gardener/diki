@@ -282,7 +282,11 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&v1r11.Rule242448{},
 		&v1r11.Rule242449{},
 		&v1r11.Rule242450{},
-		&v1r11.Rule242451{},
+		&v1r11.Rule242451{
+			Logger:            r.Logger().With("rule", v1r11.ID242451),
+			InstanceID:        r.instanceID,
+			ClusterPodContext: shootPodContext,
+		},
 		&v1r11.Rule242452{},
 		&v1r11.Rule242453{},
 		&v1r11.Rule242454{},
