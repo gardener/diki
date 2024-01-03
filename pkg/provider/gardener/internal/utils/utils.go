@@ -167,18 +167,15 @@ func MatchFileOwnersCases(
 	target rule.Target,
 ) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
-	if len(expectedFileOwnerUsers) > 0 {
-		if !slices.Contains(expectedFileOwnerUsers, fileOwnerUser) {
-			detailedTarget := target.With("details", fmt.Sprintf("fileName: %s, ownerUser: %s, expectedOwnerUsers: %v", fileName, fileOwnerUser, expectedFileOwnerUsers))
-			checkResults = append(checkResults, rule.FailedCheckResult("File has unexpected owner user", detailedTarget))
-		}
+
+	if !slices.Contains(expectedFileOwnerUsers, fileOwnerUser) {
+		detailedTarget := target.With("details", fmt.Sprintf("fileName: %s, ownerUser: %s, expectedOwnerUsers: %v", fileName, fileOwnerUser, expectedFileOwnerUsers))
+		checkResults = append(checkResults, rule.FailedCheckResult("File has unexpected owner user", detailedTarget))
 	}
 
-	if len(expectedFileOwnerGroups) > 0 {
-		if !slices.Contains(expectedFileOwnerGroups, fileOwnerGroup) {
-			detailedTarget := target.With("details", fmt.Sprintf("fileName: %s, ownerGroup: %s, expectedOwnerGroups: %v", fileName, fileOwnerGroup, expectedFileOwnerGroups))
-			checkResults = append(checkResults, rule.FailedCheckResult("File has unexpected owner group", detailedTarget))
-		}
+	if !slices.Contains(expectedFileOwnerGroups, fileOwnerGroup) {
+		detailedTarget := target.With("details", fmt.Sprintf("fileName: %s, ownerGroup: %s, expectedOwnerGroups: %v", fileName, fileOwnerGroup, expectedFileOwnerGroups))
+		checkResults = append(checkResults, rule.FailedCheckResult("File has unexpected owner group", detailedTarget))
 	}
 
 	if len(checkResults) == 0 {

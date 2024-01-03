@@ -441,10 +441,11 @@ var _ = Describe("utils", func() {
 					rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("details", "fileName: /foo/bar/file.txt, ownerUser: 1000, expectedOwnerUsers: [0]")),
 					rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("details", "fileName: /foo/bar/file.txt, ownerGroup: 2000, expectedOwnerGroups: [0 1000]")),
 				}),
-			Entry("should return passed when expected owners are empty",
+			Entry("should return failed when expected owners are empty",
 				"1000", "2000", "/foo/bar/file.txt", []string{}, []string{}, target,
 				[]rule.CheckResult{
-					rule.PassedCheckResult("File has expected owners", rule.NewTarget("details", "fileName: /foo/bar/file.txt, ownerUser: 1000, ownerGroup: 2000")),
+					rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("details", "fileName: /foo/bar/file.txt, ownerUser: 1000, expectedOwnerUsers: []")),
+					rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("details", "fileName: /foo/bar/file.txt, ownerGroup: 2000, expectedOwnerGroups: []")),
 				}),
 		)
 	})
