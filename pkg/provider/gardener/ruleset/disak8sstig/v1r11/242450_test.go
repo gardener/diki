@@ -83,7 +83,7 @@ var _ = Describe("#242450", func() {
 				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("cluster", "shoot", "details", "fileName: /var/lib/kubelet/ca.crt, ownerUser: 1000, expectedOwnerUsers: [0]")),
 				rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("cluster", "shoot", "details", "fileName: /var/lib/kubelet/ca.crt, ownerGroup: 2000, expectedOwnerGroups: [0]")),
 			}),
-		Entry("should return failed checkResults when clientCAFile is not set",
+		Entry("should return failed checkResult when clientCAFile is not set",
 			[][]string{{rawKubeletCommand, notSetClientCAFileConfig}},
 			[][]error{{nil, nil}},
 			[]rule.CheckResult{
