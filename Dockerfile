@@ -16,3 +16,12 @@ WORKDIR /
 COPY --from=builder /workspace/diki .
 
 ENTRYPOINT ["/diki"]
+
+FROM alpine AS diki-pod
+RUN apk --no-cache add curl &&\
+    curl -sLf https://github.com/containerd/nerdctl/releases/download/v1.6.0/nerdctl-1.6.0-linux-amd64.tar.gz -o /nerdctl.tar.gz &&\
+    tar -C /usr/local/bin -xzvf nerdctl.tar.gz &&\
+    rm -f nerdctl.tar.gz &&\
+    mkdir /etc/nerdctl &&\
+    echo address = "\"unix:///host/run/containerd/containerd.sock\"" >> /etc/nerdctl/nerdctl.toml &&\
+    echo namespace = "\"k8s.io\"" >> /etc/nerdctl/nerdctl.toml
