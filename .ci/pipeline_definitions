@@ -20,11 +20,11 @@ diki:
             image: 'eu.gcr.io/gardener-project/gardener/diki'
             dockerfile: 'Dockerfile'
             target: diki
-          diki-pod:
+          diki-ops:
             registry: 'gcr-readwrite'
-            image: 'eu.gcr.io/gardener-project/gardener/diki-pod'
+            image: 'eu.gcr.io/gardener-project/gardener/diki-ops'
             dockerfile: 'Dockerfile'
-            target: diki-pod
+            target: diki-ops
   jobs:
     head-update:
       traits:
@@ -57,5 +57,5 @@ diki:
           dockerimages:
             diki:
               tag_as_latest: true
-            diki-pod:
+            diki-ops:
               tag_as_latest: true
