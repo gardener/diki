@@ -11,7 +11,7 @@ COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -a -ldflags="$(/workspace/hack/get-build-ld-flags.sh)" -o diki cmd/diki/main.go
 
-FROM gcr.io/distroless/static-debian11:nonroot AS diki
+FROM gcr.io/distroless/static-debian12:nonroot AS diki
 WORKDIR /
 COPY --from=builder /workspace/diki .
 
