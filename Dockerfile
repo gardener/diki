@@ -17,7 +17,7 @@ COPY --from=builder /workspace/diki .
 
 ENTRYPOINT ["/diki"]
 
-FROM alpine AS diki-ops
+FROM alpine:3.19.0 AS diki-ops
 RUN apk --no-cache add curl &&\
     curl -sLf https://github.com/containerd/nerdctl/releases/download/v1.6.0/nerdctl-1.6.0-linux-amd64.tar.gz -o /nerdctl.tar.gz &&\
     tar -C /usr/local/bin -xzvf nerdctl.tar.gz &&\
