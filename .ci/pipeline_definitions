@@ -57,8 +57,8 @@ diki:
         publish:
           dockerimages:
             diki:
-              image: europe-docker.pkg.dev/gardener-project/snapshots/gardener/diki
+              image: europe-docker.pkg.dev/gardener-project/releases/gardener/diki
               tag_as_latest: true
             diki-ops:
-              image: europe-docker.pkg.dev/gardener-project/snapshots/gardener/diki-ops
+              image: europe-docker.pkg.dev/gardener-project/releases/gardener/diki-ops
               tag_as_latest: true
