@@ -850,4 +850,152 @@ readOnlyPort: 222
 				&config.KubeletConfig{}, MatchError("command error")),
 		)
 	})
+
+	Describe("#GetPodMountedFileStatResults", func() {
+		const (
+			mounts = `[
+  {
+    "destination": "/destination",
+    "source": "/source"
+  }, 
+  {
+    "destination": "/foo",
+    "source": "/source"
+  },
+  {
+    "destination": "/bar",
+    "source": "/source"
+  }
+]`
+			destinationStats = "600 0 0 /destination/file1.txt\n"
+			fooStats         = "644 0 65532 /foo/file2.txt\n"
+		)
+		var (
+			fakePodExecutor *fakepod.FakePodExecutor
+			ctx             context.Context
+			pod             corev1.Pod
+		)
+		BeforeEach(func() {
+			pod = corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "foo",
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name: "test",
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									MountPath: "/destination",
+								},
+								{
+									Name:      "bar",
+									MountPath: "/bar",
+								},
+							},
+						},
+					},
+					Volumes: []corev1.Volume{
+						{
+							Name: "bar",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/lib/modules",
+								},
+							},
+						},
+					},
+				},
+				Status: corev1.PodStatus{
+					ContainerStatuses: []corev1.ContainerStatus{
+						{
+							Name:        "test",
+							ContainerID: "containerd://bar",
+						},
+					},
+				},
+			}
+
+			ctx = context.TODO()
+		})
+
+		It("Should return correct single stats", func() {
+			executeReturnString := []string{mounts, destinationStats}
+			executeReturnError := []error{nil, nil}
+			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
+			result, err := utils.GetPodMountedFileStatResults(ctx, fakePodExecutor, pod, "")
+
+			Expect(err).To(BeNil())
+			Expect(result).To(Equal("600 0 0 /destination/file1.txt\n"))
+		})
+
+		It("Should return correct multiple stats", func() {
+			pod.Spec.Containers[0].VolumeMounts = append(pod.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
+				MountPath: "/foo",
+			})
+			executeReturnString := []string{mounts, destinationStats, fooStats}
+			executeReturnError := []error{nil, nil, nil}
+			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
+			result, err := utils.GetPodMountedFileStatResults(ctx, fakePodExecutor, pod, "")
+
+			Expect(err).To(BeNil())
+			Expect(result).To(Equal("600 0 0 /destination/file1.txt\n644 0 65532 /foo/file2.txt\n"))
+		})
+
+		It("Should error when there are problems with container", func() {
+			pod.Spec.Containers = []corev1.Container{
+				{
+					Name: "foo",
+				},
+				{
+					Name: "bar",
+				},
+				{
+					Name: "baz",
+				},
+			}
+			pod.Status = corev1.PodStatus{
+				ContainerStatuses: []corev1.ContainerStatus{
+					{
+						Name:        "bar",
+						ContainerID: "",
+					},
+					{
+						Name:        "baz",
+						ContainerID: "fake",
+					},
+				},
+			}
+			executeReturnString := []string{}
+			executeReturnError := []error{}
+			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
+			result, err := utils.GetPodMountedFileStatResults(ctx, fakePodExecutor, pod, "")
+
+			Expect(err).To(MatchError("container with Name foo not (yet) in status\ncontainer with Name bar not (yet) running\ncannot handle container with Name baz"))
+			Expect(result).To(Equal(""))
+		})
+
+		It("Should error when first command errors", func() {
+			executeReturnString := []string{mounts}
+			executeReturnError := []error{errors.New("command error")}
+			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
+			result, err := utils.GetPodMountedFileStatResults(ctx, fakePodExecutor, pod, "")
+
+			Expect(err).To(MatchError("command error"))
+			Expect(result).To(Equal(""))
+		})
+
+		It("Should return stats when a command errors", func() {
+			pod.Spec.Containers[0].VolumeMounts = append(pod.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
+				MountPath: "/foo",
+			})
+			executeReturnString := []string{mounts, destinationStats, fooStats}
+			executeReturnError := []error{nil, errors.New("command error"), nil}
+			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
+			result, err := utils.GetPodMountedFileStatResults(ctx, fakePodExecutor, pod, "")
+
+			Expect(err).To(MatchError("command error"))
+			Expect(result).To(Equal("644 0 65532 /foo/file2.txt\n"))
+		})
+	})
 })
