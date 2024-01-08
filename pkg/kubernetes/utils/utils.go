@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -21,6 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -402,4 +404,131 @@ func RESTConfigFromFile(filePath string) (*rest.Config, error) {
 	}
 
 	return config, nil
+}
+
+// GetPodFMountedFileStatResults returns a string containing the stat results of all mounted files of a pod
+func GetPodMountedFileStatResults(
+	ctx context.Context,
+	podExecutor pod.PodExecutor,
+	pod corev1.Pod,
+	execContainerPath string,
+) (string, error) {
+	stats := ""
+	var err error
+
+	for _, container := range pod.Spec.Containers {
+		containerStatusIdx := slices.IndexFunc(pod.Status.ContainerStatuses, func(containerStatus corev1.ContainerStatus) bool {
+			return containerStatus.Name == container.Name
+		})
+
+		if containerStatusIdx < 0 {
+			err = errors.Join(err, fmt.Errorf("container with Name %s not (yet) in status", container.Name))
+			continue
+		}
+
+		containerID := pod.Status.ContainerStatuses[containerStatusIdx].ContainerID
+		switch {
+		case len(containerID) == 0:
+			err = errors.Join(err, fmt.Errorf("container with Name %s not (yet) running", container.Name))
+		case strings.HasPrefix(containerID, "containerd://"):
+			baseContainerID := strings.Split(containerID, "//")[1]
+			containerStats, err2 := getContainerMountedFileStatResults(ctx,
+				podExecutor,
+				pod,
+				container.Name,
+				baseContainerID,
+				execContainerPath,
+			)
+			if err2 != nil {
+				err = errors.Join(err, err2)
+			}
+			stats = fmt.Sprintf("%s%s", stats, containerStats)
+		default:
+			err = errors.Join(err, fmt.Errorf("cannot handle container with Name %s", container.Name))
+		}
+	}
+	return stats, err
+}
+
+func getContainerMountedFileStatResults(
+	ctx context.Context,
+	podExecutor pod.PodExecutor,
+	pod corev1.Pod,
+	containerName string,
+	containerID string,
+	execContainerPath string,
+) (string, error) {
+	stats := ""
+	var err error
+
+	commandResult, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`%s/usr/local/bin/nerdctl --namespace k8s.io inspect --mode=native %s | jq -r .[0].Spec.mounts`, execContainerPath, containerID))
+	if err != nil {
+		return stats, err
+	}
+
+	mounts := []config.Mount{}
+	err = json.Unmarshal([]byte(commandResult), &mounts)
+	if err != nil {
+		return stats, err
+	}
+	excludedSources := sets.New("/lib/modules", "/usr/share/ca-certificates", "/var/log/journal")
+
+	for _, mount := range mounts {
+		if strings.HasPrefix(mount.Source, "/") &&
+			!matchHostPathSources(excludedSources, mount.Destination, containerName, &pod) &&
+			isMountRequiredByContainer(mount.Destination, containerName, &pod) &&
+			mount.Destination != "/dev/termination-log" {
+			mountStats, err2 := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`find %s -type f -exec stat -Lc "%%a %%u %%g %%n" {} \;`, mount.Source))
+
+			if err2 != nil {
+				err = errors.Join(err, err2)
+				continue
+			}
+
+			stats = fmt.Sprintf("%s%s", stats, mountStats)
+		}
+	}
+	return stats, err
+}
+
+func isMountRequiredByContainer(destination, containerName string, pod *corev1.Pod) bool {
+	for _, container := range pod.Spec.Containers {
+		if container.Name != containerName {
+			continue
+		}
+		if containsDestination := slices.ContainsFunc(container.VolumeMounts, func(volumeMount corev1.VolumeMount) bool {
+			return volumeMount.MountPath == destination
+		}); containsDestination {
+			return true
+		}
+	}
+	return false
+}
+
+func matchHostPathSources(sources sets.Set[string], destination, containerName string, pod *corev1.Pod) bool {
+	for _, container := range pod.Spec.Containers {
+		if container.Name != containerName {
+			continue
+		}
+		volumeMountIdx := slices.IndexFunc(container.VolumeMounts, func(volumeMount corev1.VolumeMount) bool {
+			return volumeMount.MountPath == destination
+		})
+
+		if volumeMountIdx < 0 {
+			return false
+		}
+
+		volumeIdx := slices.IndexFunc(pod.Spec.Volumes, func(volume corev1.Volume) bool {
+			return volume.Name == container.VolumeMounts[volumeMountIdx].Name
+		})
+
+		if volumeIdx < 0 {
+			return false
+		}
+
+		volume := pod.Spec.Volumes[volumeIdx]
+
+		return volume.HostPath != nil && sources.Has(volume.HostPath.Path)
+	}
+	return false
 }
