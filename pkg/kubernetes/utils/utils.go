@@ -406,7 +406,7 @@ func RESTConfigFromFile(filePath string) (*rest.Config, error) {
 	return config, nil
 }
 
-// GetPodFMountedFileStatResults returns a string containing the stat results of all mounted files of a pod
+// GetPodMountedFileStatResults returns a string containing the stat results of all mounted files of a pod
 func GetPodMountedFileStatResults(
 	ctx context.Context,
 	podExecutor pod.PodExecutor,
