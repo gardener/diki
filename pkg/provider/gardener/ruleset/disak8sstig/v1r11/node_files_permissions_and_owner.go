@@ -123,14 +123,15 @@ func (r *RuleNodeFiles) checkWorkerGroup(ctx context.Context, image, workerGroup
 
 	rawKubeletCommand, err := kubeutils.GetKubeletCommand(ctx, nodePodExecutor)
 	if err != nil {
-		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execNodePodTarget)}
+		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execNodePodTarget))
 	}
 
 	var kubeconfigPath string
 	if len(rawKubeletCommand) > 0 {
 		kubeletConfig, err := kubeutils.GetKubeletConfig(ctx, nodePodExecutor, rawKubeletCommand)
 		if err != nil {
-			return append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not retrieve kubelet config: %s", err.Error()), execNodePodTarget))
+			checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not retrieve kubelet config: %s", err.Error()), execNodePodTarget))
+			goto kubeletFileChecks
 		}
 
 		switch {
@@ -154,55 +155,66 @@ func (r *RuleNodeFiles) checkWorkerGroup(ctx context.Context, image, workerGroup
 			kubeletFilePaths = append(kubeletFilePaths, kubeletConfigPath) // rules 242452, 242453
 		}
 
-		if kubeutils.IsFlagSet(rawKubeletCommand, "feature-gates") {
-			return append(checkResults, rule.FailedCheckResult("Use of deprecated kubelet config flag feature-gates", target))
-		}
-
-		if kubeletConfig.FeatureGates == nil {
-			kubeletConfig.FeatureGates = map[string]bool{}
-		}
-
-		if kubeletConfig.ServerTLSBootstrap == nil {
-			return append(checkResults, rule.WarningCheckResult("Option serverTLSBootstrap not set", target))
-		}
-		if _, ok := kubeletConfig.FeatureGates["RotateKubeletServerCertificate"]; !ok {
-			kubeletConfig.FeatureGates["RotateKubeletServerCertificate"] = true
+		var kubeletPKIDir string
+		if kubeutils.IsFlagSet(rawKubeletCommand, "cert-dir") {
+			if kubeletPKIDir, err = r.getKubeletFlagValue(rawKubeletCommand, "cert-dir"); err != nil {
+				checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find kubelet cert-dir: %s", err.Error()), execNodePodTarget))
+			}
+		} else {
+			// set kubeletPKIDir to default value https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/
+			kubeletPKIDir = "/var/lib/kubelet/pki"
 		}
 
 		var pkiAllStatsRaw string
-		if pkiAllStatsRaw, err = nodePodExecutor.Execute(ctx, "/bin/sh", `find /var/lib/kubelet/pki -exec stat -Lc "%a %u %g %n" {} \;`); err != nil { // rule 242451
+		if pkiAllStatsRaw, err = nodePodExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`find %s -exec stat -Lc "%%a %%u %%g %%F %%n" {} \;`, kubeletPKIDir)); err != nil { // rule 242451
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execNodePodTarget))
+			goto kubeletFileChecks
 		} else if len(pkiAllStatsRaw) == 0 {
-			checkResults = append(checkResults, rule.ErroredCheckResult("Stats not found", target.With("details", "filePath: /var/lib/kubelet/pki")))
+			checkResults = append(checkResults, rule.ErroredCheckResult("Stats not found", target.With("details", fmt.Sprintf("filePath: %s", kubeletPKIDir))))
+			goto kubeletFileChecks
 		}
 
-		// https://kubernetes.io/docs/reference/access-authn-authz/kubelet-tls-bootstrapping/#certificate-rotation
-		rotateCertificatesEnabled := *kubeletConfig.ServerTLSBootstrap && kubeletConfig.FeatureGates["RotateKubeletServerCertificate"]
-
 		pkiAllStats := strings.Split(strings.TrimSpace(pkiAllStatsRaw), "\n")
+		privateKeyChecked := false
 		for _, pkiAllStat := range pkiAllStats {
 			pkiAllStatSlice := strings.Split(pkiAllStat, " ")
-			fileName := strings.Join(pkiAllStatSlice[3:], " ")
+			fileType := pkiAllStatSlice[3]
+			var fileName string
+
+			// the file type %F can have " " characters. Ex: "regular file"
+			for i := 4; i < len(pkiAllStatSlice); i++ {
+				if strings.HasPrefix(pkiAllStatSlice[i], kubeletPKIDir) {
+					fileName = strings.Join(pkiAllStatSlice[i:], " ")
+					break
+				}
+				fileType = fmt.Sprintf("%s %s", fileType, pkiAllStatSlice[i])
+			}
+
 			switch {
-			case rotateCertificatesEnabled && strings.HasSuffix(fileName, ".pem"):
+			case strings.HasSuffix(fileName, ".key") || strings.HasSuffix(fileName, ".pem"): // rule 242467
+				privateKeyChecked = true
 				checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(pkiAllStatSlice[0], pkiAllStatSlice[1], pkiAllStatSlice[2], fileName,
 					"600", expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
-			case !rotateCertificatesEnabled && strings.HasSuffix(fileName, ".crt"): // rule 242466
+			case strings.HasSuffix(fileName, ".crt"): // rule 242466
 				checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(pkiAllStatSlice[0], pkiAllStatSlice[1], pkiAllStatSlice[2], fileName,
 					"644", expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
-			case !rotateCertificatesEnabled && strings.HasSuffix(fileName, ".key"): // rule 242467
+			case fileType == "directory": // rule 242451
+				checkResults = append(checkResults, utils.MatchFileOwnersCases(pkiAllStatSlice[1], pkiAllStatSlice[2], fileName,
+					expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
+			default:
 				checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(pkiAllStatSlice[0], pkiAllStatSlice[1], pkiAllStatSlice[2], fileName,
-					"600", expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
-			default: // rule 242451
-				checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(pkiAllStatSlice[0], pkiAllStatSlice[1], pkiAllStatSlice[2], fileName,
-					"755", expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
+					"644", expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
 			}
+		}
+		if !privateKeyChecked {
+			checkResults = append(checkResults, rule.FailedCheckResult("could not find private key files in kubelet cert-dir", target.With("details", fmt.Sprintf("filePath: %s", kubeletPKIDir))))
 		}
 	} else {
 		checkResults = append(checkResults, rule.ErroredCheckResult("could not retrieve kubelet config: kubelet command not retrived", execNodePodTarget),
 			rule.ErroredCheckResult("could not find kubeconfig path: kubelet command not retrived", execNodePodTarget))
 	}
 
+kubeletFileChecks:
 	for _, kubeletFilePath := range kubeletFilePaths {
 		target := target.With("details", fmt.Sprintf("filePath: %s", kubeletFilePath))
 		statsRaw, err := nodePodExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`stat -Lc "%%a %%u %%g %%n" %s`, kubeletFilePath))
