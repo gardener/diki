@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -155,59 +156,82 @@ func (r *RuleNodeFiles) checkWorkerGroup(ctx context.Context, image, workerGroup
 			kubeletFilePaths = append(kubeletFilePaths, kubeletConfigPath) // rules 242452, 242453
 		}
 
-		var kubeletPKIDir string
-		if kubeutils.IsFlagSet(rawKubeletCommand, "cert-dir") {
-			if kubeletPKIDir, err = r.getKubeletFlagValue(rawKubeletCommand, "cert-dir"); err != nil {
-				checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find kubelet cert-dir: %s", err.Error()), execNodePodTarget))
+		if kubeletConfig.TLSPrivateKeyFile != nil && kubeletConfig.TLSCertFile != nil {
+			tlsPrivateKeyFileDir := filepath.Dir(*kubeletConfig.TLSPrivateKeyFile)
+			if len(*kubeletConfig.TLSPrivateKeyFile) == 0 {
+				checkResults = append(checkResults, rule.FailedCheckResult("could not find private key file, option tlsPrivateKeyFile is empty.", target))
+			} else {
+				checkResults = append(checkResults, r.matchSingleFilePermissionsAndOwnersCases(ctx, nodePodExecutor, execNodePodTarget, target, tlsPrivateKeyFileDir,
+					"755", expectedFileOwnerUsers, expectedFileOwnerGroups)...) // rule 242451
+				checkResults = append(checkResults, r.matchSingleFilePermissionsAndOwnersCases(ctx, nodePodExecutor, execNodePodTarget, target, *kubeletConfig.TLSPrivateKeyFile,
+					"600", expectedFileOwnerUsers, expectedFileOwnerGroups)...) // rule 242467
+			}
+
+			if len(*kubeletConfig.TLSCertFile) == 0 {
+				checkResults = append(checkResults, rule.FailedCheckResult("could not find cert file, option tlsCertFile is empty.", target))
+			} else {
+				tlsCertFileDir := filepath.Dir(*kubeletConfig.TLSCertFile)
+				if tlsCertFileDir != tlsPrivateKeyFileDir {
+					checkResults = append(checkResults, r.matchSingleFilePermissionsAndOwnersCases(ctx, nodePodExecutor, execNodePodTarget, target, tlsCertFileDir,
+						"755", expectedFileOwnerUsers, expectedFileOwnerGroups)...) // rule 242451
+				}
+				checkResults = append(checkResults, r.matchSingleFilePermissionsAndOwnersCases(ctx, nodePodExecutor, execNodePodTarget, target, *kubeletConfig.TLSCertFile,
+					"644", expectedFileOwnerUsers, expectedFileOwnerGroups)...) // rule 242466
 			}
 		} else {
 			// set kubeletPKIDir to default value https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/
-			kubeletPKIDir = "/var/lib/kubelet/pki"
-		}
-
-		var pkiAllStatsRaw string
-		if pkiAllStatsRaw, err = nodePodExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`find %s -exec stat -Lc "%%a %%u %%g %%F %%n" {} \;`, kubeletPKIDir)); err != nil { // rule 242451
-			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execNodePodTarget))
-			goto kubeletFileChecks
-		} else if len(pkiAllStatsRaw) == 0 {
-			checkResults = append(checkResults, rule.ErroredCheckResult("Stats not found", target.With("details", fmt.Sprintf("filePath: %s", kubeletPKIDir))))
-			goto kubeletFileChecks
-		}
-
-		pkiAllStats := strings.Split(strings.TrimSpace(pkiAllStatsRaw), "\n")
-		privateKeyChecked := false
-		for _, pkiAllStat := range pkiAllStats {
-			pkiAllStatSlice := strings.Split(pkiAllStat, " ")
-			fileType := pkiAllStatSlice[3]
-			var fileName string
-
-			// the file type %F can have " " characters. Ex: "regular file"
-			for i := 4; i < len(pkiAllStatSlice); i++ {
-				if strings.HasPrefix(pkiAllStatSlice[i], kubeletPKIDir) {
-					fileName = strings.Join(pkiAllStatSlice[i:], " ")
-					break
+			kubeletPKIDir := "/var/lib/kubelet/pki"
+			if kubeutils.IsFlagSet(rawKubeletCommand, "cert-dir") {
+				if kubeletPKIDir, err = r.getKubeletFlagValue(rawKubeletCommand, "cert-dir"); err != nil {
+					checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find kubelet cert-dir: %s", err.Error()), execNodePodTarget))
+					goto kubeletFileChecks
 				}
-				fileType = fmt.Sprintf("%s %s", fileType, pkiAllStatSlice[i])
 			}
 
-			switch {
-			case strings.HasSuffix(fileName, ".key") || strings.HasSuffix(fileName, ".pem"): // rule 242467
-				privateKeyChecked = true
-				checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(pkiAllStatSlice[0], pkiAllStatSlice[1], pkiAllStatSlice[2], fileName,
-					"600", expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
-			case strings.HasSuffix(fileName, ".crt"): // rule 242466
-				checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(pkiAllStatSlice[0], pkiAllStatSlice[1], pkiAllStatSlice[2], fileName,
-					"644", expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
-			case fileType == "directory": // rule 242451
-				checkResults = append(checkResults, utils.MatchFileOwnersCases(pkiAllStatSlice[1], pkiAllStatSlice[2], fileName,
-					expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
-			default:
-				checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(pkiAllStatSlice[0], pkiAllStatSlice[1], pkiAllStatSlice[2], fileName,
-					"644", expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
+			pkiAllStatsRaw, err := nodePodExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`find %s -exec stat -Lc "%%a %%u %%g %%F %%n" {} \;`, kubeletPKIDir)) // rule 242451
+			if err != nil {
+				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execNodePodTarget))
+				goto kubeletFileChecks
+			} else if len(pkiAllStatsRaw) == 0 {
+				checkResults = append(checkResults, rule.ErroredCheckResult("Stats not found", target.With("details", fmt.Sprintf("filePath: %s", kubeletPKIDir))))
+				goto kubeletFileChecks
 			}
-		}
-		if !privateKeyChecked {
-			checkResults = append(checkResults, rule.FailedCheckResult("could not find private key files in kubelet cert-dir", target.With("details", fmt.Sprintf("filePath: %s", kubeletPKIDir))))
+
+			pkiAllStats := strings.Split(strings.TrimSpace(pkiAllStatsRaw), "\n")
+			privateKeyChecked := false
+			for _, pkiAllStat := range pkiAllStats {
+				pkiAllStatSlice := strings.Split(pkiAllStat, " ")
+				fileType := pkiAllStatSlice[3]
+				var fileName string
+
+				// the file type %F can have " " characters. Ex: "regular file"
+				for i := 4; i < len(pkiAllStatSlice); i++ {
+					if strings.HasPrefix(pkiAllStatSlice[i], kubeletPKIDir) {
+						fileName = strings.Join(pkiAllStatSlice[i:], " ")
+						break
+					}
+					fileType = fmt.Sprintf("%s %s", fileType, pkiAllStatSlice[i])
+				}
+
+				switch {
+				case strings.HasSuffix(fileName, ".key") || strings.HasSuffix(fileName, ".pem"): // rule 242467
+					privateKeyChecked = true
+					checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(pkiAllStatSlice[0], pkiAllStatSlice[1], pkiAllStatSlice[2], fileName,
+						"600", expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
+				case strings.HasSuffix(fileName, ".crt"): // rule 242466
+					checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(pkiAllStatSlice[0], pkiAllStatSlice[1], pkiAllStatSlice[2], fileName,
+						"644", expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
+				case fileType == "directory": // rule 242451
+					checkResults = append(checkResults, utils.MatchFileOwnersCases(pkiAllStatSlice[1], pkiAllStatSlice[2], fileName,
+						expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
+				default:
+					checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(pkiAllStatSlice[0], pkiAllStatSlice[1], pkiAllStatSlice[2], fileName,
+						"644", expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
+				}
+			}
+			if !privateKeyChecked {
+				checkResults = append(checkResults, rule.FailedCheckResult("could not find private key files in kubelet cert-dir", target.With("details", fmt.Sprintf("filePath: %s", kubeletPKIDir))))
+			}
 		}
 	} else {
 		checkResults = append(checkResults, rule.ErroredCheckResult("could not retrieve kubelet config: kubelet command not retrived", execNodePodTarget),
@@ -217,27 +241,13 @@ func (r *RuleNodeFiles) checkWorkerGroup(ctx context.Context, image, workerGroup
 kubeletFileChecks:
 	for _, kubeletFilePath := range kubeletFilePaths {
 		target := target.With("details", fmt.Sprintf("filePath: %s", kubeletFilePath))
-		statsRaw, err := nodePodExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`stat -Lc "%%a %%u %%g %%n" %s`, kubeletFilePath))
-		if err != nil {
-			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execNodePodTarget))
-			continue
-		}
-		if len(statsRaw) == 0 {
-			checkResults = append(checkResults, rule.ErroredCheckResult("Stats not found", target))
-			continue
-		}
-		stats := strings.Split(strings.TrimSpace(statsRaw), "\n")
-
 		expectedFilePermissionsMax := "644"
 		if kubeletFilePath == kubeconfigPath {
 			expectedFilePermissionsMax = "600"
 		}
 
-		for _, stat := range stats {
-			statSlice := strings.Split(stat, " ")
-			checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(statSlice[0], statSlice[1], statSlice[2], strings.Join(statSlice[3:], " "),
-				expectedFilePermissionsMax, expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
-		}
+		checkResults = append(checkResults, r.matchSingleFilePermissionsAndOwnersCases(ctx, nodePodExecutor, execNodePodTarget, target, kubeletFilePath,
+			expectedFilePermissionsMax, expectedFileOwnerUsers, expectedFileOwnerGroups)...)
 	}
 	return checkResults
 }
@@ -252,4 +262,29 @@ func (r *RuleNodeFiles) getKubeletFlagValue(rawKubeletCommand, flag string) (str
 		return "", fmt.Errorf("kubelet %s flag has been set more than once", flag)
 	}
 	return valueSlice[0], nil
+}
+
+func (r *RuleNodeFiles) matchSingleFilePermissionsAndOwnersCases(
+	ctx context.Context,
+	nodePodExecutor pod.PodExecutor,
+	execNodePodTarget, fileTarget rule.Target,
+	filePath, expectedFilePermissionsMax string,
+	expectedFileOwnerUsers, expectedFileOwnerGroups []string) []rule.CheckResult {
+	checkResults := []rule.CheckResult{}
+	statsRaw, err := nodePodExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`stat -Lc "%%a %%u %%g %%n" %s`, filePath))
+	if err != nil {
+		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execNodePodTarget))
+		return checkResults
+	}
+	if len(statsRaw) == 0 {
+		checkResults = append(checkResults, rule.ErroredCheckResult("Stats not found", fileTarget))
+		return checkResults
+	}
+	stat := strings.Split(strings.TrimSpace(statsRaw), "\n")[0]
+
+	statSlice := strings.Split(stat, " ")
+	checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(statSlice[0], statSlice[1], statSlice[2], strings.Join(statSlice[3:], " "),
+		expectedFilePermissionsMax, expectedFileOwnerUsers, expectedFileOwnerGroups, fileTarget)...)
+
+	return checkResults
 }
