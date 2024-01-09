@@ -36,6 +36,10 @@ var _ = Describe("#RuleNodeFiles", func() {
 600 0 0 regular file /var/lib/kubelet/pki/key.key
 644 0 0 regular file /var/lib/kubelet/pki/crt.crt
 600 0 0 regular file /var/lib/kubelet/pki/kubelet-server-2023.pem`
+		compliantPrivateKeyFileStats        = `600 0 0 /var/lib/keys/tls.key`
+		compliantPrivateKeyDirStats         = `755 0 0 /var/lib/keys`
+		compliantCertFileStats              = `644 0 0 /var/lib/certs/tls.crt`
+		compliantCertDirStats               = `755 0 0 /var/lib/certs`
 		nonCompliantCAFileStats             = `664 0 0 /var/lib/kubelet/ca.crt`
 		nonCompliantKubeconfigRealFileStats = `644 0 0 /var/lib/kubelet/kubeconfig-real`
 		nonCompliantKubeletFileStats        = `644 1000 0 /var/lib/kubelet/config/kubelet`
@@ -44,9 +48,18 @@ var _ = Describe("#RuleNodeFiles", func() {
 644 0 0 regular file /var/lib/kubelet/pki/key.key
 654 0 0 regular file /var/lib/kubelet/pki/crt.crt
 644 0 0 regular file /var/lib/kubelet/pki/kubelet-server-2023.pem`
-		kubeletConfig = `authentication:
+		nonCompliantPrivateKeyFileStats = `644 0 0 /var/lib/keys/tls.key`
+		nonCompliantPrivateKeyDirStats  = `755 1000 0 /var/lib/keys`
+		nonCompliantCertFileStats       = `654 0 0 /var/lib/certs/tls.crt`
+		nonCompliantCertDirStats        = `755 0 200 /var/lib/certs`
+		kubeletConfig                   = `authentication:
   x509:
     clientCAFile: /var/lib/kubelet/ca.crt`
+		tlsKubeletConfig = `authentication:
+  x509:
+    clientCAFile: /var/lib/kubelet/ca.crt
+tlsPrivateKeyFile: /var/lib/keys/tls.key
+tlsCertFile: /var/lib/certs/tls.crt`
 	)
 
 	var (
@@ -131,8 +144,8 @@ var _ = Describe("#RuleNodeFiles", func() {
 
 		Entry("should return passed checkResults when all files comply",
 			[][]string{{kubeletServicePath, rawKubeletCommand, kubeletConfig, compliantPKIAllFilesStats, compliantCAFileStats, compliantKubeletFileStats, compliantKubeconfigRealFileStats, compliantKubeletServiceFileStats},
-				{kubeletServicePath, rawKubeletCommand, kubeletConfig, compliantPKIAllFilesStats, compliantCAFileStats, compliantKubeletFileStats, compliantKubeconfigRealFileStats, compliantKubeletServiceFileStats}},
-			[][]error{{nil, nil, nil, nil, nil, nil, nil, nil}, {nil, nil, nil, nil, nil, nil, nil, nil}},
+				{kubeletServicePath, rawKubeletCommand, tlsKubeletConfig, compliantPrivateKeyDirStats, compliantPrivateKeyFileStats, compliantCertDirStats, compliantCertFileStats, compliantCAFileStats, compliantKubeletFileStats, compliantKubeconfigRealFileStats, compliantKubeletServiceFileStats}},
+			[][]error{{nil, nil, nil, nil, nil, nil, nil, nil}, {nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "pool1", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/pki, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "pool1", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/pki/key.key, permissions: 600, ownerUser: 0, ownerGroup: 0")),
@@ -142,10 +155,10 @@ var _ = Describe("#RuleNodeFiles", func() {
 				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "pool1", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/config/kubelet, permissions: 644, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "pool1", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/kubeconfig-real, permissions: 600, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "pool1", "kind", "workerGroup", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 644, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/pki, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/pki/key.key, permissions: 600, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/pki/crt.crt, permissions: 644, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/pki/kubelet-server-2023.pem, permissions: 600, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/keys, permissions: 755, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/keys/tls.key, permissions: 600, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/certs, permissions: 755, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/certs/tls.crt, permissions: 644, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 644, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/config/kubelet, permissions: 644, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/kubeconfig-real, permissions: 600, ownerUser: 0, ownerGroup: 0")),
@@ -153,8 +166,8 @@ var _ = Describe("#RuleNodeFiles", func() {
 			}),
 		Entry("should return failed checkResults when no files comply",
 			[][]string{{kubeletServicePath, rawKubeletCommand, kubeletConfig, nonCompliantPKIAllFilesStats, nonCompliantCAFileStats, nonCompliantKubeletFileStats, nonCompliantKubeconfigRealFileStats, nonCompliantKubeletServiceFileStats},
-				{kubeletServicePath, rawKubeletCommand, kubeletConfig, nonCompliantPKIAllFilesStats, nonCompliantCAFileStats, nonCompliantKubeletFileStats, nonCompliantKubeconfigRealFileStats, nonCompliantKubeletServiceFileStats}},
-			[][]error{{nil, nil, nil, nil, nil, nil, nil, nil}, {nil, nil, nil, nil, nil, nil, nil, nil}},
+				{kubeletServicePath, rawKubeletCommand, tlsKubeletConfig, nonCompliantPrivateKeyDirStats, nonCompliantPrivateKeyFileStats, nonCompliantCertDirStats, nonCompliantCertFileStats, nonCompliantCAFileStats, nonCompliantKubeletFileStats, nonCompliantKubeconfigRealFileStats, nonCompliantKubeletServiceFileStats}},
+			[][]error{{nil, nil, nil, nil, nil, nil, nil, nil}, {nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "pool1", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/pki, ownerUser: 0, ownerGroup: 0")),
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "pool1", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/pki/key.key, permissions: 644, expectedPermissionsMax: 600")),
@@ -164,10 +177,10 @@ var _ = Describe("#RuleNodeFiles", func() {
 				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("cluster", "shoot", "name", "pool1", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/config/kubelet, ownerUser: 1000, expectedOwnerUsers: [0]")),
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "pool1", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/kubeconfig-real, permissions: 644, expectedPermissionsMax: 600")),
 				rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("cluster", "shoot", "name", "pool1", "kind", "workerGroup", "details", "fileName: /etc/systemd/system/kubelet.service, ownerGroup: 2000, expectedOwnerGroups: [0 65534]")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/pki, ownerUser: 0, ownerGroup: 0")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/pki/key.key, permissions: 644, expectedPermissionsMax: 600")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/pki/crt.crt, permissions: 654, expectedPermissionsMax: 644")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/pki/kubelet-server-2023.pem, permissions: 644, expectedPermissionsMax: 600")),
+				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/keys, ownerUser: 1000, expectedOwnerUsers: [0]")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/keys/tls.key, permissions: 644, expectedPermissionsMax: 600")),
+				rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/certs, ownerGroup: 200, expectedOwnerGroups: [0 65534]")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/certs/tls.crt, permissions: 654, expectedPermissionsMax: 644")),
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 664, expectedPermissionsMax: 644")),
 				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/config/kubelet, ownerUser: 1000, expectedOwnerUsers: [0]")),
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/kubeconfig-real, permissions: 644, expectedPermissionsMax: 600")),
