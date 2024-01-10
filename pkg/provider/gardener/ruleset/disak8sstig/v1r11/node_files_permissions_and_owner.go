@@ -162,7 +162,7 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "seed", "kind", "workerList"))), nil
 	}
 
-	nodesAllocatablePodsNum := utils.GetNodesAllocatablePodsNum(clusterPods, clusterNodes)
+	nodesAllocatablePodsNum := kubeutils.GetNodesAllocatablePodsNum(clusterPods, clusterNodes)
 	workerGroupNodes := utils.GetSingleAllocatableNodePerWorker(clusterWorkers, clusterNodes, nodesAllocatablePodsNum)
 
 	orderedWorkerGroups := []string{}
