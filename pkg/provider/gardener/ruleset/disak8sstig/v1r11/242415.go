@@ -48,9 +48,10 @@ func (r *Rule242415) Name() string {
 }
 
 func (r *Rule242415) Run(ctx context.Context) (rule.RuleResult, error) {
-	seedPods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, labels.NewSelector(), 300)
 	seedTarget := rule.NewTarget("cluster", "seed")
 	shootTarget := rule.NewTarget("cluster", "shoot")
+
+	seedPods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, labels.NewSelector(), 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
 	}
@@ -63,7 +64,7 @@ func (r *Rule242415) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	shootPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList"))), nil
 	}
 
 	shootNamespaces, err := kubeutils.GetNamespaces(ctx, r.ClusterClient)
