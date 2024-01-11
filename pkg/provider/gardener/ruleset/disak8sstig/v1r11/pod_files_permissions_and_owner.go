@@ -171,8 +171,8 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 }
 
 func (r *RulePodFiles) checkPods(ctx context.Context, clusterTarget rule.Target, image string, c client.Client, podContext pod.PodContext, pods, selectedPods []corev1.Pod, nodes []corev1.Node, mandatoryComponents []*component) []rule.CheckResult {
-	nodesAllocatablePods := utils.GetNodesAllocatablePodsNum(pods, nodes)
-	groupedPods, checkResults := utils.SelectPodOfReferenceGroup(selectedPods, nodesAllocatablePods, clusterTarget)
+	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(pods, nodes)
+	groupedPods, checkResults := kubeutils.SelectPodOfReferenceGroup(selectedPods, nodesAllocatablePods, clusterTarget)
 
 	for nodeName, pods := range groupedPods {
 		checkResultsForNodePods := r.checkNodePods(ctx, clusterTarget, image, nodeName, c, podContext, pods, mandatoryComponents)

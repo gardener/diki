@@ -5,7 +5,6 @@
 package utils
 
 import (
-	"cmp"
 	"context"
 	"fmt"
 	"os"
@@ -246,105 +245,4 @@ func MatchFilePermissionsAndOwnersCases(
 	}
 
 	return checkResults
-}
-
-// GetNodesAllocatablePodsNum return the number of free
-// allocatable spots of pods for all nodes.
-func GetNodesAllocatablePodsNum(pods []corev1.Pod, nodes []corev1.Node) map[string]int {
-	nodesAllocatablePods := map[string]int{}
-
-	for _, node := range nodes {
-		nodesAllocatablePods[node.Name] = int(node.Status.Allocatable.Pods().Value())
-	}
-	for _, pod := range pods {
-		if pod.Spec.NodeName != "" {
-			nodesAllocatablePods[pod.Spec.NodeName]--
-		}
-	}
-
-	return nodesAllocatablePods
-}
-
-// SelectPodOfReferenceGroup returns a single pod per owner reference group
-// as well as groups the returned pods by the nodes they are scheduled on.
-// Pods that do not have an owner reference will always be selected.
-// Pods will not be grouped to nodes, which have reached their allocation limit.
-// It tries to pick the pods in a way that fewer nodes will be selected.
-func SelectPodOfReferenceGroup(pods []corev1.Pod, nodesAllocatablePods map[string]int, target rule.Target) (map[string][]corev1.Pod, []rule.CheckResult) {
-	checkResults := []rule.CheckResult{}
-	groupedPodsByNodes := map[string][]corev1.Pod{}
-	groupedPodsByReferences := map[string][]corev1.Pod{}
-
-	for _, pod := range pods {
-		podTarget := target.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
-
-		if pod.Spec.NodeName != "" {
-			if len(pod.OwnerReferences) == 0 {
-				if nodesAllocatablePods[pod.Spec.NodeName] > 0 {
-					groupedPodsByNodes[pod.Spec.NodeName] = append(groupedPodsByNodes[pod.Spec.NodeName], pod)
-					continue
-				}
-				checkResults = append(checkResults, rule.WarningCheckResult("Pod cannot be tested since it is scheduled on a fully allocated node.", podTarget.With("node", pod.Spec.NodeName)))
-				continue
-			}
-
-			ownerReferenceUID := fmt.Sprintf("%s-%s", pod.OwnerReferences[0].Name, string((pod.OwnerReferences[0].UID)))
-			groupedPodsByReferences[ownerReferenceUID] = append(groupedPodsByReferences[ownerReferenceUID], pod)
-			continue
-		}
-
-		checkResults = append(checkResults, rule.WarningCheckResult("Pod not (yet) scheduled", podTarget))
-	}
-
-	keys := make([]string, 0, len(groupedPodsByReferences))
-	for key := range groupedPodsByReferences {
-		keys = append(keys, key)
-	}
-	// sort reference keys by number of pods to minimize groups
-	slices.SortFunc(keys, func(i, j string) int {
-		return cmp.Compare(len(groupedPodsByReferences[i]), len(groupedPodsByReferences[j]))
-	})
-
-	for _, key := range keys {
-		// we start from the smaller ref group because of fewer options to chose nodes from
-		pods := groupedPodsByReferences[key]
-
-		podOnUsedNodeIdx := slices.IndexFunc(pods, func(pod corev1.Pod) bool {
-			_, ok := groupedPodsByNodes[pod.Spec.NodeName]
-			return ok
-		})
-
-		// if there is a pod of the reference group which is scheduled on a selected node
-		// then add this pod to the "to-be-checked" pods
-		if podOnUsedNodeIdx >= 0 {
-			pod := pods[podOnUsedNodeIdx]
-			groupedPodsByNodes[pod.Spec.NodeName] = append(groupedPodsByNodes[pod.Spec.NodeName], pod)
-			continue
-		}
-
-		// if none of the pods match already selected node then
-		// select the node and add a single pod of the reference group for checking.
-		// the selected node must have allocatable pod space
-		maxAllocatablePods := 0
-		podToUse := corev1.Pod{}
-		for _, pod := range pods {
-			nodeName := pod.Spec.NodeName
-			if nodesAllocatablePods[nodeName] > maxAllocatablePods {
-				maxAllocatablePods = nodesAllocatablePods[nodeName]
-				podToUse = pod
-			}
-		}
-
-		if maxAllocatablePods <= 0 {
-			referenceGroupTarget := target.With("name", pods[0].OwnerReferences[0].Name, "uid", string((pods[0].OwnerReferences[0].UID)), "kind", "referenceGroup")
-			checkResults = append(
-				checkResults,
-				rule.WarningCheckResult("Reference group cannot be tested since all pods of the group are scheduled on a fully allocated node.", referenceGroupTarget),
-			)
-			continue
-		}
-
-		groupedPodsByNodes[podToUse.Spec.NodeName] = []corev1.Pod{podToUse}
-	}
-	return groupedPodsByNodes, checkResults
 }

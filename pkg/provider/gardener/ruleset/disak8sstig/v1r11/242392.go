@@ -66,7 +66,7 @@ func (r *Rule242392) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	checkResults := []rule.CheckResult{}
-	nodesAllocatablePodsNum := utils.GetNodesAllocatablePodsNum(clusterPods, clusterNodes)
+	nodesAllocatablePodsNum := kubeutils.GetNodesAllocatablePodsNum(clusterPods, clusterNodes)
 	workerGroupNodes := utils.GetSingleAllocatableNodePerWorker(clusterWorkers, clusterNodes, nodesAllocatablePodsNum)
 
 	// TODO use maps.Keys when released with go 1.21 or 1.22
