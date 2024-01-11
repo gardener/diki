@@ -7,4 +7,6 @@ package ruleset
 const (
 	// OpsToolbeltImageName is a constant for the name of the github.com/gardener/ops-toolbelt image.
 	OpsToolbeltImageName = "ops-toolbelt"
+	// DikiOpsImageName is a constant for the name of the github.com/gardener/diki diki-ops image.
+	DikiOpsImageName = "diki-ops"
 )

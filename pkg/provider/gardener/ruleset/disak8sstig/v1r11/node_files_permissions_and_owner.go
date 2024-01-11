@@ -47,9 +47,9 @@ func (r *RuleNodeFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 	expectedFileOwnerUsers := []string{"0"}
 	expectedFileOwnerGroups := []string{"0", "65534"}
 
-	image, err := imagevector.ImageVector().FindImage(ruleset.OpsToolbeltImageName)
+	image, err := imagevector.ImageVector().FindImage(ruleset.DikiOpsImageName)
 	if err != nil {
-		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", ruleset.OpsToolbeltImageName, err)
+		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", ruleset.DikiOpsImageName, err)
 	}
 
 	clusterNodes, err := kubeutils.GetNodes(ctx, r.ClusterClient, 512)

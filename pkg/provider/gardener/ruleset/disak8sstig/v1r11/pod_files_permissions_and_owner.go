@@ -80,9 +80,9 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		r.Options.ExpectedFileOwner.Groups = []string{"0"}
 	}
 
-	image, err := imagevector.ImageVector().FindImage(ruleset.OpsToolbeltImageName)
+	image, err := imagevector.ImageVector().FindImage(ruleset.DikiOpsImageName)
 	if err != nil {
-		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", ruleset.OpsToolbeltImageName, err)
+		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", ruleset.DikiOpsImageName, err)
 	}
 
 	seedTarget := rule.NewTarget("cluster", "seed")

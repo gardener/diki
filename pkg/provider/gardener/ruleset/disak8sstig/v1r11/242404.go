@@ -57,9 +57,9 @@ func (r *Rule242404) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "seed", "kind", "workerList"))), nil
 	}
 
-	image, err := imagevector.ImageVector().FindImage(ruleset.OpsToolbeltImageName)
+	image, err := imagevector.ImageVector().FindImage(ruleset.DikiOpsImageName)
 	if err != nil {
-		err = fmt.Errorf("failed to find image version for %s: %w", ruleset.OpsToolbeltImageName, err)
+		err = fmt.Errorf("failed to find image version for %s: %w", ruleset.DikiOpsImageName, err)
 		r.Logger.Error(err.Error())
 		return rule.RuleResult{}, err
 	}
