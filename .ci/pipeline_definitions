@@ -3,12 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 diki:
-  template: 'default'
   base_definition:
-    repo: ~
     traits:
       version:
         preprocess: 'inject-commit-hash'
+      component_descriptor:
+        ocm_repository: europe-docker.pkg.dev/gardener-project/snapshots
       publish:
         oci-builder: docker-buildx
         platforms:
@@ -16,32 +16,33 @@ diki:
         - linux/arm64
         dockerimages:
           diki:
-            registry: 'gcr-readwrite'
-            image: 'eu.gcr.io/gardener-project/gardener/diki'
+            image: 'europe-docker.pkg.dev/gardener-project/snapshots/gardener/diki'
             dockerfile: 'Dockerfile'
             target: diki
           diki-ops:
-            registry: 'gcr-readwrite'
-            image: 'eu.gcr.io/gardener-project/gardener/diki-ops'
+            image: 'europe-docker.pkg.dev/gardener-project/snapshots/gardener/diki-ops'
             dockerfile: 'Dockerfile'
             target: diki-ops
   jobs:
     head-update:
       traits:
-        component_descriptor: ~
+        component_descriptor:
+          ocm_repository_mappings:
+            - repository: europe-docker.pkg.dev/gardener-project/releases
         draft_release: ~
         options:
           public_build_logs: true
     pull-request:
       traits:
         pull-request: ~
-        component_descriptor: ~
         options:
           public_build_logs: true
     release:
       traits:
         version:
           preprocess: 'finalize'
+        component_descriptor:
+          ocm_repository: europe-docker.pkg.dev/gardener-project/releases
         release:
           nextversion: 'bump_minor'
           next_version_callback: '.ci/prepare_release'
@@ -56,6 +57,8 @@ diki:
         publish:
           dockerimages:
             diki:
+              image: europe-docker.pkg.dev/gardener-project/releases/gardener/diki
               tag_as_latest: true
             diki-ops:
+              image: europe-docker.pkg.dev/gardener-project/releases/gardener/diki-ops
               tag_as_latest: true
