@@ -22,21 +22,18 @@ var _ = Describe("utils", func() {
 	Describe("#NewFileStats", func() {
 
 		DescribeTable("#MatchCases",
-			func(stats, pathUsedToFindFile, containerName string, expectedFileStats *utils.FileStats, errorMatcher gomegatypes.GomegaMatcher) {
-				result, err := utils.NewFileStats(stats, pathUsedToFindFile, containerName)
+			func(stats, delimiter string, expectedFileStats utils.FileStats, errorMatcher gomegatypes.GomegaMatcher) {
+				result, err := utils.NewFileStats(stats, delimiter)
 
 				Expect(err).To(errorMatcher)
 				Expect(result).To(Equal(expectedFileStats))
 			},
 			Entry("Should return correct FileStats object",
-				"600 0 1000 regular file /destination/file 1.txt", "/destination", "test",
-				&utils.FileStats{Path: "/destination/file 1.txt", Permissions: "600", UserOwner: "0", GroupOwner: "1000", FileType: "regular file", ContainerName: "test"}, BeNil()),
+				"600\t0\t1000\tregular file\t/destination/file 1.txt", "\t",
+				utils.FileStats{Path: "/destination/file 1.txt", Permissions: "600", UserOwner: "0", GroupOwner: "1000", FileType: "regular file"}, BeNil()),
 			Entry("Should return error when stats are not full",
-				"600 0 1000 /destination/file1.txt", "/destination", "test",
-				&utils.FileStats{}, MatchError("stats: 600 0 1000 /destination/file1.txt, not in correct format: '${permissions} ${userOwner} ${groupOwner} ${fileType} ${filePath}'")),
-			Entry("Should return error when file path is not found",
-				"600 0 1000 regular file /destination/file 1.txt", "/foo", "test",
-				&utils.FileStats{}, MatchError("stats: 600 0 1000 regular file /destination/file 1.txt, not in correct format: '${permissions} ${userOwner} ${groupOwner} ${fileType} ${filePath}'")),
+				"600\t0\t1000\t/destination/file1.txt", "\t",
+				utils.FileStats{}, MatchError("stats: 600\t0\t1000\t/destination/file1.txt, not in correct format: '${permissions}\t${userOwner}\t${groupOwner}\t${fileType}\t${filePath}'")),
 		)
 	})
 	Describe("#GetPodMountedFileStatResults", func() {
@@ -55,32 +52,30 @@ var _ = Describe("utils", func() {
     "source": "/source"
   }
 ]`
-			destinationStats = "600 0 0 regular file /destination/file1.txt\n"
-			fooStats         = "644 0 65532 regular file /foo/file2.txt\n"
+			destinationStats = "600\t0\t0\tregular file\t/destination/file1.txt\n"
+			fooStats         = "644\t0\t65532\tregular file\t/foo/file2.txt\n"
 		)
 		var (
 			fakePodExecutor      *fakepod.FakePodExecutor
-			destinationFileStats *utils.FileStats
-			fooFileStats         *utils.FileStats
+			destinationFileStats utils.FileStats
+			fooFileStats         utils.FileStats
 			ctx                  context.Context
 			pod                  corev1.Pod
 		)
 		BeforeEach(func() {
-			destinationFileStats = &utils.FileStats{
-				Path:          "/destination/file1.txt",
-				Permissions:   "600",
-				UserOwner:     "0",
-				GroupOwner:    "0",
-				FileType:      "regular file",
-				ContainerName: "test",
+			destinationFileStats = utils.FileStats{
+				Path:        "/destination/file1.txt",
+				Permissions: "600",
+				UserOwner:   "0",
+				GroupOwner:  "0",
+				FileType:    "regular file",
 			}
-			fooFileStats = &utils.FileStats{
-				Path:          "/foo/file2.txt",
-				Permissions:   "644",
-				UserOwner:     "0",
-				GroupOwner:    "65532",
-				FileType:      "regular file",
-				ContainerName: "test",
+			fooFileStats = utils.FileStats{
+				Path:        "/foo/file2.txt",
+				Permissions: "644",
+				UserOwner:   "0",
+				GroupOwner:  "65532",
+				FileType:    "regular file",
 			}
 			pod = corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
@@ -132,7 +127,7 @@ var _ = Describe("utils", func() {
 			result, err := utils.GetPodMountedFileStatResults(ctx, fakePodExecutor, pod, "", []string{"/lib/modules"})
 
 			Expect(err).To(BeNil())
-			Expect(result).To(Equal([]utils.FileStats{*destinationFileStats}))
+			Expect(result).To(Equal(map[string][]utils.FileStats{"test": {destinationFileStats}}))
 		})
 
 		It("Should return correct multiple stats", func() {
@@ -145,7 +140,7 @@ var _ = Describe("utils", func() {
 			result, err := utils.GetPodMountedFileStatResults(ctx, fakePodExecutor, pod, "", []string{"/lib/modules"})
 
 			Expect(err).To(BeNil())
-			Expect(result).To(Equal([]utils.FileStats{*destinationFileStats, *fooFileStats}))
+			Expect(result).To(Equal(map[string][]utils.FileStats{"test": {destinationFileStats, fooFileStats}}))
 		})
 
 		It("Should error when there are problems with container", func() {
@@ -178,7 +173,7 @@ var _ = Describe("utils", func() {
 			result, err := utils.GetPodMountedFileStatResults(ctx, fakePodExecutor, pod, "", []string{"/lib/modules"})
 
 			Expect(err).To(MatchError("container with Name foo not (yet) in status\ncontainer with Name bar not (yet) running\ncannot handle container with Name baz"))
-			Expect(result).To(Equal([]utils.FileStats{}))
+			Expect(result).To(Equal(map[string][]utils.FileStats{}))
 		})
 
 		It("Should error when first command errors", func() {
@@ -188,7 +183,7 @@ var _ = Describe("utils", func() {
 			result, err := utils.GetPodMountedFileStatResults(ctx, fakePodExecutor, pod, "", []string{"/lib/modules"})
 
 			Expect(err).To(MatchError("command error"))
-			Expect(result).To(Equal([]utils.FileStats{}))
+			Expect(result).To(Equal(map[string][]utils.FileStats{}))
 		})
 
 		It("Should return stats when a command errors", func() {
@@ -201,7 +196,7 @@ var _ = Describe("utils", func() {
 			result, err := utils.GetPodMountedFileStatResults(ctx, fakePodExecutor, pod, "", []string{"/lib/modules"})
 
 			Expect(err).To(MatchError("command error"))
-			Expect(result).To(Equal([]utils.FileStats{*fooFileStats}))
+			Expect(result).To(Equal(map[string][]utils.FileStats{"test": {fooFileStats}}))
 		})
 	})
 })
