@@ -26,66 +26,47 @@ type FileStats struct {
 	Permissions           string
 	UserOwner, GroupOwner string
 	FileType              string
-	ContainerName         string
 }
 
 // NewFileStats creates a new FileStats object from the result of
 // stat command called with `-c "%a %u %g %F %n"` flag and value
-func NewFileStats(stats, pathUsedToFindFile, containerName string) (*FileStats, error) {
-	statsSlice := strings.Split(stats, " ")
+func NewFileStats(stats, delimiter string) (FileStats, error) {
+	statsSlice := strings.Split(stats, delimiter)
 
-	if len(statsSlice) < 5 {
-		return &FileStats{}, fmt.Errorf("stats: %s, not in correct format: '${permissions} ${userOwner} ${groupOwner} ${fileType} ${filePath}'", stats)
+	if len(statsSlice) != 5 {
+		return FileStats{}, fmt.Errorf("stats: %s, not in correct format: '${permissions}%[2]s${userOwner}%[2]s${groupOwner}%[2]s${fileType}%[2]s${filePath}'", stats, delimiter)
 	}
 
-	fileType := statsSlice[3]
-	var filePath string
-
-	// the file type %F can have " " characters. Ex: "regular file"
-	for i := 4; i < len(statsSlice); i++ {
-		if strings.HasPrefix(statsSlice[i], pathUsedToFindFile) {
-			filePath = strings.Join(statsSlice[i:], " ")
-			break
-		}
-		fileType = fmt.Sprintf("%s %s", fileType, statsSlice[i])
-	}
-
-	if len(filePath) == 0 {
-		return &FileStats{}, fmt.Errorf("stats: %s, not in correct format: '${permissions} ${userOwner} ${groupOwner} ${fileType} ${filePath}'", stats)
-	}
-
-	fileStats := &FileStats{
-		Path:          filePath,
-		Permissions:   statsSlice[0],
-		UserOwner:     statsSlice[1],
-		GroupOwner:    statsSlice[2],
-		FileType:      fileType,
-		ContainerName: containerName,
-	}
-
-	return fileStats, nil
+	return FileStats{
+		Path:        statsSlice[4],
+		Permissions: statsSlice[0],
+		UserOwner:   statsSlice[1],
+		GroupOwner:  statsSlice[2],
+		FileType:    statsSlice[3],
+	}, nil
 }
 
 // Name returns the base name of the file
-func (fs *FileStats) Name() string {
+func (fs FileStats) Name() string {
 	return filepath.Base(fs.Path)
 }
 
 // Dir returns the dir of the file
-func (fs *FileStats) Dir() string {
+func (fs FileStats) Dir() string {
 	return filepath.Dir(fs.Path)
 }
 
 // GetPodMountedFileStatResults returns a string containing the stat results of all
-// mounted files of a podwith the exception of file mounted at `/dev/termination-log`
+// mounted files of a pod with the exception of file mounted at `/dev/termination-log`,
+// host sources to be excluded can also be added. The results are mapped by container name
 func GetPodMountedFileStatResults(
 	ctx context.Context,
 	podExecutor pod.PodExecutor,
 	pod corev1.Pod,
 	execContainerPath string,
 	excludedSources []string,
-) ([]FileStats, error) {
-	stats := []FileStats{}
+) (map[string][]FileStats, error) {
+	stats := map[string][]FileStats{}
 	var err error
 
 	for _, container := range pod.Spec.Containers {
@@ -116,7 +97,9 @@ func GetPodMountedFileStatResults(
 				err = errors.Join(err, err2)
 			}
 
-			stats = append(stats, containerStats...)
+			if len(containerStats) > 0 {
+				stats[container.Name] = containerStats
+			}
 		default:
 			err = errors.Join(err, fmt.Errorf("cannot handle container with Name %s", container.Name))
 		}
@@ -151,7 +134,8 @@ func getContainerMountedFileStatResults(
 			!matchHostPathSources(excludedSourcesSet, mount.Destination, containerName, &pod) &&
 			isMountRequiredByContainer(mount.Destination, containerName, &pod) &&
 			mount.Destination != "/dev/termination-log" {
-			mountStats, err2 := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`find %s -type f -exec stat -Lc "%%a %%u %%g %%F %%n" {} \;`, mount.Source))
+			delimiter := "\t"
+			mountStats, err2 := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`find %s -type f -exec stat -Lc "%%a%[2]s%%u%[2]s%%g%[2]s%%F%[2]s%%n" {} \;`, mount.Source, delimiter))
 
 			if err2 != nil {
 				err = errors.Join(err, err2)
@@ -160,13 +144,13 @@ func getContainerMountedFileStatResults(
 
 			mountStatsSlice := strings.Split(strings.TrimSpace(mountStats), "\n")
 			for _, mountStats := range mountStatsSlice {
-				mountStatsFile, err2 := NewFileStats(mountStats, mount.Source, containerName)
+				mountStatsFile, err2 := NewFileStats(mountStats, delimiter)
 				if err2 != nil {
 					err = errors.Join(err, err2)
 					continue
 				}
 
-				stats = append(stats, *mountStatsFile)
+				stats = append(stats, mountStatsFile)
 			}
 
 		}
