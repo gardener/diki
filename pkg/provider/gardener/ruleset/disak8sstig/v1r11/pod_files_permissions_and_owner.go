@@ -22,6 +22,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/imagevector"
+	dikiutils "github.com/gardener/diki/pkg/internal/utils"
 	"github.com/gardener/diki/pkg/kubernetes/config"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
@@ -39,17 +40,8 @@ type RulePodFiles struct {
 	ControlPlanePodContext pod.PodContext
 	ClusterClient          client.Client
 	ClusterPodContext      pod.PodContext
-	Options                *OptionsPodFiles
+	Options                *dikiutils.OptionsFiles
 	Logger                 *slog.Logger
-}
-
-type OptionsPodFiles struct {
-	ExpectedFileOwner ExpectedFileOwner `yaml:"expectedFileOwner"`
-}
-
-type ExpectedFileOwner struct {
-	Users  []string `yaml:"users"`
-	Groups []string `yaml:"groups"`
 }
 
 type component struct {
@@ -79,7 +71,7 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		{name: "Kube Proxy", label: "role", value: "proxy"}, // rules 242447, 242448
 	}
 	if r.Options == nil {
-		r.Options = &OptionsPodFiles{}
+		r.Options = &dikiutils.OptionsFiles{}
 	}
 	if len(r.Options.ExpectedFileOwner.Users) == 0 {
 		r.Options.ExpectedFileOwner.Users = []string{"0"}

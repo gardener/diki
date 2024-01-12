@@ -17,6 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
+	dikiutils "github.com/gardener/diki/pkg/internal/utils"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
@@ -190,7 +191,7 @@ var _ = Describe("#RulePodFiles", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(etcdMainPodLabelInstance string, controlPlaneExecuteReturnString, clusterExecuteReturnString [][]string, controlPlaneExecuteReturnError, clusterExecuteReturnError [][]error, options *v1r11.OptionsPodFiles, expectedCheckResults []rule.CheckResult) {
+		func(etcdMainPodLabelInstance string, controlPlaneExecuteReturnString, clusterExecuteReturnString [][]string, controlPlaneExecuteReturnError, clusterExecuteReturnError [][]error, options *dikiutils.OptionsFiles, expectedCheckResults []rule.CheckResult) {
 			clusterExecuteReturnString[0] = append(clusterExecuteReturnString[0], emptyMounts)
 			clusterExecuteReturnError[0] = append(clusterExecuteReturnError[0], nil)
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(clusterExecuteReturnString, clusterExecuteReturnError)
@@ -234,8 +235,8 @@ var _ = Describe("#RulePodFiles", func() {
 		Entry("should return correct checkResults when options are used", "",
 			[][]string{{mounts, compliantStats}}, [][]string{{mounts, compliantStats}},
 			[][]error{{nil, nil}}, [][]error{{nil, nil}},
-			&v1r11.OptionsPodFiles{
-				ExpectedFileOwner: v1r11.ExpectedFileOwner{
+			&dikiutils.OptionsFiles{
+				ExpectedFileOwner: dikiutils.ExpectedFileOwner{
 					Users:  []string{"0", "65532"},
 					Groups: []string{"0", "65532"},
 				},
@@ -257,7 +258,7 @@ var _ = Describe("#RulePodFiles", func() {
 			}),
 		Entry("should return correct checkResult when container is etcd", "",
 			[][]string{{mountsWithETCD, compliantStats}}, [][]string{{emptyMounts}},
-			[][]error{{nil, nil}}, [][]error{{nil}}, &v1r11.OptionsPodFiles{},
+			[][]error{{nil, nil}}, [][]error{{nil}}, &dikiutils.OptionsFiles{},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600, ownerUser: 0, ownerGroup: 0")),
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "seed", "name", "1-seed-pod", "namespace", "foo", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 644, expectedPermissionsMax: 600")),
@@ -265,7 +266,7 @@ var _ = Describe("#RulePodFiles", func() {
 			}),
 		Entry("should return errored checkResults when podExecutor errors", "",
 			[][]string{{mounts}}, [][]string{{mounts, compliantStats}},
-			[][]error{{errors.New("foo")}}, [][]error{{nil, errors.New("bar")}}, &v1r11.OptionsPodFiles{},
+			[][]error{{errors.New("foo")}}, [][]error{{nil, errors.New("bar")}}, &dikiutils.OptionsFiles{},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("foo", rule.NewTarget("cluster", "seed", "name", "diki-pod-files-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
 				rule.ErroredCheckResult("bar", rule.NewTarget("cluster", "shoot", "name", "diki-pod-files-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),

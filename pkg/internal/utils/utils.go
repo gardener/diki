@@ -20,6 +20,15 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 )
 
+type OptionsFiles struct {
+	ExpectedFileOwner ExpectedFileOwner `yaml:"expectedFileOwner"`
+}
+
+type ExpectedFileOwner struct {
+	Users  []string `yaml:"users"`
+	Groups []string `yaml:"groups"`
+}
+
 // FileStats contains single file stats
 type FileStats struct {
 	Path                  string

@@ -13,6 +13,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/config"
+	dikiutils "github.com/gardener/diki/pkg/internal/utils"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
@@ -108,7 +109,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
-	optsPodFiles, err := getV1R11OptionOrNil[v1r11.OptionsPodFiles](ruleOptions[v1r11.IDPodFiles].Args)
+	optsPodFiles, err := getV1R11OptionOrNil[dikiutils.OptionsFiles](ruleOptions[v1r11.IDPodFiles].Args)
 	if err != nil {
 		return err
 	}

@@ -5,6 +5,7 @@
 package v1r11
 
 import (
+	dikiutils "github.com/gardener/diki/pkg/internal/utils"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
@@ -105,5 +106,5 @@ const (
 )
 
 type RuleOption interface {
-	Options242414 | Options242415 | sharedv1r11.Options245543 | sharedv1r11.Options254800 | OptionsPodFiles
+	Options242414 | Options242415 | sharedv1r11.Options245543 | sharedv1r11.Options254800 | dikiutils.OptionsFiles
 }
