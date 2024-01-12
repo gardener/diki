@@ -9,13 +9,13 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/google/uuid"
 	"k8s.io/client-go/rest"
 
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
 	sharedruleset "github.com/gardener/diki/pkg/shared/ruleset"
-	"github.com/google/uuid"
 )
 
 const (
