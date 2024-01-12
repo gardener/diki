@@ -124,7 +124,7 @@ var _ = Describe("utils", func() {
 			executeReturnString := []string{mounts, destinationStats}
 			executeReturnError := []error{nil, nil}
 			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
-			result, err := utils.GetPodMountedFileStatResults(ctx, fakePodExecutor, pod, "", []string{"/lib/modules"})
+			result, err := utils.GetMountedFilesStats(ctx, "", fakePodExecutor, pod, []string{"/lib/modules"})
 
 			Expect(err).To(BeNil())
 			Expect(result).To(Equal(map[string][]utils.FileStats{"test": {destinationFileStats}}))
@@ -137,7 +137,7 @@ var _ = Describe("utils", func() {
 			executeReturnString := []string{mounts, destinationStats, fooStats}
 			executeReturnError := []error{nil, nil, nil}
 			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
-			result, err := utils.GetPodMountedFileStatResults(ctx, fakePodExecutor, pod, "", []string{"/lib/modules"})
+			result, err := utils.GetMountedFilesStats(ctx, "", fakePodExecutor, pod, []string{"/lib/modules"})
 
 			Expect(err).To(BeNil())
 			Expect(result).To(Equal(map[string][]utils.FileStats{"test": {destinationFileStats, fooFileStats}}))
@@ -170,7 +170,7 @@ var _ = Describe("utils", func() {
 			executeReturnString := []string{}
 			executeReturnError := []error{}
 			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
-			result, err := utils.GetPodMountedFileStatResults(ctx, fakePodExecutor, pod, "", []string{"/lib/modules"})
+			result, err := utils.GetMountedFilesStats(ctx, "", fakePodExecutor, pod, []string{"/lib/modules"})
 
 			Expect(err).To(MatchError("container with Name foo not (yet) in status\ncontainer with Name bar not (yet) running\ncannot handle container with Name baz"))
 			Expect(result).To(Equal(map[string][]utils.FileStats{}))
@@ -180,7 +180,7 @@ var _ = Describe("utils", func() {
 			executeReturnString := []string{mounts}
 			executeReturnError := []error{errors.New("command error")}
 			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
-			result, err := utils.GetPodMountedFileStatResults(ctx, fakePodExecutor, pod, "", []string{"/lib/modules"})
+			result, err := utils.GetMountedFilesStats(ctx, "", fakePodExecutor, pod, []string{"/lib/modules"})
 
 			Expect(err).To(MatchError("command error"))
 			Expect(result).To(Equal(map[string][]utils.FileStats{}))
@@ -193,7 +193,7 @@ var _ = Describe("utils", func() {
 			executeReturnString := []string{mounts, destinationStats, fooStats}
 			executeReturnError := []error{nil, errors.New("command error"), nil}
 			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
-			result, err := utils.GetPodMountedFileStatResults(ctx, fakePodExecutor, pod, "", []string{"/lib/modules"})
+			result, err := utils.GetMountedFilesStats(ctx, "", fakePodExecutor, pod, []string{"/lib/modules"})
 
 			Expect(err).To(MatchError("command error"))
 			Expect(result).To(Equal(map[string][]utils.FileStats{"test": {fooFileStats}}))

@@ -46,25 +46,25 @@ func NewFileStats(stats, delimiter string) (FileStats, error) {
 	}, nil
 }
 
-// Name returns the base name of the file
-func (fs FileStats) Name() string {
+// Base calls [filepath.Base] on [Path]
+func (fs FileStats) Base() string {
 	return filepath.Base(fs.Path)
 }
 
-// Dir returns the dir of the file
+// Dir calls [filepath.Dir] on [Path]
 func (fs FileStats) Dir() string {
 	return filepath.Dir(fs.Path)
 }
 
-// GetPodMountedFileStatResults returns a string containing the stat results of all
-// mounted files of a pod with the exception of file mounted at `/dev/termination-log`,
-// host sources to be excluded can also be added. The results are mapped by container name
-func GetPodMountedFileStatResults(
+// GetMountedFilesStats returns file stats grouped by container name for all
+// mounted files in a pod with the exception of files mounted at `/dev/termination-log` destination.
+// Host sources can be exluded by setting excludeSources.
+func GetMountedFilesStats(
 	ctx context.Context,
+	podExecutorRootPath string,
 	podExecutor pod.PodExecutor,
 	pod corev1.Pod,
-	execContainerPath string,
-	excludedSources []string,
+	excludeSources []string,
 ) (map[string][]FileStats, error) {
 	stats := map[string][]FileStats{}
 	var err error
@@ -86,12 +86,12 @@ func GetPodMountedFileStatResults(
 		case strings.HasPrefix(containerID, "containerd://"):
 			baseContainerID := strings.Split(containerID, "//")[1]
 			containerStats, err2 := getContainerMountedFileStatResults(ctx,
+				podExecutorRootPath,
 				podExecutor,
 				pod,
 				container.Name,
 				baseContainerID,
-				execContainerPath,
-				excludedSources,
+				excludeSources,
 			)
 			if err2 != nil {
 				err = errors.Join(err, err2)
@@ -109,15 +109,16 @@ func GetPodMountedFileStatResults(
 
 func getContainerMountedFileStatResults(
 	ctx context.Context,
+	podExecutorRootPath string,
 	podExecutor pod.PodExecutor,
 	pod corev1.Pod,
-	containerName, containerID, execContainerPath string,
+	containerName, containerID string,
 	excludedSources []string,
 ) ([]FileStats, error) {
 	stats := []FileStats{}
 	var err error
 
-	commandResult, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`%s/usr/local/bin/nerdctl --namespace k8s.io inspect --mode=native %s | jq -r .[0].Spec.mounts`, execContainerPath, containerID))
+	commandResult, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`%s/usr/local/bin/nerdctl --namespace k8s.io inspect --mode=native %s | jq -r .[0].Spec.mounts`, podExecutorRootPath, containerID))
 	if err != nil {
 		return stats, err
 	}
