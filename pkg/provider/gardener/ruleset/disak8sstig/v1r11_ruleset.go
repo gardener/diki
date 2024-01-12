@@ -109,7 +109,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
-	optsPodFiles, err := getV1R11OptionOrNil[shareddisastig.OptionsFiles](ruleOptions[v1r11.IDPodFiles].Args)
+	optsPodFiles, err := getV1R11OptionOrNil[shareddisastig.FileOptions](ruleOptions[v1r11.IDPodFiles].Args)
 	if err != nil {
 		return err
 	}

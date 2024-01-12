@@ -1,12 +1,16 @@
+// SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package disak8sstig
 
-// OptionsFiles contains files specific stat options
-type OptionsFiles struct {
-	ExpectedFileOwner ExpectedFileOwner `yaml:"expectedFileOwner"`
+// FileOptions contains files specific stat options
+type FileOptions struct {
+	ExpectedFileOwner ExpectedOwner `yaml:"expectedFileOwner"`
 }
 
-// ExpectedFileOwner contains expected user and group owners
-type ExpectedFileOwner struct {
+// ExpectedOwner contains expected user and group owners
+type ExpectedOwner struct {
 	Users  []string `yaml:"users"`
 	Groups []string `yaml:"groups"`
 }

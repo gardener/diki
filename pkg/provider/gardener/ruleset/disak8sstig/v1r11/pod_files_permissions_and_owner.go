@@ -40,7 +40,7 @@ type RulePodFiles struct {
 	ControlPlanePodContext pod.PodContext
 	ClusterClient          client.Client
 	ClusterPodContext      pod.PodContext
-	Options                *shareddisastig.OptionsFiles
+	Options                *shareddisastig.FileOptions
 	Logger                 *slog.Logger
 }
 
@@ -71,7 +71,7 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		{name: "Kube Proxy", label: "role", value: "proxy"}, // rules 242447, 242448
 	}
 	if r.Options == nil {
-		r.Options = &shareddisastig.OptionsFiles{}
+		r.Options = &shareddisastig.FileOptions{}
 	}
 	if len(r.Options.ExpectedFileOwner.Users) == 0 {
 		r.Options.ExpectedFileOwner.Users = []string{"0"}
