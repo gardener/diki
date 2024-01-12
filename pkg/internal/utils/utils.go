@@ -9,8 +9,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -199,4 +201,35 @@ func matchHostPathSources(sources sets.Set[string], destination, containerName s
 		return volume.HostPath != nil && sources.Has(volume.HostPath.Path)
 	}
 	return false
+}
+
+// ExceedFilePermissions returns true if any of the user, group or other permissions
+// exceed their counterparts in what is passed as max permissions.
+//
+// Examples where filePermissions do not exceed filePermissionsMax:
+//
+//	filePermissions = "0003" filePermissionsMax = "0644"
+//	filePermissions = "0444" filePermissionsMax = "0644"
+//	filePermissions = "0600" filePermissionsMax = "0644"
+//	filePermissions = "0644" filePermissionsMax = "0644"
+//
+// Examples where filePermissions exceed filePermissionsMax:
+//
+//	filePermissions = "0005" filePermissionsMax = "0644"
+//	filePermissions = "0050" filePermissionsMax = "0644"
+//	filePermissions = "0700" filePermissionsMax = "0644"
+//	filePermissions = "0755" filePermissionsMax = "0644"
+func ExceedFilePermissions(filePermissions, filePermissionsMax string) (bool, error) {
+	filePermissionsInt, err := strconv.ParseInt(filePermissions, 8, 32)
+	if err != nil {
+		return false, err
+	}
+	filePermissionsMaxInt, err := strconv.ParseInt(filePermissionsMax, 8, 32)
+	if err != nil {
+		return false, err
+	}
+
+	fileModePermission := os.FileMode(filePermissionsInt)
+	fileModePermissionsMax := os.FileMode(filePermissionsMaxInt)
+	return fileModePermission&^fileModePermissionsMax != 0, nil
 }
