@@ -22,13 +22,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/imagevector"
-	dikiutils "github.com/gardener/diki/pkg/internal/utils"
 	"github.com/gardener/diki/pkg/kubernetes/config"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset"
 	"github.com/gardener/diki/pkg/rule"
+	shareddisastig "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig"
 )
 
 var _ rule.Rule = &RulePodFiles{}
@@ -40,7 +40,7 @@ type RulePodFiles struct {
 	ControlPlanePodContext pod.PodContext
 	ClusterClient          client.Client
 	ClusterPodContext      pod.PodContext
-	Options                *dikiutils.OptionsFiles
+	Options                *shareddisastig.OptionsFiles
 	Logger                 *slog.Logger
 }
 
@@ -71,7 +71,7 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		{name: "Kube Proxy", label: "role", value: "proxy"}, // rules 242447, 242448
 	}
 	if r.Options == nil {
-		r.Options = &dikiutils.OptionsFiles{}
+		r.Options = &shareddisastig.OptionsFiles{}
 	}
 	if len(r.Options.ExpectedFileOwner.Users) == 0 {
 		r.Options.ExpectedFileOwner.Users = []string{"0"}
