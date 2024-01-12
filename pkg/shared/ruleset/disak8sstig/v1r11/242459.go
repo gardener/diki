@@ -152,7 +152,7 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 			}
-			expectedFilePermissionsMax := "644"
+			expectedFilePermissionsMax := "600"
 
 			for containerName, fileStats := range mappedFileStats {
 				for _, fileStat := range fileStats {
