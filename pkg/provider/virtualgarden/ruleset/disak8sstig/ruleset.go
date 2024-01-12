@@ -15,6 +15,7 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
 	sharedruleset "github.com/gardener/diki/pkg/shared/ruleset"
+	"github.com/google/uuid"
 )
 
 const (
@@ -30,6 +31,7 @@ type Ruleset struct {
 	rules                       map[string]rule.Rule
 	GardenConfig, RuntimeConfig *rest.Config
 	numWorkers                  int
+	instanceID                  string
 	logger                      *slog.Logger
 }
 
@@ -38,6 +40,7 @@ func New(options ...CreateOption) (*Ruleset, error) {
 	r := &Ruleset{
 		rules:      map[string]rule.Rule{},
 		numWorkers: 5,
+		instanceID: uuid.New().String(),
 	}
 
 	for _, o := range options {
