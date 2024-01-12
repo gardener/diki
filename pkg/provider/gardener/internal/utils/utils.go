@@ -7,15 +7,14 @@ package utils
 import (
 	"context"
 	"fmt"
-	"os"
 	"slices"
-	"strconv"
 
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	dikiutils "github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -125,37 +124,6 @@ func anyNodesForWorkerGroup(workerGroupName string, nodes []corev1.Node) bool {
 	return false
 }
 
-// ExceedFilePermissions returns true if any of the user, group or other permissions
-// exceed their counterparts in what is passed as max permissions.
-//
-// Examples where filePermissions do not exceed filePermissionsMax:
-//
-//	filePermissions = "0003" filePermissionsMax = "0644"
-//	filePermissions = "0444" filePermissionsMax = "0644"
-//	filePermissions = "0600" filePermissionsMax = "0644"
-//	filePermissions = "0644" filePermissionsMax = "0644"
-//
-// Examples where filePermissions exceed filePermissionsMax:
-//
-//	filePermissions = "0005" filePermissionsMax = "0644"
-//	filePermissions = "0050" filePermissionsMax = "0644"
-//	filePermissions = "0700" filePermissionsMax = "0644"
-//	filePermissions = "0755" filePermissionsMax = "0644"
-func ExceedFilePermissions(filePermissions, filePermissionsMax string) (bool, error) {
-	filePermissionsInt, err := strconv.ParseInt(filePermissions, 8, 32)
-	if err != nil {
-		return false, err
-	}
-	filePermissionsMaxInt, err := strconv.ParseInt(filePermissionsMax, 8, 32)
-	if err != nil {
-		return false, err
-	}
-
-	fileModePermission := os.FileMode(filePermissionsInt)
-	fileModePermissionsMax := os.FileMode(filePermissionsMaxInt)
-	return fileModePermission&^fileModePermissionsMax != 0, nil
-}
-
 // MatchFileOwnersCases returns []rule.CheckResult for a given file and its owners for a select expected values.
 func MatchFileOwnersCases(
 	fileOwnerUser,
@@ -198,7 +166,7 @@ func MatchFilePermissionsAndOwnersCases(
 ) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
 	if len(expectedFilePermissionsMax) > 0 {
-		exceedFilePermissions, err := ExceedFilePermissions(filePermissions, expectedFilePermissionsMax)
+		exceedFilePermissions, err := dikiutils.ExceedFilePermissions(filePermissions, expectedFilePermissionsMax)
 		if err != nil {
 			return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), target)}
 		}

@@ -12,7 +12,6 @@ import (
 	kubernetesgardener "github.com/gardener/gardener/pkg/client/kubernetes"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	gomegatypes "github.com/onsi/gomega/types"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -397,25 +396,6 @@ var _ = Describe("utils", func() {
 			}))
 		})
 	})
-
-	DescribeTable("#ExceedFilePermissions",
-		func(filePermissions, filePermissionsMax string, expectedResult bool, errorMatcher gomegatypes.GomegaMatcher) {
-			result, err := utils.ExceedFilePermissions(filePermissions, filePermissionsMax)
-
-			Expect(result).To(Equal(expectedResult))
-			Expect(err).To(errorMatcher)
-		},
-		Entry("should return false when filePermissions do not exceed filePermissionsMax",
-			"0600", "0644", false, BeNil()),
-		Entry("should return false when filePermissions equal filePermissionsMax",
-			"0644", "0644", false, BeNil()),
-		Entry("should return true when filePermissions exceed filePermissionsMax by user permissions",
-			"0700", "0644", true, BeNil()),
-		Entry("should return true when filePermissions exceed filePermissionsMax by group permissions",
-			"0460", "0644", true, BeNil()),
-		Entry("should return true when filePermissions exceed filePermissionsMax by other permissions",
-			"0406", "0644", true, BeNil()),
-	)
 
 	Describe("#MatchFileOwnersCases", func() {
 		var (
