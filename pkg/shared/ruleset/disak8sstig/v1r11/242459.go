@@ -93,7 +93,8 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "nodeList"))), nil
 	}
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
-	groupedPods, checkResults := kubeutils.SelectPodOfReferenceGroup(checkPods, nodesAllocatablePods, target)
+	groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(checkPods, nodesAllocatablePods, target)
+	checkResults = append(checkResults, checks...)
 	image, err := imagevector.ImageVector().FindImage(ruleset.OpsToolbeltImageName)
 	if err != nil {
 		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", ruleset.OpsToolbeltImageName, err)
@@ -103,19 +104,14 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 		podName := fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
 		execPodTarget := target.With("name", podName, "namespace", "kube-system", "kind", "pod")
 
-		var podExecutor pod.PodExecutor
-		var err error
-		additionalLabels := map[string]string{
-			pod.LabelInstanceID: r.InstanceID,
-		}
-
 		defer func() {
 			if err := r.PodContext.Delete(ctx, podName, "kube-system"); err != nil {
 				r.Logger.Error(err.Error())
 			}
 		}()
 
-		podExecutor, err = r.PodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", image.String(), nodeName, additionalLabels))
+		additionalLabels := map[string]string{pod.LabelInstanceID: r.InstanceID}
+		podExecutor, err := r.PodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", image.String(), nodeName, additionalLabels))
 		if err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 			continue
@@ -138,35 +134,34 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 		execContainerPath := fmt.Sprintf("/run/containerd/io.containerd.runtime.v2.task/k8s.io/%s/rootfs", execBaseContainerID)
 
 		for _, pod := range pods {
-			target = target.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
 			excludedSources := []string{"/lib/modules", "/usr/share/ca-certificates", "/var/log/journal"}
 			mappedFileStats, err := dikiutils.GetMountedFilesStats(ctx, execContainerPath, podExecutor, pod, excludedSources)
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
+				continue
 			}
-			expectedFilePermissionsMax := "600"
 
+			expectedFilePermissionsMax := "600"
 			for containerName, fileStats := range mappedFileStats {
 				for _, fileStat := range fileStats {
-					target = target.With("name", pod.Name, "containerName", containerName, "namespace", pod.Namespace, "kind", "pod")
+					containerTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)
 					exceedFilePermissions, err := dikiutils.ExceedFilePermissions(fileStat.Permissions, expectedFilePermissionsMax)
 					if err != nil {
-						checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target))
+						checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), containerTarget))
 						continue
 					}
 
 					if exceedFilePermissions {
-						detailedTarget := target.With("details", fmt.Sprintf("fileName: %s, permissions: %s, expectedPermissionsMax: %s", fileStat.Path, fileStat.Permissions, expectedFilePermissionsMax))
+						detailedTarget := containerTarget.With("details", fmt.Sprintf("fileName: %s, permissions: %s, expectedPermissionsMax: %s", fileStat.Path, fileStat.Permissions, expectedFilePermissionsMax))
 						checkResults = append(checkResults, rule.FailedCheckResult("File has too wide permissions", detailedTarget))
 						continue
 					}
 
-					detailedTarget := target.With("details", fmt.Sprintf("fileName: %s, permissions: %s", fileStat.Path, fileStat.Permissions))
+					detailedTarget := containerTarget.With("details", fmt.Sprintf("fileName: %s, permissions: %s", fileStat.Path, fileStat.Permissions))
 					checkResults = append(checkResults, rule.PassedCheckResult("File has expected permissions", detailedTarget))
 				}
 			}
 		}
-
 	}
 
 	return rule.RuleResult{
