@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// StringGenerator generates a string with specified length
 type StringGenerator interface {
 	Generate(int) string
 }
