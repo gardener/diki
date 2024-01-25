@@ -22,16 +22,3 @@ func TestV1R10(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "DISA Kubernetes STIG V1R10 Test Suite")
 }
-
-func (r *FakeRandString) Generate(n int) string {
-	b := make([]rune, n)
-	for i := 0; i < n; i++ {
-		b[i] = r.CurrentChar
-	}
-	r.CurrentChar++
-	return string(b)
-}
-
-type FakeRandString struct {
-	CurrentChar rune
-}

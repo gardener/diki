@@ -18,6 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
+	fakestrgen "github.com/gardener/diki/pkg/internal/stringgen/fake"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
@@ -74,7 +75,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 	)
 
 	BeforeEach(func() {
-		v1r11.Generator = &FakeRandString{CurrentChar: 'a'}
+		v1r11.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
 		fakeClusterClient = fakeclient.NewClientBuilder().Build()
 		fakeControlPlaneClient = fakeclient.NewClientBuilder().WithScheme(kubernetesgardener.SeedScheme).Build()
 

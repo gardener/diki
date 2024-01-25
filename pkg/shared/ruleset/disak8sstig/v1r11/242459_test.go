@@ -17,6 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
+	fakestrgen "github.com/gardener/diki/pkg/internal/stringgen/fake"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/rule"
@@ -60,7 +61,7 @@ var _ = Describe("#242459", func() {
 	)
 
 	BeforeEach(func() {
-		v1r11.Generator = &FakeRandString{CurrentChar: 'a'}
+		v1r11.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
 		fakeClient = fakeclient.NewClientBuilder().Build()
 
 		Node = &corev1.Node{
