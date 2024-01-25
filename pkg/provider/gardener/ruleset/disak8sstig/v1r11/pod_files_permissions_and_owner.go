@@ -28,6 +28,7 @@ import (
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var _ rule.Rule = &RulePodFiles{}
@@ -39,17 +40,8 @@ type RulePodFiles struct {
 	ControlPlanePodContext pod.PodContext
 	ClusterClient          client.Client
 	ClusterPodContext      pod.PodContext
-	Options                *OptionsPodFiles
+	Options                *option.FileOwnerOptions
 	Logger                 *slog.Logger
-}
-
-type OptionsPodFiles struct {
-	ExpectedFileOwner ExpectedFileOwner `yaml:"expectedFileOwner"`
-}
-
-type ExpectedFileOwner struct {
-	Users  []string `yaml:"users"`
-	Groups []string `yaml:"groups"`
 }
 
 type component struct {
@@ -79,7 +71,7 @@ func (r *RulePodFiles) Run(ctx context.Context) (rule.RuleResult, error) {
 		{name: "Kube Proxy", label: "role", value: "proxy"}, // rules 242447, 242448
 	}
 	if r.Options == nil {
-		r.Options = &OptionsPodFiles{}
+		r.Options = &option.FileOwnerOptions{}
 	}
 	if len(r.Options.ExpectedFileOwner.Users) == 0 {
 		r.Options.ExpectedFileOwner.Users = []string{"0"}

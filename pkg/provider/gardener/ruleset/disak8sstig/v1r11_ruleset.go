@@ -16,6 +16,7 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	option "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
@@ -108,7 +109,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
-	optsPodFiles, err := getV1R11OptionOrNil[v1r11.OptionsPodFiles](ruleOptions[v1r11.IDPodFiles].Args)
+	optsPodFiles, err := getV1R11OptionOrNil[option.FileOwnerOptions](ruleOptions[v1r11.IDPodFiles].Args)
 	if err != nil {
 		return err
 	}
