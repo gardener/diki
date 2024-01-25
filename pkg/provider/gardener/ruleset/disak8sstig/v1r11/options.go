@@ -5,7 +5,7 @@
 package v1r11
 
 import (
-	shareddisastig "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig"
+	option "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
@@ -106,5 +106,5 @@ const (
 )
 
 type RuleOption interface {
-	Options242414 | Options242415 | sharedv1r11.Options245543 | sharedv1r11.Options254800 | shareddisastig.FileOptions
+	Options242414 | Options242415 | sharedv1r11.Options245543 | sharedv1r11.Options254800 | option.FileOwnerOptions
 }
