@@ -14,6 +14,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -142,7 +143,8 @@ var _ = Describe("#242459", func() {
 	It("should fail when etcd pods cannot be found", func() {
 		Expect(fakeClient.Create(ctx, Node)).To(Succeed())
 		Expect(fakeClient.Create(ctx, fooPod)).To(Succeed())
-
+		mainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
+		eventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
 		fakePodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
 		r := &v1r11.Rule242459{
 			Logger:             testLogger,
@@ -150,16 +152,16 @@ var _ = Describe("#242459", func() {
 			Client:             fakeClient,
 			Namespace:          Namespace,
 			PodContext:         fakePodContext,
-			ETCDMainInstance:   "etcd-main",
-			ETCDEventsInstance: "etcd-events",
+			ETCDMainSelector:   mainSelector,
+			ETCDEventsSelector: eventsSelector,
 		}
 
 		ruleResult, err := r.Run(ctx)
-
+		target := rule.NewTarget("namespace", r.Namespace)
 		Expect(err).To(BeNil())
 		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
-			rule.FailedCheckResult("etcd-main pods not found!", rule.NewTarget()),
-			rule.FailedCheckResult("etcd-events pods not found!", rule.NewTarget()),
+			rule.FailedCheckResult("Pods not found!", target.With("selector", mainSelector.String())),
+			rule.FailedCheckResult("Pods not found!", target.With("selector", eventsSelector.String())),
 		}))
 	})
 
@@ -178,8 +180,8 @@ var _ = Describe("#242459", func() {
 				Client:             fakeClient,
 				Namespace:          Namespace,
 				PodContext:         fakePodContext,
-				ETCDMainInstance:   "etcd-main",
-				ETCDEventsInstance: "etcd-events",
+				ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"instance": "etcd-main"}),
+				ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"instance": "etcd-events"}),
 			}
 
 			ruleResult, err := r.Run(ctx)

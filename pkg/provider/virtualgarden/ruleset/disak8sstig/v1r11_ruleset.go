@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 
 	kubernetesgardener "github.com/gardener/gardener/pkg/client/kubernetes"
+	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/config"
@@ -514,8 +515,8 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Client:             runtimeClient,
 			Namespace:          ns,
 			PodContext:         runtimePodContext,
-			ETCDMainInstance:   etcdMain,
-			ETCDEventsInstance: etcdEvents,
+			ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"instance": etcdMain}),
+			ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"instance": etcdEvents}),
 		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242460,

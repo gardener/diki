@@ -13,7 +13,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/imagevector"
@@ -31,8 +30,8 @@ type Rule242459 struct {
 	Client             client.Client
 	Namespace          string
 	PodContext         pod.PodContext
-	ETCDMainInstance   string
-	ETCDEventsInstance string
+	ETCDMainSelector   labels.Selector
+	ETCDEventsSelector labels.Selector
 	Logger             *slog.Logger
 }
 
@@ -46,15 +45,15 @@ func (r *Rule242459) Name() string {
 
 func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults := []rule.CheckResult{}
-	etcdMainInstance := "etcd-main"
-	etcdEventsInstance := "etcd-events"
+	etcdMainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
+	etcdEventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
 
-	if r.ETCDMainInstance != "" {
-		etcdMainInstance = r.ETCDMainInstance
+	if r.ETCDMainSelector != nil {
+		etcdMainSelector = r.ETCDMainSelector
 	}
 
-	if r.ETCDEventsInstance != "" {
-		etcdEventsInstance = r.ETCDEventsInstance
+	if r.ETCDEventsSelector != nil {
+		etcdEventsSelector = r.ETCDEventsSelector
 	}
 
 	target := rule.NewTarget()
@@ -62,18 +61,11 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target.With("namespace", r.Namespace, "kind", "podList"))), nil
 	}
-	checkPodsInstances := []string{etcdMainInstance, etcdEventsInstance}
+	checkPodsSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector}
 	checkPods := []corev1.Pod{}
 
-	for _, checkPodInstance := range checkPodsInstances {
-		instanceReq, err := labels.NewRequirement("instance", selection.Equals, []string{checkPodInstance})
-		if err != nil {
-			return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
-		}
-
-		podSelector := labels.NewSelector().Add(*instanceReq)
+	for _, podSelector := range checkPodsSelectors {
 		pods := []corev1.Pod{}
-
 		for _, p := range allPods {
 			if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
 				pods = append(pods, p)
@@ -81,7 +73,7 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		if len(pods) == 0 {
-			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("%s pods not found!", checkPodInstance), target))
+			checkResults = append(checkResults, rule.FailedCheckResult("Pods not found!", target.With("namespace", r.Namespace, "selector", podSelector.String())))
 			continue
 		}
 
