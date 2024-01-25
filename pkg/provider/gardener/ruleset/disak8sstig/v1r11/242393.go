@@ -14,6 +14,7 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset"
 	"github.com/gardener/diki/pkg/rule"
+	"k8s.io/component-base/version"
 )
 
 var _ rule.Rule = &Rule242393{}
@@ -38,6 +39,12 @@ func (r *Rule242393) Run(ctx context.Context) (rule.RuleResult, error) {
 	image, err := imagevector.ImageVector().FindImage(ruleset.DikiOpsImageName)
 	if err != nil {
 		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", ruleset.DikiOpsImageName, err)
+	}
+
+	// check if tag is not present and use the controller's version if that is the case
+	if image.Tag == nil {
+		tag := version.Get().GitVersion
+		image.Tag = &tag
 	}
 
 	defer func() {

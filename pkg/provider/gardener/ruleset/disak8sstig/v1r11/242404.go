@@ -11,6 +11,7 @@ import (
 	"slices"
 
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/component-base/version"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/imagevector"
@@ -59,9 +60,13 @@ func (r *Rule242404) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	image, err := imagevector.ImageVector().FindImage(ruleset.DikiOpsImageName)
 	if err != nil {
-		err = fmt.Errorf("failed to find image version for %s: %w", ruleset.DikiOpsImageName, err)
-		r.Logger.Error(err.Error())
-		return rule.RuleResult{}, err
+		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", ruleset.DikiOpsImageName, err)
+	}
+
+	// check if tag is not present and use the controller's version if that is the case
+	if image.Tag == nil {
+		tag := version.Get().GitVersion
+		image.Tag = &tag
 	}
 
 	checkResults := []rule.CheckResult{}

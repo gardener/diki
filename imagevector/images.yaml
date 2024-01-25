@@ -10,5 +10,4 @@ images:
   tag: "0.25.0"
 - name: diki-ops
   sourceRepository: github.com/gardener/diki
-  repository: eu.gcr.io/gardener-project/gardener/diki-ops
-  tag: "v0.3.0"
+  repository: europe-docker.pkg.dev/gardener-project/releases/gardener/diki-ops
