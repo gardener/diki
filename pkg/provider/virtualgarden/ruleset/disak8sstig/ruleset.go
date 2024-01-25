@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/google/uuid"
 	"k8s.io/client-go/rest"
 
 	"github.com/gardener/diki/pkg/config"
@@ -30,6 +31,7 @@ type Ruleset struct {
 	rules                       map[string]rule.Rule
 	GardenConfig, RuntimeConfig *rest.Config
 	numWorkers                  int
+	instanceID                  string
 	logger                      *slog.Logger
 }
 
@@ -38,6 +40,7 @@ func New(options ...CreateOption) (*Ruleset, error) {
 	r := &Ruleset{
 		rules:      map[string]rule.Rule{},
 		numWorkers: 5,
+		instanceID: uuid.New().String(),
 	}
 
 	for _, o := range options {

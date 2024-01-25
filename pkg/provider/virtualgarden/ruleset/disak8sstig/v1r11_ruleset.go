@@ -8,9 +8,11 @@ import (
 	"encoding/json"
 
 	kubernetesgardener "github.com/gardener/gardener/pkg/client/kubernetes"
+	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/config"
+	"github.com/gardener/diki/pkg/kubernetes/pod"
 	"github.com/gardener/diki/pkg/provider/virtualgarden/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
@@ -23,6 +25,11 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	}
 
 	_, err = client.New(r.GardenConfig, client.Options{Scheme: kubernetesgardener.GardenScheme})
+	if err != nil {
+		return err
+	}
+
+	runtimePodContext, err := pod.NewSimplePodContext(runtimeClient, r.RuntimeConfig)
 	if err != nil {
 		return err
 	}
@@ -502,12 +509,15 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"Duplicate of 242453. "+noKubeletsMsg,
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242459,
-			"The Kubernetes etcd must have file permissions set to 644 or more restrictive (MEDIUM 242459)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242459{
+			Logger:             r.Logger().With("rule", sharedv1r11.ID242459),
+			InstanceID:         r.instanceID,
+			Client:             runtimeClient,
+			Namespace:          ns,
+			PodContext:         runtimePodContext,
+			ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"instance": etcdMain}),
+			ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"instance": etcdEvents}),
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242460,
 			"The Kubernetes admin kubeconfig must have file permissions set to 644 or more restrictive (MEDIUM 242460)",
