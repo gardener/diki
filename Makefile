@@ -2,10 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-REPO_ROOT         := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-HACK_DIR          := $(REPO_ROOT)/hack
-VERSION           := $(shell cat "$(REPO_ROOT)/VERSION")
-EFFECTIVE_VERSION := $(VERSION)-$(shell git rev-parse HEAD)
+ENSURE_GARDENER_MOD := $(shell go get github.com/gardener/gardener@$$(go list -m -f "{{.Version}}" github.com/gardener/gardener))
+GARDENER_HACK_DIR   := $(shell go list -m -f "{{.Dir}}" github.com/gardener/gardener)/hack
+REPO_ROOT           := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+HACK_DIR            := $(REPO_ROOT)/hack
+VERSION             := $(shell cat "$(REPO_ROOT)/VERSION")
+EFFECTIVE_VERSION   := $(VERSION)-$(shell git rev-parse HEAD)
 
 # TODO: remove this once g/g updates to this or newer version
 GOIMPORTSREVISER_VERSION = v3.4.0
@@ -14,7 +16,7 @@ GOIMPORTSREVISER_VERSION = v3.4.0
 LD_FLAGS := "-w $(shell EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) bash $(HACK_DIR)/get-build-ld-flags.sh)"
 
 TOOLS_DIR := $(REPO_ROOT)/hack/tools
-include $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/tools.mk
+include $(GARDENER_HACK_DIR)/tools.mk
 
 # additional tools
 include hack/tools.mk
@@ -40,7 +42,7 @@ run:
 
 .PHONY: format
 format: $(GOIMPORTS) $(GOIMPORTSREVISER)
-	@$(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/format.sh ./cmd ./pkg ./imagevector
+	@bash $(GARDENER_HACK_DIR)/format.sh ./cmd ./pkg ./imagevector
 
 .PHONY: test
 test:
@@ -48,19 +50,17 @@ test:
 
 .PHONY: clean
 clean:
-	@$(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/clean.sh ./cmd/... ./pkg/...
+	@bash $(GARDENER_HACK_DIR)/clean.sh ./cmd/... ./pkg/...
 
 .PHONY: check
 check: $(GOIMPORTS) $(GOLANGCI_LINT)
 	go vet ./...
-	@$(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/check.sh --golangci-lint-config=./.golangci.yaml ./cmd/... ./pkg/...
+	@REPO_ROOT=$(REPO_ROOT) bash $(GARDENER_HACK_DIR)/check.sh --golangci-lint-config=./.golangci.yaml ./cmd/... ./pkg/...
 
-.PHONY: revendor
-revendor:
+.PHONY: tidy
+tidy:
 	@GO111MODULE=on go mod tidy
-	@GO111MODULE=on go mod vendor
-	@chmod +x $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/*
-	@chmod +x $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/.ci/*
+	@mkdir -p $(REPO_ROOT)/.ci/hack && cp $(GARDENER_HACK_DIR)/.ci/* $(REPO_ROOT)/.ci/hack/ && chmod +xw $(REPO_ROOT)/.ci/hack/*
 
 .PHONY: gen-styles
 gen-styles: $(TAILWINDCSS)
@@ -73,15 +73,15 @@ generate:
 
 .PHONY: check-generate
 check-generate:
-	@$(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/check-generate.sh $(REPO_ROOT)
+	@bash $(GARDENER_HACK_DIR)/check-generate.sh $(REPO_ROOT)
 
 .PHONY: test-cov
 test-cov:
-	@$(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/test-cover.sh ./cmd/... ./pkg/...
+	@bash $(GARDENER_HACK_DIR)/test-cover.sh ./cmd/... ./pkg/...
 
 .PHONY: test-clean
 test-clean:
-	@$(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/test-cover-clean.sh
+	@bash $(GARDENER_HACK_DIR)/test-cover-clean.sh
 
 .PHONY: verify
 verify: format check test
