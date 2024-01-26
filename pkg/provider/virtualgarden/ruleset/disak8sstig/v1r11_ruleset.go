@@ -108,6 +108,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Namespace:      ns,
 			DeploymentName: apiserverDeploymentName,
 			ContainerName:  apiserverContainerName,
+			AllowedModes:   []string{"RBAC"},
 		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242383,
