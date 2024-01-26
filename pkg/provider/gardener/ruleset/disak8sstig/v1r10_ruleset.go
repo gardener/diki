@@ -7,7 +7,7 @@ package disak8sstig
 import (
 	"encoding/json"
 
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 	kubernetesgardener "github.com/gardener/gardener/pkg/client/kubernetes"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -316,7 +316,6 @@ func (r *Ruleset) registerV1R10Rules(ruleOptions map[string]config.RuleOptionsCo
 			Logger:                  r.Logger().With("rule", v1r10.ID254801),
 			InstanceID:              r.instanceID,
 			ClusterClient:           shootClient,
-			ClusterVersion:          semverShootKubernetesVersion,
 			ClusterCoreV1RESTClient: shootClientSet.CoreV1().RESTClient(),
 			ControlPlaneClient:      seedClient,
 			ClusterPodContext:       shootPodContext,

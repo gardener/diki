@@ -7,7 +7,7 @@ package v1r10_test
 import (
 	"context"
 
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
