@@ -5,4 +5,4 @@
 # SPDX-License-Identifier: Apache-2.0
 
 COMPONENT_PREFIXES="eu.gcr.io/gardener-project/gardener/ops-toolbelt" \
-    "$(dirname $0)"/../vendor/github.com/gardener/gardener/hack/.ci/component_descriptor "$(dirname $0)"/..
+    "$(dirname $0)"/hack/component_descriptor "$(dirname $0)"/..
