@@ -10,11 +10,12 @@ import (
 	"log/slog"
 	"strings"
 
+	"k8s.io/component-base/version"
+
 	"github.com/gardener/diki/imagevector"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset"
 	"github.com/gardener/diki/pkg/rule"
-	"k8s.io/component-base/version"
 )
 
 var _ rule.Rule = &Rule242393{}
