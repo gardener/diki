@@ -2,14 +2,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-NAME              := diki
-NAME_OPS          := diki-ops
-REGISTRY          := europe-docker.pkg.dev/gardener-project/releases/gardener
 REPO_ROOT         := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 HACK_DIR          := $(REPO_ROOT)/hack
 VERSION           := $(shell cat "$(REPO_ROOT)/VERSION")
 EFFECTIVE_VERSION := $(VERSION)-$(shell git rev-parse HEAD)
-GOARCH            ?= $(shell go env GOARCH)
 
 # TODO: remove this once g/g updates to this or newer version
 GOIMPORTSREVISER_VERSION = v3.4.0
@@ -32,11 +28,6 @@ run:
 	--provider=gardener \
 	--ruleset-id=disa-kubernetes-stig \
 	--ruleset-version=v1r11
-
-.PHONY: docker-images
-docker-images:
-	@docker build --build-arg EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) --build-arg TARGETARCH=$(GOARCH) -t $(REGISTRY)/$(NAME):$(EFFECTIVE_VERSION) -t $(REGISTRY)/$(NAME):latest -f Dockerfile -m 6g --target $(NAME) .
-	@docker build --build-arg EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) --build-arg TARGETARCH=$(GOARCH) -t $(REGISTRY)/$(NAME_OPS):$(EFFECTIVE_VERSION) -t $(REGISTRY)/$(NAME_OPS):latest -f Dockerfile -m 6g --target $(NAME_OPS) .
 
 .PHONY: format
 format: $(GOIMPORTS) $(GOIMPORTSREVISER)
