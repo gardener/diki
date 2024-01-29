@@ -66,7 +66,7 @@ func (r *Rule242420) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", ruleset.DikiOpsImageName, err)
 	}
 
-	// check if tag is not present and use the controller's version if that is the case
+	// check if tag is not present and use diki's version as a default
 	if image.Tag == nil {
 		tag := version.Get().GitVersion
 		image.Tag = &tag
