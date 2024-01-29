@@ -15,6 +15,7 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	"github.com/gardener/diki/pkg/provider/virtualgarden/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	option "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
@@ -34,6 +35,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
+	opts242446, err := getV1R11OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedv1r11.ID242446].Args)
+	if err != nil {
+		return err
+	}
 	opts245543, err := getV1R11OptionOrNil[sharedv1r11.Options245543](ruleOptions[sharedv1r11.ID245543].Args)
 	if err != nil {
 		return err
@@ -437,12 +442,14 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"Gardener does not deploy any control plane component as systemd processes or static pod.",
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242446,
-			"The Kubernetes conf files must be owned by root (MEDIUM 242446)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242446{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242446),
+			InstanceID: r.instanceID,
+			Client:     runtimeClient,
+			Namespace:  ns,
+			PodContext: runtimePodContext,
+			Options:    opts242446,
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242447,
 			"The Kubernetes Kube Proxy kubeconfig must have file permissions set to 644 or more restrictive (MEDIUM 242447)",
