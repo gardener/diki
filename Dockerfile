@@ -17,7 +17,7 @@ COPY --from=builder /workspace/diki .
 
 ENTRYPOINT ["/diki"]
 
-FROM alpine:3.19.0 AS diki-ops
+FROM alpine:3.19.1 AS diki-ops
 
 ARG TARGETARCH
 
