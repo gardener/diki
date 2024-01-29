@@ -19,15 +19,24 @@ include $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/tools.mk
 # additional tools
 include hack/tools.mk
 
+# make run runs diki with flags specified by environment variables:
+# CONFIG - required - specifies the path to diki config file
+# RULE_ID - optional - if set diki executes only the specified rule
+# PROVIDER - optional - selects provider, defaults to "gardener"
+# RULESET_ID - optional - selects ruleset, defaults to "disa-kubernetes-stig"
+# RULESET_VERSION - optional - selects ruleset version, defaults to "v1r11"
+PROVIDER        ?= gardener
+RULESET_ID      ?= disa-kubernetes-stig
+RULESET_VERSION ?= v1r11
 .PHONY: run
 run:
 	go run -ldflags $(LD_FLAGS) \
 	./cmd/diki run \
 	--config=$(CONFIG) \
 	--rule-id=$(RULE_ID) \
-	--provider=gardener \
-	--ruleset-id=disa-kubernetes-stig \
-	--ruleset-version=v1r11
+	--provider=${PROVIDER} \
+	--ruleset-id=${RULESET_ID} \
+	--ruleset-version=${RULESET_VERSION}
 
 .PHONY: format
 format: $(GOIMPORTS) $(GOIMPORTSREVISER)
