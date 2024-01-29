@@ -20,6 +20,7 @@ import (
 
 	"github.com/gardener/diki/pkg/kubernetes/config"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
+	"github.com/gardener/diki/pkg/rule"
 )
 
 // FileStats contains single file stats
@@ -232,4 +233,31 @@ func ExceedFilePermissions(filePermissions, filePermissionsMax string) (bool, er
 	fileModePermission := os.FileMode(filePermissionsInt)
 	fileModePermissionsMax := os.FileMode(filePermissionsMaxInt)
 	return fileModePermission&^fileModePermissionsMax != 0, nil
+}
+
+// MatchFileOwnersCases returns []rule.CheckResult for a given file and its owners for a select expected values.
+func MatchFileOwnersCases(
+	fileStats FileStats,
+	expectedFileOwnerUsers,
+	expectedFileOwnerGroups []string,
+	target rule.Target,
+) []rule.CheckResult {
+	checkResults := []rule.CheckResult{}
+
+	if !slices.Contains(expectedFileOwnerUsers, fileStats.UserOwner) {
+		detailedTarget := target.With("details", fmt.Sprintf("fileName: %s, ownerUser: %s, expectedOwnerUsers: %v", fileStats.Path, fileStats.UserOwner, expectedFileOwnerUsers))
+		checkResults = append(checkResults, rule.FailedCheckResult("File has unexpected owner user", detailedTarget))
+	}
+
+	if !slices.Contains(expectedFileOwnerGroups, fileStats.GroupOwner) {
+		detailedTarget := target.With("details", fmt.Sprintf("fileName: %s, ownerGroup: %s, expectedOwnerGroups: %v", fileStats.Path, fileStats.GroupOwner, expectedFileOwnerGroups))
+		checkResults = append(checkResults, rule.FailedCheckResult("File has unexpected owner group", detailedTarget))
+	}
+
+	if len(checkResults) == 0 {
+		detailedTarget := target.With("details", fmt.Sprintf("fileName: %s, ownerUser: %s, ownerGroup: %s", fileStats.Path, fileStats.UserOwner, fileStats.GroupOwner))
+		checkResults = append(checkResults, rule.PassedCheckResult("File has expected owners", detailedTarget))
+	}
+
+	return checkResults
 }
