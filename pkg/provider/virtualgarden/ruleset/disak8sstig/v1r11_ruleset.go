@@ -560,12 +560,15 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"",
 			rule.NotImplemented,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242467,
-			"The Kubernetes PKI keys must have file permissions set to 600 or more restrictive (MEDIUM 242467)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242467{
+			Logger:             r.Logger().With("rule", sharedv1r11.ID242467),
+			InstanceID:         r.instanceID,
+			Client:             runtimeClient,
+			Namespace:          ns,
+			PodContext:         runtimePodContext,
+			ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"instance": etcdMain}),
+			ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"instance": etcdEvents}),
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID245541,
 			"Kubernetes Kubelet must not disable timeouts (MEDIUM 245541)",
