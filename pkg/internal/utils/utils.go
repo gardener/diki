@@ -145,6 +145,11 @@ func getContainerMountedFileStatResults(
 				continue
 			}
 
+			if len(mountStats) == 0 {
+				err = errors.Join(err, fmt.Errorf("could not find file with path %s", mount.Source))
+				continue
+			}
+
 			mountStatsSlice := strings.Split(strings.TrimSpace(mountStats), "\n")
 			for _, mountStats := range mountStatsSlice {
 				mountStatsFile, err2 := NewFileStats(mountStats, delimiter)

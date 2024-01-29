@@ -143,6 +143,19 @@ var _ = Describe("utils", func() {
 			Expect(result).To(Equal(map[string][]utils.FileStats{"test": {destinationFileStats, fooFileStats}}))
 		})
 
+		It("Should return error when file could not be found", func() {
+			pod.Spec.Containers[0].VolumeMounts = append(pod.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
+				MountPath: "/foo",
+			})
+			executeReturnString := []string{mounts, destinationStats, ""}
+			executeReturnError := []error{nil, nil, nil}
+			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
+			result, err := utils.GetMountedFilesStats(ctx, "", fakePodExecutor, pod, []string{"/lib/modules"})
+
+			Expect(err).To(MatchError("could not find file with path /foo"))
+			Expect(result).To(Equal(map[string][]utils.FileStats{"test": {destinationFileStats}}))
+		})
+
 		It("Should error when there are problems with container", func() {
 			pod.Spec.Containers = []corev1.Container{
 				{
