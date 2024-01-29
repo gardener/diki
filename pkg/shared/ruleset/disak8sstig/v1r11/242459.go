@@ -138,7 +138,6 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 			mappedFileStats, err := dikiutils.GetMountedFilesStats(ctx, execContainerPath, podExecutor, pod, excludedSources)
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
-				continue
 			}
 
 			expectedFilePermissionsMax := "600"
