@@ -21,8 +21,8 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
-	"github.com/gardener/diki/pkg/provider/gardener/ruleset"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/images"
 )
 
 var _ rule.Rule = &Rule242399{}
@@ -70,9 +70,9 @@ func (r *Rule242399) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "seed", "kind", "workerList"))), nil
 	}
 
-	image, err := imagevector.ImageVector().FindImage(ruleset.DikiOpsImageName)
+	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
 	if err != nil {
-		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", ruleset.DikiOpsImageName, err)
+		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
 	}
 
 	// check if tag is not present and use diki's version as a default
