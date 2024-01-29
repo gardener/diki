@@ -158,6 +158,8 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 			}
 
+			// 640 are the minimal possible permissions for key files given that Control plane components
+			// run as 65532 user/group and mounted files are with owner user root and group 65532
 			expectedFilePermissionsMax := "640"
 			for containerName, fileStats := range mappedFileStats {
 				for _, fileStat := range fileStats {
