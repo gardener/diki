@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"sort"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -26,16 +27,16 @@ import (
 var _ rule.Rule = &Rule242467{}
 
 type Rule242467 struct {
-	InstanceID                    string
-	Client                        client.Client
-	Namespace                     string
-	PodContext                    pod.PodContext
-	ETCDMainSelector              labels.Selector
-	ETCDEventsSelector            labels.Selector
-	KubeAPIServerSelector         labels.Selector
-	KubeControllerManagerSelector labels.Selector
-	KubeSchedulerSelector         labels.Selector
-	Logger                        *slog.Logger
+	InstanceID                   string
+	Client                       client.Client
+	Namespace                    string
+	PodContext                   pod.PodContext
+	ETCDMainSelector             labels.Selector
+	ETCDEventsSelector           labels.Selector
+	KubeAPIServerDepName         string
+	KubeControllerManagerDepName string
+	KubeSchedulerDepName         *string
+	Logger                       *slog.Logger
 }
 
 func (r *Rule242467) ID() string {
@@ -50,9 +51,9 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults := []rule.CheckResult{}
 	etcdMainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
 	etcdEventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
-	kubeAPIServerSelector := labels.SelectorFromSet(labels.Set{"role": "apiserver"})
-	kubeControllerManagerSelector := labels.SelectorFromSet(labels.Set{"role": "controller-manager"})
-	kubeSchedulerSelector := labels.SelectorFromSet(labels.Set{"role": "scheduler"})
+	kubeAPIServerDepName := "kube-apiserver"
+	kubeControllerManagerDepName := "kube-controller-manager"
+	kubeSchedulerDepName := "kube-scheduler"
 
 	if r.ETCDMainSelector != nil {
 		etcdMainSelector = r.ETCDMainSelector
@@ -62,16 +63,16 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 		etcdEventsSelector = r.ETCDEventsSelector
 	}
 
-	if r.KubeAPIServerSelector != nil {
-		kubeAPIServerSelector = r.KubeAPIServerSelector
+	if r.KubeAPIServerDepName != "" {
+		kubeAPIServerDepName = r.KubeAPIServerDepName
 	}
 
-	if r.KubeControllerManagerSelector != nil {
-		kubeControllerManagerSelector = r.KubeControllerManagerSelector
+	if r.KubeControllerManagerDepName != "" {
+		kubeControllerManagerDepName = r.KubeControllerManagerDepName
 	}
 
-	if r.KubeSchedulerSelector != nil {
-		kubeSchedulerSelector = r.KubeSchedulerSelector
+	if r.KubeSchedulerDepName != nil {
+		kubeSchedulerDepName = *r.KubeSchedulerDepName
 	}
 
 	target := rule.NewTarget()
@@ -79,7 +80,11 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target.With("namespace", r.Namespace, "kind", "podList"))), nil
 	}
-	checkPodsSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector, kubeAPIServerSelector, kubeControllerManagerSelector, kubeSchedulerSelector}
+	checkPodsSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector}
+	checkPodsDepNames := []string{kubeAPIServerDepName, kubeControllerManagerDepName}
+	if kubeSchedulerDepName != "" {
+		checkPodsDepNames = append(checkPodsDepNames, kubeSchedulerDepName)
+	}
 	checkPods := []corev1.Pod{}
 
 	for _, podSelector := range checkPodsSelectors {
@@ -92,6 +97,21 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 
 		if len(pods) == 0 {
 			checkResults = append(checkResults, rule.FailedCheckResult("Pods not found!", target.With("namespace", r.Namespace, "selector", podSelector.String())))
+			continue
+		}
+
+		checkPods = append(checkPods, pods...)
+	}
+
+	for _, deploymentName := range checkPodsDepNames {
+		pods, err := kubeutils.GetDeploymentPods(ctx, r.Client, deploymentName, r.Namespace)
+		if err != nil {
+			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target.With("kind", "podList")))
+			continue
+		}
+
+		if len(pods) == 0 {
+			checkResults = append(checkResults, rule.FailedCheckResult("Pods not found!", target.With("name", deploymentName, "kind", "Deployment", "namespace", r.Namespace)))
 			continue
 		}
 
@@ -151,6 +171,10 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 		execBaseContainerID := strings.Split(execContainerID, "//")[1]
 		execContainerPath := fmt.Sprintf("/run/containerd/io.containerd.runtime.v2.task/k8s.io/%s/rootfs", execBaseContainerID)
 
+		sort.Slice(pods, func(i, j int) bool {
+			return pods[i].Name < pods[j].Name
+		})
+
 		for _, pod := range pods {
 			excludedSources := []string{"/lib/modules", "/usr/share/ca-certificates", "/var/log/journal"}
 			mappedFileStats, err := intutils.GetMountedFilesStats(ctx, execContainerPath, podExecutor, pod, excludedSources)
@@ -163,7 +187,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 			expectedFilePermissionsMax := "640"
 			for containerName, fileStats := range mappedFileStats {
 				for _, fileStat := range fileStats {
-					if !strings.HasSuffix(fileStat.Path, ".key") {
+					if !strings.HasSuffix(fileStat.Path, ".key") && !strings.HasSuffix(fileStat.Path, ".pem") {
 						continue
 					}
 
