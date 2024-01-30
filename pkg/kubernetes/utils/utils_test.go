@@ -402,6 +402,7 @@ var _ = Describe("utils", func() {
 				{
 					Name: "foo",
 					UID:  "1",
+					Kind: "Deployment",
 				},
 			}
 			replicaSet.Spec.Replicas = pointer.Int32(int32(1))
@@ -411,6 +412,7 @@ var _ = Describe("utils", func() {
 				{
 					Name: "foo",
 					UID:  "2",
+					Kind: "ReplicaSet",
 				},
 			}
 			Expect(fakeClient.Create(ctx, deployment)).To(Succeed())
@@ -422,10 +424,11 @@ var _ = Describe("utils", func() {
 			Expect(pods).To(Equal([]corev1.Pod{*pod}))
 			Expect(err).To(BeNil())
 		})
+
 		It("should return error when deployment not found", func() {
 			pods, err := utils.GetDeploymentPods(ctx, fakeClient, "foo", namespace)
 
-			Expect(pods).To(Equal([]corev1.Pod{}))
+			Expect(pods).To(BeNil())
 			Expect(err).To(MatchError("deployments.apps \"foo\" not found"))
 		})
 
@@ -437,6 +440,7 @@ var _ = Describe("utils", func() {
 				{
 					Name: "foo",
 					UID:  "1",
+					Kind: "Deployment",
 				},
 			}
 			replicaSet.Spec.Replicas = pointer.Int32(int32(0))
@@ -446,6 +450,7 @@ var _ = Describe("utils", func() {
 				{
 					Name: "foo",
 					UID:  "2",
+					Kind: "ReplicaSet",
 				},
 			}
 			Expect(fakeClient.Create(ctx, deployment)).To(Succeed())
@@ -457,6 +462,7 @@ var _ = Describe("utils", func() {
 			Expect(pods).To(Equal([]corev1.Pod{}))
 			Expect(err).To(BeNil())
 		})
+
 		It("should return pods when relicaSet replicase are not specified", func() {
 			deployment := basicDeployment.DeepCopy()
 			deployment.UID = "1"
@@ -465,6 +471,7 @@ var _ = Describe("utils", func() {
 				{
 					Name: "foo",
 					UID:  "1",
+					Kind: "Deployment",
 				},
 			}
 			replicaSet.UID = "2"
@@ -473,6 +480,7 @@ var _ = Describe("utils", func() {
 				{
 					Name: "foo",
 					UID:  "2",
+					Kind: "ReplicaSet",
 				},
 			}
 			Expect(fakeClient.Create(ctx, deployment)).To(Succeed())
@@ -484,6 +492,7 @@ var _ = Describe("utils", func() {
 			Expect(pods).To(Equal([]corev1.Pod{*pod}))
 			Expect(err).To(BeNil())
 		})
+
 		It("should return multiple pods", func() {
 			deployment := basicDeployment.DeepCopy()
 			deployment.UID = "1"
@@ -493,6 +502,7 @@ var _ = Describe("utils", func() {
 				{
 					Name: "foo",
 					UID:  "1",
+					Kind: "Deployment",
 				},
 			}
 			replicaSet1.UID = "2"
@@ -502,6 +512,7 @@ var _ = Describe("utils", func() {
 				{
 					Name: "foo",
 					UID:  "1",
+					Kind: "Deployment",
 				},
 			}
 			replicaSet2.UID = "3"
@@ -511,6 +522,7 @@ var _ = Describe("utils", func() {
 				{
 					Name: "foo",
 					UID:  "2",
+					Kind: "ReplicaSet",
 				},
 			}
 			pod2 := basicPod.DeepCopy()
@@ -519,6 +531,7 @@ var _ = Describe("utils", func() {
 				{
 					Name: "foo",
 					UID:  "2",
+					Kind: "ReplicaSet",
 				},
 			}
 			pod3 := basicPod.DeepCopy()
@@ -527,6 +540,7 @@ var _ = Describe("utils", func() {
 				{
 					Name: "foo",
 					UID:  "3",
+					Kind: "ReplicaSet",
 				},
 			}
 			Expect(fakeClient.Create(ctx, deployment)).To(Succeed())
