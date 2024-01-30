@@ -2,16 +2,41 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-REPO_ROOT := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+REPO_ROOT         := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+HACK_DIR          := $(REPO_ROOT)/hack
+VERSION           := $(shell cat "$(REPO_ROOT)/VERSION")
+EFFECTIVE_VERSION := $(VERSION)-$(shell git rev-parse HEAD)
 
 # TODO: remove this once g/g updates to this or newer version
 GOIMPORTSREVISER_VERSION = v3.4.0
+
+
+LD_FLAGS := "-w $(shell EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) bash $(HACK_DIR)/get-build-ld-flags.sh)"
 
 TOOLS_DIR := $(REPO_ROOT)/hack/tools
 include $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/tools.mk
 
 # additional tools
 include hack/tools.mk
+
+# make run runs diki with flags specified by environment variables:
+# CONFIG - required - specifies the path to diki config file
+# RULE_ID - optional - if set diki executes only the specified rule
+# PROVIDER - optional - selects provider, defaults to "gardener"
+# RULESET_ID - optional - selects ruleset, defaults to "disa-kubernetes-stig"
+# RULESET_VERSION - optional - selects ruleset version, defaults to "v1r11"
+PROVIDER        ?= gardener
+RULESET_ID      ?= disa-kubernetes-stig
+RULESET_VERSION ?= v1r11
+.PHONY: run
+run:
+	go run -ldflags $(LD_FLAGS) \
+	./cmd/diki run \
+	--config=$(CONFIG) \
+	--rule-id=$(RULE_ID) \
+	--provider=${PROVIDER} \
+	--ruleset-id=${RULESET_ID} \
+	--ruleset-version=${RULESET_VERSION}
 
 .PHONY: format
 format: $(GOIMPORTS) $(GOIMPORTSREVISER)
