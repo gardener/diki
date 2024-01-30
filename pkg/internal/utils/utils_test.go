@@ -152,7 +152,7 @@ var _ = Describe("utils", func() {
 			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
 			result, err := utils.GetMountedFilesStats(ctx, "", fakePodExecutor, pod, []string{"/lib/modules"})
 
-			Expect(err).To(MatchError("could not find file with path /foo"))
+			Expect(err).To(MatchError("could not find file /foo"))
 			Expect(result).To(Equal(map[string][]utils.FileStats{"test": {destinationFileStats}}))
 		})
 

@@ -146,7 +146,7 @@ func getContainerMountedFileStatResults(
 			}
 
 			if len(mountStats) == 0 {
-				err = errors.Join(err, fmt.Errorf("could not find file with path %s", mount.Source))
+				err = errors.Join(err, fmt.Errorf("could not find file %s", mount.Source))
 				continue
 			}
 
