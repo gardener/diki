@@ -228,6 +228,321 @@ var _ = Describe("utils", func() {
 
 	})
 
+	Describe("#GetReplicaSets", func() {
+		var (
+			fakeClient       client.Client
+			ctx              = context.TODO()
+			namespaceFoo     = "foo"
+			namespaceDefault = "default"
+		)
+
+		BeforeEach(func() {
+			fakeClient = fakeclient.NewClientBuilder().Build()
+			for i := 0; i < 10; i++ {
+				replicaSet := &appsv1.ReplicaSet{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      strconv.Itoa(i),
+						Namespace: namespaceDefault,
+					},
+					Spec: appsv1.ReplicaSetSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										Name: "test",
+									},
+								},
+							},
+						},
+					},
+				}
+				Expect(fakeClient.Create(ctx, replicaSet)).To(Succeed())
+			}
+			for i := 10; i < 12; i++ {
+				replicaSet := &appsv1.ReplicaSet{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      strconv.Itoa(i),
+						Namespace: namespaceDefault,
+						Labels: map[string]string{
+							"foo": "bar",
+						},
+					},
+					Spec: appsv1.ReplicaSetSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										Name: "test",
+									},
+								},
+							},
+						},
+					},
+				}
+				Expect(fakeClient.Create(ctx, replicaSet)).To(Succeed())
+			}
+			for i := 0; i < 6; i++ {
+				replicaSet := &appsv1.ReplicaSet{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      strconv.Itoa(i),
+						Namespace: namespaceFoo,
+					},
+					Spec: appsv1.ReplicaSetSpec{
+						Template: corev1.PodTemplateSpec{
+							Spec: corev1.PodSpec{
+								Containers: []corev1.Container{
+									{
+										Name: "test",
+									},
+								},
+							},
+						},
+					},
+				}
+				Expect(fakeClient.Create(ctx, replicaSet)).To(Succeed())
+			}
+		})
+
+		It("should return correct number of replicaSets in default namespace", func() {
+			replicaSets, err := utils.GetReplicaSets(ctx, fakeClient, namespaceDefault, labels.NewSelector(), 2)
+
+			Expect(len(replicaSets)).To(Equal(12))
+			Expect(err).To(BeNil())
+		})
+
+		It("should return correct number of replicaSets in foo namespace", func() {
+			replicaSets, err := utils.GetReplicaSets(ctx, fakeClient, namespaceFoo, labels.NewSelector(), 2)
+
+			Expect(len(replicaSets)).To(Equal(6))
+			Expect(err).To(BeNil())
+		})
+
+		It("should return correct number of replicaSets in all namespaces", func() {
+			replicaSets, err := utils.GetReplicaSets(ctx, fakeClient, "", labels.NewSelector(), 2)
+
+			Expect(len(replicaSets)).To(Equal(18))
+			Expect(err).To(BeNil())
+		})
+		It("should return correct number of labeled replicaSets in default namespace", func() {
+			replicaSets, err := utils.GetReplicaSets(ctx, fakeClient, namespaceDefault, labels.SelectorFromSet(labels.Set{"foo": "bar"}), 2)
+
+			Expect(len(replicaSets)).To(Equal(2))
+			Expect(err).To(BeNil())
+		})
+
+	})
+
+	Describe("#GetDeploymentPods", func() {
+		var (
+			fakeClient      client.Client
+			ctx             = context.TODO()
+			basicDeployment *appsv1.Deployment
+			basicReplicaSet *appsv1.ReplicaSet
+			basicPod        *corev1.Pod
+			namespace       = "foo"
+		)
+
+		BeforeEach(func() {
+			fakeClient = fakeclient.NewClientBuilder().Build()
+			basicDeployment = &appsv1.Deployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "foo",
+					Namespace: namespace,
+				},
+				Spec: appsv1.DeploymentSpec{
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name: "test",
+								},
+							},
+						},
+					},
+				},
+			}
+			basicReplicaSet = &appsv1.ReplicaSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "foo",
+					Namespace: namespace,
+				},
+				Spec: appsv1.ReplicaSetSpec{
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name: "test",
+								},
+							},
+						},
+					},
+				},
+			}
+			basicPod = &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "foo",
+					Namespace: namespace,
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name: "test",
+						},
+					},
+				},
+			}
+
+		})
+
+		It("should return pods of a deployment", func() {
+			deployment := basicDeployment.DeepCopy()
+			deployment.UID = "1"
+			replicaSet := basicReplicaSet.DeepCopy()
+			replicaSet.OwnerReferences = []metav1.OwnerReference{
+				{
+					Name: "foo",
+					UID:  "1",
+				},
+			}
+			replicaSet.Spec.Replicas = pointer.Int32(int32(1))
+			replicaSet.UID = "2"
+			pod := basicPod.DeepCopy()
+			pod.OwnerReferences = []metav1.OwnerReference{
+				{
+					Name: "foo",
+					UID:  "2",
+				},
+			}
+			Expect(fakeClient.Create(ctx, deployment)).To(Succeed())
+			Expect(fakeClient.Create(ctx, replicaSet)).To(Succeed())
+			Expect(fakeClient.Create(ctx, pod)).To(Succeed())
+
+			pods, err := utils.GetDeploymentPods(ctx, fakeClient, "foo", namespace)
+
+			Expect(pods).To(Equal([]corev1.Pod{*pod}))
+			Expect(err).To(BeNil())
+		})
+		It("should return error when deployment not found", func() {
+			pods, err := utils.GetDeploymentPods(ctx, fakeClient, "foo", namespace)
+
+			Expect(pods).To(Equal([]corev1.Pod{}))
+			Expect(err).To(MatchError("deployments.apps \"foo\" not found"))
+		})
+
+		It("should not return pods when relicaSet replicase are 0", func() {
+			deployment := basicDeployment.DeepCopy()
+			deployment.UID = "1"
+			replicaSet := basicReplicaSet.DeepCopy()
+			replicaSet.OwnerReferences = []metav1.OwnerReference{
+				{
+					Name: "foo",
+					UID:  "1",
+				},
+			}
+			replicaSet.Spec.Replicas = pointer.Int32(int32(0))
+			replicaSet.UID = "2"
+			pod := basicPod.DeepCopy()
+			pod.OwnerReferences = []metav1.OwnerReference{
+				{
+					Name: "foo",
+					UID:  "2",
+				},
+			}
+			Expect(fakeClient.Create(ctx, deployment)).To(Succeed())
+			Expect(fakeClient.Create(ctx, replicaSet)).To(Succeed())
+			Expect(fakeClient.Create(ctx, pod)).To(Succeed())
+
+			pods, err := utils.GetDeploymentPods(ctx, fakeClient, "foo", namespace)
+
+			Expect(pods).To(Equal([]corev1.Pod{}))
+			Expect(err).To(BeNil())
+		})
+		It("should return pods when relicaSet replicase are not specified", func() {
+			deployment := basicDeployment.DeepCopy()
+			deployment.UID = "1"
+			replicaSet := basicReplicaSet.DeepCopy()
+			replicaSet.OwnerReferences = []metav1.OwnerReference{
+				{
+					Name: "foo",
+					UID:  "1",
+				},
+			}
+			replicaSet.UID = "2"
+			pod := basicPod.DeepCopy()
+			pod.OwnerReferences = []metav1.OwnerReference{
+				{
+					Name: "foo",
+					UID:  "2",
+				},
+			}
+			Expect(fakeClient.Create(ctx, deployment)).To(Succeed())
+			Expect(fakeClient.Create(ctx, replicaSet)).To(Succeed())
+			Expect(fakeClient.Create(ctx, pod)).To(Succeed())
+
+			pods, err := utils.GetDeploymentPods(ctx, fakeClient, "foo", namespace)
+
+			Expect(pods).To(Equal([]corev1.Pod{*pod}))
+			Expect(err).To(BeNil())
+		})
+		It("should return multiple pods", func() {
+			deployment := basicDeployment.DeepCopy()
+			deployment.UID = "1"
+			replicaSet1 := basicReplicaSet.DeepCopy()
+			replicaSet1.Name = "foo1"
+			replicaSet1.OwnerReferences = []metav1.OwnerReference{
+				{
+					Name: "foo",
+					UID:  "1",
+				},
+			}
+			replicaSet1.UID = "2"
+			replicaSet2 := basicReplicaSet.DeepCopy()
+			replicaSet2.Name = "foo2"
+			replicaSet2.OwnerReferences = []metav1.OwnerReference{
+				{
+					Name: "foo",
+					UID:  "1",
+				},
+			}
+			replicaSet2.UID = "3"
+			pod1 := basicPod.DeepCopy()
+			pod1.Name = "foo1"
+			pod1.OwnerReferences = []metav1.OwnerReference{
+				{
+					Name: "foo",
+					UID:  "2",
+				},
+			}
+			pod2 := basicPod.DeepCopy()
+			pod2.Name = "foo2"
+			pod2.OwnerReferences = []metav1.OwnerReference{
+				{
+					Name: "foo",
+					UID:  "2",
+				},
+			}
+			pod3 := basicPod.DeepCopy()
+			pod3.Name = "foo3"
+			pod3.OwnerReferences = []metav1.OwnerReference{
+				{
+					Name: "foo",
+					UID:  "3",
+				},
+			}
+			Expect(fakeClient.Create(ctx, deployment)).To(Succeed())
+			Expect(fakeClient.Create(ctx, replicaSet1)).To(Succeed())
+			Expect(fakeClient.Create(ctx, replicaSet2)).To(Succeed())
+			Expect(fakeClient.Create(ctx, pod1)).To(Succeed())
+			Expect(fakeClient.Create(ctx, pod2)).To(Succeed())
+			Expect(fakeClient.Create(ctx, pod3)).To(Succeed())
+
+			pods, err := utils.GetDeploymentPods(ctx, fakeClient, "foo", namespace)
+
+			Expect(pods).To(Equal([]corev1.Pod{*pod1, *pod2, *pod3}))
+			Expect(err).To(BeNil())
+		})
+	})
+
 	Describe("#GetNodes", func() {
 		var (
 			fakeClient client.Client
