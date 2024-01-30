@@ -25,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/kubernetes/config"
@@ -93,32 +92,33 @@ func GetReplicaSets(ctx context.Context, c client.Client, namespace string, sele
 }
 
 // GetDeploymentPods return all pods of a given deployment.
-func GetDeploymentPods(ctx context.Context, c client.Client, deploymentName, namespace string) ([]corev1.Pod, error) {
-	pods := []corev1.Pod{}
+func GetDeploymentPods(ctx context.Context, c client.Client, name, namespace string) ([]corev1.Pod, error) {
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      deploymentName,
+			Name:      name,
 			Namespace: namespace,
 		},
 	}
 
 	if err := c.Get(ctx, client.ObjectKeyFromObject(deployment), deployment); err != nil {
-		return pods, err
+		return nil, err
 	}
 
 	allPods, err := GetPods(ctx, c, namespace, labels.NewSelector(), 300)
 	if err != nil {
-		return pods, err
+		return nil, err
 	}
 
-	allReplicaSets, err := GetReplicaSets(ctx, c, namespace, labels.NewSelector(), 300)
+	replicaSets, err := GetReplicaSets(ctx, c, namespace, labels.NewSelector(), 300)
 	if err != nil {
-		return pods, err
+		return nil, err
 	}
 
-	for _, replicaSet := range allReplicaSets {
+	pods := []corev1.Pod{}
+	for _, replicaSet := range replicaSets {
 		// When not specified replicaSet.Spec.Replicas defaults to 1: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/#replicas
-		if replicaSet.OwnerReferences[0].UID == deployment.UID && (replicaSet.Spec.Replicas == nil || *replicaSet.Spec.Replicas > *pointer.Int32(int32(0))) {
+		ownerRef := replicaSet.OwnerReferences[0]
+		if ownerRef.UID == deployment.UID && ownerRef.Kind == "Deployment" && (replicaSet.Spec.Replicas == nil || *replicaSet.Spec.Replicas > 0) {
 			for _, pod := range allPods {
 				if pod.OwnerReferences[0].UID == replicaSet.UID {
 					pods = append(pods, pod)
