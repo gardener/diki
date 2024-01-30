@@ -397,37 +397,6 @@ var _ = Describe("utils", func() {
 		})
 	})
 
-	Describe("#MatchFileOwnersCases", func() {
-		var (
-			target = rule.NewTarget()
-		)
-		DescribeTable("#MatchCases",
-			func(fileOwnerUser, fileOwnerGroup, fileName string, expectedFileOwnerUsers, expectedFileOwnerGroups []string, target rule.Target, expectedResults []rule.CheckResult) {
-				result := utils.MatchFileOwnersCases(fileOwnerUser, fileOwnerGroup, fileName, expectedFileOwnerUsers, expectedFileOwnerGroups, target)
-
-				Expect(result).To(Equal(expectedResults))
-			},
-			Entry("should return passed when all checks pass",
-				"0", "2000", "/foo/bar/file.txt", []string{"0"}, []string{"0", "2000"}, target,
-				[]rule.CheckResult{
-					rule.PassedCheckResult("File has expected owners", rule.NewTarget("details", "fileName: /foo/bar/file.txt, ownerUser: 0, ownerGroup: 2000")),
-				}),
-			Entry("should return failed results when all checks fail",
-				"1000", "2000", "/foo/bar/file.txt", []string{"0"}, []string{"0", "1000"}, target,
-				[]rule.CheckResult{
-
-					rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("details", "fileName: /foo/bar/file.txt, ownerUser: 1000, expectedOwnerUsers: [0]")),
-					rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("details", "fileName: /foo/bar/file.txt, ownerGroup: 2000, expectedOwnerGroups: [0 1000]")),
-				}),
-			Entry("should return failed when expected owners are empty",
-				"1000", "2000", "/foo/bar/file.txt", []string{}, []string{}, target,
-				[]rule.CheckResult{
-					rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("details", "fileName: /foo/bar/file.txt, ownerUser: 1000, expectedOwnerUsers: []")),
-					rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("details", "fileName: /foo/bar/file.txt, ownerGroup: 2000, expectedOwnerGroups: []")),
-				}),
-		)
-	})
-
 	Describe("#MatchFilePermissionsAndOwnersCases", func() {
 		var (
 			target = rule.NewTarget()

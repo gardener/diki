@@ -17,6 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/imagevector"
+	dikiutils "github.com/gardener/diki/pkg/internal/utils"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
@@ -229,8 +230,8 @@ func (r *RuleNodeFiles) checkWorkerGroup(ctx context.Context, image, workerGroup
 					checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(pkiAllStatSlice[0], pkiAllStatSlice[1], pkiAllStatSlice[2], fileName,
 						"644", expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
 				case fileType == "directory": // rule 242451
-					checkResults = append(checkResults, utils.MatchFileOwnersCases(pkiAllStatSlice[1], pkiAllStatSlice[2], fileName,
-						expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
+					checkResults = append(checkResults, dikiutils.MatchFileOwnersCases(dikiutils.FileStats{UserOwner: pkiAllStatSlice[1], GroupOwner: pkiAllStatSlice[2],
+						Path: fileName}, expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)
 				default:
 					checkResults = append(checkResults, utils.MatchFilePermissionsAndOwnersCases(pkiAllStatSlice[0], pkiAllStatSlice[1], pkiAllStatSlice[2], fileName,
 						"644", expectedFileOwnerUsers, expectedFileOwnerGroups, target)...)

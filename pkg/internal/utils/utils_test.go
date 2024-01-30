@@ -16,6 +16,7 @@ import (
 
 	"github.com/gardener/diki/pkg/internal/utils"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
+	"github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("utils", func() {
@@ -218,4 +219,35 @@ var _ = Describe("utils", func() {
 		Entry("should return true when filePermissions exceed filePermissionsMax by other permissions",
 			"0406", "0644", true, BeNil()),
 	)
+
+	Describe("#MatchFileOwnersCases", func() {
+		var (
+			target = rule.NewTarget()
+		)
+		DescribeTable("#MatchCases",
+			func(fileStats utils.FileStats, expectedFileOwnerUsers, expectedFileOwnerGroups []string, target rule.Target, expectedResults []rule.CheckResult) {
+				result := utils.MatchFileOwnersCases(fileStats, expectedFileOwnerUsers, expectedFileOwnerGroups, target)
+
+				Expect(result).To(Equal(expectedResults))
+			},
+			Entry("should return passed when all checks pass",
+				utils.FileStats{UserOwner: "0", GroupOwner: "2000", Path: "/foo/bar/file.txt"}, []string{"0"}, []string{"0", "2000"}, target,
+				[]rule.CheckResult{
+					rule.PassedCheckResult("File has expected owners", rule.NewTarget("details", "fileName: /foo/bar/file.txt, ownerUser: 0, ownerGroup: 2000")),
+				}),
+			Entry("should return failed results when all checks fail",
+				utils.FileStats{UserOwner: "1000", GroupOwner: "2000", Path: "/foo/bar/file.txt"}, []string{"0"}, []string{"0", "1000"}, target,
+				[]rule.CheckResult{
+
+					rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("details", "fileName: /foo/bar/file.txt, ownerUser: 1000, expectedOwnerUsers: [0]")),
+					rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("details", "fileName: /foo/bar/file.txt, ownerGroup: 2000, expectedOwnerGroups: [0 1000]")),
+				}),
+			Entry("should return failed when expected owners are empty",
+				utils.FileStats{UserOwner: "1000", GroupOwner: "2000", Path: "/foo/bar/file.txt"}, []string{}, []string{}, target,
+				[]rule.CheckResult{
+					rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("details", "fileName: /foo/bar/file.txt, ownerUser: 1000, expectedOwnerUsers: []")),
+					rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("details", "fileName: /foo/bar/file.txt, ownerGroup: 2000, expectedOwnerGroups: []")),
+				}),
+		)
+	})
 })
