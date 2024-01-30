@@ -122,12 +122,14 @@ var _ = Describe("utils", func() {
 			Expect(len(pods)).To(Equal(18))
 			Expect(err).To(BeNil())
 		})
+
 		It("should return correct number of labeled pods in default namespace", func() {
 			pods, err := utils.GetObjectsMetadata(ctx, fakeClient, corev1.SchemeGroupVersion.WithKind("PodList"), namespaceDefault, labels.SelectorFromSet(labels.Set{"foo": "bar"}), 2)
 
 			Expect(len(pods)).To(Equal(2))
 			Expect(err).To(BeNil())
 		})
+
 		It("should return correct number of nodes", func() {
 			nodes, err := utils.GetObjectsMetadata(ctx, fakeClient, corev1.SchemeGroupVersion.WithKind("NodeList"), "", labels.NewSelector(), 2)
 
@@ -219,6 +221,7 @@ var _ = Describe("utils", func() {
 			Expect(len(pods)).To(Equal(18))
 			Expect(err).To(BeNil())
 		})
+
 		It("should return correct number of labeled pods in default namespace", func() {
 			pods, err := utils.GetPods(ctx, fakeClient, namespaceDefault, labels.SelectorFromSet(labels.Set{"foo": "bar"}), 2)
 
@@ -323,13 +326,13 @@ var _ = Describe("utils", func() {
 			Expect(len(replicaSets)).To(Equal(18))
 			Expect(err).To(BeNil())
 		})
+
 		It("should return correct number of labeled replicaSets in default namespace", func() {
 			replicaSets, err := utils.GetReplicaSets(ctx, fakeClient, namespaceDefault, labels.SelectorFromSet(labels.Set{"foo": "bar"}), 2)
 
 			Expect(len(replicaSets)).To(Equal(2))
 			Expect(err).To(BeNil())
 		})
-
 	})
 
 	Describe("#GetDeploymentPods", func() {
@@ -1127,7 +1130,6 @@ var _ = Describe("utils", func() {
 
 			Expect(result).To(BeNil())
 		})
-
 	})
 
 	Describe("#IsFlagSet", func() {
@@ -1585,6 +1587,5 @@ readOnlyPort: 222
 			Expect(res).To(Equal(expectedRes))
 			Expect(checkResult).To(Equal(expectedCheckResults))
 		})
-
 	})
 })
