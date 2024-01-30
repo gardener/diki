@@ -461,7 +461,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		&sharedv1r11.Rule242467{
-			Logger:     r.Logger().With("rule", v1r11.ID242467),
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242467),
 			InstanceID: r.instanceID,
 			Client:     seedClient,
 			PodContext: seedPodContext,
