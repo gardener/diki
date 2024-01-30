@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/kubernetes/config"
@@ -70,6 +71,63 @@ func GetPods(ctx context.Context, c client.Client, namespace string, selector la
 			return pods, nil
 		}
 	}
+}
+
+// GetReplicaSets return all replicaSets for a given namespace, or all namespaces if it's set to empty string "".
+// It retrieves replicaSets by portions set by limit.
+func GetReplicaSets(ctx context.Context, c client.Client, namespace string, selector labels.Selector, limit int64) ([]appsv1.ReplicaSet, error) {
+	replicaSetList := &appsv1.ReplicaSetList{}
+	replicaSets := []appsv1.ReplicaSet{}
+
+	for {
+		if err := c.List(ctx, replicaSetList, client.InNamespace(namespace), client.Limit(limit), client.MatchingLabelsSelector{Selector: selector}, client.Continue(replicaSetList.Continue)); err != nil {
+			return nil, err
+		}
+
+		replicaSets = append(replicaSets, replicaSetList.Items...)
+
+		if len(replicaSetList.Continue) == 0 {
+			return replicaSets, nil
+		}
+	}
+}
+
+// GetDeploymentPods return all pods of a given deployment.
+func GetDeploymentPods(ctx context.Context, c client.Client, deploymentName, namespace string) ([]corev1.Pod, error) {
+	pods := []corev1.Pod{}
+	deployment := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      deploymentName,
+			Namespace: namespace,
+		},
+	}
+
+	if err := c.Get(ctx, client.ObjectKeyFromObject(deployment), deployment); err != nil {
+		return pods, err
+	}
+
+	allPods, err := GetPods(ctx, c, namespace, labels.NewSelector(), 300)
+	if err != nil {
+		return pods, err
+	}
+
+	allReplicaSets, err := GetReplicaSets(ctx, c, namespace, labels.NewSelector(), 300)
+	if err != nil {
+		return pods, err
+	}
+
+	for _, replicaSet := range allReplicaSets {
+		// When not specified replicaSet.Spec.Replicas defaults to 1: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/#replicas
+		if replicaSet.OwnerReferences[0].UID == deployment.UID && (replicaSet.Spec.Replicas == nil || *replicaSet.Spec.Replicas > *pointer.Int32(int32(0))) {
+			for _, pod := range allPods {
+				if pod.OwnerReferences[0].UID == replicaSet.UID {
+					pods = append(pods, pod)
+				}
+			}
+		}
+	}
+
+	return pods, nil
 }
 
 // GetNodes return all nodes. It retrieves pods by portions set by limit.
