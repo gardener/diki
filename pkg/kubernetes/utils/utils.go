@@ -53,7 +53,7 @@ func GetObjectsMetadata(ctx context.Context, c client.Client, gvk schema.GroupVe
 	}
 }
 
-// GetPods return all pods for a given namespace, or all namespaces if it's set to empty string "".
+// GetPods returns all pods for a given namespace, or all namespaces if it's set to empty string "".
 // It retrieves pods by portions set by limit.
 func GetPods(ctx context.Context, c client.Client, namespace string, selector labels.Selector, limit int64) ([]corev1.Pod, error) {
 	podList := &corev1.PodList{}
@@ -72,7 +72,7 @@ func GetPods(ctx context.Context, c client.Client, namespace string, selector la
 	}
 }
 
-// GetReplicaSets return all replicaSets for a given namespace, or all namespaces if it's set to empty string "".
+// GetReplicaSets returns all replicaSets for a given namespace, or all namespaces if it's set to empty string "".
 // It retrieves replicaSets by portions set by limit.
 func GetReplicaSets(ctx context.Context, c client.Client, namespace string, selector labels.Selector, limit int64) ([]appsv1.ReplicaSet, error) {
 	replicaSetList := &appsv1.ReplicaSetList{}
@@ -91,7 +91,7 @@ func GetReplicaSets(ctx context.Context, c client.Client, namespace string, sele
 	}
 }
 
-// GetDeploymentPods return all pods of a given deployment.
+// GetDeploymentPods returns all pods of a given deployment.
 func GetDeploymentPods(ctx context.Context, c client.Client, name, namespace string) ([]corev1.Pod, error) {
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
