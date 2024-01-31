@@ -9,9 +9,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gardener/diki/pkg/shared/provider"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
+	"github.com/gardener/diki/pkg/shared/provider"
 )
 
 var testLogger provider.Logger
