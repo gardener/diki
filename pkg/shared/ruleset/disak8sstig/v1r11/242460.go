@@ -40,7 +40,7 @@ func (r *Rule242460) ID() string {
 }
 
 func (r *Rule242460) Name() string {
-	return "Kubernetes admin.conf must have file permissions set to 644 or more restrictive (MEDIUM 242460)"
+	return "The Kubernetes admin.conf must have file permissions set to 644 or more restrictive (MEDIUM 242460)"
 }
 
 func (r *Rule242460) Run(ctx context.Context) (rule.RuleResult, error) {
