@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"sort"
 	"strings"
 
@@ -22,6 +21,7 @@ import (
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/provider"
 )
 
 var _ rule.Rule = &Rule242467{}
@@ -36,7 +36,7 @@ type Rule242467 struct {
 	KubeAPIServerDepName         string
 	KubeControllerManagerDepName string
 	KubeSchedulerDepName         *string
-	Logger                       *slog.Logger
+	Logger                       provider.Logger
 }
 
 func (r *Rule242467) ID() string {

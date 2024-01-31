@@ -9,11 +9,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/gardener/diki/pkg/shared/provider"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var testLogger *slog.Logger
+var testLogger provider.Logger
 
 func TestV1R11(t *testing.T) {
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
