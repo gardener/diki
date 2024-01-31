@@ -27,16 +27,14 @@ import (
 var _ rule.Rule = &Rule242467{}
 
 type Rule242467 struct {
-	InstanceID                   string
-	Client                       client.Client
-	Namespace                    string
-	PodContext                   pod.PodContext
-	ETCDMainSelector             labels.Selector
-	ETCDEventsSelector           labels.Selector
-	KubeAPIServerDepName         string
-	KubeControllerManagerDepName string
-	KubeSchedulerDepName         *string
-	Logger                       provider.Logger
+	InstanceID         string
+	Client             client.Client
+	Namespace          string
+	PodContext         pod.PodContext
+	ETCDMainSelector   labels.Selector
+	ETCDEventsSelector labels.Selector
+	DeploymentNames    []string
+	Logger             provider.Logger
 }
 
 func (r *Rule242467) ID() string {
@@ -51,9 +49,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults := []rule.CheckResult{}
 	etcdMainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
 	etcdEventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
-	kubeAPIServerDepName := "kube-apiserver"
-	kubeControllerManagerDepName := "kube-controller-manager"
-	kubeSchedulerDepName := "kube-scheduler"
+	checkPodsDepNames := []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
 
 	if r.ETCDMainSelector != nil {
 		etcdMainSelector = r.ETCDMainSelector
@@ -63,16 +59,8 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 		etcdEventsSelector = r.ETCDEventsSelector
 	}
 
-	if r.KubeAPIServerDepName != "" {
-		kubeAPIServerDepName = r.KubeAPIServerDepName
-	}
-
-	if r.KubeControllerManagerDepName != "" {
-		kubeControllerManagerDepName = r.KubeControllerManagerDepName
-	}
-
-	if r.KubeSchedulerDepName != nil {
-		kubeSchedulerDepName = *r.KubeSchedulerDepName
+	if r.DeploymentNames != nil {
+		checkPodsDepNames = r.DeploymentNames
 	}
 
 	target := rule.NewTarget()
@@ -81,10 +69,6 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target.With("namespace", r.Namespace, "kind", "podList"))), nil
 	}
 	checkPodsSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector}
-	checkPodsDepNames := []string{kubeAPIServerDepName, kubeControllerManagerDepName}
-	if kubeSchedulerDepName != "" {
-		checkPodsDepNames = append(checkPodsDepNames, kubeSchedulerDepName)
-	}
 	checkPods := []corev1.Pod{}
 
 	for _, podSelector := range checkPodsSelectors {

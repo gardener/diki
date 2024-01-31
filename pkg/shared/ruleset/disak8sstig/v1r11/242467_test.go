@@ -279,6 +279,30 @@ var _ = Describe("#242467", func() {
 		}))
 	})
 
+	It("should fail when pods cannot be found and deploymentNames is empty", func() {
+		mainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
+		eventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
+		fakePodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
+		r := &v1r11.Rule242467{
+			Logger:             testLogger,
+			InstanceID:         instanceID,
+			Client:             fakeClient,
+			Namespace:          Namespace,
+			PodContext:         fakePodContext,
+			ETCDMainSelector:   mainSelector,
+			ETCDEventsSelector: eventsSelector,
+			DeploymentNames:    []string{},
+		}
+
+		ruleResult, err := r.Run(ctx)
+		target := rule.NewTarget("namespace", r.Namespace)
+		Expect(err).To(BeNil())
+		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
+			rule.FailedCheckResult("Pods not found!", target.With("selector", mainSelector.String())),
+			rule.FailedCheckResult("Pods not found!", target.With("selector", eventsSelector.String())),
+		}))
+	})
+
 	DescribeTable("Run cases",
 		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			Expect(fakeClient.Create(ctx, etcdMainPod)).To(Succeed())

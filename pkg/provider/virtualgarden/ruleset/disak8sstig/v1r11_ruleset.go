@@ -9,7 +9,6 @@ import (
 
 	kubernetesgardener "github.com/gardener/gardener/pkg/client/kubernetes"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/config"
@@ -562,16 +561,14 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.NotImplemented,
 		),
 		&sharedv1r11.Rule242467{
-			Logger:                       r.Logger().With("rule", sharedv1r11.ID242467),
-			InstanceID:                   r.instanceID,
-			Client:                       runtimeClient,
-			Namespace:                    ns,
-			PodContext:                   runtimePodContext,
-			ETCDMainSelector:             labels.SelectorFromSet(labels.Set{"instance": etcdMain}),
-			ETCDEventsSelector:           labels.SelectorFromSet(labels.Set{"instance": etcdEvents}),
-			KubeAPIServerDepName:         apiserverDeploymentName,
-			KubeControllerManagerDepName: kcmDeploymentName,
-			KubeSchedulerDepName:         pointer.String(""),
+			Logger:             r.Logger().With("rule", sharedv1r11.ID242467),
+			InstanceID:         r.instanceID,
+			Client:             runtimeClient,
+			Namespace:          ns,
+			PodContext:         runtimePodContext,
+			ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"instance": etcdMain}),
+			ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"instance": etcdEvents}),
+			DeploymentNames:    []string{apiserverDeploymentName, kcmDeploymentName},
 		},
 		rule.NewSkipRule(
 			sharedv1r11.ID245541,
