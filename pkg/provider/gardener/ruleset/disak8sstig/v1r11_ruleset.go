@@ -116,7 +116,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 
 	rules := []rule.Rule{
 		&sharedv1r11.Rule242376{Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule242377{Logger: r.Logger().With("rule", v1r11.ID242377), Client: seedClient, Namespace: r.shootNamespace},
+		&v1r11.Rule242377{Logger: r.Logger().With("rule", sharedv1r11.ID242377), Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242378{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242379{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242380{Client: seedClient, Namespace: r.shootNamespace},
@@ -142,7 +142,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		),
 		&sharedv1r11.Rule242386{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242387{
-			Logger:                  r.Logger().With("rule", v1r11.ID242387),
+			Logger:                  r.Logger().With("rule", sharedv1r11.ID242387),
 			InstanceID:              r.instanceID,
 			ClusterClient:           shootClient,
 			ClusterCoreV1RESTClient: shootClientSet.CoreV1().RESTClient(),
@@ -154,7 +154,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedv1r11.Rule242389{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242390{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242391{
-			Logger:                  r.Logger().With("rule", v1r11.ID242391),
+			Logger:                  r.Logger().With("rule", sharedv1r11.ID242391),
 			InstanceID:              r.instanceID,
 			ClusterClient:           shootClient,
 			ClusterCoreV1RESTClient: shootClientSet.CoreV1().RESTClient(),
@@ -163,7 +163,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			ControlPlaneNamespace:   r.shootNamespace,
 		},
 		&v1r11.Rule242392{
-			Logger:                  r.Logger().With("rule", v1r11.ID242392),
+			Logger:                  r.Logger().With("rule", sharedv1r11.ID242392),
 			InstanceID:              r.instanceID,
 			ClusterClient:           shootClient,
 			ClusterCoreV1RESTClient: shootClientSet.CoreV1().RESTClient(),
@@ -171,9 +171,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			ClusterPodContext:       shootPodContext,
 			ControlPlaneNamespace:   r.shootNamespace,
 		},
-		&v1r11.Rule242393{Logger: r.Logger().With("rule", v1r11.ID242393), InstanceID: r.instanceID, ClusterPodContext: shootPodContext},
-		&v1r11.Rule242394{Logger: r.Logger().With("rule", v1r11.ID242394), InstanceID: r.instanceID, ClusterPodContext: shootPodContext},
-		&v1r11.Rule242395{Logger: r.Logger().With("rule", v1r11.ID242395), Client: shootClient},
+		&v1r11.Rule242393{Logger: r.Logger().With("rule", sharedv1r11.ID242393), InstanceID: r.instanceID, ClusterPodContext: shootPodContext},
+		&v1r11.Rule242394{Logger: r.Logger().With("rule", sharedv1r11.ID242394), InstanceID: r.instanceID, ClusterPodContext: shootPodContext},
+		&v1r11.Rule242395{Logger: r.Logger().With("rule", sharedv1r11.ID242395), Client: shootClient},
 		rule.NewSkipRule(
 			sharedv1r11.ID242396,
 			"Kubernetes Kubectl cp command must give expected access and results (MEDIUM 242396)",
@@ -181,7 +181,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		&v1r11.Rule242397{
-			Logger:                  r.Logger().With("rule", v1r11.ID242397),
+			Logger:                  r.Logger().With("rule", sharedv1r11.ID242397),
 			InstanceID:              r.instanceID,
 			ClusterClient:           shootClient,
 			ClusterCoreV1RESTClient: shootClientSet.CoreV1().RESTClient(),
@@ -197,7 +197,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		&v1r11.Rule242399{
-			Logger:                  r.Logger().With("rule", v1r11.ID242399),
+			Logger:                  r.Logger().With("rule", sharedv1r11.ID242399),
 			InstanceID:              r.instanceID,
 			ClusterClient:           shootClient,
 			ClusterVersion:          semverShootKubernetesVersion,
@@ -210,7 +210,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedv1r11.Rule242402{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242403{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242404{
-			Logger:                r.Logger().With("rule", v1r11.ID242404),
+			Logger:                r.Logger().With("rule", sharedv1r11.ID242404),
 			InstanceID:            r.instanceID,
 			ClusterClient:         shootClient,
 			ControlPlaneClient:    seedClient,
@@ -267,24 +267,24 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		&v1r11.Rule242414{
-			Logger:                r.Logger().With("rule", v1r11.ID242414),
+			Logger:                r.Logger().With("rule", sharedv1r11.ID242414),
 			ClusterClient:         shootClient,
 			ControlPlaneClient:    seedClient,
 			ControlPlaneNamespace: r.shootNamespace,
 			Options:               opts242414,
 		},
 		&v1r11.Rule242415{
-			Logger:                r.Logger().With("rule", v1r11.ID242415),
+			Logger:                r.Logger().With("rule", sharedv1r11.ID242415),
 			ClusterClient:         shootClient,
 			ControlPlaneClient:    seedClient,
 			ControlPlaneNamespace: r.shootNamespace,
 			Options:               opts242415,
 		},
-		&v1r11.Rule242417{Logger: r.Logger().With("rule", v1r11.ID242417), Client: shootClient},
+		&v1r11.Rule242417{Logger: r.Logger().With("rule", sharedv1r11.ID242417), Client: shootClient},
 		&sharedv1r11.Rule242418{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242419{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242420{
-			Logger:                  r.Logger().With("rule", v1r11.ID242420),
+			Logger:                  r.Logger().With("rule", sharedv1r11.ID242420),
 			InstanceID:              r.instanceID,
 			ClusterClient:           shootClient,
 			ClusterCoreV1RESTClient: shootClientSet.CoreV1().RESTClient(),
@@ -296,7 +296,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedv1r11.Rule242422{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242423{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242424{
-			Logger:                  r.Logger().With("rule", v1r11.ID242424),
+			Logger:                  r.Logger().With("rule", sharedv1r11.ID242424),
 			InstanceID:              r.instanceID,
 			ClusterClient:           shootClient,
 			ClusterCoreV1RESTClient: shootClientSet.CoreV1().RESTClient(),
@@ -305,7 +305,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			ControlPlaneNamespace:   r.shootNamespace,
 		},
 		&v1r11.Rule242425{
-			Logger:                  r.Logger().With("rule", v1r11.ID242425),
+			Logger:                  r.Logger().With("rule", sharedv1r11.ID242425),
 			InstanceID:              r.instanceID,
 			ClusterClient:           shootClient,
 			ClusterCoreV1RESTClient: shootClientSet.CoreV1().RESTClient(),
@@ -322,7 +322,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedv1r11.Rule242432{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242433{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242434{
-			Logger:                  r.Logger().With("rule", v1r11.ID242434),
+			Logger:                  r.Logger().With("rule", sharedv1r11.ID242434),
 			InstanceID:              r.instanceID,
 			ClusterClient:           shootClient,
 			ClusterCoreV1RESTClient: shootClientSet.CoreV1().RESTClient(),
@@ -332,7 +332,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		},
 		&sharedv1r11.Rule242436{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242437{
-			Logger:                r.Logger().With("rule", v1r11.ID242437),
+			Logger:                r.Logger().With("rule", sharedv1r11.ID242437),
 			ClusterClient:         shootClient,
 			ClusterVersion:        semverShootKubernetesVersion,
 			ControlPlaneClient:    seedClient,
@@ -340,7 +340,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			ControlPlaneNamespace: r.shootNamespace,
 		},
 		&sharedv1r11.Rule242438{Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule242442{Logger: r.Logger().With("rule", v1r11.ID242442), ClusterClient: shootClient, ControlPlaneClient: seedClient, ControlPlaneNamespace: r.shootNamespace},
+		&v1r11.Rule242442{Logger: r.Logger().With("rule", sharedv1r11.ID242442), ClusterClient: shootClient, ControlPlaneClient: seedClient, ControlPlaneNamespace: r.shootNamespace},
 		rule.NewSkipRule(
 			sharedv1r11.ID242443,
 			"Kubernetes must contain the latest updates as authorized by IAVMs, CTOs, DTMs, and STIGs (MEDIUM 242443)",
@@ -432,7 +432,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		&sharedv1r11.Rule242459{
-			Logger:     r.Logger().With("rule", v1r11.ID242459),
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242459),
 			InstanceID: r.instanceID,
 			Client:     seedClient,
 			PodContext: seedPodContext,
@@ -467,7 +467,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		&v1r11.Rule245541{
-			Logger:                  r.Logger().With("rule", v1r11.ID245541),
+			Logger:                  r.Logger().With("rule", sharedv1r11.ID245541),
 			InstanceID:              r.instanceID,
 			ClusterClient:           shootClient,
 			ClusterCoreV1RESTClient: shootClientSet.CoreV1().RESTClient(),
@@ -480,7 +480,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedv1r11.Rule245544{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule254800{Client: seedClient, Namespace: r.shootNamespace, Options: opts254800},
 		&v1r11.Rule254801{
-			Logger:                  r.Logger().With("rule", v1r11.ID254801),
+			Logger:                  r.Logger().With("rule", sharedv1r11.ID254801),
 			InstanceID:              r.instanceID,
 			ClusterClient:           shootClient,
 			ClusterVersion:          semverShootKubernetesVersion,
