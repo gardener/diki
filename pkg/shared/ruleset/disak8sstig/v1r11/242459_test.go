@@ -41,6 +41,16 @@ var _ = Describe("#242459", func() {
     "source": "/source"
   }
 ]`
+		mountsMulty = `[
+  {
+    "destination": "/destination",
+    "source": "/destination"
+  },
+  {
+    "destination": "/destination",
+    "source": "/destination"
+  }
+]`
 		emptyMounts       = `[]`
 		compliantStats    = "600\t0\t0\tregular file\t/destination/file1.txt\n400\t0\t65532\tregular file\t/destination/bar/file2.txt"
 		compliantStats2   = "600\t0\t0\tregular file\t/destination/file3.txt\n600\t1000\t0\tregular file\t/destination/bar/file4.txt\n"
@@ -211,6 +221,14 @@ var _ = Describe("#242459", func() {
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242459-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
 				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242459-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
+			}),
+		Entry("should check files when GetMountedFilesStats errors",
+			[][]string{{mountsMulty, compliantStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
+			[][]error{{nil, nil, errors.New("bar"), nil, nil, nil, nil}},
+			[]rule.CheckResult{
+				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242459-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 400")),
 			}),
 		Entry("should correctly return all checkResults when commands error",
 			[][]string{{mounts, mounts, compliantStats2}},
