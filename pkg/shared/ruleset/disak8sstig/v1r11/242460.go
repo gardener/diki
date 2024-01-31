@@ -7,7 +7,7 @@ package v1r11
 import (
 	"context"
 	"fmt"
-	"log/slog"
+	"sort"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -16,24 +16,23 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/imagevector"
-	dikiutils "github.com/gardener/diki/pkg/internal/utils"
+	intutils "github.com/gardener/diki/pkg/internal/utils"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/provider"
 )
 
 var _ rule.Rule = &Rule242460{}
 
 type Rule242460 struct {
-	InstanceID                    string
-	Client                        client.Client
-	Namespace                     string
-	PodContext                    pod.PodContext
-	KubeAPIServerSelector         labels.Selector
-	KubeControllerManagerSelector labels.Selector
-	KubeSchedulerSelector         labels.Selector
-	Logger                        *slog.Logger
+	InstanceID      string
+	Client          client.Client
+	Namespace       string
+	PodContext      pod.PodContext
+	DeploymentNames []string
+	Logger          provider.Logger
 }
 
 func (r *Rule242460) ID() string {
@@ -46,20 +45,10 @@ func (r *Rule242460) Name() string {
 
 func (r *Rule242460) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults := []rule.CheckResult{}
-	kubeAPIServerSelector := labels.SelectorFromSet(labels.Set{"role": "apiserver"})
-	kubeControllerManagerSelector := labels.SelectorFromSet(labels.Set{"role": "controller-manager"})
-	kubeSchedulerSelector := labels.SelectorFromSet(labels.Set{"role": "scheduler"})
+	checkPodsDepNames := []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
 
-	if r.KubeAPIServerSelector != nil {
-		kubeAPIServerSelector = r.KubeAPIServerSelector
-	}
-
-	if r.KubeControllerManagerSelector != nil {
-		kubeControllerManagerSelector = r.KubeControllerManagerSelector
-	}
-
-	if r.KubeSchedulerSelector != nil {
-		kubeSchedulerSelector = r.KubeSchedulerSelector
+	if r.DeploymentNames != nil {
+		checkPodsDepNames = r.DeploymentNames
 	}
 
 	target := rule.NewTarget()
@@ -67,19 +56,17 @@ func (r *Rule242460) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target.With("namespace", r.Namespace, "kind", "podList"))), nil
 	}
-	checkPodsSelectors := []labels.Selector{kubeAPIServerSelector, kubeControllerManagerSelector, kubeSchedulerSelector}
 	checkPods := []corev1.Pod{}
 
-	for _, podSelector := range checkPodsSelectors {
-		pods := []corev1.Pod{}
-		for _, p := range allPods {
-			if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
-				pods = append(pods, p)
-			}
+	for _, deploymentName := range checkPodsDepNames {
+		pods, err := kubeutils.GetDeploymentPods(ctx, r.Client, deploymentName, r.Namespace)
+		if err != nil {
+			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target.With("kind", "podList")))
+			continue
 		}
 
 		if len(pods) == 0 {
-			checkResults = append(checkResults, rule.FailedCheckResult("Pods not found!", target.With("namespace", r.Namespace, "selector", podSelector.String())))
+			checkResults = append(checkResults, rule.FailedCheckResult("Pods not found!", target.With("name", deploymentName, "kind", "Deployment", "namespace", r.Namespace)))
 			continue
 		}
 
@@ -139,9 +126,13 @@ func (r *Rule242460) Run(ctx context.Context) (rule.RuleResult, error) {
 		execBaseContainerID := strings.Split(execContainerID, "//")[1]
 		execContainerPath := fmt.Sprintf("/run/containerd/io.containerd.runtime.v2.task/k8s.io/%s/rootfs", execBaseContainerID)
 
+		sort.Slice(pods, func(i, j int) bool {
+			return pods[i].Name < pods[j].Name
+		})
+
 		for _, pod := range pods {
 			excludedSources := []string{"/lib/modules", "/usr/share/ca-certificates", "/var/log/journal"}
-			mappedFileStats, err := dikiutils.GetMountedFilesStats(ctx, execContainerPath, podExecutor, pod, excludedSources)
+			mappedFileStats, err := intutils.GetMountedFilesStats(ctx, execContainerPath, podExecutor, pod, excludedSources)
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 			}
@@ -151,7 +142,7 @@ func (r *Rule242460) Run(ctx context.Context) (rule.RuleResult, error) {
 				for _, fileStat := range fileStats {
 
 					containerTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)
-					exceedFilePermissions, err := dikiutils.ExceedFilePermissions(fileStat.Permissions, expectedFilePermissionsMax)
+					exceedFilePermissions, err := intutils.ExceedFilePermissions(fileStat.Permissions, expectedFilePermissionsMax)
 					if err != nil {
 						checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), containerTarget))
 						continue
