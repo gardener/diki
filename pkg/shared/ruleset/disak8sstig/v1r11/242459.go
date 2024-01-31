@@ -17,7 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/imagevector"
-	dikiutils "github.com/gardener/diki/pkg/internal/utils"
+	intutils "github.com/gardener/diki/pkg/internal/utils"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
@@ -142,7 +142,7 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 
 		for _, pod := range pods {
 			excludedSources := []string{"/lib/modules", "/usr/share/ca-certificates", "/var/log/journal"}
-			mappedFileStats, err := dikiutils.GetMountedFilesStats(ctx, execContainerPath, podExecutor, pod, excludedSources)
+			mappedFileStats, err := intutils.GetMountedFilesStats(ctx, execContainerPath, podExecutor, pod, excludedSources)
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 				continue
@@ -152,7 +152,7 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 			for containerName, fileStats := range mappedFileStats {
 				for _, fileStat := range fileStats {
 					containerTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)
-					exceedFilePermissions, err := dikiutils.ExceedFilePermissions(fileStat.Permissions, expectedFilePermissionsMax)
+					exceedFilePermissions, err := intutils.ExceedFilePermissions(fileStat.Permissions, expectedFilePermissionsMax)
 					if err != nil {
 						checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), containerTarget))
 						continue

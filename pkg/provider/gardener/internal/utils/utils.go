@@ -13,7 +13,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	dikiutils "github.com/gardener/diki/pkg/internal/utils"
+	intutils "github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -136,7 +136,7 @@ func MatchFilePermissionsAndOwnersCases(
 ) []rule.CheckResult {
 	checkResults := []rule.CheckResult{}
 	if len(expectedFilePermissionsMax) > 0 {
-		exceedFilePermissions, err := dikiutils.ExceedFilePermissions(filePermissions, expectedFilePermissionsMax)
+		exceedFilePermissions, err := intutils.ExceedFilePermissions(filePermissions, expectedFilePermissionsMax)
 		if err != nil {
 			return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), target)}
 		}
