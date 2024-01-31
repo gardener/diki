@@ -182,8 +182,10 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 			}
 
-			// 640 are the minimal possible permissions for key files given that Control plane components
-			// run as 65532 user/group and mounted files are with owner user root and group 65532
+			// Control plane components run as "nonroot" user/group 65532
+			// Mounted file have owner user root and group 65532
+			// Since in k8s there is no easy way to change the user owner of a file (link the issue)
+			// we check for 640 instead of 600 for key files
 			expectedFilePermissionsMax := "640"
 			for containerName, fileStats := range mappedFileStats {
 				for _, fileStat := range fileStats {
