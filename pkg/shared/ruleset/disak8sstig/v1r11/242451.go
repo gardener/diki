@@ -180,6 +180,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 
 			for containerName, fileStats := range mappedFileStats {
 				pkiDirs := map[string]bool{}
+				containerTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)
 				for _, fileStat := range fileStats {
 					if !strings.HasSuffix(fileStat.Path, ".key") && !strings.HasSuffix(fileStat.Path, ".pem") && !strings.HasSuffix(fileStat.Path, ".crt") {
 						continue
@@ -187,14 +188,30 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 
 					pkiDirs[fileStat.Dir()] = true
 
-					containerTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)
 					checkResults = append(checkResults, intutils.MatchFileOwnersCases(fileStat, r.Options.ExpectedFileOwner.Users, r.Options.ExpectedFileOwner.Groups, containerTarget)...)
 				}
-				for _, fileStat := range fileStats {
-					if _, ok := pkiDirs[fileStat.Path]; ok {
-						containerTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)
-						checkResults = append(checkResults, intutils.MatchFileOwnersCases(fileStat, r.Options.ExpectedFileOwner.Users, r.Options.ExpectedFileOwner.Groups, containerTarget)...)
+				for dir := range pkiDirs {
+					delimiter := "\t"
+					dirStats, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`stat -Lc "%%a%[1]s%%u%[1]s%%g%[1]s%%F%[1]s%%n" %s`, delimiter, dir))
+
+					if err != nil {
+						checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
+						continue
 					}
+
+					if len(dirStats) == 0 {
+						checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find file %s", dir), execPodTarget))
+						continue
+					}
+
+					dirStatsSlice := strings.Split(strings.TrimSpace(dirStats), "\n")
+					dirFileStats, err := intutils.NewFileStats(dirStatsSlice[0], delimiter)
+					if err != nil {
+						checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
+						continue
+					}
+
+					checkResults = append(checkResults, intutils.MatchFileOwnersCases(dirFileStats, r.Options.ExpectedFileOwner.Users, r.Options.ExpectedFileOwner.Groups, containerTarget)...)
 				}
 			}
 		}

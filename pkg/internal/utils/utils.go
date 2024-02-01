@@ -139,7 +139,7 @@ func getContainerMountedFileStatResults(
 			isMountRequiredByContainer(mount.Destination, containerName, &pod) &&
 			mount.Destination != "/dev/termination-log" {
 			delimiter := "\t"
-			mountStats, err2 := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`find %s -exec stat -Lc "%%a%[2]s%%u%[2]s%%g%[2]s%%F%[2]s%%n" {} \;`, mount.Source, delimiter))
+			mountStats, err2 := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`find %s -type f -exec stat -Lc "%%a%[2]s%%u%[2]s%%g%[2]s%%F%[2]s%%n" {} \;`, mount.Source, delimiter))
 
 			if err2 != nil {
 				err = errors.Join(err, err2)
