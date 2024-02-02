@@ -25,17 +25,17 @@ Most of Diki's `run` configurations are provided through its [config file](./con
 
 - Run all known rulesets for all known providers
 ```bash
-diki run --config=config.yaml --all
+./hack/run --config=config.yaml --all
 ```
 
 - Run a specific ruleset for a known provider
 ```bash
-diki run --config=config.yaml --provider=gardener --ruleset-id=disa-kubernetes-stig --ruleset-version=v1r11
+./hack/run --config=config.yaml --provider=gardener --ruleset-id=disa-kubernetes-stig --ruleset-version=v1r11
 ```
 
 - Run a specific rule defined in a ruleset for a known provider
 ```bash
-diki run --config=config.yaml --provider=gardener --ruleset-id=disa-kubernetes-stig --ruleset-version=v1r11 --rule-id=242414
+./hack/run --config=config.yaml --provider=gardener --ruleset-id=disa-kubernetes-stig --ruleset-version=v1r11 --rule-id=242414
 ```
 
 #### Report
