@@ -13,14 +13,15 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/component-base/version"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/imagevector"
 	intutils "github.com/gardener/diki/pkg/internal/utils"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
-	"github.com/gardener/diki/pkg/provider/gardener/ruleset"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/images"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
@@ -73,10 +74,10 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target.With("namespace", r.Namespace, "kind", "podList"))), nil
 	}
-	checkPodsSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector}
+	podSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector}
 	checkPods := []corev1.Pod{}
 
-	for _, podSelector := range checkPodsSelectors {
+	for _, podSelector := range podSelectors {
 		pods := []corev1.Pod{}
 		for _, p := range allPods {
 			if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
@@ -107,9 +108,15 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
 	groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(checkPods, nodesAllocatablePods, target)
 	checkResults = append(checkResults, checks...)
-	image, err := imagevector.ImageVector().FindImage(ruleset.OpsToolbeltImageName)
+	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
 	if err != nil {
-		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", ruleset.OpsToolbeltImageName, err)
+		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
+	}
+
+	// check if tag is not present and use diki's version as a default
+	if image.Tag == nil {
+		tag := version.Get().GitVersion
+		image.Tag = &tag
 	}
 
 	for nodeName, pods := range groupedPods {
