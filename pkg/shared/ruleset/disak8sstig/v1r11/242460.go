@@ -5,9 +5,10 @@
 package v1r11
 
 import (
+	"cmp"
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -133,10 +134,15 @@ func (r *Rule242460) Run(ctx context.Context) (rule.RuleResult, error) {
 		execBaseContainerID := strings.Split(execContainerID, "//")[1]
 		execContainerPath := fmt.Sprintf("/run/containerd/io.containerd.runtime.v2.task/k8s.io/%s/rootfs", execBaseContainerID)
 
-		sort.Slice(pods, func(i, j int) bool {
-			return pods[i].Name < pods[j].Name
+		// TODO: this is done only because it makes testing this function easier
+		// can be reworked so that the call to sort is removed
+		slices.SortFunc(pods, func(a, b corev1.Pod) int {
+			return cmp.Compare(a.Name, b.Name)
 		})
 
+		// The rule is not explained in details and it is ambiguous
+		// It refers to kubeconfigs (and other configuration files?)
+		// This is why we check all files and not only specific ones
 		for _, pod := range pods {
 			excludedSources := []string{"/lib/modules", "/usr/share/ca-certificates", "/var/log/journal"}
 			mappedFileStats, err := intutils.GetMountedFilesStats(ctx, execContainerPath, podExecutor, pod, excludedSources)
