@@ -49,7 +49,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults := []rule.CheckResult{}
 	etcdMainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
 	etcdEventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
-	checkPodsDepNames := []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
+	deploymentNames := []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
 
 	if r.ETCDMainSelector != nil {
 		etcdMainSelector = r.ETCDMainSelector
@@ -60,7 +60,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if r.DeploymentNames != nil {
-		checkPodsDepNames = r.DeploymentNames
+		deploymentNames = r.DeploymentNames
 	}
 
 	target := rule.NewTarget()
@@ -68,10 +68,10 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target.With("namespace", r.Namespace, "kind", "podList"))), nil
 	}
-	checkPodsSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector}
+	podSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector}
 	checkPods := []corev1.Pod{}
 
-	for _, podSelector := range checkPodsSelectors {
+	for _, podSelector := range podSelectors {
 		pods := []corev1.Pod{}
 		for _, p := range allPods {
 			if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
@@ -87,7 +87,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkPods = append(checkPods, pods...)
 	}
 
-	for _, deploymentName := range checkPodsDepNames {
+	for _, deploymentName := range deploymentNames {
 		pods, err := kubeutils.GetDeploymentPods(ctx, r.Client, deploymentName, r.Namespace)
 		if err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target.With("kind", "podList")))
@@ -95,7 +95,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		if len(pods) == 0 {
-			checkResults = append(checkResults, rule.FailedCheckResult("Pods not found!", target.With("name", deploymentName, "kind", "Deployment", "namespace", r.Namespace)))
+			checkResults = append(checkResults, rule.FailedCheckResult("Pods not found for deployment!", target.With("name", deploymentName, "kind", "Deployment", "namespace", r.Namespace)))
 			continue
 		}
 
