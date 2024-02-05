@@ -5,9 +5,10 @@
 package v1r11
 
 import (
+	"cmp"
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -162,8 +163,8 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 		execBaseContainerID := strings.Split(execContainerID, "//")[1]
 		execContainerPath := fmt.Sprintf("/run/containerd/io.containerd.runtime.v2.task/k8s.io/%s/rootfs", execBaseContainerID)
 
-		sort.Slice(pods, func(i, j int) bool {
-			return pods[i].Name < pods[j].Name
+		slices.SortFunc(pods, func(a, b corev1.Pod) int {
+			return cmp.Compare(a.Name, b.Name)
 		})
 
 		for _, pod := range pods {
