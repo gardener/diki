@@ -100,6 +100,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
+	opts242445, err := getV1R11OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedv1r11.ID242445].Args)
+	if err != nil {
+		return err
+	}
 	opts242446, err := getV1R11OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedv1r11.ID242446].Args)
 	if err != nil {
 		return err
@@ -361,12 +365,14 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			`Rule is duplicate of "242405"`,
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242445,
-			"Kubernetes component etcd must be owned by etcd (MEDIUM 242445)",
-			`Gardener does not deploy any control plane component as systemd processes or static pod. It is deployed as regular pod under root:root, not readable by non-root users, which is checked by "pod-files" for correctness, consistency, deduplication, reliability, and performance reasons.`,
-			rule.Skipped,
-		),
+		&sharedv1r11.Rule242445{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242445),
+			InstanceID: r.instanceID,
+			Client:     seedClient,
+			PodContext: seedPodContext,
+			Namespace:  r.shootNamespace,
+			Options:    opts242445,
+		},
 		&sharedv1r11.Rule242446{
 			Logger:     r.Logger().With("rule", sharedv1r11.ID242446),
 			InstanceID: r.instanceID,

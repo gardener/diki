@@ -11,6 +11,15 @@ providers:               # contains information about known providers
     name: DISA Kubernetes Security Technical Implementation Guide
     version: v1r11
     ruleOptions:
+    - ruleID: "242445"
+      args:
+        expectedFileOwner:
+          # users and groups default to ["0"]
+          #
+          # Gardener images use distroless nonroot user with ID 65532
+          # https://github.com/GoogleContainerTools/distroless/blob/main/base/base.bzl#L8
+          users: ["0", "65532"]
+          groups: ["0", "65532"]
     - ruleID: "242446"
       args:
         expectedFileOwner:
