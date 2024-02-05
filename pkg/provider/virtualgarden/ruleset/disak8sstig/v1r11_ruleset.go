@@ -50,10 +50,6 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
-	opts254800, err := getV1R11OptionOrNil[sharedv1r11.Options254800](ruleOptions[sharedv1r11.ID254800].Args)
-	if err != nil {
-		return err
-	}
 
 	const (
 		ns                      = "garden"
@@ -108,6 +104,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Namespace:      ns,
 			DeploymentName: apiserverDeploymentName,
 			ContainerName:  apiserverContainerName,
+			ExpectedModes:  []string{"RBAC", "Webhook"},
 		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242383,
@@ -619,19 +616,18 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			DeploymentName: apiserverDeploymentName,
 			ContainerName:  apiserverContainerName,
 		},
-		&sharedv1r11.Rule245544{
-			Client:         runtimeClient,
-			Namespace:      ns,
-			DeploymentName: apiserverDeploymentName,
-			ContainerName:  apiserverContainerName,
-		},
-		&sharedv1r11.Rule254800{
-			Client:         runtimeClient,
-			Namespace:      ns,
-			Options:        opts254800,
-			DeploymentName: apiserverDeploymentName,
-			ContainerName:  apiserverContainerName,
-		},
+		rule.NewSkipRule(
+			sharedv1r11.ID245544,
+			"Kubernetes endpoints must use approved organizational certificate and key pair to protect information in transit (HIGH 245544)",
+			noKubeletsMsg,
+			rule.Skipped,
+		),
+		rule.NewSkipRule(
+			sharedv1r11.ID254800,
+			"Kubernetes must have a Pod Security Admission control file configured (HIGH 254800)",
+			noPodsMsg,
+			rule.Skipped,
+		),
 		rule.NewSkipRule(
 			sharedv1r11.ID254801,
 			"Kubernetes must enable PodSecurity admission controller on static pods and Kubelets (HIGH 254801)",

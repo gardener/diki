@@ -69,50 +69,58 @@ var _ = Describe("#242382", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(container corev1.Container, expectedCheckResults []rule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
+		func(expectedModes []string, container corev1.Container, expectedCheckResults []rule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
 			kcmDeployment.Spec.Template.Spec.Containers = []corev1.Container{container}
 			Expect(fakeClient.Create(ctx, kcmDeployment)).To(Succeed())
 
-			r := &v1r11.Rule242382{Client: fakeClient, Namespace: namespace}
+			r := &v1r11.Rule242382{
+				Client:        fakeClient,
+				Namespace:     namespace,
+				ExpectedModes: expectedModes,
+			}
 			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 		},
 
-		Entry("should fail when authorization-mode is not set",
+		Entry("should fail when authorization-mode is not set", []string{},
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--flag1=value1", "--flag2=value2"}},
 			[]rule.CheckResult{{Status: rule.Failed, Message: "Option authorization-mode has not been set.", Target: target}},
 			BeNil()),
-		Entry("should pass when authorization-mode is set to allowed value Node,RBAC",
+		Entry("should pass when authorization-mode is set to expected value Node,RBAC", []string{},
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--authorization-mode=Node,RBAC"}},
-			[]rule.CheckResult{{Status: rule.Passed, Message: "Option authorization-mode set to allowed value.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Option authorization-mode set to expected value.", Target: target}},
 			BeNil()),
-		Entry("should pass when authorization-mode is set to allowed value RBAC,Node",
+		Entry("should fail when authorization-mode is set to not expected value RBAC,Node", []string{},
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--authorization-mode=RBAC,Node"}},
-			[]rule.CheckResult{{Status: rule.Passed, Message: "Option authorization-mode set to allowed value.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Option authorization-mode set to not expected value.", Target: target}},
 			BeNil()),
-		Entry("should fail when authorization-mode is set to not allowed value AlwaysAllow",
+		Entry("should fail when authorization-mode is set to not allowed value AlwaysAllow", []string{},
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--authorization-mode=AlwaysAllow"}},
 			[]rule.CheckResult{{Status: rule.Failed, Message: "Option authorization-mode set to not allowed value.", Target: target}},
 			BeNil()),
-		Entry("should fail when authorization-mode is set to not allowed value RBAC,Node,AlwaysAllow",
+		Entry("should fail when authorization-mode is set to not allowed value RBAC,Node,AlwaysAllow", []string{},
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--authorization-mode=RBAC,Node,AlwaysAllow"}},
 			[]rule.CheckResult{{Status: rule.Failed, Message: "Option authorization-mode set to not allowed value.", Target: target}},
 			BeNil()),
-		Entry("should warn when authorization-mode is set to not allowed value Node",
+		Entry("should fail when authorization-mode is set to not expected value Node", []string{},
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--authorization-mode=Node"}},
-			[]rule.CheckResult{{Status: rule.Warning, Message: "Option authorization-mode set to not recommended value.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Option authorization-mode set to not expected value.", Target: target}},
 			BeNil()),
-		Entry("should warn when authorization-mode is set to not allowed value RBAC,Node,other",
+		Entry("should fail when authorization-mode is set to not expected value RBAC,Node,other", []string{},
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--authorization-mode=RBAC,Node,other"}},
-			[]rule.CheckResult{{Status: rule.Warning, Message: "Option authorization-mode set to not recommended value.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Option authorization-mode set to not expected value.", Target: target}},
 			BeNil()),
-		Entry("should warn when authorization-mode is set more than once",
+		Entry("should return correct checkResults when expectedModes are set", []string{"RBAC", "Webhook"},
+			corev1.Container{Name: "kube-apiserver", Command: []string{"--authorization-mode=RBAC,Webhook"}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Option authorization-mode set to expected value.", Target: target}},
+			BeNil()),
+		Entry("should warn when authorization-mode is set more than once", []string{},
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--authorization-mode=RBAC,Node"}, Args: []string{"--authorization-mode=Node,RBAC"}},
 			[]rule.CheckResult{{Status: rule.Warning, Message: "Option authorization-mode has been set more than once in container command.", Target: target}},
 			BeNil()),
-		Entry("should error when deployment does not have container 'kube-apiserver'",
+		Entry("should error when deployment does not have container 'kube-apiserver'", []string{},
 			corev1.Container{Name: "not-kube-apiserver", Command: []string{"--authorization-mode=RBAC,Node"}},
 			[]rule.CheckResult{{Status: rule.Errored, Message: "deployment: kube-apiserver does not contain container: kube-apiserver", Target: target}},
 			BeNil()),

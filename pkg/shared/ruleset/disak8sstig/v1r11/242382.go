@@ -12,7 +12,6 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -24,6 +23,7 @@ type Rule242382 struct {
 	Namespace      string
 	DeploymentName string
 	ContainerName  string
+	ExpectedModes  []string
 }
 
 func (r *Rule242382) ID() string {
@@ -38,6 +38,7 @@ func (r *Rule242382) Run(ctx context.Context) (rule.RuleResult, error) {
 	const option = "authorization-mode"
 	deploymentName := "kube-apiserver"
 	containerName := "kube-apiserver"
+	expectedModes := []string{"Node", "RBAC"}
 
 	if r.DeploymentName != "" {
 		deploymentName = r.DeploymentName
@@ -45,6 +46,10 @@ func (r *Rule242382) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	if r.ContainerName != "" {
 		containerName = r.ContainerName
+	}
+
+	if len(r.ExpectedModes) != 0 {
+		expectedModes = r.ExpectedModes
 	}
 
 	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
@@ -62,9 +67,9 @@ func (r *Rule242382) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", option), target)), nil
 	case slices.Contains(strings.Split(optSlice[0], ","), "AlwaysAllow"):
 		return rule.SingleCheckResult(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", option), target)), nil
-	case utils.EqualSets([]string{"Node", "RBAC"}, strings.Split(optSlice[0], ",")):
-		return rule.SingleCheckResult(r, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", option), target)), nil
+	case slices.Equal(expectedModes, strings.Split(optSlice[0], ",")):
+		return rule.SingleCheckResult(r, rule.PassedCheckResult(fmt.Sprintf("Option %s set to expected value.", option), target)), nil
 	default:
-		return rule.SingleCheckResult(r, rule.WarningCheckResult(fmt.Sprintf("Option %s set to not recommended value.", option), target)), nil
+		return rule.SingleCheckResult(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not expected value.", option), target)), nil
 	}
 }
