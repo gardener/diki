@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -22,6 +21,7 @@ import (
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/images"
+	"github.com/gardener/diki/pkg/shared/provider"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
@@ -35,7 +35,7 @@ type Rule242445 struct {
 	ETCDMainSelector   labels.Selector
 	ETCDEventsSelector labels.Selector
 	Options            *option.FileOwnerOptions
-	Logger             *slog.Logger
+	Logger             provider.Logger
 }
 
 func (r *Rule242445) ID() string {
