@@ -564,12 +564,16 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"Rule is duplicate of 242402.",
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242466,
-			"The Kubernetes PKI CRT must have file permissions set to 644 or more restrictive (MEDIUM 242466)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242466{
+			Logger:             r.Logger().With("rule", sharedv1r11.ID242466),
+			InstanceID:         r.instanceID,
+			Client:             runtimeClient,
+			Namespace:          ns,
+			PodContext:         runtimePodContext,
+			ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"instance": etcdMain}),
+			ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"instance": etcdEvents}),
+			DeploymentNames:    []string{apiserverDeploymentName, kcmDeploymentName},
+		},
 		&sharedv1r11.Rule242467{
 			Logger:             r.Logger().With("rule", sharedv1r11.ID242467),
 			InstanceID:         r.instanceID,

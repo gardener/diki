@@ -461,12 +461,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			`Rule is duplicate of "242402"`,
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242466,
-			"Kubernetes PKI CRT must have file permissions set to 644 or more restrictive (MEDIUM 242466)",
-			`Rule implemented by "node-files" and "pod-files" for correctness, consistency, deduplication, reliability, and performance reasons.`,
-			rule.Skipped,
-		),
+		&sharedv1r11.Rule242466{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242466),
+			InstanceID: r.instanceID,
+			Client:     seedClient,
+			PodContext: seedPodContext,
+			Namespace:  r.shootNamespace,
+		},
 		&sharedv1r11.Rule242467{
 			Logger:     r.Logger().With("rule", sharedv1r11.ID242467),
 			InstanceID: r.instanceID,
