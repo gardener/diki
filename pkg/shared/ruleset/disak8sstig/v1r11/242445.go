@@ -50,15 +50,16 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults := []rule.CheckResult{}
 	etcdMainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
 	etcdEventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
+	options := option.FileOwnerOptions{}
 
-	if r.Options == nil {
-		r.Options = &option.FileOwnerOptions{}
+	if r.Options != nil {
+		options = *r.Options
 	}
-	if len(r.Options.ExpectedFileOwner.Users) == 0 {
-		r.Options.ExpectedFileOwner.Users = []string{"0"}
+	if len(options.ExpectedFileOwner.Users) == 0 {
+		options.ExpectedFileOwner.Users = []string{"0"}
 	}
-	if len(r.Options.ExpectedFileOwner.Groups) == 0 {
-		r.Options.ExpectedFileOwner.Groups = []string{"0"}
+	if len(options.ExpectedFileOwner.Groups) == 0 {
+		options.ExpectedFileOwner.Groups = []string{"0"}
 	}
 
 	if r.ETCDMainSelector != nil {
@@ -162,7 +163,7 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 			for containerName, fileStats := range mappedFileStats {
 				for _, fileStat := range fileStats {
 					containerTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)
-					checkResults = append(checkResults, intutils.MatchFileOwnersCases(fileStat, r.Options.ExpectedFileOwner.Users, r.Options.ExpectedFileOwner.Groups, containerTarget)...)
+					checkResults = append(checkResults, intutils.MatchFileOwnersCases(fileStat, options.ExpectedFileOwner.Users, options.ExpectedFileOwner.Groups, containerTarget)...)
 				}
 			}
 		}
