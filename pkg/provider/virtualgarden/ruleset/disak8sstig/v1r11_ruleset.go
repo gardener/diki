@@ -518,12 +518,14 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"instance": etcdMain}),
 			ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"instance": etcdEvents}),
 		},
-		rule.NewSkipRule(
-			sharedv1r11.ID242460,
-			"The Kubernetes admin kubeconfig must have file permissions set to 644 or more restrictive (MEDIUM 242460)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242460{
+			Logger:          r.Logger().With("rule", sharedv1r11.ID242460),
+			InstanceID:      r.instanceID,
+			Client:          runtimeClient,
+			Namespace:       ns,
+			PodContext:      runtimePodContext,
+			DeploymentNames: []string{apiserverDeploymentName, kcmDeploymentName},
+		},
 		&sharedv1r11.Rule242461{
 			Client:         runtimeClient,
 			Namespace:      ns,
