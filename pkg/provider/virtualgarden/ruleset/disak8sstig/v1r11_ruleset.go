@@ -15,7 +15,7 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	"github.com/gardener/diki/pkg/provider/virtualgarden/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
-	option "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
@@ -40,6 +40,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 	opts245543, err := getV1R11OptionOrNil[sharedv1r11.Options245543](ruleOptions[sharedv1r11.ID245543].Args)
+	if err != nil {
+		return err
+	}
+	opts242451, err := getV1R11OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedv1r11.ID242451].Args)
 	if err != nil {
 		return err
 	}
@@ -475,12 +479,17 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noKubeletsMsg,
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242451,
-			"The Kubernetes component PKI must be owned by root (MEDIUM 242451)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242451{
+			Logger:             r.Logger().With("rule", sharedv1r11.ID242451),
+			InstanceID:         r.instanceID,
+			Client:             runtimeClient,
+			Namespace:          ns,
+			PodContext:         runtimePodContext,
+			ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"instance": etcdMain}),
+			ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"instance": etcdEvents}),
+			DeploymentNames:    []string{apiserverDeploymentName, kcmDeploymentName},
+			Options:            opts242451,
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242452,
 			"The Kubernetes kubelet KubeConfig must have file permissions set to 644 or more restrictive (MEDIUM 242452)",

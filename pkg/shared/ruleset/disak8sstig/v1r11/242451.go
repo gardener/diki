@@ -24,11 +24,12 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/images"
 	"github.com/gardener/diki/pkg/shared/provider"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
-var _ rule.Rule = &Rule242467{}
+var _ rule.Rule = &Rule242451{}
 
-type Rule242467 struct {
+type Rule242451 struct {
 	InstanceID         string
 	Client             client.Client
 	Namespace          string
@@ -36,22 +37,34 @@ type Rule242467 struct {
 	ETCDMainSelector   labels.Selector
 	ETCDEventsSelector labels.Selector
 	DeploymentNames    []string
+	Options            *option.FileOwnerOptions
 	Logger             provider.Logger
 }
 
-func (r *Rule242467) ID() string {
-	return ID242467
+func (r *Rule242451) ID() string {
+	return ID242451
 }
 
-func (r *Rule242467) Name() string {
-	return "The Kubernetes PKI keys must have file permissions set to 600 or more restrictive (MEDIUM 242467)"
+func (r *Rule242451) Name() string {
+	return "The Kubernetes component PKI must be owned by root (MEDIUM 242451)"
 }
 
-func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults := []rule.CheckResult{}
 	etcdMainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
 	etcdEventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
 	deploymentNames := []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
+	options := option.FileOwnerOptions{}
+
+	if r.Options != nil {
+		options = *r.Options
+	}
+	if len(options.ExpectedFileOwner.Users) == 0 {
+		options.ExpectedFileOwner.Users = []string{"0"}
+	}
+	if len(options.ExpectedFileOwner.Groups) == 0 {
+		options.ExpectedFileOwner.Groups = []string{"0"}
+	}
 
 	if r.ETCDMainSelector != nil {
 		etcdMainSelector = r.ETCDMainSelector
@@ -174,32 +187,44 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 			}
 
-			// Control plane components run as "nonroot" user/group 65532
-			// Mounted file have owner user root and group 65532
-			// Since in k8s there is no easy way to change the user owner of a file (link the issue)
-			// we check for 640 instead of 600 for key files
-			expectedFilePermissionsMax := "640"
 			for containerName, fileStats := range mappedFileStats {
+				pkiDirs := map[string]struct{}{}
+				containerTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)
+
+				// We iterate through a files matching certain suffixes and we check their permissions
+				// Directories that contain such files are saved so that they can be checked in the following for cycle
 				for _, fileStat := range fileStats {
-					if !strings.HasSuffix(fileStat.Path, ".key") && !strings.HasSuffix(fileStat.Path, ".pem") {
+					if !strings.HasSuffix(fileStat.Path, ".key") && !strings.HasSuffix(fileStat.Path, ".pem") && !strings.HasSuffix(fileStat.Path, ".crt") {
 						continue
 					}
 
-					containerTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)
-					exceedFilePermissions, err := intutils.ExceedFilePermissions(fileStat.Permissions, expectedFilePermissionsMax)
+					pkiDirs[fileStat.Dir()] = struct{}{}
+
+					checkResults = append(checkResults, intutils.MatchFileOwnersCases(fileStat, options.ExpectedFileOwner.Users, options.ExpectedFileOwner.Groups, containerTarget)...)
+				}
+
+				for dir := range pkiDirs {
+					delimiter := "\t"
+					dirStats, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`stat -Lc "%%a%[1]s%%u%[1]s%%g%[1]s%%F%[1]s%%n" %s`, delimiter, dir))
+
 					if err != nil {
-						checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), containerTarget))
+						checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 						continue
 					}
 
-					if exceedFilePermissions {
-						detailedTarget := containerTarget.With("details", fmt.Sprintf("fileName: %s, permissions: %s, expectedPermissionsMax: %s", fileStat.Path, fileStat.Permissions, expectedFilePermissionsMax))
-						checkResults = append(checkResults, rule.FailedCheckResult("File has too wide permissions", detailedTarget))
+					if len(dirStats) == 0 {
+						checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find file %s", dir), execPodTarget))
 						continue
 					}
 
-					detailedTarget := containerTarget.With("details", fmt.Sprintf("fileName: %s, permissions: %s", fileStat.Path, fileStat.Permissions))
-					checkResults = append(checkResults, rule.PassedCheckResult("File has expected permissions", detailedTarget))
+					dirStatsSlice := strings.Split(strings.TrimSpace(dirStats), "\n")
+					dirFileStats, err := intutils.NewFileStats(dirStatsSlice[0], delimiter)
+					if err != nil {
+						checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
+						continue
+					}
+
+					checkResults = append(checkResults, intutils.MatchFileOwnersCases(dirFileStats, options.ExpectedFileOwner.Users, options.ExpectedFileOwner.Groups, containerTarget)...)
 				}
 			}
 		}
