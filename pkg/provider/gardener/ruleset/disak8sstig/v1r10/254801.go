@@ -10,8 +10,6 @@ import (
 	"log/slog"
 	"slices"
 
-	"github.com/Masterminds/semver"
-	versionutils "github.com/gardener/gardener/pkg/utils/version"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -31,7 +29,6 @@ type Rule254801 struct {
 	ControlPlaneClient      client.Client
 	ControlPlaneNamespace   string
 	ClusterClient           client.Client
-	ClusterVersion          *semver.Version
 	ClusterCoreV1RESTClient rest.Interface
 	ClusterPodContext       pod.PodContext
 	Logger                  *slog.Logger
@@ -108,13 +105,11 @@ func (r *Rule254801) Run(ctx context.Context) (rule.RuleResult, error) {
 			kubeletConfig.FeatureGates = map[string]bool{}
 		}
 
-		// featureGates.PodSecurity defaults to false in v1.22 and to true in versions >= v1.23. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/#feature-gates-for-alpha-or-beta-features
+		// featureGates.PodSecurity defaults to true in versions >= v1.23. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/#feature-gates-for-alpha-or-beta-features
 		podSecurityConfig, ok := kubeletConfig.FeatureGates["PodSecurity"]
 		switch {
-		case !ok && versionutils.ConstraintK8sEqual122.Check(r.ClusterVersion):
-			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Option %s not set.", option), target.With("details", fmt.Sprintf("Cluster uses Kubernetes %s.", r.ClusterVersion.String()))))
 		case !ok:
-			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", option), target.With("details", fmt.Sprintf("Cluster uses Kubernetes %s.", r.ClusterVersion.String()))))
+			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", option), target))
 		case podSecurityConfig:
 			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", option), target))
 		default:
@@ -175,13 +170,11 @@ func (r *Rule254801) checkWorkerGroup(ctx context.Context, workerGroup string, n
 		kubeletConfig.FeatureGates = map[string]bool{}
 	}
 
-	// featureGates.PodSecurity defaults to false in v1.22 and to true in versions >= v1.23. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/#feature-gates-for-alpha-or-beta-features
+	// featureGates.PodSecurity defaults to true in versions >= v1.23. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/#feature-gates-for-alpha-or-beta-features
 	podSecurityConfig, ok := kubeletConfig.FeatureGates["PodSecurity"]
 	switch {
-	case !ok && versionutils.ConstraintK8sEqual122.Check(r.ClusterVersion):
-		return rule.FailedCheckResult(fmt.Sprintf("Option %s not set.", option), target.With("details", fmt.Sprintf("Cluster uses Kubernetes %s.", r.ClusterVersion.String())))
 	case !ok:
-		return rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", option), target.With("details", fmt.Sprintf("Cluster uses Kubernetes %s.", r.ClusterVersion.String())))
+		return rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", option), target)
 	case podSecurityConfig:
 		return rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", option), target)
 	default:

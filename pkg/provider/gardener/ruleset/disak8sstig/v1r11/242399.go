@@ -10,7 +10,7 @@ import (
 	"log/slog"
 	"slices"
 
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 	versionutils "github.com/gardener/gardener/pkg/utils/version"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/rest"

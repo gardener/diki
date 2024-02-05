@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 	versionutils "github.com/gardener/gardener/pkg/utils/version"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"

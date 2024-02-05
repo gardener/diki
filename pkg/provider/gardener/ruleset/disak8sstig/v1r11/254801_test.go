@@ -11,7 +11,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/Masterminds/semver"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	kubernetesgardener "github.com/gardener/gardener/pkg/client/kubernetes"
 	. "github.com/onsi/ginkgo/v2"
@@ -53,8 +52,6 @@ var _ = Describe("#254801", func() {
 		fakeClusterClient      client.Client
 		fakeClusterRESTClient  rest.Interface
 		fakeClusterPodContext  pod.PodContext
-		clusterVersion122      *semver.Version
-		clusterVersion126      *semver.Version
 		ctx                    = context.TODO()
 		workers                *extensionsv1alpha1.Worker
 		namespace              = "foo"
@@ -152,40 +149,6 @@ var _ = Describe("#254801", func() {
 				}
 			}),
 		}
-
-		clusterVersion122 = semver.MustParse("1.22.0")
-		clusterVersion126 = semver.MustParse("1.26.0")
-	})
-
-	It("should return correct checkResults when nodes do not have featureGates.PodSecurity set and cluster version is = v1.22", func() {
-		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1", "details", "Cluster uses Kubernetes 1.22.0.")),
-			rule.FailedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "Cluster uses Kubernetes 1.22.0.")),
-			rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-			rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
-			rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
-			rule.FailedCheckResult("Option featureGates.PodSecurity set to not allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node2")),
-			rule.WarningCheckResult("Node is not in Ready state.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
-			rule.FailedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node4", "details", "Cluster uses Kubernetes 1.22.0.")),
-			rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node5")),
-		}
-		executeReturnString := [][]string{{"--not-feature-gates=PodSecurity=true --config=./config", podSecurityNotSetConfig}, {"--not-feature-gates=PodSecurity=true, --config=./config", podSecurityNotSetConfig}}
-		executeReturnError := [][]error{{nil, nil}, {nil, nil}}
-		fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
-		r := &v1r11.Rule254801{
-			Logger:                  testLogger,
-			ControlPlaneClient:      fakeControlPlaneClient,
-			ControlPlaneNamespace:   namespace,
-			ClusterClient:           fakeClusterClient,
-			ClusterVersion:          clusterVersion122,
-			ClusterCoreV1RESTClient: fakeClusterRESTClient,
-			ClusterPodContext:       fakeClusterPodContext,
-		}
-
-		ruleResult, err := r.Run(ctx)
-		Expect(err).To(BeNil())
-
-		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 
 	DescribeTable("Run cases",
@@ -194,7 +157,7 @@ var _ = Describe("#254801", func() {
 				rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
 				rule.FailedCheckResult("Option featureGates.PodSecurity set to not allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node2")),
 				rule.WarningCheckResult("Node is not in Ready state.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
-				rule.PassedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node4", "details", "Cluster uses Kubernetes 1.26.0.")),
+				rule.PassedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node4")),
 				rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node5")),
 			}
 			expectedCheckResults = append(expectedCheckResults, alwaysExpectedCheckResults...)
@@ -204,7 +167,6 @@ var _ = Describe("#254801", func() {
 				ControlPlaneClient:      fakeControlPlaneClient,
 				ControlPlaneNamespace:   namespace,
 				ClusterClient:           fakeClusterClient,
-				ClusterVersion:          clusterVersion126,
 				ClusterCoreV1RESTClient: fakeClusterRESTClient,
 				ClusterPodContext:       fakeClusterPodContext,
 			}
@@ -233,12 +195,12 @@ var _ = Describe("#254801", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
-		Entry("should return correct checkResults when nodes do not have featureGates.PodSecurity set and cluster version is > v1.22",
+		Entry("should return correct checkResults when nodes do not have featureGates.PodSecurity set",
 			[][]string{{"--not-feature-gates=PodSecurity=true --config=./config", podSecurityNotSetConfig}, {"--not-feature-gates=PodSecurity=true, --config=./config", podSecurityNotSetConfig}},
 			[][]error{{nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1", "details", "Cluster uses Kubernetes 1.26.0.")),
-				rule.PassedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "Cluster uses Kubernetes 1.26.0.")),
+				rule.PassedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
+				rule.PassedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
