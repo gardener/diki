@@ -5,9 +5,10 @@
 package v1r11
 
 import (
+	"cmp"
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -49,15 +50,15 @@ func (r *Rule242446) Name() string {
 func (r *Rule242446) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults := []rule.CheckResult{}
 	deploymentNames := []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
-
-	if r.Options == nil {
-		r.Options = &option.FileOwnerOptions{}
+	options := option.FileOwnerOptions{}
+	if r.Options != nil {
+		options = *r.Options
 	}
-	if len(r.Options.ExpectedFileOwner.Users) == 0 {
-		r.Options.ExpectedFileOwner.Users = []string{"0"}
+	if len(options.ExpectedFileOwner.Users) == 0 {
+		options.ExpectedFileOwner.Users = []string{"0"}
 	}
-	if len(r.Options.ExpectedFileOwner.Groups) == 0 {
-		r.Options.ExpectedFileOwner.Groups = []string{"0"}
+	if len(options.ExpectedFileOwner.Groups) == 0 {
+		options.ExpectedFileOwner.Groups = []string{"0"}
 	}
 
 	if r.DeploymentNames != nil {
@@ -145,10 +146,13 @@ func (r *Rule242446) Run(ctx context.Context) (rule.RuleResult, error) {
 		execBaseContainerID := strings.Split(execContainerID, "//")[1]
 		execContainerPath := fmt.Sprintf("/run/containerd/io.containerd.runtime.v2.task/k8s.io/%s/rootfs", execBaseContainerID)
 
-		sort.Slice(pods, func(i, j int) bool {
-			return pods[i].Name < pods[j].Name
+		slices.SortFunc(pods, func(a, b corev1.Pod) int {
+			return cmp.Compare(a.Name, b.Name)
 		})
 
+		// The rule is not explained in details and it is ambiguous
+		// It refers to kubeconfigs (and other configuration files?)
+		// This is why we check all files and not only specific ones
 		for _, pod := range pods {
 			excludedSources := []string{"/lib/modules", "/usr/share/ca-certificates", "/var/log/journal"}
 			mappedFileStats, err := intutils.GetMountedFilesStats(ctx, execContainerPath, podExecutor, pod, excludedSources)
@@ -159,7 +163,7 @@ func (r *Rule242446) Run(ctx context.Context) (rule.RuleResult, error) {
 			for containerName, fileStats := range mappedFileStats {
 				for _, fileStat := range fileStats {
 					containerTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)
-					checkResults = append(checkResults, intutils.MatchFileOwnersCases(fileStat, r.Options.ExpectedFileOwner.Users, r.Options.ExpectedFileOwner.Groups, containerTarget)...)
+					checkResults = append(checkResults, intutils.MatchFileOwnersCases(fileStat, options.ExpectedFileOwner.Users, options.ExpectedFileOwner.Groups, containerTarget)...)
 				}
 			}
 		}
