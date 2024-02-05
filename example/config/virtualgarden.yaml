@@ -10,7 +10,22 @@ providers:               # contains information about known providers
   - id: disa-kubernetes-stig
     name: DISA Kubernetes Security Technical Implementation Guide
     version: v1r11
-    ruleOptions: []
+    ruleOptions:
+    - ruleID: "242446"
+      args:
+        expectedFileOwner:
+          # users and groups default to ["0"]
+          #
+          # Gardener images use distroless nonroot user with ID 65532
+          # https://github.com/GoogleContainerTools/distroless/blob/main/base/base.bzl#L8
+          users: ["0", "65532"]
+          groups: ["0", "65532"]
+    - ruleID: "245543"
+      args:
+        acceptedTokens:
+        - user: "health-check"
+          uid: "health-check"
+          # groups: "group1,group2,group3"
 output:
   path: /tmp/test-output.json          #  optional, path to summary json report
   minStatus: Passed
