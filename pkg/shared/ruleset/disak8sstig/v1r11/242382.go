@@ -12,7 +12,6 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -20,11 +19,11 @@ import (
 var _ rule.Rule = &Rule242382{}
 
 type Rule242382 struct {
-	Client         client.Client
-	Namespace      string
-	DeploymentName string
-	ContainerName  string
-	AllowedModes   []string
+	Client           client.Client
+	Namespace        string
+	DeploymentName   string
+	ContainerName    string
+	RecommendedModes []string
 }
 
 func (r *Rule242382) ID() string {
@@ -39,7 +38,7 @@ func (r *Rule242382) Run(ctx context.Context) (rule.RuleResult, error) {
 	const option = "authorization-mode"
 	deploymentName := "kube-apiserver"
 	containerName := "kube-apiserver"
-	allowedModes := []string{"Node", "RBAC"}
+	recommendedModes := []string{"Node", "RBAC"}
 
 	if r.DeploymentName != "" {
 		deploymentName = r.DeploymentName
@@ -49,8 +48,8 @@ func (r *Rule242382) Run(ctx context.Context) (rule.RuleResult, error) {
 		containerName = r.ContainerName
 	}
 
-	if len(r.AllowedModes) != 0 {
-		allowedModes = r.AllowedModes
+	if len(r.RecommendedModes) != 0 {
+		recommendedModes = r.RecommendedModes
 	}
 
 	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
@@ -68,8 +67,8 @@ func (r *Rule242382) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", option), target)), nil
 	case slices.Contains(strings.Split(optSlice[0], ","), "AlwaysAllow"):
 		return rule.SingleCheckResult(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", option), target)), nil
-	case utils.EqualSets(allowedModes, strings.Split(optSlice[0], ",")):
-		return rule.SingleCheckResult(r, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", option), target)), nil
+	case slices.Equal(recommendedModes, strings.Split(optSlice[0], ",")):
+		return rule.SingleCheckResult(r, rule.PassedCheckResult(fmt.Sprintf("Option %s set to recommended value.", option), target)), nil
 	default:
 		return rule.SingleCheckResult(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not recommended value.", option), target)), nil
 	}
