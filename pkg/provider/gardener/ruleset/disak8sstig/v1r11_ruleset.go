@@ -460,12 +460,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			`Rule implemented by "node-files" and "pod-files" for correctness, consistency, deduplication, reliability, and performance reasons.`,
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242467,
-			"Kubernetes PKI keys must have file permissions set to 600 or more restrictive (MEDIUM 242467)",
-			`Rule implemented by "node-files" and "pod-files" for correctness, consistency, deduplication, reliability, and performance reasons.`,
-			rule.Skipped,
-		),
+		&sharedv1r11.Rule242467{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242467),
+			InstanceID: r.instanceID,
+			Client:     seedClient,
+			PodContext: seedPodContext,
+			Namespace:  r.shootNamespace,
+		},
 		&v1r11.Rule245541{
 			Logger:                  r.Logger().With("rule", sharedv1r11.ID245541),
 			InstanceID:              r.instanceID,
