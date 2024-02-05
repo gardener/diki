@@ -273,9 +273,9 @@ var _ = Describe("#242466", func() {
 		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
 			rule.FailedCheckResult("Pods not found!", target.With("selector", mainSelector.String())),
 			rule.FailedCheckResult("Pods not found!", target.With("selector", eventsSelector.String())),
-			rule.FailedCheckResult("Pods not found!", target.With("name", "kube-apiserver", "kind", "Deployment", "namespace", r.Namespace)),
-			rule.FailedCheckResult("Pods not found!", target.With("name", "kube-controller-manager", "kind", "Deployment", "namespace", r.Namespace)),
-			rule.FailedCheckResult("Pods not found!", target.With("name", "kube-scheduler", "kind", "Deployment", "namespace", r.Namespace)),
+			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "kube-apiserver", "kind", "Deployment", "namespace", r.Namespace)),
+			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "kube-controller-manager", "kind", "Deployment", "namespace", r.Namespace)),
+			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "kube-scheduler", "kind", "Deployment", "namespace", r.Namespace)),
 		}))
 	})
 
