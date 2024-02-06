@@ -5,8 +5,9 @@
 package managedk8s
 
 import (
-	"github.com/gardener/diki/pkg/shared/provider"
 	"k8s.io/client-go/rest"
+
+	"github.com/gardener/diki/pkg/shared/provider"
 )
 
 // CreateOption is a function that acts on a [Provider]
