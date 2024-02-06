@@ -1,0 +1,25 @@
+providers:                   # contains information about known providers
+- id: managedk8s             # unique provider identifier
+  name: "Managed Kubernetes" # user friendly name of the provider
+  metadata:
+    foo: bar
+  args:
+    kubeconfigPath: /tmp/kubeconfig.config  # path to garden cluster admin kubeconfig
+  rulesets:
+  - id: disa-kubernetes-stig
+    name: DISA Kubernetes Security Technical Implementation Guide
+    version: v1r11
+    ruleOptions:
+    # - ruleID: "242415"
+    #   args:
+    #     acceptedPods:
+    #     - podMatchLabels:
+    #         label: foo
+    #       namespaceMatchLabels:
+    #         label: foo
+    #       justification: "justification"
+    #       environmentVariables:
+    #       - FOO_BAR
+output:
+  path: /tmp/test-output.json  # optional, path to summary json report
+  minStatus: Passed
