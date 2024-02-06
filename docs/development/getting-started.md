@@ -26,7 +26,7 @@ You can use the [example gardener configuration](../../example/config/gardener.y
 
 To run Diki you can use the [run script](../../hack/run.sh). It will use default ldflags flags or you can configure them by setting the `LD_FLAGS` env var. You will need to set the `IMAGEVECTOR_OVERWRITE` env var to overwrite the [images.yaml](../../imagevector/images.yaml) file to a file that specifies the version of the `diki-ops` image or change it's repository.
 
-After creating the overwrite images file you can run diki as follow:
+After creating the overwrite images file you can run diki as follows:
 ```bash
 IMAGEVECTOR_OVERWRITE=/path/to/images/file ./hack/run.sh --config=/path/to/config/file
 ```

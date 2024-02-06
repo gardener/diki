@@ -17,7 +17,7 @@ Diki is the Greek word for "trial". You can also memorise it as "Detective Inves
 
 If you install via GitHub releases, you need to put the diki binary on your path.
 
-You can also install diki using these commands:
+You can also install diki using this code snippet:
 ```bash
 # Example for macOS
 
@@ -44,17 +44,17 @@ Most of Diki's `run` configurations are provided through its [config file](./con
 
 - Run all known rulesets for all known providers
 ```bash
-diki --config=config.yaml --all
+diki run --config=config.yaml --all
 ```
 
 - Run a specific ruleset for a known provider
 ```bash
-diki --config=config.yaml --provider=gardener --ruleset-id=disa-kubernetes-stig --ruleset-version=v1r11
+diki run --config=config.yaml --provider=gardener --ruleset-id=disa-kubernetes-stig --ruleset-version=v1r11
 ```
 
 - Run a specific rule defined in a ruleset for a known provider
 ```bash
-diki --config=config.yaml --provider=gardener --ruleset-id=disa-kubernetes-stig --ruleset-version=v1r11 --rule-id=242414
+diki run --config=config.yaml --provider=gardener --ruleset-id=disa-kubernetes-stig --ruleset-version=v1r11 --rule-id=242414
 ```
 
 #### Report
