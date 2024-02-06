@@ -20,7 +20,7 @@ Make sure that you have a running local Gardener setup with a created shoot clus
 
 ### Diki configuration
 
-You can use the [example gardener configuration](../../example/config/gardener.yaml) for this run. You will need to modify the `provider.args` field with correct kubeconfigs and shoot name/ namespace. You can can find a guide on how to get the shoot's kubeconfig [here]([here](https://github.com/gardener/gardener/blob/master/docs/deployment/getting_started_locally.md).
+You can use the [example gardener configuration](../../example/config/gardener.yaml) for this run. You will need to modify the `provider.args` field with correct kubeconfigs and shoot name/ namespace. You can can find a guide on how to get the shoot's kubeconfig [here](https://github.com/gardener/gardener/blob/master/docs/deployment/getting_started_locally.md).
 
 ### Diki run
 
