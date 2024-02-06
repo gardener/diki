@@ -138,7 +138,7 @@ func FromGenericConfig(providerConf config.ProviderConfig) (*Provider, error) {
 		return nil, err
 	}
 
-	GardenKubeconfig, err := kubeutils.RESTConfigFromFile(providerGardenArgs.GardenKubeconfigPath)
+	gardenKubeconfig, err := kubeutils.RESTConfigFromFile(providerGardenArgs.GardenKubeconfigPath)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func FromGenericConfig(providerConf config.ProviderConfig) (*Provider, error) {
 	gardenProvider, err := New(
 		WithID(providerConf.ID),
 		WithName(providerConf.Name),
-		WithGardenConfig(GardenKubeconfig),
+		WithGardenConfig(gardenKubeconfig),
 		WithRuntimeConfig(runtimeKubeconfig),
 		WithMetadata(providerConf.Metadata),
 	)
