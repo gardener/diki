@@ -144,16 +144,29 @@ var _ = Describe("utils", func() {
 			Expect(result).To(Equal(map[string][]utils.FileStats{"test": {destinationFileStats, fooFileStats}}))
 		})
 
-		It("Should return error when file could not be found", func() {
+		It("Should return error when files could not be found", func() {
 			pod.Spec.Containers[0].VolumeMounts = append(pod.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
 				MountPath: "/foo",
 			})
-			executeReturnString := []string{mounts, destinationStats, ""}
-			executeReturnError := []error{nil, nil, nil}
+			executeReturnString := []string{mounts, destinationStats, "", "2\n"}
+			executeReturnError := []error{nil, nil, nil, nil}
 			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
 			result, err := utils.GetMountedFilesStats(ctx, "", fakePodExecutor, pod, []string{"/lib/modules"})
 
-			Expect(err).To(MatchError("could not find file /foo"))
+			Expect(err).To(MatchError("could not find files in /foo"))
+			Expect(result).To(Equal(map[string][]utils.FileStats{"test": {destinationFileStats}}))
+		})
+
+		It("Should not return error when directory is empty", func() {
+			pod.Spec.Containers[0].VolumeMounts = append(pod.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
+				MountPath: "/foo",
+			})
+			executeReturnString := []string{mounts, destinationStats, "", "0\n"}
+			executeReturnError := []error{nil, nil, nil, nil}
+			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
+			result, err := utils.GetMountedFilesStats(ctx, "", fakePodExecutor, pod, []string{"/lib/modules"})
+
+			Expect(err).To(BeNil())
 			Expect(result).To(Equal(map[string][]utils.FileStats{"test": {destinationFileStats}}))
 		})
 
