@@ -12,4 +12,4 @@ The `Gardener` provider implements the following `rulesets`:
 
 ### Configuration
 
-See an [example Diki configuration](../../example/config/virtualgarden.yaml) for this provider.
+See an [example Diki configuration](../../example/config/managedk8s.yaml) for this provider.
