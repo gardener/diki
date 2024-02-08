@@ -1,4 +1,5 @@
 # Diki
+[![REUSE status](https://api.reuse.software/badge/github.com/gardener/diki)](https://api.reuse.software/info/github.com/gardener/diki)
 
 [![gardener compliance checker](https://badgen.net/badge/gardener/compliance-checker/009f76)](https://github.com/gardener)
 [![status alpha](https://badgen.net/badge/status/alpha/d8624d)](https://badgen.net/badge/status/alpha/d8624d)
