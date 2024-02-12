@@ -15,7 +15,7 @@ import (
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
-func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsConfig) error { //nolint:unused // TODO: add to FromGenericConfig
+func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
 	client, err := client.New(r.Config, client.Options{})
 	if err != nil {
 		return err
@@ -27,7 +27,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	}
 
 	const (
-		noControlPlaneMsg = "The Managed kubernetes Cluster does not have access to control plane components."
+		noControlPlaneMsg = "The Managed Kubernetes cluster does not have access to control plane components."
 	)
 	rules := []rule.Rule{
 		rule.NewSkipRule(
@@ -178,8 +178,8 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		rule.NewSkipRule(
 			sharedv1r11.ID242400,
 			"The Kubernetes API server must have Alpha APIs disabled (MEDIUM 242400)",
-			noControlPlaneMsg,
-			rule.Skipped,
+			"",
+			rule.NotImplemented,
 		),
 		rule.NewSkipRule(
 			sharedv1r11.ID242402,
@@ -278,7 +278,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		),
 		rule.NewSkipRule(
 			sharedv1r11.ID242419,
-			"The Kubernetes API server must use approved cipher suites (MEDIUM 242419)",
+			"Kubernetes API Server must have the SSL Certificate Authority set (MEDIUM 242419)",
 			noControlPlaneMsg,
 			rule.Skipped,
 		),
@@ -405,7 +405,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		rule.NewSkipRule(
 			sharedv1r11.ID242444,
 			"Kubernetes component manifests must be owned by root (MEDIUM 242444)",
-			"Rule is duplicate of 242405 "+noControlPlaneMsg,
+			"Rule is duplicate of 242405. "+noControlPlaneMsg,
 			rule.Skipped,
 		),
 		rule.NewSkipRule(
@@ -588,7 +588,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	return r.AddRules(rules...)
 }
 
-func parseV1R11Options[O v1r11.RuleOption](options any) (*O, error) { //nolint:unused
+func parseV1R11Options[O v1r11.RuleOption](options any) (*O, error) {
 	optionsByte, err := json.Marshal(options)
 	if err != nil {
 		return nil, err
@@ -602,7 +602,7 @@ func parseV1R11Options[O v1r11.RuleOption](options any) (*O, error) { //nolint:u
 	return &parsedOptions, nil
 }
 
-func getV1R11OptionOrNil[O v1r11.RuleOption](options any) (*O, error) { //nolint:unused
+func getV1R11OptionOrNil[O v1r11.RuleOption](options any) (*O, error) {
 	if options == nil {
 		return nil, nil
 	}
