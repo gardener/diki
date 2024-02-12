@@ -19,7 +19,7 @@ import (
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
-func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsConfig) error { //nolint:unused // TODO: add to FromGenericConfig
+func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
 	runtimeClient, err := client.New(r.RuntimeConfig, client.Options{})
 	if err != nil {
 		return err
@@ -646,7 +646,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	return r.AddRules(rules...)
 }
 
-func parseV1R11Options[O v1r11.RuleOption](options any) (*O, error) { //nolint:unused
+func parseV1R11Options[O v1r11.RuleOption](options any) (*O, error) {
 	optionsByte, err := json.Marshal(options)
 	if err != nil {
 		return nil, err
@@ -660,7 +660,7 @@ func parseV1R11Options[O v1r11.RuleOption](options any) (*O, error) { //nolint:u
 	return &parsedOptions, nil
 }
 
-func getV1R11OptionOrNil[O v1r11.RuleOption](options any) (*O, error) { //nolint:unused
+func getV1R11OptionOrNil[O v1r11.RuleOption](options any) (*O, error) {
 	if options == nil {
 		return nil, nil
 	}

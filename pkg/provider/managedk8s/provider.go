@@ -1,8 +1,8 @@
-// SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+// SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package virtualgarden
+package managedk8s
 
 import (
 	"context"
@@ -21,19 +21,18 @@ import (
 	sharedprovider "github.com/gardener/diki/pkg/shared/provider"
 )
 
-// Provider is a Garden Cluster Provider that can be used to implement rules
-// against a virtual garden cluster and its controlplane (residing in a runtime cluster).
+// Provider is a Managed Kubernetes Cluster Provider that can
+// be used to implement rules against a kubernetes cluster.
 type Provider struct {
-	id, name                    string
-	RuntimeConfig, GardenConfig *rest.Config
-	rulesets                    map[string]ruleset.Ruleset
-	metadata                    map[string]string
-	logger                      *slog.Logger
+	id, name string
+	Config   *rest.Config
+	rulesets map[string]ruleset.Ruleset
+	metadata map[string]string
+	logger   sharedprovider.Logger
 }
 
 type providerArgs struct {
-	RuntimeKubeconfigPath string
-	GardenKubeconfigPath  string
+	KubeconfigPath string
 }
 
 var _ provider.Provider = &Provider{}
@@ -48,12 +47,8 @@ func New(options ...CreateOption) (*Provider, error) {
 	}
 
 	var err error
-	if p.RuntimeConfig == nil {
-		err = errors.Join(err, errors.New("runtime cluster config is nil"))
-	}
-
-	if p.GardenConfig == nil {
-		err = errors.Join(err, errors.New("garden cluster config is nil"))
+	if p.Config == nil {
+		err = errors.Join(err, errors.New("cluster config is nil"))
 	}
 
 	if err != nil {
@@ -128,38 +123,32 @@ func FromGenericConfig(providerConf config.ProviderConfig) (*Provider, error) {
 		return nil, err
 	}
 
-	var providerGardenArgs providerArgs
-	if err := json.Unmarshal(providerArgsByte, &providerGardenArgs); err != nil {
+	var providerArgs providerArgs
+	if err := json.Unmarshal(providerArgsByte, &providerArgs); err != nil {
 		return nil, err
 	}
 
-	runtimeKubeconfig, err := kubeutils.RESTConfigFromFile(providerGardenArgs.RuntimeKubeconfigPath)
+	kubeconfig, err := kubeutils.RESTConfigFromFile(providerArgs.KubeconfigPath)
 	if err != nil {
 		return nil, err
 	}
 
-	gardenKubeconfig, err := kubeutils.RESTConfigFromFile(providerGardenArgs.GardenKubeconfigPath)
-	if err != nil {
-		return nil, err
-	}
-
-	gardenProvider, err := New(
+	provider, err := New(
 		WithID(providerConf.ID),
 		WithName(providerConf.Name),
-		WithGardenConfig(gardenKubeconfig),
-		WithRuntimeConfig(runtimeKubeconfig),
+		WithConfig(kubeconfig),
 		WithMetadata(providerConf.Metadata),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	return gardenProvider, nil
+	return provider, nil
 }
 
 // Logger returns the Provider's logger.
 // If not set it set it to slog.Default().With("provider", p.ID()) then return it.
-func (p *Provider) Logger() *slog.Logger {
+func (p *Provider) Logger() sharedprovider.Logger {
 	if p.logger == nil {
 		p.logger = slog.Default().With("provider", p.ID())
 	}

@@ -20,7 +20,7 @@ import (
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
-func parseV1R11Options[O v1r11.RuleOption](options any) (*O, error) { //nolint:unused
+func parseV1R11Options[O v1r11.RuleOption](options any) (*O, error) {
 	optionsByte, err := json.Marshal(options)
 	if err != nil {
 		return nil, err
@@ -34,14 +34,14 @@ func parseV1R11Options[O v1r11.RuleOption](options any) (*O, error) { //nolint:u
 	return &parsedOptions, nil
 }
 
-func getV1R11OptionOrNil[O v1r11.RuleOption](options any) (*O, error) { //nolint:unused
+func getV1R11OptionOrNil[O v1r11.RuleOption](options any) (*O, error) {
 	if options == nil {
 		return nil, nil
 	}
 	return parseV1R11Options[O](options)
 }
 
-func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsConfig) error { //nolint:unused // TODO: add to FromGenericConfig
+func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
 	shootClient, err := client.New(r.ShootConfig, client.Options{Scheme: kubernetesgardener.ShootScheme})
 	if err != nil {
 		return err

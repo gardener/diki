@@ -1,13 +1,12 @@
-// SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+// SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v1r10
+package v1r11
 
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -16,16 +15,16 @@ import (
 	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/provider"
+	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
 var _ rule.Rule = &Rule242415{}
 
 type Rule242415 struct {
-	ClusterClient         client.Client
-	ControlPlaneClient    client.Client
-	ControlPlaneNamespace string
-	Options               *Options242415
-	Logger                *slog.Logger
+	Client  client.Client
+	Options *Options242415
+	Logger  provider.Logger
 }
 
 type Options242415 struct {
@@ -40,7 +39,7 @@ type AcceptedPods242415 struct {
 }
 
 func (r *Rule242415) ID() string {
-	return ID242415
+	return sharedv1r11.ID242415
 }
 
 func (r *Rule242415) Name() string {
@@ -48,29 +47,18 @@ func (r *Rule242415) Name() string {
 }
 
 func (r *Rule242415) Run(ctx context.Context) (rule.RuleResult, error) {
-	seedPods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, labels.NewSelector(), 300)
-	seedTarget := rule.NewTarget("cluster", "seed")
-	shootTarget := rule.NewTarget("cluster", "shoot")
+	target := rule.NewTarget()
+
+	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "podList"))), nil
 	}
 
-	seedNamespaces, err := kubeutils.GetNamespaces(ctx, r.ControlPlaneClient)
+	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "namespaceList"))), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "namespaceList"))), nil
 	}
-	checkResults := r.checkPods(seedPods, seedNamespaces, seedTarget)
-
-	shootPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
-	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
-	}
-
-	shootNamespaces, err := kubeutils.GetNamespaces(ctx, r.ClusterClient)
-	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "namespaceList"))), nil
-	}
-	checkResults = append(checkResults, r.checkPods(shootPods, shootNamespaces, shootTarget)...)
+	checkResults := r.checkPods(pods, namespaces, target)
 
 	return rule.RuleResult{
 		RuleID:       r.ID(),

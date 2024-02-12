@@ -12,13 +12,8 @@ import (
 
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
+	"github.com/gardener/diki/pkg/shared/provider"
 )
-
-// Logger is a minimalistic logger interface.
-type Logger interface {
-	Info(string, ...any)
-	Error(string, ...any)
-}
 
 // Run is a sample implementation for a [ruleset.Ruleset].
 func Run(
@@ -26,7 +21,7 @@ func Run(
 	r ruleset.Ruleset,
 	rules map[string]rule.Rule,
 	numWorkers int,
-	log Logger,
+	log provider.Logger,
 ) (ruleset.RulesetResult, error) {
 	if len(rules) == 0 {
 		return ruleset.RulesetResult{}, fmt.Errorf("no rules are registered in the ruleset")
