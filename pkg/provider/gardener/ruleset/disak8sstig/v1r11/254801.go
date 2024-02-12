@@ -66,12 +66,7 @@ func (r *Rule254801) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
 	}
-
-	// check if tag is not present and use diki's version as a default
-	if image.Tag == nil {
-		tag := version.Get().GitVersion
-		image.Tag = &tag
-	}
+	image.WithOptionalTag(version.Get().GitVersion)
 
 	nodesAllocatablePodsNum := kubeutils.GetNodesAllocatablePodsNum(clusterPods, clusterNodes)
 	workerGroupNodes := utils.GetSingleAllocatableNodePerWorker(clusterWorkers, clusterNodes, nodesAllocatablePodsNum)
