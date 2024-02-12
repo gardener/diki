@@ -16,6 +16,7 @@ import (
 	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
 var _ rule.Rule = &Rule242414{}
@@ -40,7 +41,7 @@ type AcceptedPods242414 struct {
 }
 
 func (r *Rule242414) ID() string {
-	return ID242414
+	return sharedv1r11.ID242414
 }
 
 func (r *Rule242414) Name() string {

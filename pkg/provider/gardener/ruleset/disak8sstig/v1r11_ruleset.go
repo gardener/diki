@@ -92,11 +92,11 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
-	opts242414, err := getV1R11OptionOrNil[v1r11.Options242414](ruleOptions[v1r11.ID242414].Args)
+	opts242414, err := getV1R11OptionOrNil[v1r11.Options242414](ruleOptions[sharedv1r11.ID242414].Args)
 	if err != nil {
 		return err
 	}
-	opts242415, err := getV1R11OptionOrNil[v1r11.Options242415](ruleOptions[v1r11.ID242415].Args)
+	opts242415, err := getV1R11OptionOrNil[v1r11.Options242415](ruleOptions[sharedv1r11.ID242415].Args)
 	if err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
-	opts245543, err := getV1R11OptionOrNil[sharedv1r11.Options245543](ruleOptions[v1r11.ID245543].Args)
+	opts245543, err := getV1R11OptionOrNil[sharedv1r11.Options245543](ruleOptions[sharedv1r11.ID245543].Args)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
-	opts254800, err := getV1R11OptionOrNil[sharedv1r11.Options254800](ruleOptions[v1r11.ID254800].Args)
+	opts254800, err := getV1R11OptionOrNil[sharedv1r11.Options254800](ruleOptions[sharedv1r11.ID254800].Args)
 	if err != nil {
 		return err
 	}

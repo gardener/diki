@@ -23,6 +23,7 @@ import (
 	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/images"
+	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
 var _ rule.Rule = &Rule242387{}
@@ -38,7 +39,7 @@ type Rule242387 struct {
 }
 
 func (r *Rule242387) ID() string {
-	return ID242387
+	return sharedv1r11.ID242387
 }
 
 func (r *Rule242387) Name() string {
