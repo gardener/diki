@@ -35,7 +35,7 @@ type AcceptedPods242415 struct {
 	PodMatchLabels       map[string]string `json:"podMatchLabels" yaml:"podMatchLabels"`
 	NamespaceMatchLabels map[string]string `json:"namespaceMatchLabels" yaml:"namespaceMatchLabels"`
 	Justification        string            `json:"justification" yaml:"justification"`
-	EnvironmentVariables []string          `json:"environmentVariables" yaml:"environmentVariables "`
+	EnvironmentVariables []string          `json:"environmentVariables" yaml:"environmentVariables"`
 }
 
 func (r *Rule242415) ID() string {
