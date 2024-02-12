@@ -4,7 +4,7 @@ providers:                   # contains information about known providers
   metadata:
     foo: bar
   args:
-    kubeconfigPath: /tmp/kubeconfig.config  # path to garden cluster admin kubeconfig
+    kubeconfigPath: /tmp/kubeconfig.config  # path to cluster admin kubeconfig
   rulesets:
   - id: disa-kubernetes-stig
     name: DISA Kubernetes Security Technical Implementation Guide

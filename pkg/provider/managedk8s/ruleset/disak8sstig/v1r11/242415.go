@@ -47,18 +47,18 @@ func (r *Rule242415) Name() string {
 }
 
 func (r *Rule242415) Run(ctx context.Context) (rule.RuleResult, error) {
-	shootTarget := rule.NewTarget()
+	target := rule.NewTarget()
 
-	shootPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
+	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList"))), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "podList"))), nil
 	}
 
-	shootNamespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
+	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "namespaceList"))), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "namespaceList"))), nil
 	}
-	checkResults := r.checkPods(shootPods, shootNamespaces, shootTarget)
+	checkResults := r.checkPods(pods, namespaces, target)
 
 	return rule.RuleResult{
 		RuleID:       r.ID(),

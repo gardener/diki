@@ -133,7 +133,7 @@ func FromGenericConfig(providerConf config.ProviderConfig) (*Provider, error) {
 		return nil, err
 	}
 
-	gardenProvider, err := New(
+	provider, err := New(
 		WithID(providerConf.ID),
 		WithName(providerConf.Name),
 		WithConfig(kubeconfig),
@@ -143,7 +143,7 @@ func FromGenericConfig(providerConf config.ProviderConfig) (*Provider, error) {
 		return nil, err
 	}
 
-	return gardenProvider, nil
+	return provider, nil
 }
 
 // Logger returns the Provider's logger.

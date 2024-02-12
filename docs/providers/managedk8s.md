@@ -2,11 +2,11 @@
 
 ## Provider
 
-The `Managed Kubernetes` provider is capable of accessing a `GKE cluster` environment and running `rulesets` against it.
+The `Managed Kubernetes` provider is capable of accessing a managed Kubernetes environment and running `rulesets` against it.
 
 ## Rulesets
 
-The `Gardener` provider implements the following `rulesets`:
+The `Managed Kubernetes` provider implements the following `rulesets`:
 - [DISA Kubernetes Security Technical Implementation Guide](../rulesets/disa-k8s-stig.md)
     - v1r11
 
