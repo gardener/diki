@@ -16,7 +16,7 @@ import (
 )
 
 func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsConfig) error { //nolint:unused // TODO: add to FromGenericConfig
-	Client, err := client.New(r.Config, client.Options{})
+	client, err := client.New(r.Config, client.Options{})
 	if err != nil {
 		return err
 	}
@@ -261,7 +261,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		),
 		&v1r11.Rule242415{
 			Logger:  r.Logger().With("rule", sharedv1r11.ID242415),
-			Client:  Client,
+			Client:  client,
 			Options: opts242415,
 		},
 		rule.NewSkipRule(
