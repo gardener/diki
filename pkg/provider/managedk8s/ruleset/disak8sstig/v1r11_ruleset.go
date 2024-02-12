@@ -466,12 +466,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noControlPlaneMsg,
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242442,
-			"Kubernetes must remove old components after updated versions have been installed (MEDIUM 242442)",
-			"",
-			rule.NotImplemented,
-		),
+		&v1r11.Rule242442{
+			Logger: r.Logger().With("rule", sharedv1r11.ID242442),
+			Client: client,
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242443,
 			"Kubernetes must contain the latest updates as authorized by IAVMs, CTOs, DTMs, and STIGs (MEDIUM 242443)",
