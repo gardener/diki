@@ -35,6 +35,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
+	opts242414, err := getV1R11OptionOrNil[v1r11.Options242414](ruleOptions[sharedv1r11.ID242414].Args)
+	if err != nil {
+		return err
+	}
 	opts242415, err := getV1R11OptionOrNil[v1r11.Options242415](ruleOptions[sharedv1r11.ID242415].Args)
 	if err != nil {
 		return err
@@ -269,12 +273,11 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noControlPlaneMsg,
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242414,
-			"The Kubernetes cluster must use non-privileged host ports for user pods (MEDIUM 242414)",
-			"",
-			rule.NotImplemented,
-		),
+		&v1r11.Rule242414{
+			Logger:  r.Logger().With("rule", sharedv1r11.ID242414),
+			Client:  client,
+			Options: opts242414,
+		},
 		&v1r11.Rule242415{
 			Client:  client,
 			Options: opts242415,
