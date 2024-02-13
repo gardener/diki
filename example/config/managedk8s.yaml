@@ -10,6 +10,14 @@ providers:                   # contains information about known providers
     name: DISA Kubernetes Security Technical Implementation Guide
     version: v1r11
     ruleOptions:
+    # - ruleID: "242406"
+    # args:
+    #   nodeLabelsSelector:
+    #     labels:
+    #     - foo
+    #   expectedFileOwner:
+    #     users: ["0"]
+    #     groups: ["0"]
     # - ruleID: "242415"
     #   args:
     #     acceptedPods:
