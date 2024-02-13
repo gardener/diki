@@ -37,6 +37,27 @@ var _ = Describe("utils", func() {
 				utils.FileStats{}, MatchError("stats: 600\t0\t1000\t/destination/file1.txt, not in correct format: '${permissions}\t${userOwner}\t${groupOwner}\t${fileType}\t${filePath}'")),
 		)
 	})
+	Describe("#GetSingleFileStats", func() {
+		DescribeTable("#MatchCases",
+			func(executeReturnString []string, executeReturnError []error, expectedFileStats utils.FileStats, errorMatcher gomegatypes.GomegaMatcher) {
+				ctx := context.TODO()
+				fakePodExecutor := fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
+				result, err := utils.GetSingleFileStats(ctx, fakePodExecutor, "file/foo")
+
+				Expect(err).To(errorMatcher)
+				Expect(result).To(Equal(expectedFileStats))
+			},
+			Entry("Should return correct FileStats object",
+				[]string{"600\t0\t1000\tregular file\t/destination/file 1.txt"}, []error{nil},
+				utils.FileStats{Path: "/destination/file 1.txt", Permissions: "600", UserOwner: "0", GroupOwner: "1000", FileType: "regular file"}, BeNil()),
+			Entry("Should return correct error message when command errors",
+				[]string{"600\t0\t1000\tregular file\t/destination/file 1.txt"}, []error{errors.New("foo")},
+				utils.FileStats{}, MatchError("foo")),
+			Entry("Should return correct error message when command errors",
+				[]string{""}, []error{nil},
+				utils.FileStats{}, MatchError("could not find file file/foo")),
+		)
+	})
 	Describe("#GetPodMountedFileStatResults", func() {
 		const (
 			mounts = `[
