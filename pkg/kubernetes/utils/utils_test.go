@@ -1295,6 +1295,172 @@ readOnlyPort: 222
 	Describe("#SelectPodOfReferenceGroup", func() {
 		var (
 			nodesAllocatablePods map[string]int
+			node1                corev1.Node
+			node2                corev1.Node
+			node3                corev1.Node
+			node4                corev1.Node
+			nodes                []corev1.Node
+		)
+
+		BeforeEach(func() {
+			nodesAllocatablePods = map[string]int{
+				"node1": 10,
+				"node2": 10,
+				"node3": 10,
+				"node4": 10,
+			}
+
+			node1 = corev1.Node{}
+			node1.Labels = map[string]string{}
+			node1.Name = "node1"
+
+			node2 = corev1.Node{}
+			node2.Labels = map[string]string{}
+			node2.Name = "node2"
+
+			node3 = corev1.Node{}
+			node3.Labels = map[string]string{}
+			node3.Name = "node3"
+
+			node4 = corev1.Node{}
+			node4.Labels = map[string]string{}
+			node4.Name = "node4"
+
+			nodes = []corev1.Node{node1, node2, node3, node4}
+		})
+
+		It("should return nodes by unique single label value combination", func() {
+			nodes[0].Labels["label"] = "foo"
+			nodes[1].Labels["label"] = "bar"
+			nodes[2].Labels["label"] = "foo"
+			nodes[3].Labels["label"] = "bar"
+
+			res, checkResult := utils.SelectNodes(nodes, nodesAllocatablePods, []string{"label"}, true)
+
+			expectedRes := []corev1.Node{node1, node2}
+			Expect(res).To(ConsistOf(expectedRes))
+			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+		})
+
+		It("should return nodes by unique label value combination", func() {
+			nodes[0].Labels["label1"] = "foo"
+			nodes[1].Labels["label1"] = "foo"
+			nodes[2].Labels["label1"] = "foo"
+			nodes[3].Labels["label1"] = "bar"
+			nodes[0].Labels["label2"] = "foo"
+			nodes[1].Labels["label2"] = "bar"
+			nodes[2].Labels["label2"] = "foo"
+			nodes[3].Labels["label2"] = "bar"
+
+			res, checkResult := utils.SelectNodes(nodes, nodesAllocatablePods, []string{"label1", "label2"}, true)
+
+			expectedRes := []corev1.Node{node1, node2, node4}
+			Expect(res).To(ConsistOf(expectedRes))
+			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+		})
+
+		It("should not return nodes without label when skipEmpty is true", func() {
+			nodes[0].Labels["label"] = "foo"
+			nodes[1].Labels["label"] = "foo"
+			nodes[3].Labels["label"] = "bar"
+
+			res, checkResult := utils.SelectNodes(nodes, nodesAllocatablePods, []string{"label"}, true)
+
+			expectedRes := []corev1.Node{node1, node4}
+			Expect(res).To(ConsistOf(expectedRes))
+			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+		})
+
+		It("should return nodes without label when skipEmpty is false", func() {
+			nodes[0].Labels["label"] = "foo"
+			nodes[1].Labels["label"] = "foo"
+			nodes[3].Labels["label"] = "bar"
+
+			res, checkResult := utils.SelectNodes(nodes, nodesAllocatablePods, []string{"label"}, false)
+
+			expectedRes := []corev1.Node{node1, node3, node4}
+			Expect(res).To(ConsistOf(expectedRes))
+			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+		})
+
+		It("should return correct checkResults when a combination does not have allocatable nodes", func() {
+			nodes[0].Labels["label1"] = "foo"
+			nodes[1].Labels["label1"] = "foo"
+			nodes[2].Labels["label1"] = "foo"
+			nodes[3].Labels["label1"] = "bar"
+			nodes[0].Labels["label2"] = "foo"
+			nodes[1].Labels["label2"] = "bar"
+			nodes[2].Labels["label2"] = "foo"
+			nodes[3].Labels["label2"] = "bar"
+
+			nodesAllocatablePods = map[string]int{
+				"node1": 0,
+				"node2": 0,
+				"node3": 10,
+				"node4": 0,
+			}
+
+			res, checkResult := utils.SelectNodes(nodes, nodesAllocatablePods, []string{"label1", "label2"}, true)
+
+			expectedRes := []corev1.Node{node3}
+			expectedCheckResults := []rule.CheckResult{
+				{
+					Status:  rule.Warning,
+					Message: "No allocatable nodes of label value combination",
+					Target:  rule.NewTarget("labels", "label1: foo, label2: bar"),
+				},
+				{
+					Status:  rule.Warning,
+					Message: "No allocatable nodes of label value combination",
+					Target:  rule.NewTarget("labels", "label1: bar, label2: bar"),
+				},
+			}
+
+			Expect(res).To(ConsistOf(expectedRes))
+			Expect(checkResult).To(Equal(expectedCheckResults))
+		})
+
+		It("should return correct checkResult when when skipEmpty is false", func() {
+			nodes[0].Labels["label"] = "foo"
+			nodes[1].Labels["label"] = "foo"
+			nodes[3].Labels["label"] = "bar"
+
+			nodesAllocatablePods = map[string]int{
+				"node1": 10,
+				"node2": 10,
+				"node3": 0,
+				"node4": 10,
+			}
+
+			res, checkResult := utils.SelectNodes(nodes, nodesAllocatablePods, []string{"label"}, false)
+
+			expectedRes := []corev1.Node{node1, node4}
+			expectedCheckResults := []rule.CheckResult{
+				{
+					Status:  rule.Warning,
+					Message: "No allocatable nodes of label value combination",
+					Target:  rule.NewTarget("labels", "label: \"\""),
+				},
+			}
+
+			Expect(res).To(ConsistOf(expectedRes))
+			Expect(checkResult).To(Equal(expectedCheckResults))
+		})
+
+		It("should return all allocatable nodes when labels are not specified", func() {
+			nodesAllocatablePods["node3"] = 0
+
+			res, checkResult := utils.SelectNodes(nodes, nodesAllocatablePods, []string{}, true)
+
+			expectedRes := []corev1.Node{node1, node2, node4}
+			Expect(res).To(ConsistOf(expectedRes))
+			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+		})
+	})
+
+	Describe("#SelectPodOfReferenceGroup", func() {
+		var (
+			nodesAllocatablePods map[string]int
 		)
 
 		BeforeEach(func() {
