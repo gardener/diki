@@ -4,6 +4,16 @@
 
 package option
 
+// NodeSelectorOptions contains configuration for node grouping
+type NodeSelectorOptions struct {
+	NodeLabelsSelector NodeLabelsSelector `json:"nodeLabelsSelector" yaml:"nodeLabelsSelector"`
+}
+
+// NodeLabelsSelector contains node labels used for grouping nodes
+type NodeLabelsSelector struct {
+	Labels []string `json:"labels" yaml:"labels"`
+}
+
 // FileOwnerOptions contains expected user and group owners for files
 type FileOwnerOptions struct {
 	ExpectedFileOwner ExpectedOwner `json:"expectedFileOwner" yaml:"expectedFileOwner"`
