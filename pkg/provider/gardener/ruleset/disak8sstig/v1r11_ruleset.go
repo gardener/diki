@@ -92,6 +92,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
+	opts242406, err := getV1R11OptionOrNil[sharedv1r11.Options242406](ruleOptions[sharedv1r11.ID242406].Args)
+	if err != nil {
+		return err
+	}
 	opts242414, err := getV1R11OptionOrNil[v1r11.Options242414](ruleOptions[sharedv1r11.ID242414].Args)
 	if err != nil {
 		return err
@@ -235,12 +239,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"Gardener does not deploy any control plane component as systemd processes or static pod.",
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242406,
-			"Kubernetes kubelet configuration file must be owned by root (MEDIUM 242406)",
-			`Rule implemented by "node-files" for correctness, consistency, deduplication, reliability, and performance reasons.`,
-			rule.Skipped,
-		),
+		&sharedv1r11.Rule242406{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242406),
+			InstanceID: r.instanceID,
+			Client:     shootClient,
+			PodContext: shootPodContext,
+			Options:    opts242406,
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242407,
 			"The Kubernetes KubeletConfiguration files must have file permissions set to 644 or more restrictive  (MEDIUM 242407)",

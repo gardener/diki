@@ -10,6 +10,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/config"
+	"github.com/gardener/diki/pkg/kubernetes/pod"
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
@@ -21,6 +22,15 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
+	podContext, err := pod.NewSimplePodContext(client, r.Config)
+	if err != nil {
+		return err
+	}
+
+	opts242406, err := getV1R11OptionOrNil[sharedv1r11.Options242406](ruleOptions[sharedv1r11.ID242406].Args)
+	if err != nil {
+		return err
+	}
 	opts242415, err := getV1R11OptionOrNil[v1r11.Options242415](ruleOptions[sharedv1r11.ID242415].Args)
 	if err != nil {
 		return err
@@ -205,12 +215,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noControlPlaneMsg,
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242406,
-			"Kubernetes kubelet configuration file must be owned by root (MEDIUM 242406)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242406{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242406),
+			InstanceID: r.instanceID,
+			Client:     client,
+			PodContext: podContext,
+			Options:    opts242406,
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242407,
 			"The Kubernetes KubeletConfiguration files must have file permissions set to 644 or more restrictive (MEDIUM 242407)",
