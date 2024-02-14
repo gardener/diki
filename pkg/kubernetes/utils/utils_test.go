@@ -1417,7 +1417,7 @@ readOnlyPort: 222
 			}
 
 			Expect(res).To(ConsistOf(expectedRes))
-			Expect(checkResult).To(Equal(expectedCheckResults))
+			Expect(checkResult).To(ConsistOf(expectedCheckResults))
 		})
 
 		It("should return correct checkResult when when skipEmpty is false", func() {
