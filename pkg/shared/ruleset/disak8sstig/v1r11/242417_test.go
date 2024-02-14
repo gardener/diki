@@ -71,7 +71,6 @@ var _ = Describe("#242417", func() {
 		r := &v1r11.Rule242417{
 			Client:  fakeClient,
 			Options: options,
-			Logger:  testLogger,
 		}
 
 		ruleResult, err := r.Run(ctx)
@@ -102,7 +101,7 @@ var _ = Describe("#242417", func() {
 		pod3.Labels["label"] = "gardener"
 		Expect(fakeClient.Create(ctx, pod3)).To(Succeed())
 
-		r := &v1r11.Rule242417{Logger: testLogger, Client: fakeClient}
+		r := &v1r11.Rule242417{Client: fakeClient}
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).To(BeNil())
@@ -161,7 +160,6 @@ var _ = Describe("#242417", func() {
 		r := &v1r11.Rule242417{
 			Client:  fakeClient,
 			Options: options,
-			Logger:  testLogger,
 		}
 
 		ruleResult, err := r.Run(ctx)

@@ -18,7 +18,6 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/provider"
 )
 
 var _ rule.Rule = &Rule242417{}
@@ -26,7 +25,6 @@ var _ rule.Rule = &Rule242417{}
 type Rule242417 struct {
 	Client  client.Client
 	Options *Options242417
-	Logger  provider.Logger
 }
 
 type Options242417 struct {

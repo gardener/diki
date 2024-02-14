@@ -314,7 +314,6 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Options:               opts242415,
 		},
 		&sharedv1r11.Rule242417{
-			Logger:  r.Logger().With("rule", sharedv1r11.ID242417),
 			Client:  shootClient,
 			Options: opts242417,
 		},
