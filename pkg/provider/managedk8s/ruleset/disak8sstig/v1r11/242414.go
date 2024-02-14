@@ -15,7 +15,6 @@ import (
 	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/provider"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
@@ -24,7 +23,6 @@ var _ rule.Rule = &Rule242414{}
 type Rule242414 struct {
 	Client  client.Client
 	Options *Options242414
-	Logger  provider.Logger
 }
 
 type Options242414 struct {

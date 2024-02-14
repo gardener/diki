@@ -274,7 +274,6 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		&v1r11.Rule242414{
-			Logger:  r.Logger().With("rule", sharedv1r11.ID242414),
 			Client:  client,
 			Options: opts242414,
 		},
