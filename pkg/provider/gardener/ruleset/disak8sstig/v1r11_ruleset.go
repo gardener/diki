@@ -185,7 +185,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		},
 		&v1r11.Rule242393{Logger: r.Logger().With("rule", sharedv1r11.ID242393), InstanceID: r.instanceID, ClusterPodContext: shootPodContext},
 		&v1r11.Rule242394{Logger: r.Logger().With("rule", sharedv1r11.ID242394), InstanceID: r.instanceID, ClusterPodContext: shootPodContext},
-		&v1r11.Rule242395{Logger: r.Logger().With("rule", sharedv1r11.ID242395), Client: shootClient},
+		&sharedv1r11.Rule242395{Client: shootClient},
 		rule.NewSkipRule(
 			sharedv1r11.ID242396,
 			"Kubernetes Kubectl cp command must give expected access and results (MEDIUM 242396)",

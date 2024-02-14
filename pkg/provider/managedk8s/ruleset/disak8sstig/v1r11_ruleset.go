@@ -144,12 +144,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"",
 			rule.NotImplemented,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242395,
-			"Kubernetes dashboard must not be enabled (MEDIUM 242395)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242395{Client: client},
 		rule.NewSkipRule(
 			sharedv1r11.ID242396,
 			"Kubernetes Kubectl cp command must give expected access and results (MEDIUM 242396)",
