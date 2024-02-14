@@ -492,7 +492,7 @@ func SelectNodes(nodes []corev1.Node, nodesAllocatablePods map[string]int, label
 	selectedNodes := []corev1.Node{}
 	checkResults := []rule.CheckResult{}
 
-	// if not labels are provided return all allocatable nodes
+	// if no labels are provided return all allocatable nodes
 	if len(labels) == 0 {
 		for _, node := range nodes {
 			if nodesAllocatablePods[node.Name] > 0 {
