@@ -467,7 +467,6 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		&v1r11.Rule242442{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242442),
 			Client: client,
 		},
 		rule.NewSkipRule(

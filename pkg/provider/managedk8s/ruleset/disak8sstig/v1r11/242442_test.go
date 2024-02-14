@@ -57,7 +57,7 @@ var _ = Describe("#242442", func() {
 	})
 
 	It("should return correct results when all images use only 1 version", func() {
-		r := &v1r11.Rule242442{Logger: testLogger, Client: client}
+		r := &v1r11.Rule242442{Client: client}
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
 		pod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:foobar"
@@ -81,7 +81,7 @@ var _ = Describe("#242442", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 	It("should return correct results when a image uses more than 1 version", func() {
-		r := &v1r11.Rule242442{Logger: testLogger, Client: client}
+		r := &v1r11.Rule242442{Client: client}
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
 		pod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:foobar"
@@ -106,7 +106,7 @@ var _ = Describe("#242442", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 	It("should return errored results when containerStatus cannot be found for a given container", func() {
-		r := &v1r11.Rule242442{Logger: testLogger, Client: client}
+		r := &v1r11.Rule242442{Client: client}
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
 		pod1.Status.ContainerStatuses[0].Name = "not-found"

@@ -15,7 +15,6 @@ import (
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/provider"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
@@ -23,7 +22,6 @@ var _ rule.Rule = &Rule242442{}
 
 type Rule242442 struct {
 	Client client.Client
-	Logger provider.Logger
 }
 
 func (r *Rule242442) ID() string {
