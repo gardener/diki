@@ -54,6 +54,20 @@ providers:             # contains information about known providers
           # https://github.com/GoogleContainerTools/distroless/blob/main/base/base.bzl#L8
           users: ["0", "65532"]
           groups: ["0", "65532"]
+    - ruleID: "242417"
+      args:
+        acceptedPods:
+        - podMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          # Defaults to ["kube-system", "kube-public", "kube-node-lease"]
+          namespaceNames:
+          - kube-system
+          - kube-public
+          - kube-node-lease
+          justification: "managed by gardener pods are not user pods"
+          # relates to the result status in the report
+          # can be set to Passed or Accepted. Defaults to Accepted
+          status: Passed
     - ruleID: "242446"
       args:
         expectedFileOwner:
