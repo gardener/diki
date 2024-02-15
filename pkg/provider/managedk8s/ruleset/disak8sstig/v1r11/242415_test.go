@@ -61,7 +61,7 @@ var _ = Describe("#242415", func() {
 	})
 
 	It("should return correct results when all pods pass", func() {
-		r := &v1r11.Rule242415{Logger: testLogger, Client: fakeClient, Options: options}
+		r := &v1r11.Rule242415{Client: fakeClient, Options: options}
 		Expect(fakeClient.Create(ctx, pod)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
@@ -78,7 +78,7 @@ var _ = Describe("#242415", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 	It("should return correct results when a pod fails", func() {
-		r := &v1r11.Rule242415{Logger: testLogger, Client: fakeClient, Options: options}
+		r := &v1r11.Rule242415{Client: fakeClient, Options: options}
 		pod.Spec.Containers[0].Env = []corev1.EnvVar{
 			{
 				Name: "SECRET_TEST",
@@ -114,7 +114,7 @@ var _ = Describe("#242415", func() {
 				},
 			},
 		}
-		r := &v1r11.Rule242415{Logger: testLogger, Client: fakeClient, Options: options}
+		r := &v1r11.Rule242415{Client: fakeClient, Options: options}
 		pod.Spec.Containers[0].Env = []corev1.EnvVar{
 			{
 				Name: "SECRET_TEST",

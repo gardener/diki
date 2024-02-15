@@ -260,7 +260,6 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.NotImplemented,
 		),
 		&v1r11.Rule242415{
-			Logger:  r.Logger().With("rule", sharedv1r11.ID242415),
 			Client:  client,
 			Options: opts242415,
 		},
