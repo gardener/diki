@@ -12,9 +12,11 @@ providers:                   # contains information about known providers
     ruleOptions:
     # - ruleID: "242406"
     # args:
-    #   nodeLabelsSelector:
-    #     labels:
-    #     - foo
+    #   # Node labels used to group nodes by specified
+    #   # label value combinations. Only one node per
+    #   # combination will be tested
+    #   groupNodeLabels:
+    #   - foo
     #   expectedFileOwner:
     #     users: ["0"]
     #     groups: ["0"]

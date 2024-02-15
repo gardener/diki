@@ -34,7 +34,7 @@ type Rule242406 struct {
 }
 
 type Options242406 struct {
-	*option.NodeSelectorOptions
+	GroupNodeLabels []string `json:"groupNodeLabels" yaml:"groupNodeLabels"`
 	*option.FileOwnerOptions
 }
 
@@ -50,13 +50,13 @@ func (r *Rule242406) Run(ctx context.Context) (rule.RuleResult, error) {
 	var kubeletServicePath string
 	checkResults := []rule.CheckResult{}
 	options := option.FileOwnerOptions{}
-	selectLabels := []string{}
+	nodeLabels := []string{}
 
 	if r.Options != nil && r.Options.FileOwnerOptions != nil {
 		options = *r.Options.FileOwnerOptions
 	}
-	if r.Options != nil && r.Options.NodeSelectorOptions != nil {
-		selectLabels = r.Options.NodeLabelsSelector.Labels
+	if r.Options != nil {
+		nodeLabels = r.Options.GroupNodeLabels
 	}
 	if len(options.ExpectedFileOwner.Users) == 0 {
 		options.ExpectedFileOwner.Users = []string{"0"}
@@ -78,7 +78,7 @@ func (r *Rule242406) Run(ctx context.Context) (rule.RuleResult, error) {
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(pods, nodes)
 	var selectedNodes []corev1.Node
 
-	selectedNodes, checks := kubeutils.SelectNodes(nodes, nodesAllocatablePods, selectLabels)
+	selectedNodes, checks := kubeutils.SelectNodes(nodes, nodesAllocatablePods, nodeLabels)
 	checkResults = append(checkResults, checks...)
 
 	if len(selectedNodes) == 0 {
