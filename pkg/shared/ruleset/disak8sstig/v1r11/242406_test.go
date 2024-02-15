@@ -122,6 +122,7 @@ var _ = Describe("#242406", func() {
 			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "node", "name", "node1", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "node", "name", "node3", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 0, ownerGroup: 0")),
+				rule.WarningCheckResult("Node does not have set label", rule.NewTarget("kind", "node", "name", "node4", "label", "foo")),
 			}),
 		Entry("should return correct checkResults when expected owners are specified",
 			sharedv1r11.Options242406{

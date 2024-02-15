@@ -78,7 +78,7 @@ func (r *Rule242406) Run(ctx context.Context) (rule.RuleResult, error) {
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(pods, nodes)
 	var selectedNodes []corev1.Node
 
-	selectedNodes, checks := kubeutils.SelectNodes(nodes, nodesAllocatablePods, selectLabels, true)
+	selectedNodes, checks := kubeutils.SelectNodes(nodes, nodesAllocatablePods, selectLabels)
 	checkResults = append(checkResults, checks...)
 
 	if len(selectedNodes) == 0 {
