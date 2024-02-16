@@ -1370,7 +1370,7 @@ readOnlyPort: 222
 			expectedCheckResults := []rule.CheckResult{
 				{
 					Status:  rule.Warning,
-					Message: "Node does not have set label",
+					Message: "Node is missing a label",
 					Target:  rule.NewTarget("kind", "node", "name", "node3", "label", "label"),
 				},
 			}
