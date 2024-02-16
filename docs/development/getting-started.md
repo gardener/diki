@@ -11,7 +11,7 @@ See the [provider specific documentation](../providers/).
 
 ## Running diki Locally
 
-This document will walk you through running Diki against a local shoot cluster for development purposes. This guide uses the Gardener's local development setup.
+This part will walk you through the process of running Diki against a local shoot cluster for development purposes. This guide uses the Gardener's local development setup.
 If you encounter difficulties, please open an issue so that we can make this process easier.
 
 ### Prerequisites

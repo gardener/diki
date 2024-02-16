@@ -17,7 +17,7 @@ Diki is the Greek word for "trial". You can also memorise it as "Detective Inves
 
 If you install via GitHub releases, you need to put the diki binary on your path.
 
-You can also install diki using this code snippet:
+A sample install snippet for macOS can look like this:
 ```bash
 # Example for macOS
 
