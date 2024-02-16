@@ -92,10 +92,6 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
-	opts242406, err := getV1R11OptionOrNil[sharedv1r11.Options242406](ruleOptions[sharedv1r11.ID242406].Args)
-	if err != nil {
-		return err
-	}
 	opts242414, err := getV1R11OptionOrNil[v1r11.Options242414](ruleOptions[sharedv1r11.ID242414].Args)
 	if err != nil {
 		return err
@@ -244,7 +240,15 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			InstanceID: r.instanceID,
 			Client:     shootClient,
 			PodContext: shootPodContext,
-			Options:    opts242406,
+			Options: &sharedv1r11.Options242406{
+				GroupByLabels: []string{"worker.gardener.cloud/pool"},
+				FileOwnerOptions: &option.FileOwnerOptions{
+					ExpectedFileOwner: option.ExpectedOwner{
+						Users:  []string{"0", "65532"},
+						Groups: []string{"0", "65532"},
+					},
+				},
+			},
 		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242407,

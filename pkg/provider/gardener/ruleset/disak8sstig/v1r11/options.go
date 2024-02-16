@@ -15,5 +15,5 @@ const (
 )
 
 type RuleOption interface {
-	sharedv1r11.Options242406 | Options242414 | Options242415 | sharedv1r11.Options245543 | sharedv1r11.Options254800 | option.FileOwnerOptions
+	Options242414 | Options242415 | sharedv1r11.Options245543 | sharedv1r11.Options254800 | option.FileOwnerOptions
 }

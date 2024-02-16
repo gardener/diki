@@ -7,6 +7,7 @@ package v1r11
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/component-base/version"
@@ -56,7 +57,7 @@ func (r *Rule242406) Run(ctx context.Context) (rule.RuleResult, error) {
 			options = *r.Options.FileOwnerOptions
 		}
 		if r.Options.GroupByLabels != nil {
-			nodeLabels = r.Options.GroupByLabels
+			nodeLabels = slices.Clone(r.Options.GroupByLabels)
 		}
 	}
 	if len(options.ExpectedFileOwner.Users) == 0 {
