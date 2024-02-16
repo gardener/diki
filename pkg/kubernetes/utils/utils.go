@@ -527,7 +527,7 @@ func SelectNodes(nodes []corev1.Node, nodesAllocatablePods map[string]int, label
 		})
 
 		if idx < 0 {
-			labelMessage := key[:len(key)-1]
+			labelMessage := strings.TrimSuffix(key, ",")
 			checkResults = append(checkResults, rule.WarningCheckResult("No allocatable nodes of label value combination", rule.NewTarget("labels", labelMessage)))
 			continue
 		}
