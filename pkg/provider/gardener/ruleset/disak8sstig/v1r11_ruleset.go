@@ -126,6 +126,16 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
+	// Gardener images use distroless nonroot user with ID 65532
+	// https://github.com/GoogleContainerTools/distroless/blob/main/base/base.bzl#L8
+	gardenerFileOwnerOptions := &option.FileOwnerOptions{
+		ExpectedFileOwner: option.ExpectedOwner{
+			Users:  []string{"0", "65532"},
+			Groups: []string{"0", "65532"},
+		},
+	}
+	workerPoolGroupByLabels := []string{"worker.gardener.cloud/pool"}
+
 	rules := []rule.Rule{
 		&sharedv1r11.Rule242376{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242377{Logger: r.Logger().With("rule", sharedv1r11.ID242377), Client: seedClient, Namespace: r.shootNamespace},
@@ -241,21 +251,19 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Client:     shootClient,
 			PodContext: shootPodContext,
 			Options: &sharedv1r11.Options242406{
-				GroupByLabels: []string{"worker.gardener.cloud/pool"},
-				FileOwnerOptions: &option.FileOwnerOptions{
-					ExpectedFileOwner: option.ExpectedOwner{
-						Users:  []string{"0", "65532"},
-						Groups: []string{"0", "65532"},
-					},
-				},
+				GroupByLabels:    workerPoolGroupByLabels,
+				FileOwnerOptions: gardenerFileOwnerOptions,
 			},
 		},
-		rule.NewSkipRule(
-			sharedv1r11.ID242407,
-			"The Kubernetes KubeletConfiguration files must have file permissions set to 644 or more restrictive  (MEDIUM 242407)",
-			`Rule implemented by "node-files" for correctness, consistency, deduplication, reliability, and performance reasons.`,
-			rule.Skipped,
-		),
+		&sharedv1r11.Rule242407{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242407),
+			InstanceID: r.instanceID,
+			Client:     shootClient,
+			PodContext: shootPodContext,
+			Options: &sharedv1r11.Options242407{
+				GroupByLabels: workerPoolGroupByLabels,
+			},
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242408,
 			"The Kubernetes manifest files must have least privileges  (MEDIUM 242408)",

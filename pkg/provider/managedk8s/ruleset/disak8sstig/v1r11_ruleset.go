@@ -31,6 +31,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
+	opts242407, err := getV1R11OptionOrNil[sharedv1r11.Options242407](ruleOptions[sharedv1r11.ID242407].Args)
+	if err != nil {
+		return err
+	}
 	opts242415, err := getV1R11OptionOrNil[v1r11.Options242415](ruleOptions[sharedv1r11.ID242415].Args)
 	if err != nil {
 		return err
@@ -222,12 +226,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			PodContext: podContext,
 			Options:    opts242406,
 		},
-		rule.NewSkipRule(
-			sharedv1r11.ID242407,
-			"The Kubernetes KubeletConfiguration files must have file permissions set to 644 or more restrictive (MEDIUM 242407)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242407{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242407),
+			InstanceID: r.instanceID,
+			Client:     client,
+			PodContext: podContext,
+			Options:    opts242407,
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242408,
 			"The Kubernetes manifest files must have least privileges (MEDIUM 242408)",
