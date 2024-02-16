@@ -482,6 +482,62 @@ func GetNodesAllocatablePodsNum(pods []corev1.Pod, nodes []corev1.Node) map[stri
 	return nodesAllocatablePods
 }
 
+// SelectNodes returns a subset of nodes. Containing
+// a single node per unique label value combination.
+// Nodes that have reached their allocation limit will not be returned.
+// If no labels are provided all allocatable nodes will be returned.
+func SelectNodes(nodes []corev1.Node, nodesAllocatablePods map[string]int, labels []string) ([]corev1.Node, []rule.CheckResult) {
+	selectedNodes := []corev1.Node{}
+	checkResults := []rule.CheckResult{}
+
+	// if no labels are provided return all allocatable nodes
+	if len(labels) == 0 {
+		for _, node := range nodes {
+			if nodesAllocatablePods[node.Name] > 0 {
+				selectedNodes = append(selectedNodes, node)
+			}
+		}
+		return selectedNodes, checkResults
+	}
+
+	// map node by unique label values combination
+	groupedNodes := map[string][]corev1.Node{}
+
+	for _, node := range nodes {
+		var keyBuilder strings.Builder
+		for _, label := range labels {
+			if value, ok := node.Labels[label]; ok {
+				keyBuilder.WriteString(fmt.Sprintf("%s=%s,", label, value))
+			} else {
+				checkResults = append(checkResults, rule.WarningCheckResult("Node is missing a label", rule.NewTarget("kind", "node", "name", node.Name, "label", label)))
+				keyBuilder.Reset()
+				break
+			}
+		}
+
+		key := keyBuilder.String()
+		if len(key) > 0 {
+			groupedNodes[key] = append(groupedNodes[key], node)
+		}
+	}
+
+	for key, currentNodes := range groupedNodes {
+		idx := slices.IndexFunc(currentNodes, func(node corev1.Node) bool {
+			return nodesAllocatablePods[node.Name] > 0
+		})
+
+		if idx < 0 {
+			labelMessage := strings.TrimSuffix(key, ",")
+			checkResults = append(checkResults, rule.WarningCheckResult("No allocatable nodes of label value combination", rule.NewTarget("labels", labelMessage)))
+			continue
+		}
+
+		selectedNodes = append(selectedNodes, currentNodes[idx])
+	}
+
+	return selectedNodes, checkResults
+}
+
 // SelectPodOfReferenceGroup returns a single pod per owner reference group
 // as well as groups the returned pods by the nodes they are scheduled on.
 // Pods that do not have an owner reference will always be selected.

@@ -59,6 +59,32 @@ func (fs FileStats) Dir() string {
 	return filepath.Dir(fs.Path)
 }
 
+// GetSingleFileStats returns file stats for a specified file
+func GetSingleFileStats(
+	ctx context.Context,
+	podExecutor pod.PodExecutor,
+	filePath string,
+) (FileStats, error) {
+	stats := FileStats{}
+	delimiter := "\t"
+	statsRaw, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`stat -Lc "%%a%[1]s%%u%[1]s%%g%[1]s%%F%[1]s%%n" %s`, delimiter, filePath))
+	if err != nil {
+		return stats, err
+	}
+	if len(statsRaw) == 0 {
+		return stats, fmt.Errorf("could not find file %s", filePath)
+	}
+
+	stat := strings.Split(strings.TrimSpace(statsRaw), "\n")[0]
+
+	stats, err = NewFileStats(stat, delimiter)
+	if err != nil {
+		return stats, err
+	}
+
+	return stats, nil
+}
+
 // GetMountedFilesStats returns file stats grouped by container name for all
 // mounted files in a pod with the exception of files mounted at `/dev/termination-log` destination.
 // Host sources can be exluded by setting excludeSources.

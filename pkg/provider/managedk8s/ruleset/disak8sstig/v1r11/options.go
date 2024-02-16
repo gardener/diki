@@ -4,6 +4,11 @@
 
 package v1r11
 
+import (
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
+)
+
 type RuleOption interface {
-	Options242415
+	sharedv1r11.Options242406 | Options242415 | option.FileOwnerOptions
 }
