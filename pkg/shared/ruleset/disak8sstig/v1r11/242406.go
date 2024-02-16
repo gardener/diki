@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/component-base/version"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -52,11 +51,13 @@ func (r *Rule242406) Run(ctx context.Context) (rule.RuleResult, error) {
 	options := option.FileOwnerOptions{}
 	nodeLabels := []string{}
 
-	if r.Options != nil && r.Options.FileOwnerOptions != nil {
-		options = *r.Options.FileOwnerOptions
-	}
 	if r.Options != nil {
-		nodeLabels = r.Options.GroupByLabels
+		if r.Options.FileOwnerOptions != nil {
+			options = *r.Options.FileOwnerOptions
+		}
+		if r.Options.GroupByLabels != nil {
+			nodeLabels = r.Options.GroupByLabels
+		}
 	}
 	if len(options.ExpectedFileOwner.Users) == 0 {
 		options.ExpectedFileOwner.Users = []string{"0"}
@@ -76,8 +77,6 @@ func (r *Rule242406) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(pods, nodes)
-	var selectedNodes []corev1.Node
-
 	selectedNodes, checks := kubeutils.SelectNodes(nodes, nodesAllocatablePods, nodeLabels)
 	checkResults = append(checkResults, checks...)
 
