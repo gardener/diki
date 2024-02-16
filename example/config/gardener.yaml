@@ -20,7 +20,7 @@ providers:             # contains information about known providers
         # Node labels used to group nodes by specified
         # label value combinations. Only one node per
         # combination will be tested
-        groupNodeLabels:
+        groupByLabels:
         - worker.gardener.cloud/pool
         expectedFileOwner:
           # users and groups default to allow all

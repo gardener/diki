@@ -1403,12 +1403,12 @@ readOnlyPort: 222
 				{
 					Status:  rule.Warning,
 					Message: "No allocatable nodes of label value combination",
-					Target:  rule.NewTarget("labels", "label1:foo,label2:bar"),
+					Target:  rule.NewTarget("labels", "label1=foo,label2=bar"),
 				},
 				{
 					Status:  rule.Warning,
 					Message: "No allocatable nodes of label value combination",
-					Target:  rule.NewTarget("labels", "label1:bar,label2:bar"),
+					Target:  rule.NewTarget("labels", "label1=bar,label2=bar"),
 				},
 			}
 
