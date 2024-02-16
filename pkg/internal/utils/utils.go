@@ -173,7 +173,15 @@ func getContainerMountedFileStatResults(
 			}
 
 			if len(mountStats) == 0 {
-				err = errors.Join(err, fmt.Errorf("could not find file %s", mount.Source))
+				fileNum, err2 := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`ls %s | wc -l`, mount.Source))
+				if err2 != nil {
+					err = errors.Join(err, err2)
+					continue
+				}
+
+				if fileNum != "0\n" {
+					err = errors.Join(err, fmt.Errorf("could not find files in %s", mount.Source))
+				}
 				continue
 			}
 
