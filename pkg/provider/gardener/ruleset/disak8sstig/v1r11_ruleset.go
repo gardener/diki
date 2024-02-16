@@ -412,12 +412,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Namespace:  r.shootNamespace,
 			Options:    opts242446,
 		},
-		rule.NewSkipRule(
-			sharedv1r11.ID242447,
-			"Kubernetes Kube Proxy must have file permissions set to 644 or more restrictive (MEDIUM 242447)",
-			`Rule is implemented by the "pod-files" rule for correctness, consistency, deduplication, reliability, and performance reasons.`,
-			rule.Skipped,
-		),
+		&sharedv1r11.Rule242447{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242447),
+			InstanceID: r.instanceID,
+			Client:     shootClient,
+			PodContext: shootPodContext,
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242448,
 			"Kubernetes Kube Proxy must be owned by root (MEDIUM 242448)",
