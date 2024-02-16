@@ -15,6 +15,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/gardener/diki/pkg/internal/utils"
+	"github.com/gardener/diki/pkg/kubernetes/config"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -58,7 +59,7 @@ var _ = Describe("utils", func() {
 				utils.FileStats{}, MatchError("could not find file file/foo")),
 		)
 	})
-	Describe("#GetPodMountedFileStatResults", func() {
+	Describe("#GetMountedFilesStats", func() {
 		const (
 			mounts = `[
   {
@@ -248,24 +249,103 @@ var _ = Describe("utils", func() {
 		})
 	})
 
-	DescribeTable("#ExceedFilePermissions",
-		func(filePermissions, filePermissionsMax string, expectedResult bool, errorMatcher gomegatypes.GomegaMatcher) {
-			result, err := utils.ExceedFilePermissions(filePermissions, filePermissionsMax)
+	Describe("#GetContainerID", func() {
+		DescribeTable("#MatchCases",
+			func(containerName, containerStatusName, containerID string, expectedID string, errorMatcher gomegatypes.GomegaMatcher) {
+				pod := corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "foo",
+					},
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							{
+								Name: containerName,
+							},
+						},
+					},
+					Status: corev1.PodStatus{
+						ContainerStatuses: []corev1.ContainerStatus{
+							{
+								Name:        containerStatusName,
+								ContainerID: containerID,
+							},
+						},
+					},
+				}
+				result, err := utils.GetContainerID(pod, containerName)
 
-			Expect(result).To(Equal(expectedResult))
-			Expect(err).To(errorMatcher)
-		},
-		Entry("should return false when filePermissions do not exceed filePermissionsMax",
-			"0600", "0644", false, BeNil()),
-		Entry("should return false when filePermissions equal filePermissionsMax",
-			"0644", "0644", false, BeNil()),
-		Entry("should return true when filePermissions exceed filePermissionsMax by user permissions",
-			"0700", "0644", true, BeNil()),
-		Entry("should return true when filePermissions exceed filePermissionsMax by group permissions",
-			"0460", "0644", true, BeNil()),
-		Entry("should return true when filePermissions exceed filePermissionsMax by other permissions",
-			"0406", "0644", true, BeNil()),
-	)
+				Expect(err).To(errorMatcher)
+				Expect(result).To(Equal(expectedID))
+			},
+			Entry("should return correct containerID",
+				"test", "test", "containerd://1", "1", BeNil()),
+			Entry("should return error when containerStatus missing",
+				"test", "test2", "containerd://1", "", MatchError("container with Name test not (yet) in status")),
+			Entry("should return error when containerID is empty",
+				"test", "test", "", "", MatchError("container with Name test not (yet) running")),
+			Entry("should return error when containerID is not recognized",
+				"test", "test", "1", "", MatchError("cannot handle container with Name test")),
+		)
+	})
+
+	Describe("#GetContainerMounts", func() {
+		const (
+			mounts = `[
+  {
+    "destination": "/foo",
+    "source": "/foo-bar"
+  }, 
+  {
+    "destination": "/bar",
+    "source": "/foo"
+  }
+]`
+		)
+		var (
+			fakePodExecutor *fakepod.FakePodExecutor
+			ctx             context.Context
+		)
+		BeforeEach(func() {
+			ctx = context.TODO()
+		})
+
+		DescribeTable("#MatchCases",
+			func(executeReturnString []string, executeReturnError []error, expectedConfigMounts []config.Mount, errorMatcher gomegatypes.GomegaMatcher) {
+				fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
+				result, err := utils.GetContainerMounts(ctx, "", fakePodExecutor, "")
+
+				Expect(err).To(errorMatcher)
+				Expect(result).To(Equal(expectedConfigMounts))
+			},
+			Entry("should return correct kube-proxy config",
+				[]string{mounts}, []error{nil},
+				[]config.Mount{{Destination: "/foo", Source: "/foo-bar"}, {Destination: "/bar", Source: "/foo"}}, BeNil()),
+			Entry("should return error when command errors",
+				[]string{mounts}, []error{errors.New("command error")},
+				[]config.Mount{}, MatchError("command error")),
+		)
+	})
+
+	Describe("#ExceedFilePermissions", func() {
+		DescribeTable("#MatchCases",
+			func(filePermissions, filePermissionsMax string, expectedResult bool, errorMatcher gomegatypes.GomegaMatcher) {
+				result, err := utils.ExceedFilePermissions(filePermissions, filePermissionsMax)
+
+				Expect(result).To(Equal(expectedResult))
+				Expect(err).To(errorMatcher)
+			},
+			Entry("should return false when filePermissions do not exceed filePermissionsMax",
+				"0600", "0644", false, BeNil()),
+			Entry("should return false when filePermissions equal filePermissionsMax",
+				"0644", "0644", false, BeNil()),
+			Entry("should return true when filePermissions exceed filePermissionsMax by user permissions",
+				"0700", "0644", true, BeNil()),
+			Entry("should return true when filePermissions exceed filePermissionsMax by group permissions",
+				"0460", "0644", true, BeNil()),
+			Entry("should return true when filePermissions exceed filePermissionsMax by other permissions",
+				"0406", "0644", true, BeNil()),
+		)
+	})
 
 	Describe("#MatchFileOwnersCases", func() {
 		var (
