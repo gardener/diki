@@ -192,6 +192,16 @@ func NodeReadyStatus(node corev1.Node) bool {
 	return false
 }
 
+// GetContainerFromPod returns a container object with a specific cainerName, if such container is not present it retuns found=false
+func GetContainerFromPod(pod *corev1.Pod, containerName string) (container corev1.Container, found bool) {
+	for _, container := range pod.Spec.Containers {
+		if container.Name == containerName {
+			return container, true
+		}
+	}
+	return corev1.Container{}, false
+}
+
 // GetContainerFromDeployment returns a container object with a specific cainerName, if such container is not present it retuns found=false
 func GetContainerFromDeployment(deployment *appsv1.Deployment, containerName string) (container corev1.Container, found bool) {
 	for _, container := range deployment.Spec.Template.Spec.Containers {
@@ -362,6 +372,37 @@ func GetKubeletCommand(ctx context.Context, podExecutor pod.PodExecutor) (string
 	return rawKubeletCommand, nil
 }
 
+// GetKubeProxyCommand returns the used kube-proxy command
+func GetKubeProxyCommand(pod corev1.Pod) (string, error) {
+	container, found := GetContainerFromPod(&pod, "kube-proxy")
+	if !found {
+		return "", errors.New("kube-proxy pod does not contain kube-proxy container")
+	}
+
+	rawCommand := strings.Join(append(container.Command, container.Args...), " ")
+	return rawCommand, nil
+}
+
+// FindFileMountSource returns a mounted file's source location on the host
+func FindFileMountSource(filePath string, mounts []config.Mount) (string, error) {
+	sort.Slice(mounts, func(i, j int) bool {
+		return len(mounts[i].Destination) > len(mounts[j].Destination)
+	})
+
+	for _, mount := range mounts {
+		if mount.Destination == filePath {
+			return mount.Source, nil
+		}
+
+		if strings.HasPrefix(filePath, fmt.Sprintf("%s/", mount.Destination)) {
+			sourcePath := fmt.Sprintf("%s%s", mount.Source, filePath[len(mount.Destination):])
+			return sourcePath, nil
+		}
+	}
+
+	return "", fmt.Errorf("could not find source path for %s", filePath)
+}
+
 // IsFlagSet returns true if a specific flag is set in the command
 func IsFlagSet(rawCommand, option string) bool {
 	optionSlice := FindFlagValueRaw(strings.Split(rawCommand, " "), option)
@@ -393,6 +434,23 @@ func GetKubeletConfig(ctx context.Context, podExecutor pod.PodExecutor, rawKubel
 	}
 
 	return kubeletConfig, nil
+}
+
+// GetKubeProxyConfig returns the kube-proxy config specified by it's path
+func GetKubeProxyConfig(ctx context.Context, podExecutor pod.PodExecutor, kubeProxyPath string) (*config.KubeProxyConfig, error) {
+
+	rawKubeProxyConfig, err := podExecutor.Execute(ctx, "bin/sh", fmt.Sprintf("cat %s", kubeProxyPath))
+	if err != nil {
+		return &config.KubeProxyConfig{}, err
+	}
+
+	kubeProxyConfig := &config.KubeProxyConfig{}
+	err = yaml.Unmarshal([]byte(rawKubeProxyConfig), kubeProxyConfig)
+	if err != nil {
+		return &config.KubeProxyConfig{}, err
+	}
+
+	return kubeProxyConfig, nil
 }
 
 // GetNodeConfigz returns the runtime kubelet config

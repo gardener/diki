@@ -1132,6 +1132,173 @@ var _ = Describe("utils", func() {
 		})
 	})
 
+	Describe("#GetKubeletCommand", func() {
+		var (
+			fakePodExecutor *fakepod.FakePodExecutor
+			ctx             context.Context
+			commandMessage  string
+		)
+		BeforeEach(func() {
+			commandMessage = "message foo"
+			ctx = context.TODO()
+		})
+
+		DescribeTable("#MatchCases",
+			func(executeReturnString []string, executeReturnError []error, expectedMessage string, errorMatcher gomegatypes.GomegaMatcher) {
+				fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
+				result, err := utils.GetKubeletCommand(ctx, fakePodExecutor)
+
+				Expect(err).To(errorMatcher)
+				Expect(result).To(Equal(expectedMessage))
+			},
+			Entry("should return command message",
+				[]string{commandMessage}, []error{nil}, commandMessage, BeNil()),
+			Entry("should return error when command errors",
+				[]string{commandMessage}, []error{errors.New("command error")}, "", MatchError("command error")),
+		)
+	})
+
+	Describe("#GetKubeProxyCommand", func() {
+		var (
+			pod corev1.Pod
+		)
+		BeforeEach(func() {
+			pod = corev1.Pod{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:    "foo",
+							Command: []string{"sudo", "su"},
+							Args:    []string{"foo"},
+						},
+						{
+							Name:    "bar",
+							Command: []string{""},
+							Args:    []string{""},
+						},
+					},
+				},
+			}
+		})
+
+		DescribeTable("#MatchCases",
+			func(containerName string, command, args []string, expectedResult string, errorMatcher gomegatypes.GomegaMatcher) {
+				pod.Spec.Containers[1].Name = containerName
+				pod.Spec.Containers[1].Command = command
+				pod.Spec.Containers[1].Args = args
+				result, err := utils.GetKubeProxyCommand(pod)
+
+				Expect(err).To(errorMatcher)
+				Expect(result).To(Equal(expectedResult))
+			},
+			Entry("should return kube-proxy command", "kube-proxy",
+				[]string{"/bin/sh", "-c", "exec", "kube-proxy"}, []string{"--kubeconfig=/var/lib/kube-proxy/kubeconfig"},
+				"/bin/sh -c exec kube-proxy --kubeconfig=/var/lib/kube-proxy/kubeconfig", BeNil()),
+			Entry("should return error when kube-proxy container is not found", "kube-not-proxy",
+				[]string{}, []string{},
+				"", MatchError("kube-proxy pod does not contain kube-proxy container")),
+		)
+	})
+
+	Describe("#FindFileMountSource", func() {
+
+		It("should find the correct mount source", func() {
+			mounts := []config.Mount{
+				{
+					Destination: "/foo/bar",
+					Source:      "/wrong/source",
+				},
+				{
+					Destination: "/foo-bar",
+					Source:      "/again/wrong/source",
+				},
+				{
+					Destination: "/bar/foo",
+					Source:      "/correct/source",
+				},
+			}
+			filePath := "/bar/foo/file.txt"
+
+			result, err := utils.FindFileMountSource(filePath, mounts)
+
+			Expect(err).To(BeNil())
+			Expect(result).To(Equal("/correct/source/file.txt"))
+		})
+
+		It("should return correct sourcec path when destination matches filePath", func() {
+			mounts := []config.Mount{
+				{
+					Destination: "/foo/bar",
+					Source:      "/wrong/source",
+				},
+				{
+					Destination: "/foo-bar",
+					Source:      "/again/wrong/source",
+				},
+				{
+					Destination: "/bar/foo/file.txt",
+					Source:      "/correct/source/file1.txt",
+				},
+			}
+			filePath := "/bar/foo/file.txt"
+
+			result, err := utils.FindFileMountSource(filePath, mounts)
+
+			Expect(err).To(BeNil())
+			Expect(result).To(Equal("/correct/source/file1.txt"))
+		})
+
+		It("should find most decisive source path", func() {
+			mounts := []config.Mount{
+				{
+					Destination: "/",
+					Source:      "/wrong/source",
+				},
+				{
+					Destination: "/bar",
+					Source:      "/again/wrong/source",
+				},
+				{
+					Destination: "/bar/fooo",
+					Source:      "/correct/source",
+				},
+				{
+					Destination: "/bar/foo",
+					Source:      "/correct/source",
+				},
+			}
+			filePath := "/bar/foo/file.txt"
+
+			result, err := utils.FindFileMountSource(filePath, mounts)
+
+			Expect(err).To(BeNil())
+			Expect(result).To(Equal("/correct/source/file.txt"))
+		})
+
+		It("should return error when source path cannot be found", func() {
+			mounts := []config.Mount{
+				{
+					Destination: "/foo/bar",
+					Source:      "/wrong/source",
+				},
+				{
+					Destination: "/foo-bar",
+					Source:      "/again/wrong/source",
+				},
+				{
+					Destination: "/bar/foo",
+					Source:      "/correct/source",
+				},
+			}
+			filePath := "/bar/fo/file.txt"
+
+			result, err := utils.FindFileMountSource(filePath, mounts)
+
+			Expect(err).To(MatchError("could not find source path for /bar/fo/file.txt"))
+			Expect(result).To(Equal(""))
+		})
+	})
+
 	Describe("#IsFlagSet", func() {
 		DescribeTable("#MatchCases",
 			func(rawKubeletCommand string, expectedResult bool) {
@@ -1182,6 +1349,37 @@ readOnlyPort: 222
 			Entry("should return error if pod execute command errors",
 				[]string{kubeletConfig}, []error{errors.New("command error")}, "--config=./config",
 				&config.KubeletConfig{}, MatchError("command error")),
+		)
+	})
+
+	Describe("#GetKubeProxyConfig", func() {
+		const (
+			kubeProxyConfig = `clientConnection:
+  kubeconfig: /foo/bar/kubeconfig
+`
+		)
+		var (
+			fakePodExecutor *fakepod.FakePodExecutor
+			ctx             context.Context
+		)
+		BeforeEach(func() {
+			ctx = context.TODO()
+		})
+
+		DescribeTable("#MatchCases",
+			func(executeReturnString []string, executeReturnError []error, expectedKubeProxyConfig *config.KubeProxyConfig, errorMatcher gomegatypes.GomegaMatcher) {
+				fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
+				result, err := utils.GetKubeProxyConfig(ctx, fakePodExecutor, "")
+
+				Expect(err).To(errorMatcher)
+				Expect(result).To(Equal(expectedKubeProxyConfig))
+			},
+			Entry("should return correct kube-proxy config",
+				[]string{kubeProxyConfig}, []error{nil},
+				&config.KubeProxyConfig{ClientConnection: config.KPClientConnection{Kubeconfig: "/foo/bar/kubeconfig"}}, BeNil()),
+			Entry("should return error when command errors",
+				[]string{kubeProxyConfig}, []error{errors.New("command error")},
+				&config.KubeProxyConfig{}, MatchError("command error")),
 		)
 	})
 
