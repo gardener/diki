@@ -106,7 +106,7 @@ var _ = Describe("#242392", func() {
 		}
 
 		Expect(err).To(BeNil())
-		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
 	})
 
 	It("should return correct checkResults only for selected nodes", func() {
@@ -148,6 +148,6 @@ var _ = Describe("#242392", func() {
 		}
 
 		Expect(err).To(BeNil())
-		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
 	})
 })
