@@ -7,6 +7,7 @@ package disak8sstig
 import (
 	"encoding/json"
 
+	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/config"
@@ -23,6 +24,11 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	}
 
 	podContext, err := pod.NewSimplePodContext(client, r.Config)
+	if err != nil {
+		return err
+	}
+
+	clientSet, err := kubernetes.NewForConfig(r.Config)
 	if err != nil {
 		return err
 	}
@@ -44,6 +50,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 	opts242417, err := getV1R11OptionOrNil[sharedv1r11.Options242417](ruleOptions[sharedv1r11.ID242417].Args)
+	if err != nil {
+		return err
+	}
+	opts242420, err := getV1R11OptionOrNil[sharedv1r11.Options242420](ruleOptions[sharedv1r11.ID242420].Args)
 	if err != nil {
 		return err
 	}
@@ -296,12 +306,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noControlPlaneMsg,
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242420,
-			"Kubernetes Kubelet must have the SSL Certificate Authority set (MEDIUM 242420)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242420{
+			Logger:       r.Logger().With("rule", sharedv1r11.ID242420),
+			Client:       client,
+			V1RESTClient: clientSet.CoreV1().RESTClient(),
+			Options:      opts242420,
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242421,
 			"Kubernetes Controller Manager must have the SSL Certificate Authority set (MEDIUM 242421)",
