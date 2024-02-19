@@ -50,20 +50,17 @@ func (r *Rule242407) Run(ctx context.Context) (rule.RuleResult, error) {
 	expectedFilePermissionsMax := "644"
 	nodeLabels := []string{}
 
-	if r.Options != nil {
-		if r.Options.GroupByLabels != nil {
-			nodeLabels = slices.Clone(r.Options.GroupByLabels)
-		}
+	if r.Options != nil && r.Options.GroupByLabels != nil {
+		nodeLabels = slices.Clone(r.Options.GroupByLabels)
 	}
 
-	target := rule.NewTarget()
 	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "podList"))), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
 	}
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "nodeList"))), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "nodeList"))), nil
 	}
 
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(pods, nodes)
@@ -71,7 +68,7 @@ func (r *Rule242407) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults = append(checkResults, checks...)
 
 	if len(selectedNodes) == 0 {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult("no allocatable nodes could be selected", target)), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult("no allocatable nodes could be selected", rule.NewTarget())), nil
 	}
 
 	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)

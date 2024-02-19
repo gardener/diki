@@ -20,7 +20,7 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/rule"
-	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
 var _ = Describe("#242407", func() {
@@ -44,7 +44,7 @@ var _ = Describe("#242407", func() {
 	)
 
 	BeforeEach(func() {
-		sharedv1r11.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
+		v1r11.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
 		fakeClient = fakeclient.NewClientBuilder().Build()
 
 		plainNode = &corev1.Node{
@@ -81,9 +81,9 @@ var _ = Describe("#242407", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(options sharedv1r11.Options242407, executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
+		func(options v1r11.Options242407, executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			podContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
-			r := &sharedv1r11.Rule242407{
+			r := &v1r11.Rule242407{
 				Logger:     testLogger,
 				InstanceID: instanceID,
 				Client:     fakeClient,
@@ -108,7 +108,7 @@ var _ = Describe("#242407", func() {
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("kind", "node", "name", "node4", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 606, expectedPermissionsMax: 644")),
 			}),
 		Entry("should return correct checkResults only for selected nodes",
-			sharedv1r11.Options242407{
+			v1r11.Options242407{
 				GroupByLabels: []string{"foo"},
 			},
 			[][]string{{kubeletServicePath, compliantKubeletServiceFileStats}, {kubeletServicePath, compliantKubeletServiceFileStats}},
