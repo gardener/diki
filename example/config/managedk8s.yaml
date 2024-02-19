@@ -58,6 +58,10 @@ providers:                   # contains information about known providers
     #       # relates to the result status in the report
     #       # can be set to Passed or Accepted. Defaults to Accepted
     #       status: Passed
+    # - ruleID: "242420"
+    #   args:
+    #     groupByLabels:
+    #     - foo
 output:
   path: /tmp/test-output.json  # optional, path to summary json report
   minStatus: Passed
