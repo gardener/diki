@@ -175,14 +175,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Client:       shootClient,
 			V1RESTClient: shootClientSet.CoreV1().RESTClient(),
 		},
-		&v1r11.Rule242392{
-			Logger:                  r.Logger().With("rule", sharedv1r11.ID242392),
-			InstanceID:              r.instanceID,
-			ClusterClient:           shootClient,
-			ClusterCoreV1RESTClient: shootClientSet.CoreV1().RESTClient(),
-			ControlPlaneClient:      seedClient,
-			ClusterPodContext:       shootPodContext,
-			ControlPlaneNamespace:   r.shootNamespace,
+		&sharedv1r11.Rule242392{
+			Logger:       r.Logger().With("rule", sharedv1r11.ID242392),
+			Client:       shootClient,
+			V1RESTClient: shootClientSet.CoreV1().RESTClient(),
+			Options: &sharedv1r11.Options242392{
+				GroupByLabels: []string{"worker.gardener.cloud/pool"},
+			},
 		},
 		&v1r11.Rule242393{Logger: r.Logger().With("rule", sharedv1r11.ID242393), InstanceID: r.instanceID, ClusterPodContext: shootPodContext},
 		&v1r11.Rule242394{Logger: r.Logger().With("rule", sharedv1r11.ID242394), InstanceID: r.instanceID, ClusterPodContext: shootPodContext},
