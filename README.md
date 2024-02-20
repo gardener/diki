@@ -16,8 +16,27 @@ Diki is the Greek word for "trial". You can also memorise it as "Detective Inves
 
 #### Installation
 
+If you install via GitHub releases, you need to put the diki binary on your path.
+
+A sample install snippet for macOS can look like this:
 ```bash
-go install github.com/gardener/diki/cmd/diki@latest
+# Example for macOS
+
+# set operating system and architecture
+os=darwin # choose between darwin, linux, windows
+arch=amd64 # choose between amd64, arm64
+
+# Get latest version. Alternatively set your desired version
+version=$(curl -Ls -H 'Accept: application/json' https://github.com/gardener/diki/releases/latest | jq -r '.tag_name')
+
+# Download diki
+curl -LO "https://github.com/gardener/diki/releases/download/${version}/diki-${os}-${arch}"
+
+# Make the diki binary executable
+chmod +x "./diki-${os}-${arch}"
+
+# Move the binary in to your PATH
+sudo mv "./diki-${os}-${arch}" /usr/local/bin/diki
 ```
 
 #### Run
