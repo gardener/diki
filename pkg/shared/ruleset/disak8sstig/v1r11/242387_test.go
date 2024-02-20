@@ -13,7 +13,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -56,9 +55,6 @@ var _ = Describe("#242387", func() {
 						Status: corev1.ConditionTrue,
 					},
 				},
-				Allocatable: corev1.ResourceList{
-					"pods": resource.MustParse("0.0"),
-				},
 			},
 		}
 	})
@@ -93,7 +89,6 @@ var _ = Describe("#242387", func() {
 			}),
 		}
 		r := &v1r11.Rule242387{
-			Logger:       testLogger,
 			Client:       fakeClient,
 			V1RESTClient: fakeRESTClient,
 		}
@@ -103,48 +98,6 @@ var _ = Describe("#242387", func() {
 			rule.PassedCheckResult("Option readOnlyPort set to allowed value.", rule.NewTarget("kind", "node", "name", "node1")),
 			rule.FailedCheckResult("Option readOnlyPort set to not allowed value.", rule.NewTarget("kind", "node", "name", "node2", "details", "Read only port set to 10255")),
 			rule.PassedCheckResult("Option readOnlyPort not set.", rule.NewTarget("kind", "node", "name", "node3")),
-		}
-
-		Expect(err).To(BeNil())
-		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
-	})
-
-	It("should return correct checkResults only for selected nodes", func() {
-		node1 := plainNode.DeepCopy()
-		node1.ObjectMeta.Name = "node1"
-		node1.ObjectMeta.Labels["foo"] = "bar1"
-		Expect(fakeClient.Create(ctx, node1)).To(Succeed())
-
-		node2 := plainNode.DeepCopy()
-		node2.ObjectMeta.Name = "node2"
-		node2.ObjectMeta.Labels["foo"] = "bar2"
-		Expect(fakeClient.Create(ctx, node2)).To(Succeed())
-
-		node3 := plainNode.DeepCopy()
-		node3.ObjectMeta.Name = "node3"
-		node3.ObjectMeta.Labels["foo"] = "bar1"
-		Expect(fakeClient.Create(ctx, node3)).To(Succeed())
-
-		fakeRESTClient = &manualfake.RESTClient{
-			GroupVersion:         schema.GroupVersion{Group: "", Version: "v1"},
-			NegotiatedSerializer: scheme.Codecs,
-			Client: manualfake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
-				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(readOnlyPortAllowedNodeConfig)))}, nil
-			}),
-		}
-		r := &v1r11.Rule242387{
-			Logger:       testLogger,
-			Client:       fakeClient,
-			V1RESTClient: fakeRESTClient,
-			Options: &v1r11.Options242387{
-				GroupByLabels: []string{"foo"},
-			},
-		}
-		ruleResult, err := r.Run(ctx)
-
-		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("Option readOnlyPort set to allowed value.", rule.NewTarget("kind", "node", "name", "node1")),
-			rule.PassedCheckResult("Option readOnlyPort set to allowed value.", rule.NewTarget("kind", "node", "name", "node2")),
 		}
 
 		Expect(err).To(BeNil())
