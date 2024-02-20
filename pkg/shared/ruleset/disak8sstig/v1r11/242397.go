@@ -39,7 +39,7 @@ func (r *Rule242397) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if len(nodes) == 0 {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult("No nodes found.", rule.NewTarget())), nil
+		return rule.SingleCheckResult(r, rule.WarningCheckResult("No nodes found.", rule.NewTarget())), nil
 	}
 
 	const staticPodPathConfigOption = "staticPodPath"
