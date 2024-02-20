@@ -10,5 +10,5 @@ import (
 )
 
 type RuleOption interface {
-	sharedv1r11.Options242406 | sharedv1r11.Options242407 | Options242415 | option.FileOwnerOptions
+	sharedv1r11.Options242406 | sharedv1r11.Options242407 | Options242414 | Options242415 | option.FileOwnerOptions
 }

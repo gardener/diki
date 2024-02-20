@@ -11,19 +11,29 @@ providers:                   # contains information about known providers
     version: v1r11
     ruleOptions:
     # - ruleID: "242406"
-    # args:
-    #   # Node labels used to group nodes by specified
-    #   # label value combinations. Only one node per
-    #   # combination will be tested
-    #   groupByLabels:
-    #   - foo
-    #   expectedFileOwner:
-    #     users: ["0"]
-    #     groups: ["0"]
+    #   args:
+    #     # Node labels used to group nodes by specified
+    #     # label value combinations. Only one node per
+    #     # combination will be tested
+    #     groupByLabels:
+    #     - foo
+    #     expectedFileOwner:
+    #       users: ["0"]
+    #       groups: ["0"]
     # - ruleID: "242407"
     #   args:
     #     groupByLabels:
     #     - foo
+    # - ruleID: "242414"
+    #   args:
+    #     acceptedPods:
+    #     - podMatchLabels:
+    #         label: foo
+    #       namespaceMatchLabels:
+    #         label: foo
+    #       justification: "justification"
+    #       ports:
+    #       - 53
     # - ruleID: "242415"
     #   args:
     #     acceptedPods:
