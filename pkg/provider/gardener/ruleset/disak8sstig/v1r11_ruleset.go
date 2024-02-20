@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 
 	"github.com/Masterminds/semver/v3"
+	resourcesv1alpha1 "github.com/gardener/gardener/pkg/apis/resources/v1alpha1"
 	kubernetesgardener "github.com/gardener/gardener/pkg/client/kubernetes"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -309,7 +310,20 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			ControlPlaneNamespace: r.shootNamespace,
 			Options:               opts242415,
 		},
-		&v1r11.Rule242417{Logger: r.Logger().With("rule", sharedv1r11.ID242417), Client: shootClient},
+		&sharedv1r11.Rule242417{
+			Client: shootClient,
+			Options: &sharedv1r11.Options242417{
+				AcceptedPods: []sharedv1r11.AcceptedPods242417{
+					{
+						PodMatchLabels: map[string]string{
+							resourcesv1alpha1.ManagedBy: "gardener",
+						},
+						Justification: "Gardener managed pods are not user pods",
+						Status:        "Passed",
+					},
+				},
+			},
+		},
 		&sharedv1r11.Rule242418{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242419{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242420{

@@ -44,6 +44,20 @@ providers:                   # contains information about known providers
     #       justification: "justification"
     #       environmentVariables:
     #       - FOO_BAR
+    # - ruleID: "242417"
+    #   args:
+    #     acceptedPods:
+    #     - podMatchLabels:
+    #         foo: bar
+    #       # Defaults to ["kube-system", "kube-public", "kube-node-lease"]
+    #       namespaceNames:
+    #       - kube-system
+    #       - kube-public
+    #       - kube-node-lease
+    #       justification: "justification"
+    #       # relates to the result status in the report
+    #       # can be set to Passed or Accepted. Defaults to Accepted
+    #       status: Passed
 output:
   path: /tmp/test-output.json  # optional, path to summary json report
   minStatus: Passed

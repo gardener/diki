@@ -43,6 +43,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
+	opts242417, err := getV1R11OptionOrNil[sharedv1r11.Options242417](ruleOptions[sharedv1r11.ID242417].Args)
+	if err != nil {
+		return err
+	}
 
 	const (
 		noControlPlaneMsg = "The Managed Kubernetes cluster does not have access to control plane components."
@@ -276,12 +280,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Client:  client,
 			Options: opts242415,
 		},
-		rule.NewSkipRule(
-			sharedv1r11.ID242417,
-			"Kubernetes must separate user functionality (MEDIUM 242417)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242417{
+			Client:  client,
+			Options: opts242417,
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242418,
 			"The Kubernetes API server must use approved cipher suites (MEDIUM 242418)",
