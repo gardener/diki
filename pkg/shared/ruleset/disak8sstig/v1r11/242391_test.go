@@ -13,8 +13,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -46,18 +44,12 @@ var _ = Describe("#242391", func() {
 		fakeClient = fakeclient.NewClientBuilder().Build()
 
 		plainNode = &corev1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Labels: map[string]string{},
-			},
 			Status: corev1.NodeStatus{
 				Conditions: []corev1.NodeCondition{
 					{
 						Type:   corev1.NodeReady,
 						Status: corev1.ConditionTrue,
 					},
-				},
-				Allocatable: corev1.ResourceList{
-					"pods": resource.MustParse("0.0"),
 				},
 			},
 		}
@@ -93,7 +85,6 @@ var _ = Describe("#242391", func() {
 			}),
 		}
 		r := &v1r11.Rule242391{
-			Logger:       testLogger,
 			Client:       fakeClient,
 			V1RESTClient: fakeRESTClient,
 		}
@@ -109,42 +100,16 @@ var _ = Describe("#242391", func() {
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
 	})
 
-	It("should return correct checkResults only for selected nodes", func() {
-		node1 := plainNode.DeepCopy()
-		node1.ObjectMeta.Name = "node1"
-		node1.ObjectMeta.Labels["foo"] = "bar1"
-		Expect(fakeClient.Create(ctx, node1)).To(Succeed())
-
-		node2 := plainNode.DeepCopy()
-		node2.ObjectMeta.Name = "node2"
-		node2.ObjectMeta.Labels["foo"] = "bar2"
-		Expect(fakeClient.Create(ctx, node2)).To(Succeed())
-
-		node3 := plainNode.DeepCopy()
-		node3.ObjectMeta.Name = "node3"
-		node3.ObjectMeta.Labels["foo"] = "bar1"
-		Expect(fakeClient.Create(ctx, node3)).To(Succeed())
-
-		fakeRESTClient = &manualfake.RESTClient{
-			GroupVersion:         schema.GroupVersion{Group: "", Version: "v1"},
-			NegotiatedSerializer: scheme.Codecs,
-			Client: manualfake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
-				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(anonymousAuthAllowedNodeConfig)))}, nil
-			}),
-		}
+	It("should return warn when nodes are not found", func() {
+		fakeRESTClient = &manualfake.RESTClient{}
 		r := &v1r11.Rule242391{
-			Logger:       testLogger,
 			Client:       fakeClient,
 			V1RESTClient: fakeRESTClient,
-			Options: &v1r11.Options242391{
-				GroupByLabels: []string{"foo"},
-			},
 		}
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("Option authentication.anonymous.enabled set to allowed value.", rule.NewTarget("kind", "node", "name", "node1")),
-			rule.PassedCheckResult("Option authentication.anonymous.enabled set to allowed value.", rule.NewTarget("kind", "node", "name", "node2")),
+			rule.WarningCheckResult("No nodes found.", rule.NewTarget()),
 		}
 
 		Expect(err).To(BeNil())

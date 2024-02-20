@@ -177,12 +177,8 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedv1r11.Rule242389{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242390{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242391{
-			Logger:       r.Logger().With("rule", sharedv1r11.ID242391),
 			Client:       shootClient,
 			V1RESTClient: shootClientSet.CoreV1().RESTClient(),
-			Options: &sharedv1r11.Options242391{
-				GroupByLabels: []string{"worker.gardener.cloud/pool"},
-			},
 		},
 		&v1r11.Rule242392{
 			Logger:                  r.Logger().With("rule", sharedv1r11.ID242392),
