@@ -33,6 +33,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
+	opts242393, err := getV1R11OptionOrNil[sharedv1r11.Options242393](ruleOptions[sharedv1r11.ID242393].Args)
+	if err != nil {
+		return err
+	}
 	opts242406, err := getV1R11OptionOrNil[sharedv1r11.Options242406](ruleOptions[sharedv1r11.ID242406].Args)
 	if err != nil {
 		return err
@@ -158,12 +162,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Client:       client,
 			V1RESTClient: clientSet.CoreV1().RESTClient(),
 		},
-		rule.NewSkipRule(
-			sharedv1r11.ID242393,
-			"Kubernetes Worker Nodes must not have sshd service running (MEDIUM 242393)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242393{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242393),
+			InstanceID: r.instanceID,
+			Client:     client,
+			PodContext: podContext,
+			Options:    opts242393,
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242394,
 			"Kubernetes Worker Nodes must not have the sshd service enabled (MEDIUM 242394)",
