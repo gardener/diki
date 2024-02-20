@@ -60,7 +60,7 @@ providers:                   # contains information about known providers
     #       status: Passed
     # - ruleID: "242447"
     #   args:
-    #     kubeProxyMatchLabels:
+    #     podMatchLabels:
     #       foo: bar
 output:
   path: /tmp/test-output.json  # optional, path to summary json report
