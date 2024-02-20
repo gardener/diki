@@ -318,7 +318,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 						PodMatchLabels: map[string]string{
 							resourcesv1alpha1.ManagedBy: "gardener",
 						},
-						Justification: "managed by gardener pods are not user pods",
+						Justification: "Gardener managed pods are not user pods",
 						Status:        "Passed",
 					},
 				},
