@@ -7,6 +7,7 @@ package disak8sstig
 import (
 	"encoding/json"
 
+	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/config"
@@ -23,6 +24,11 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	}
 
 	podContext, err := pod.NewSimplePodContext(client, r.Config)
+	if err != nil {
+		return err
+	}
+
+	clientSet, err := kubernetes.NewForConfig(r.Config)
 	if err != nil {
 		return err
 	}
@@ -122,12 +128,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noControlPlaneMsg,
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242387,
-			"The Kubernetes Kubelet must have the read-only port flag disabled (HIGH 242387)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242387{
+			Client:       client,
+			V1RESTClient: clientSet.CoreV1().RESTClient(),
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242388,
 			"The Kubernetes API server must have the insecure bind address not set (HIGH 242388)",
