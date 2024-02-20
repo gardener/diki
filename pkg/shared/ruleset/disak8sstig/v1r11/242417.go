@@ -7,8 +7,9 @@ package v1r11
 import (
 	"context"
 	"fmt"
+	"slices"
+	"strings"
 
-	"golang.org/x/exp/slices"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
@@ -51,7 +52,7 @@ func (r *Rule242417) Run(ctx context.Context) (rule.RuleResult, error) {
 	systemNamespaces := []string{"kube-system", "kube-public", "kube-node-lease"}
 	acceptedPods := []AcceptedPods242417{}
 
-	if r.Options != nil {
+	if r.Options != nil && r.Options.AcceptedPods != nil {
 		acceptedPods = r.Options.AcceptedPods
 	}
 
@@ -82,8 +83,9 @@ func (r *Rule242417) Run(ctx context.Context) (rule.RuleResult, error) {
 
 			acceptedPod := r.Options.AcceptedPods[acceptedPodIdx]
 
-			msg := acceptedPod.Justification
-			switch acceptedPod.Status {
+			msg := strings.TrimSpace(acceptedPod.Justification)
+			status := strings.TrimSpace(acceptedPod.Status)
+			switch status {
 			case "Passed", "passed":
 				if len(msg) == 0 {
 					msg = "System pod in system namespaces."
@@ -95,7 +97,7 @@ func (r *Rule242417) Run(ctx context.Context) (rule.RuleResult, error) {
 				}
 				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, target))
 			default:
-				checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("unrecognized status set: %s", acceptedPod.Status), target))
+				checkResults = append(checkResults, rule.WarningCheckResult(fmt.Sprintf("unrecognized status: %s", status), target))
 			}
 		}
 	}

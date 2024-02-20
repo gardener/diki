@@ -166,7 +166,7 @@ var _ = Describe("#242417", func() {
 		Expect(err).To(BeNil())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.ErroredCheckResult("unrecognized status set: fake", rule.NewTarget("name", "pod1", "namespace", "kube-system", "kind", "pod")),
+			rule.WarningCheckResult("unrecognized status: fake", rule.NewTarget("name", "pod1", "namespace", "kube-system", "kind", "pod")),
 			rule.AcceptedCheckResult("Accept pod.", rule.NewTarget("name", "bar", "namespace", "kube-system", "kind", "pod")),
 			rule.AcceptedCheckResult("Accepted user pod in system namespaces.", rule.NewTarget("name", "bar", "namespace", "kube-public", "kind", "pod")),
 		}
