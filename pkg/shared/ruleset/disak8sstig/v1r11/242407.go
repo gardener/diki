@@ -20,51 +20,38 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/images"
 	"github.com/gardener/diki/pkg/shared/provider"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
-var _ rule.Rule = &Rule242406{}
+var _ rule.Rule = &Rule242407{}
 
-type Rule242406 struct {
+type Rule242407 struct {
 	InstanceID string
 	Client     client.Client
 	PodContext pod.PodContext
-	Options    *Options242406
+	Options    *Options242407
 	Logger     provider.Logger
 }
 
-type Options242406 struct {
+type Options242407 struct {
 	GroupByLabels []string `json:"groupByLabels" yaml:"groupByLabels"`
-	*option.FileOwnerOptions
 }
 
-func (r *Rule242406) ID() string {
-	return ID242406
+func (r *Rule242407) ID() string {
+	return ID242407
 }
 
-func (r *Rule242406) Name() string {
-	return "The Kubernetes kubelet configuration file must be owned by root (MEDIUM 242406)"
+func (r *Rule242407) Name() string {
+	return "The Kubernetes kubelet configuration files must have file permissions set to 644 or more restrictive (MEDIUM 242407)"
 }
 
-func (r *Rule242406) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242407) Run(ctx context.Context) (rule.RuleResult, error) {
 	var kubeletServicePath string
 	checkResults := []rule.CheckResult{}
-	options := option.FileOwnerOptions{}
+	expectedFilePermissionsMax := "644"
 	nodeLabels := []string{}
 
-	if r.Options != nil {
-		if r.Options.FileOwnerOptions != nil {
-			options = *r.Options.FileOwnerOptions
-		}
-		if r.Options.GroupByLabels != nil {
-			nodeLabels = slices.Clone(r.Options.GroupByLabels)
-		}
-	}
-	if len(options.ExpectedFileOwner.Users) == 0 {
-		options.ExpectedFileOwner.Users = []string{"0"}
-	}
-	if len(options.ExpectedFileOwner.Groups) == 0 {
-		options.ExpectedFileOwner.Groups = []string{"0"}
+	if r.Options != nil && r.Options.GroupByLabels != nil {
+		nodeLabels = slices.Clone(r.Options.GroupByLabels)
 	}
 
 	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
@@ -119,9 +106,21 @@ func (r *Rule242406) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		target := rule.NewTarget("kind", "node", "name", node.Name, "details", fmt.Sprintf("filePath: %s", kubeletServicePath))
-		checkResults = append(checkResults,
-			intutils.MatchFileOwnersCases(fileStats, options.ExpectedFileOwner.Users, options.ExpectedFileOwner.Groups, target)...)
 
+		exceedFilePermissions, err := intutils.ExceedFilePermissions(fileStats.Permissions, expectedFilePermissionsMax)
+		if err != nil {
+			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target))
+			continue
+		}
+
+		if exceedFilePermissions {
+			detailedTarget := target.With("details", fmt.Sprintf("fileName: %s, permissions: %s, expectedPermissionsMax: %s", fileStats.Path, fileStats.Permissions, expectedFilePermissionsMax))
+			checkResults = append(checkResults, rule.FailedCheckResult("File has too wide permissions", detailedTarget))
+			continue
+		}
+
+		detailedTarget := target.With("details", fmt.Sprintf("fileName: %s, permissions: %s", fileStats.Path, fileStats.Permissions))
+		checkResults = append(checkResults, rule.PassedCheckResult("File has expected permissions", detailedTarget))
 	}
 
 	return rule.RuleResult{

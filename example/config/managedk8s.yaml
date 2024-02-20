@@ -20,6 +20,10 @@ providers:                   # contains information about known providers
     #   expectedFileOwner:
     #     users: ["0"]
     #     groups: ["0"]
+    # - ruleID: "242407"
+    #   args:
+    #     groupByLabels:
+    #     - foo
     # - ruleID: "242415"
     #   args:
     #     acceptedPods:
