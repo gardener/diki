@@ -21,9 +21,9 @@ providers:                   # contains information about known providers
     #     users: ["0"]
     #     groups: ["0"]
     # - ruleID: "242407"
-    # args:
-    #   groupByLabels:
-    #   - foo
+    #   args:
+    #     groupByLabels:
+    #     - foo
     # - ruleID: "242415"
     #   args:
     #     acceptedPods:
