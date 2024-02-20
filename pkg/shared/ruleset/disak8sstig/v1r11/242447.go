@@ -128,7 +128,7 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 			expectedFilePermissionsMax := "644"
 			podTarget := target.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
 
-			rawKubeProxyCommand, err := kubeutils.GetKubeProxyCommand(pod)
+			rawKubeProxyCommand, err := kubeutils.GetContainerCommand(pod, "kube-proxy")
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), podTarget))
 				continue
@@ -187,7 +187,7 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 			}
 
 			if len(kubeconfigPath) == 0 {
-				checkResults = append(checkResults, rule.PassedCheckResult("Kube-proxy uses in-cluster kubeconfig.", podTarget))
+				checkResults = append(checkResults, rule.PassedCheckResult("Kube-proxy uses in-cluster kubeconfig", podTarget))
 				continue
 			}
 

@@ -1158,7 +1158,7 @@ var _ = Describe("utils", func() {
 		)
 	})
 
-	Describe("#GetKubeProxyCommand", func() {
+	Describe("#GetContainerCommand", func() {
 		var (
 			pod corev1.Pod
 		)
@@ -1183,20 +1183,19 @@ var _ = Describe("utils", func() {
 
 		DescribeTable("#MatchCases",
 			func(containerName string, command, args []string, expectedResult string, errorMatcher gomegatypes.GomegaMatcher) {
-				pod.Spec.Containers[1].Name = containerName
 				pod.Spec.Containers[1].Command = command
 				pod.Spec.Containers[1].Args = args
-				result, err := utils.GetKubeProxyCommand(pod)
+				result, err := utils.GetContainerCommand(pod, containerName)
 
 				Expect(err).To(errorMatcher)
 				Expect(result).To(Equal(expectedResult))
 			},
-			Entry("should return kube-proxy command", "kube-proxy",
+			Entry("should return cotainer command", "bar",
 				[]string{"/bin/sh", "-c", "exec", "kube-proxy"}, []string{"--kubeconfig=/var/lib/kube-proxy/kubeconfig"},
 				"/bin/sh -c exec kube-proxy --kubeconfig=/var/lib/kube-proxy/kubeconfig", BeNil()),
-			Entry("should return error when kube-proxy container is not found", "kube-not-proxy",
+			Entry("should return error when container is not found", "not-bar",
 				[]string{}, []string{},
-				"", MatchError("kube-proxy pod does not contain kube-proxy container")),
+				"", MatchError("pod does not contain not-bar container")),
 		)
 	})
 

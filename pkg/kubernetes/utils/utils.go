@@ -372,11 +372,11 @@ func GetKubeletCommand(ctx context.Context, podExecutor pod.PodExecutor) (string
 	return rawKubeletCommand, nil
 }
 
-// GetKubeProxyCommand returns the used kube-proxy command
-func GetKubeProxyCommand(pod corev1.Pod) (string, error) {
-	container, found := GetContainerFromPod(&pod, "kube-proxy")
+// GetContainerCommand returns the used container command
+func GetContainerCommand(pod corev1.Pod, containerName string) (string, error) {
+	container, found := GetContainerFromPod(&pod, containerName)
 	if !found {
-		return "", errors.New("kube-proxy pod does not contain kube-proxy container")
+		return "", fmt.Errorf("pod does not contain %s container", containerName)
 	}
 
 	rawCommand := strings.Join(append(container.Command, container.Args...), " ")
