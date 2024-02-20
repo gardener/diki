@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+// SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -6,7 +6,6 @@ package v1r11
 
 import (
 	"context"
-	"log/slog"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -14,18 +13,16 @@ import (
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
-	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
 var _ rule.Rule = &Rule242395{}
 
 type Rule242395 struct {
 	Client client.Client
-	Logger *slog.Logger
 }
 
 func (r *Rule242395) ID() string {
-	return sharedv1r11.ID242395
+	return ID242395
 }
 
 func (r *Rule242395) Name() string {
@@ -33,20 +30,19 @@ func (r *Rule242395) Name() string {
 }
 
 func (r *Rule242395) Run(ctx context.Context) (rule.RuleResult, error) {
-	shootTarget := rule.NewTarget("cluster", "shoot")
 	podsPartialMetadata, err := kubeutils.GetObjectsMetadata(ctx, r.Client, corev1.SchemeGroupVersion.WithKind("PodList"), "", labels.SelectorFromSet(labels.Set{"k8s-app": "kubernetes-dashboard"}), 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList"))), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
 	}
 
 	checkResults := []rule.CheckResult{}
 	for _, podPartialMetadata := range podsPartialMetadata {
-		target := shootTarget.With("name", podPartialMetadata.Name, "namespace", podPartialMetadata.Namespace, "kind", "pod")
+		target := rule.NewTarget("name", podPartialMetadata.Name, "namespace", podPartialMetadata.Namespace, "kind", "pod")
 		checkResults = append(checkResults, rule.FailedCheckResult("Kubernetes dashboard installed", target))
 	}
 
 	if len(checkResults) == 0 {
-		return rule.SingleCheckResult(r, rule.PassedCheckResult("Kubernetes dashboard not installed", shootTarget)), nil
+		return rule.SingleCheckResult(r, rule.PassedCheckResult("Kubernetes dashboard not installed", rule.NewTarget())), nil
 	}
 
 	return rule.RuleResult{
