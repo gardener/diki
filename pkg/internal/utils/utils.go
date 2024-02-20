@@ -99,41 +99,72 @@ func GetMountedFilesStats(
 	var err error
 
 	for _, container := range pod.Spec.Containers {
-		containerStatusIdx := slices.IndexFunc(pod.Status.ContainerStatuses, func(containerStatus corev1.ContainerStatus) bool {
-			return containerStatus.Name == container.Name
-		})
 
-		if containerStatusIdx < 0 {
-			err = errors.Join(err, fmt.Errorf("container with Name %s not (yet) in status", container.Name))
+		baseContainerID, err2 := GetContainerID(pod, container.Name)
+		if err2 != nil {
+			err = errors.Join(err, err2)
 			continue
 		}
 
-		containerID := pod.Status.ContainerStatuses[containerStatusIdx].ContainerID
-		switch {
-		case len(containerID) == 0:
-			err = errors.Join(err, fmt.Errorf("container with Name %s not (yet) running", container.Name))
-		case strings.HasPrefix(containerID, "containerd://"):
-			baseContainerID := strings.Split(containerID, "//")[1]
-			containerStats, err2 := getContainerMountedFileStatResults(ctx,
-				podExecutorRootPath,
-				podExecutor,
-				pod,
-				container.Name,
-				baseContainerID,
-				excludeSources,
-			)
-			if err2 != nil {
-				err = errors.Join(err, err2)
-			}
+		containerStats, err2 := getContainerMountedFileStatResults(ctx,
+			podExecutorRootPath,
+			podExecutor,
+			pod,
+			container.Name,
+			baseContainerID,
+			excludeSources,
+		)
+		if err2 != nil {
+			err = errors.Join(err, err2)
+		}
 
-			if len(containerStats) > 0 {
-				stats[container.Name] = containerStats
-			}
-		default:
-			err = errors.Join(err, fmt.Errorf("cannot handle container with Name %s", container.Name))
+		if len(containerStats) > 0 {
+			stats[container.Name] = containerStats
 		}
 	}
 	return stats, err
+}
+
+// GetContainerID returns the container ID specified in the container statust by container name
+func GetContainerID(pod corev1.Pod, containerName string) (string, error) {
+	containerStatusIdx := slices.IndexFunc(pod.Status.ContainerStatuses, func(containerStatus corev1.ContainerStatus) bool {
+		return containerStatus.Name == containerName
+	})
+
+	if containerStatusIdx < 0 {
+		return "", fmt.Errorf("container with Name %s not (yet) in status", containerName)
+	}
+
+	containerID := pod.Status.ContainerStatuses[containerStatusIdx].ContainerID
+	switch {
+	case len(containerID) == 0:
+		return "", fmt.Errorf("container with Name %s not (yet) running", containerName)
+	case strings.HasPrefix(containerID, "containerd://"):
+		return strings.Split(containerID, "//")[1], nil
+	default:
+		return "", fmt.Errorf("cannot handle container with Name %s", containerName)
+	}
+}
+
+// GetContainerMounts returns the container mounts of a container
+func GetContainerMounts(
+	ctx context.Context,
+	podExecutorRootPath string,
+	podExecutor pod.PodExecutor,
+	containerID string,
+) ([]config.Mount, error) {
+	commandResult, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`%s/usr/local/bin/nerdctl --namespace k8s.io inspect --mode=native %s | jq -r .[0].Spec.mounts`, podExecutorRootPath, containerID))
+	if err != nil {
+		return []config.Mount{}, err
+	}
+
+	mounts := []config.Mount{}
+	err = json.Unmarshal([]byte(commandResult), &mounts)
+	if err != nil {
+		return []config.Mount{}, err
+	}
+
+	return mounts, nil
 }
 
 func getContainerMountedFileStatResults(
@@ -147,13 +178,7 @@ func getContainerMountedFileStatResults(
 	stats := []FileStats{}
 	var err error
 
-	commandResult, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`%s/usr/local/bin/nerdctl --namespace k8s.io inspect --mode=native %s | jq -r .[0].Spec.mounts`, podExecutorRootPath, containerID))
-	if err != nil {
-		return stats, err
-	}
-
-	mounts := []config.Mount{}
-	err = json.Unmarshal([]byte(commandResult), &mounts)
+	mounts, err := GetContainerMounts(ctx, podExecutorRootPath, podExecutor, containerID)
 	if err != nil {
 		return stats, err
 	}
