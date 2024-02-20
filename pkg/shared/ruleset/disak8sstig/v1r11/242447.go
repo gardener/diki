@@ -45,7 +45,7 @@ func (r *Rule242447) ID() string {
 }
 
 func (r *Rule242447) Name() string {
-	return "The Kubernetes component etcd must be owned by etcd (MEDIUM 242447)"
+	return "The Kubernetes Kube Proxy kubeconfig must have file permissions set to 644 or more restrictive (MEDIUM 242447)"
 }
 
 func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
@@ -134,13 +134,13 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 				continue
 			}
 
-			kubeconfigPath, err := r.GetKubeletFlagValue(rawKubeProxyCommand, "kubeconfig")
+			kubeconfigPath, err := r.GetKubeProxyFlagValue(rawKubeProxyCommand, "kubeconfig")
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), podTarget))
 				continue
 			}
 
-			configPath, err := r.GetKubeletFlagValue(rawKubeProxyCommand, "config")
+			configPath, err := r.GetKubeProxyFlagValue(rawKubeProxyCommand, "config")
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), podTarget))
 				continue
@@ -173,6 +173,8 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 
 				selectedFileStats = append(selectedFileStats, configFileStats)
 
+				// if the --kubeconfig path is not set then we read the configfile to get the kubeconfig
+				// https://github.com/kubernetes/kubernetes/blob/2016fab3085562b4132e6d3774b6ded5ba9939fd/cmd/kube-proxy/app/server.go#L775
 				if len(kubeconfigPath) == 0 {
 					kubeProxyConfig, err := kubeutils.GetKubeProxyConfig(ctx, podExecutor, configSourcePath)
 					if err != nil {
@@ -185,7 +187,7 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 			}
 
 			if len(kubeconfigPath) == 0 {
-				checkResults = append(checkResults, rule.WarningCheckResult("Kube-proxy creates kubeconfig using serviceaccount token!", podTarget))
+				checkResults = append(checkResults, rule.PassedCheckResult("Kube-proxy uses in-cluster kubeconfig.", podTarget))
 				continue
 			}
 
@@ -230,8 +232,8 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (r *Rule242447) GetKubeletFlagValue(rawKubeProxyCommand, flag string) (string, error) {
-	valueSlice := kubeutils.FindFlagValueRaw(strings.Split(rawKubeProxyCommand, " "), flag)
+func (r *Rule242447) GetKubeProxyFlagValue(rawCommand, flag string) (string, error) {
+	valueSlice := kubeutils.FindFlagValueRaw(strings.Split(rawCommand, " "), flag)
 
 	if len(valueSlice) == 0 {
 		return "", nil
