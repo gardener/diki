@@ -53,10 +53,6 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
-	opts242420, err := getV1R11OptionOrNil[sharedv1r11.Options242420](ruleOptions[sharedv1r11.ID242420].Args)
-	if err != nil {
-		return err
-	}
 
 	const (
 		noControlPlaneMsg = "The Managed Kubernetes cluster does not have access to control plane components."
@@ -307,10 +303,8 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		&sharedv1r11.Rule242420{
-			Logger:       r.Logger().With("rule", sharedv1r11.ID242420),
 			Client:       client,
 			V1RESTClient: clientSet.CoreV1().RESTClient(),
-			Options:      opts242420,
 		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242421,
