@@ -204,12 +204,8 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		&sharedv1r11.Rule242397{
-			Logger:       r.Logger().With("rule", sharedv1r11.ID242397),
 			Client:       shootClient,
 			V1RESTClient: shootClientSet.CoreV1().RESTClient(),
-			Options: &sharedv1r11.Options242397{
-				GroupByLabels: []string{"worker.gardener.cloud/pool"},
-			},
 		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242398,

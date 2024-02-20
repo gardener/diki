@@ -33,10 +33,6 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
-	opts242397, err := getV1R11OptionOrNil[sharedv1r11.Options242397](ruleOptions[sharedv1r11.ID242397].Args)
-	if err != nil {
-		return err
-	}
 	opts242406, err := getV1R11OptionOrNil[sharedv1r11.Options242406](ruleOptions[sharedv1r11.ID242406].Args)
 	if err != nil {
 		return err
@@ -184,10 +180,8 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.NotImplemented,
 		),
 		&sharedv1r11.Rule242397{
-			Logger:       r.Logger().With("rule", sharedv1r11.ID242397),
 			Client:       client,
 			V1RESTClient: clientSet.CoreV1().RESTClient(),
-			Options:      opts242397,
 		},
 		rule.NewSkipRule(
 			// feature-gates.DynamicAuditing removed in v1.19. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/

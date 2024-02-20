@@ -10,10 +10,6 @@ providers:                   # contains information about known providers
     name: DISA Kubernetes Security Technical Implementation Guide
     version: v1r11
     ruleOptions:
-    # - ruleID: "242397"
-    #   args:
-    #     groupByLabels:
-    #     - topology.gke.io/zone
     # - ruleID: "242406"
     #   args:
     #     # Node labels used to group nodes by specified
