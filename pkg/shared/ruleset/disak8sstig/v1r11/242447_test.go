@@ -207,6 +207,18 @@ var _ = Describe("#242447", func() {
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "2-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, permissions: 664, expectedPermissionsMax: 644")),
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "2-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig2, permissions: 606, expectedPermissionsMax: 644")),
 			}),
+		Entry("should check only pod with matched labels",
+			v1r11.Options242447{
+				PodMatchLabels: map[string]string{
+					"component": "kube-proxy",
+				},
+			},
+			[][]string{{mounts, compliantConfigStats, compliantKubeconfigStats}},
+			[][]error{{nil, nil, nil}},
+			[]rule.CheckResult{
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, permissions: 644")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig, permissions: 600")),
+			}),
 		Entry("should return passed when kubeconfig is created by token", nil,
 			[][]string{{mounts, compliantConfigStats, compliantKubeconfigStats, mounts, compliantConfigStats, ""}},
 			[][]error{{nil, nil, nil, nil, nil, nil}},
