@@ -65,6 +65,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
+	opts242449, err := getV1R11OptionOrNil[sharedv1r11.Options242449](ruleOptions[sharedv1r11.ID242449].Args)
+	if err != nil {
+		return err
+	}
 
 	const (
 		noControlPlaneMsg = "The Managed Kubernetes cluster does not have access to control plane components."
@@ -457,12 +461,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			PodContext: podContext,
 			Options:    opts242448,
 		},
-		rule.NewSkipRule(
-			sharedv1r11.ID242449,
-			"The Kubernetes Kubelet certificate authority file must have file permissions set to 644 or more restrictive (MEDIUM 242449)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242449{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242449),
+			InstanceID: r.instanceID,
+			Client:     client,
+			PodContext: podContext,
+			Options:    opts242449,
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242450,
 			"The Kubernetes Kubelet certificate authority must be owned by root (MEDIUM 242450)",

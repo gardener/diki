@@ -410,12 +410,15 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 				FileOwnerOptions: gardenerFileOwnerOptions,
 			},
 		},
-		rule.NewSkipRule(
-			sharedv1r11.ID242449,
-			"Kubernetes Kubelet certificate authority file must have file permissions set to 644 or more restrictive (MEDIUM 242449)",
-			`Rule implemented by "node-files" for correctness, consistency, deduplication, reliability, and performance reasons.`,
-			rule.Skipped,
-		),
+		&sharedv1r11.Rule242449{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242449),
+			InstanceID: r.instanceID,
+			Client:     shootClient,
+			PodContext: shootPodContext,
+			Options: &sharedv1r11.Options242449{
+				GroupByLabels: workerPoolGroupByLabels,
+			},
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242450,
 			"Kubernetes Kubelet certificate authority must be owned by root (MEDIUM 242450)",
