@@ -262,11 +262,13 @@ func FindFlagValueRaw(command []string, flag string) []string {
 	flag = fmt.Sprintf("-%s", flag)
 
 	result := []string{}
-	for _, c := range command {
+	for idx, c := range command {
 		before, after, found := strings.Cut(c, flag)
 		if found && (before == "" || before == "-") && (len(after) == 0 || string(after[0]) == "=" || string(after[0]) == " ") {
 			if len(after) != 0 && string(after[0]) == "=" {
 				after = after[1:]
+			} else if len(after) == 0 && idx+1 < len(command) && string(command[idx+1][0]) != "-" {
+				after = command[idx+1]
 			}
 			result = append(result, strings.TrimSpace(after))
 		}

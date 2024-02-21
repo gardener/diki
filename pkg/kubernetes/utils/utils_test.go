@@ -810,7 +810,7 @@ var _ = Describe("utils", func() {
 			"flag1",
 			[]string{"value1", "value3", ""}),
 		Entry("should correctly find values for flag starts with -",
-			[]string{"-flag1=value1", "-flag2=value2", "-flag1 value3", "-flag1foo=value4", "-flag1", "-barflag1=value6"},
+			[]string{"-flag1=value1", "-flag2=value2", "-flag1", "value3", "-flag1foo=value4", "-flag1", "-barflag1=value6"},
 			"flag1",
 			[]string{"value1", "value3", ""}),
 		Entry("ambiguous behavior",
