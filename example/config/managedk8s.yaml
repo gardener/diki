@@ -62,6 +62,13 @@ providers:                   # contains information about known providers
     #   args:
     #     podMatchLabels:
     #       foo: bar
+    # - ruleID: "242448"
+    #   args:
+    #     podMatchLabels:
+    #       foo: bar
+    #     expectedFileOwner:
+    #       users: ["0"]
+    #       groups: ["0"]
 output:
   path: /tmp/test-output.json  # optional, path to summary json report
   minStatus: Passed
