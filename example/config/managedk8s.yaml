@@ -73,6 +73,10 @@ providers:                   # contains information about known providers
     #     expectedFileOwner:
     #       users: ["0"]
     #       groups: ["0"]
+    # - ruleID: "242449"
+    #   args:
+    #     groupByLabels:
+    #     - foo
 output:
   path: /tmp/test-output.json  # optional, path to summary json report
   minStatus: Passed
