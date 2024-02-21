@@ -1152,9 +1152,13 @@ var _ = Describe("utils", func() {
 				Expect(result).To(Equal(expectedMessage))
 			},
 			Entry("should return command message",
-				[]string{commandMessage}, []error{nil}, commandMessage, BeNil()),
-			Entry("should return error when command errors",
-				[]string{commandMessage}, []error{errors.New("command error")}, "", MatchError("command error")),
+				[]string{"1\n", commandMessage}, []error{nil, nil}, commandMessage, BeNil()),
+			Entry("should return error when PID is 0",
+				[]string{"0\n"}, []error{nil}, "", MatchError("kubelet service is not running")),
+			Entry("should return error when first command errors",
+				[]string{"1\n"}, []error{errors.New("command error")}, "", MatchError("command error")),
+			Entry("should return error when second command errors",
+				[]string{"1\n", commandMessage}, []error{nil, errors.New("command error")}, "", MatchError("command error")),
 		)
 	})
 

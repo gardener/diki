@@ -128,8 +128,8 @@ var _ = Describe("#242404", func() {
 		},
 
 		Entry("should return correct checkResults when execute errors, and one node has hostname-override kubelet flag not set",
-			[][]string{{""}, {"--not-hostname-override=/foo/bar"}},
-			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil}},
+			[][]string{{""}, {"1", "--not-hostname-override=/foo/bar"}},
+			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", rule.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
 				rule.PassedCheckResult("Flag hostname-override not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
@@ -137,8 +137,8 @@ var _ = Describe("#242404", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when hostname-override flag is set",
-			[][]string{{"--hostname-override=/foo/bar --config=./config"}, {"--hostname-override --config=./config"}},
-			[][]error{{nil}, {nil}},
+			[][]string{{"1", "--hostname-override=/foo/bar --config=./config"}, {"1", "--hostname-override --config=./config"}},
+			[][]error{{nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
 				rule.FailedCheckResult("Flag hostname-override set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Flag hostname-override set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),

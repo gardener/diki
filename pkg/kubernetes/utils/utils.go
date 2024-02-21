@@ -364,7 +364,17 @@ func GetCommandOptionFromDeployment(ctx context.Context, c client.Client, deploy
 
 // GetKubeletCommand returns the used kubelet command
 func GetKubeletCommand(ctx context.Context, podExecutor pod.PodExecutor) (string, error) {
-	rawKubeletCommand, err := podExecutor.Execute(ctx, "bin/sh", `ps x -o command | grep "/opt/bin/kubelet" | grep -v "grep"`)
+	kubeletPID, err := podExecutor.Execute(ctx, "bin/sh", `systemctl show -P MainPID kubelet`)
+	if err != nil {
+		return "", err
+	}
+	kubeletPID = strings.TrimSuffix(kubeletPID, "\n")
+
+	if kubeletPID == "0" {
+		return "", errors.New("kubelet service is not running")
+	}
+
+	rawKubeletCommand, err := podExecutor.Execute(ctx, "bin/sh", fmt.Sprintf("ps --no-headers -p %s -o command", kubeletPID))
 	if err != nil {
 		return "", err
 	}

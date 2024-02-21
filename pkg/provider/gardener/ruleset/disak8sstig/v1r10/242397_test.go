@@ -176,8 +176,8 @@ var _ = Describe("#242397", func() {
 		},
 
 		Entry("should return correct checkResults when execute errors, and one node has pod-manifest-path kubelet flag set",
-			[][]string{{""}, {"--pod-manifest-path=/foo/bar"}},
-			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil}},
+			[][]string{{""}, {"1", "--pod-manifest-path=/foo/bar"}},
+			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", rule.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
 				rule.FailedCheckResult("Use of deprecated kubelet config flag pod-manifest-path.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
@@ -185,8 +185,8 @@ var _ = Describe("#242397", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes have staticPodPath set",
-			[][]string{{"--not-pod-manifest-path=/foo/bar --config=./config", staticPodPathEmptyConfig}, {"--not-pod-manifest-path=/foo/bar --config=./config", staticPodPathSetConfig}},
-			[][]error{{nil, nil}, {nil, nil}},
+			[][]string{{"1", "--not-pod-manifest-path=/foo/bar --config=./config", staticPodPathEmptyConfig}, {"1", "--not-pod-manifest-path=/foo/bar --config=./config", staticPodPathSetConfig}},
+			[][]error{{nil, nil, nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.FailedCheckResult("Option staticPodPath set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option staticPodPath set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
@@ -194,8 +194,8 @@ var _ = Describe("#242397", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes do not have staticPodPath set",
-			[][]string{{"--not-pod-manifest-path=/foo/bar --config=./config", staticPodPathNotSetConfig}, {"--not-pod-manifest-path=/foo/bar, --config=./config", staticPodPathNotSetConfig}},
-			[][]error{{nil, nil}, {nil, nil}},
+			[][]string{{"1", "--not-pod-manifest-path=/foo/bar --config=./config", staticPodPathNotSetConfig}, {"1", "--not-pod-manifest-path=/foo/bar, --config=./config", staticPodPathNotSetConfig}},
+			[][]error{{nil, nil, nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("Option staticPodPath not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.PassedCheckResult("Option staticPodPath not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),

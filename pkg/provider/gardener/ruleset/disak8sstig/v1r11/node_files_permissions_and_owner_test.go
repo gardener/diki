@@ -144,9 +144,9 @@ tlsCertFile: /var/lib/certs/tls.crt`
 		},
 
 		Entry("should return passed checkResults when all files comply",
-			[][]string{{kubeletServicePath, rawKubeletCommand, kubeletConfig, compliantPKIAllFilesStats, compliantCAFileStats, compliantKubeletFileStats, compliantKubeconfigRealFileStats, compliantKubeletServiceFileStats},
-				{kubeletServicePath, rawKubeletCommand, tlsKubeletConfig, compliantPrivateKeyDirStats, compliantPrivateKeyFileStats, compliantCertDirStats, compliantCertFileStats, compliantCAFileStats, compliantKubeletFileStats, compliantKubeconfigRealFileStats, compliantKubeletServiceFileStats}},
-			[][]error{{nil, nil, nil, nil, nil, nil, nil, nil}, {nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil}},
+			[][]string{{kubeletServicePath, "1", rawKubeletCommand, kubeletConfig, compliantPKIAllFilesStats, compliantCAFileStats, compliantKubeletFileStats, compliantKubeconfigRealFileStats, compliantKubeletServiceFileStats},
+				{kubeletServicePath, "1", rawKubeletCommand, tlsKubeletConfig, compliantPrivateKeyDirStats, compliantPrivateKeyFileStats, compliantCertDirStats, compliantCertFileStats, compliantCAFileStats, compliantKubeletFileStats, compliantKubeconfigRealFileStats, compliantKubeletServiceFileStats}},
+			[][]error{{nil, nil, nil, nil, nil, nil, nil, nil, nil}, {nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "pool1", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/pki, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "pool1", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/pki/key.key, permissions: 600, ownerUser: 0, ownerGroup: 0")),
@@ -166,9 +166,9 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.PassedCheckResult("File has expected permissions and expected owner", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 644, ownerUser: 0, ownerGroup: 0")),
 			}),
 		Entry("should return failed checkResults when no files comply",
-			[][]string{{kubeletServicePath, rawKubeletCommand, kubeletConfig, nonCompliantPKIAllFilesStats, nonCompliantCAFileStats, nonCompliantKubeletFileStats, nonCompliantKubeconfigRealFileStats, nonCompliantKubeletServiceFileStats},
-				{kubeletServicePath, rawKubeletCommand, tlsKubeletConfig, nonCompliantPrivateKeyDirStats, nonCompliantPrivateKeyFileStats, nonCompliantCertDirStats, nonCompliantCertFileStats, nonCompliantCAFileStats, nonCompliantKubeletFileStats, nonCompliantKubeconfigRealFileStats, nonCompliantKubeletServiceFileStats}},
-			[][]error{{nil, nil, nil, nil, nil, nil, nil, nil}, {nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil}},
+			[][]string{{kubeletServicePath, "1", rawKubeletCommand, kubeletConfig, nonCompliantPKIAllFilesStats, nonCompliantCAFileStats, nonCompliantKubeletFileStats, nonCompliantKubeconfigRealFileStats, nonCompliantKubeletServiceFileStats},
+				{kubeletServicePath, "1", rawKubeletCommand, tlsKubeletConfig, nonCompliantPrivateKeyDirStats, nonCompliantPrivateKeyFileStats, nonCompliantCertDirStats, nonCompliantCertFileStats, nonCompliantCAFileStats, nonCompliantKubeletFileStats, nonCompliantKubeconfigRealFileStats, nonCompliantKubeletServiceFileStats}},
+			[][]error{{nil, nil, nil, nil, nil, nil, nil, nil, nil}, {nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "pool1", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/pki, ownerUser: 0, ownerGroup: 0")),
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "pool1", "kind", "workerGroup", "details", "fileName: /var/lib/kubelet/pki/key.key, permissions: 644, expectedPermissionsMax: 600")),
@@ -188,9 +188,9 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("cluster", "shoot", "name", "pool2", "kind", "workerGroup", "details", "fileName: /etc/systemd/system/kubelet.service, ownerGroup: 2000, expectedOwnerGroups: [0 65534]")),
 			}),
 		Entry("should return errored checkResults when different function error",
-			[][]string{{kubeletServicePath, rawKubeletCommand, "", "", "", "", "", ""},
-				{kubeletServicePath, "", ""}},
-			[][]error{{errors.New("foo"), nil, nil, nil, nil, nil, nil, nil}, {nil, nil, nil}},
+			[][]string{{kubeletServicePath, "1", rawKubeletCommand, "", "", "", "", "", ""},
+				{kubeletServicePath, "1", "", ""}},
+			[][]error{{errors.New("foo"), nil, nil, nil, nil, nil, nil, nil, nil}, {nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("could not find kubelet.service path: foo", rule.NewTarget("cluster", "shoot", "name", dikiPodName, "namespace", "kube-system", "kind", "pod")),
 				rule.FailedCheckResult("could not find client ca path: client-ca-file not set.", rule.NewTarget("cluster", "shoot", "name", dikiPodName, "namespace", "kube-system", "kind", "pod")),
