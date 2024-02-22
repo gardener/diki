@@ -574,12 +574,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"",
 			rule.NotImplemented,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID245541,
-			"Kubernetes Kubelet must not disable timeouts (MEDIUM 245541)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule245541{
+			Client:       client,
+			V1RESTClient: clientSet.CoreV1().RESTClient(),
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID245542,
 			"Kubernetes API Server must disable basic authentication to protect information in transit (HIGH 245542)",

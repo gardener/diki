@@ -487,14 +487,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			PodContext: seedPodContext,
 			Namespace:  r.shootNamespace,
 		},
-		&v1r11.Rule245541{
-			Logger:                  r.Logger().With("rule", sharedv1r11.ID245541),
-			InstanceID:              r.instanceID,
-			ClusterClient:           shootClient,
-			ClusterCoreV1RESTClient: shootClientSet.CoreV1().RESTClient(),
-			ControlPlaneClient:      seedClient,
-			ClusterPodContext:       shootPodContext,
-			ControlPlaneNamespace:   r.shootNamespace,
+		&sharedv1r11.Rule245541{
+			Client:       shootClient,
+			V1RESTClient: shootClientSet.CoreV1().RESTClient(),
 		},
 		&sharedv1r11.Rule245542{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule245543{Client: seedClient, Namespace: r.shootNamespace, Options: opts245543},
