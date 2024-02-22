@@ -403,12 +403,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noControlPlaneMsg,
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242434,
-			"Kubernetes Kubelet must enable kernel protection (HIGH 242434)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242434{
+			Client:       client,
+			V1RESTClient: clientSet.CoreV1().RESTClient(),
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242436,
 			"The Kubernetes API server must have the ValidatingAdmissionWebhook enabled (HIGH 242436)",
