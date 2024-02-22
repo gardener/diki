@@ -103,4 +103,20 @@ var _ = Describe("#242387", func() {
 		Expect(err).To(BeNil())
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
 	})
+
+	It("should return warn when nodes are not found", func() {
+		fakeRESTClient = &manualfake.RESTClient{}
+		r := &v1r11.Rule242387{
+			Client:       fakeClient,
+			V1RESTClient: fakeRESTClient,
+		}
+		ruleResult, err := r.Run(ctx)
+
+		expectedCheckResults := []rule.CheckResult{
+			rule.WarningCheckResult("No nodes found.", rule.NewTarget()),
+		}
+
+		Expect(err).To(BeNil())
+		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
+	})
 })
