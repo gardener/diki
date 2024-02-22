@@ -44,12 +44,7 @@ func (r *Rule242424) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.WarningCheckResult("No nodes found.", rule.NewTarget())), nil
 	}
 
-	const (
-		tlsPrivateKeyFileConfigOption = "tlsPrivateKeyFile"
-		featureGatesFlag              = "feature-gates"
-		tlsPrivateKeyFileFlag         = "tls-private-key-file"
-	)
-
+	const tlsPrivateKeyFileConfigOption = "tlsPrivateKeyFile"
 	for _, node := range nodes {
 		target := rule.NewTarget("kind", "node", "name", node.Name)
 		if !kubeutils.NodeReadyStatus(node) {
