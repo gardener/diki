@@ -7,6 +7,7 @@ package disak8sstig
 import (
 	"encoding/json"
 
+	"github.com/Masterminds/semver/v3"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -29,6 +30,16 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	}
 
 	clientSet, err := kubernetes.NewForConfig(r.Config)
+	if err != nil {
+		return err
+	}
+
+	kubernetesVersion, err := clientSet.Discovery().ServerVersion()
+	if err != nil {
+		return err
+	}
+
+	semverKubernetesVersion, err := semver.NewVersion(kubernetesVersion.String())
 	if err != nil {
 		return err
 	}
@@ -201,12 +212,11 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"Option feature-gates.DynamicAuditing was removed in Kubernetes v1.19.",
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242399,
-			"Kubernetes DynamicKubeletConfig must not be enabled (MEDIUM 242399)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242399{
+			Client:            client,
+			KubernetesVersion: semverKubernetesVersion,
+			V1RESTClient:      clientSet.CoreV1().RESTClient(),
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242400,
 			"The Kubernetes API server must have Alpha APIs disabled (MEDIUM 242400)",
