@@ -29,7 +29,7 @@ func (r *Rule242425) ID() string {
 }
 
 func (r *Rule242425) Name() string {
-	return "Kubernetes Kubelet must enable tls-cert-file for client authentication to secure service (MEDIUM 242425)"
+	return "Kubernetes Kubelet must enable tlsCertFile for client authentication to secure service (MEDIUM 242425)"
 }
 
 func (r *Rule242425) Run(ctx context.Context) (rule.RuleResult, error) {
