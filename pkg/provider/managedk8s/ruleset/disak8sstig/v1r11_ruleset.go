@@ -154,12 +154,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Client:       client,
 			V1RESTClient: clientSet.CoreV1().RESTClient(),
 		},
-		rule.NewSkipRule(
-			sharedv1r11.ID242392,
-			"The Kubernetes kubelet must enable explicit authorization (HIGH 242392)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242392{
+			Client:       client,
+			V1RESTClient: clientSet.CoreV1().RESTClient(),
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242393,
 			"Kubernetes Worker Nodes must not have sshd service running (MEDIUM 242393)",
