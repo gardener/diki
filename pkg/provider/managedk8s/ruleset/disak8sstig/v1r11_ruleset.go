@@ -343,12 +343,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noControlPlaneMsg,
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242424,
-			"Kubernetes Kubelet must enable tlsPrivateKeyFile for client authentication to secure service (MEDIUM 242424)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242424{
+			Client:       client,
+			V1RESTClient: clientSet.CoreV1().RESTClient(),
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242425,
 			"Kubernetes Kubelet must enable tlsCertFile for client authentication to secure service (MEDIUM 242425)",
