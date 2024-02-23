@@ -64,7 +64,7 @@ func (r *Rule242399) Run(ctx context.Context) (rule.RuleResult, error) {
 			continue
 		}
 
-		// featureGates.DynamicKubeletConfig is depracated in v1.22, defaults to false. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
+		// featureGates.DynamicKubeletConfig is deprecated in v1.22, defaults to false. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
 		if dynamicKubeletConfig, ok := kubeletConfig.FeatureGates["DynamicKubeletConfig"]; !ok {
 			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", option), target))
 		} else if dynamicKubeletConfig {
