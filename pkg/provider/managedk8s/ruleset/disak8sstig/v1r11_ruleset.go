@@ -298,12 +298,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noControlPlaneMsg,
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242420,
-			"Kubernetes Kubelet must have the SSL Certificate Authority set (MEDIUM 242420)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242420{
+			Client:       client,
+			V1RESTClient: clientSet.CoreV1().RESTClient(),
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242421,
 			"Kubernetes Controller Manager must have the SSL Certificate Authority set (MEDIUM 242421)",
