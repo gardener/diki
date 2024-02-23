@@ -367,7 +367,7 @@ func GetCommandOptionFromDeployment(ctx context.Context, c client.Client, deploy
 
 // GetKubeletCommand returns the used kubelet command
 func GetKubeletCommand(ctx context.Context, podExecutor pod.PodExecutor) (string, error) {
-	kubeletPID, err := podExecutor.Execute(ctx, "bin/sh", `systemctl show -P MainPID kubelet`)
+	kubeletPID, err := podExecutor.Execute(ctx, "/bin/sh", `systemctl show -P MainPID kubelet`)
 	if err != nil {
 		return "", err
 	}
@@ -377,7 +377,7 @@ func GetKubeletCommand(ctx context.Context, podExecutor pod.PodExecutor) (string
 		return "", errors.New("kubelet service is not running")
 	}
 
-	rawKubeletCommand, err := podExecutor.Execute(ctx, "bin/sh", fmt.Sprintf("ps --no-headers -p %s -o command", kubeletPID))
+	rawKubeletCommand, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf("ps --no-headers -p %s -o command", kubeletPID))
 	if err != nil {
 		return "", err
 	}
@@ -435,7 +435,7 @@ func GetKubeletConfig(ctx context.Context, podExecutor pod.PodExecutor, rawKubel
 	}
 	configPath := configPathSlice[0]
 
-	rawKubeletConfig, err := podExecutor.Execute(ctx, "bin/sh", fmt.Sprintf("cat %s", configPath))
+	rawKubeletConfig, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf("cat %s", configPath))
 	if err != nil {
 		return &config.KubeletConfig{}, err
 	}
@@ -452,7 +452,7 @@ func GetKubeletConfig(ctx context.Context, podExecutor pod.PodExecutor, rawKubel
 // GetKubeProxyConfig returns the kube-proxy config specified by it's path
 func GetKubeProxyConfig(ctx context.Context, podExecutor pod.PodExecutor, kubeProxyPath string) (*config.KubeProxyConfig, error) {
 
-	rawKubeProxyConfig, err := podExecutor.Execute(ctx, "bin/sh", fmt.Sprintf("cat %s", kubeProxyPath))
+	rawKubeProxyConfig, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf("cat %s", kubeProxyPath))
 	if err != nil {
 		return &config.KubeProxyConfig{}, err
 	}

@@ -46,7 +46,6 @@ func (r *Rule242449) Name() string {
 }
 
 func (r *Rule242449) Run(ctx context.Context) (rule.RuleResult, error) {
-	var kubeletServicePath string
 	checkResults := []rule.CheckResult{}
 	expectedFilePermissionsMax := "644"
 	nodeLabels := []string{}
@@ -130,7 +129,7 @@ func (r *Rule242449) Run(ctx context.Context) (rule.RuleResult, error) {
 			continue
 		}
 
-		target := rule.NewTarget("kind", "node", "name", node.Name, "details", fmt.Sprintf("filePath: %s", kubeletServicePath))
+		target := rule.NewTarget("kind", "node", "name", node.Name, "details", fmt.Sprintf("filePath: %s", kubeletClientCAFile))
 
 		exceedFilePermissions, err := intutils.ExceedFilePermissions(fileStats.Permissions, expectedFilePermissionsMax)
 		if err != nil {
