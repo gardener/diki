@@ -180,8 +180,8 @@ var _ = Describe("#242391", func() {
 		},
 
 		Entry("should return correct checkResults when one node's /healthz enpoint can be reached anonymously, another has anonymous-auth kubelet flag set",
-			[][]string{{"healthy"}, {"Unauthorized", "--anonymous-auth=false"}},
-			[][]error{{nil}, {nil, nil}},
+			[][]string{{"healthy"}, {"Unauthorized", "1", "--anonymous-auth=false"}},
+			[][]error{{nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.FailedCheckResult("Kubelet allowed anonymous authentication (or could not be probed).", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Use of deprecated kubelet config flag anonymous-auth.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
@@ -189,8 +189,8 @@ var _ = Describe("#242391", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes have authentication.anonymous.enabled set",
-			[][]string{{"Unauthorized", "--not-anonymous-auth=true --config=./config", anonymousAuthAllowedConfig}, {"Unauthorized", "--not-anonymous-auth=true --config=./config", anonymousAuthNotAllowedConfig}},
-			[][]error{{nil, nil, nil}, {nil, nil, nil}},
+			[][]string{{"Unauthorized", "1", "--not-anonymous-auth=true --config=./config", anonymousAuthAllowedConfig}, {"Unauthorized", "1", "--not-anonymous-auth=true --config=./config", anonymousAuthNotAllowedConfig}},
+			[][]error{{nil, nil, nil, nil}, {nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("Option authentication.anonymous.enabled set to allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option authentication.anonymous.enabled set to not allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
@@ -198,8 +198,8 @@ var _ = Describe("#242391", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes do not have authentication.anonymous.enabled set",
-			[][]string{{"Unauthorized", "--not-anonymous-auth=true --config=./config", anonymousAuthNotSetConfig}, {"Unauthorized", "--not-anonymous-auth=true, --config=./config", anonymousAuthNotSetConfig}},
-			[][]error{{nil, nil, nil}, {nil, nil, nil}},
+			[][]string{{"Unauthorized", "1", "--not-anonymous-auth=true --config=./config", anonymousAuthNotSetConfig}, {"Unauthorized", "1", "--not-anonymous-auth=true, --config=./config", anonymousAuthNotSetConfig}},
+			[][]error{{nil, nil, nil, nil}, {nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.FailedCheckResult("Option authentication.anonymous.enabled not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option authentication.anonymous.enabled not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),

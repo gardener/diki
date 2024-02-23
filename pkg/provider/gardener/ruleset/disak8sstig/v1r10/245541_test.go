@@ -180,8 +180,8 @@ var _ = Describe("#245541", func() {
 		},
 
 		Entry("should return correct checkResults when execute errors, and one pod has streaming-connection-idle-timeout kubelet flag set",
-			[][]string{{""}, {"--streaming-connection-idle-timeout=true"}},
-			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil}},
+			[][]string{{""}, {"1", "--streaming-connection-idle-timeout=true"}},
+			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", rule.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
 				rule.FailedCheckResult("Use of deprecated kubelet config flag streaming-connection-idle-timeout.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
@@ -189,8 +189,8 @@ var _ = Describe("#245541", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes have streamingConnectionIdleTimeout set",
-			[][]string{{"--not-streaming-connection-idle-timeout=true --config=./config", streamingConnectionIdleTimeoutAllowedConfig}, {"--not-streaming-connection-idle-timeout=true --config=./config", streamingConnectionIdleTimeoutNotAllowedConfig}},
-			[][]error{{nil, nil}, {nil, nil}},
+			[][]string{{"1", "--not-streaming-connection-idle-timeout=true --config=./config", streamingConnectionIdleTimeoutAllowedConfig}, {"1", "--not-streaming-connection-idle-timeout=true --config=./config", streamingConnectionIdleTimeoutNotAllowedConfig}},
+			[][]error{{nil, nil, nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("Option streamingConnectionIdleTimeout set to allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option streamingConnectionIdleTimeout set to not allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "streamingConnectionIdleTimeout set to 30s.")),
@@ -198,8 +198,8 @@ var _ = Describe("#245541", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes do not have streamingConnectionIdleTimeout set or is set to not recommended value",
-			[][]string{{"--not-streaming-connection-idle-timeout=true --config=./config", streamingConnectionIdleTimeoutNotSetConfig}, {"--not-streaming-connection-idle-timeout=true, --config=./config", streamingConnectionIdleTimeoutNotRecommendedConfig}},
-			[][]error{{nil, nil}, {nil, nil}},
+			[][]string{{"1", "--not-streaming-connection-idle-timeout=true --config=./config", streamingConnectionIdleTimeoutNotSetConfig}, {"1", "--not-streaming-connection-idle-timeout=true, --config=./config", streamingConnectionIdleTimeoutNotRecommendedConfig}},
+			[][]error{{nil, nil, nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.FailedCheckResult("Option streamingConnectionIdleTimeout not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.PassedCheckResult("Option streamingConnectionIdleTimeout set to allowed, but not recommended value (should be 5m).", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "streamingConnectionIdleTimeout set to 1h0m0s.")),
@@ -207,8 +207,8 @@ var _ = Describe("#245541", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes do not have streamingConnectionIdleTimeout set or is set to not recommended value over 4 hours",
-			[][]string{{"--not-streaming-connection-idle-timeout=true --config=./config", streamingConnectionIdleTimeoutNotAllowedConfigOver4Hours}, {"--not-streaming-connection-idle-timeout=true, --config=./config", streamingConnectionIdleTimeoutNotRecommendedConfig}},
-			[][]error{{nil, nil}, {nil, nil}},
+			[][]string{{"1", "--not-streaming-connection-idle-timeout=true --config=./config", streamingConnectionIdleTimeoutNotAllowedConfigOver4Hours}, {"1", "--not-streaming-connection-idle-timeout=true, --config=./config", streamingConnectionIdleTimeoutNotRecommendedConfig}},
+			[][]error{{nil, nil, nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.FailedCheckResult("Option streamingConnectionIdleTimeout set to not allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1", "details", "streamingConnectionIdleTimeout set to 5h0m0s.")),
 				rule.PassedCheckResult("Option streamingConnectionIdleTimeout set to allowed, but not recommended value (should be 5m).", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "streamingConnectionIdleTimeout set to 1h0m0s.")),

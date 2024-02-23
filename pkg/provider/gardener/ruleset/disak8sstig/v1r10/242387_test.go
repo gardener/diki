@@ -176,8 +176,8 @@ var _ = Describe("#242387", func() {
 		},
 
 		Entry("should return correct checkResults when one node has read-only port opened, another has read-only-port kubelet flag set",
-			[][]string{{`tcp   LISTEN 0      32768      127.0.0.1:10255      0.0.0.0:*    users:(("kubelet",pid=755,fd=19))`}, {"", "--read-only-port=123"}},
-			[][]error{{nil}, {nil, nil}},
+			[][]string{{`tcp   LISTEN 0      32768      127.0.0.1:10255      0.0.0.0:*    users:(("kubelet",pid=755,fd=19))`}, {"", "1", "--read-only-port=123"}},
+			[][]error{{nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.FailedCheckResult("Kubelet read-only port 10255 open.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Use of deprecated kubelet config flag read-only-port.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
@@ -185,8 +185,8 @@ var _ = Describe("#242387", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes have readOnlyPort set",
-			[][]string{{"", "--not-read-only-port=bar --config=./config", readOnlyPortAllowedConfig}, {"", "--not-read-only-port=bar --config=./config", readOnlyPortNotAllowedConfig}},
-			[][]error{{nil, nil, nil}, {nil, nil, nil}},
+			[][]string{{"", "1", "--not-read-only-port=bar --config=./config", readOnlyPortAllowedConfig}, {"", "1", "--not-read-only-port=bar --config=./config", readOnlyPortNotAllowedConfig}},
+			[][]error{{nil, nil, nil, nil}, {nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("Option readOnlyPort set to allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option readOnlyPort set to not allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "Read only port set to 10255")),
@@ -194,8 +194,8 @@ var _ = Describe("#242387", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes do not have readOnlyPort set",
-			[][]string{{"", "--not-read-only-port=bar --config=./config", readOnlyPortNotSetConfig}, {"", "--not-read-only-port=bar, --config=./config", readOnlyPortNotSetConfig}},
-			[][]error{{nil, nil, nil}, {nil, nil, nil}},
+			[][]string{{"", "1", "--not-read-only-port=bar --config=./config", readOnlyPortNotSetConfig}, {"", "1", "--not-read-only-port=bar, --config=./config", readOnlyPortNotSetConfig}},
+			[][]error{{nil, nil, nil, nil}, {nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("Option readOnlyPort not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.PassedCheckResult("Option readOnlyPort not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),

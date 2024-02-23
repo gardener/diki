@@ -178,8 +178,8 @@ var _ = Describe("#242392", func() {
 		},
 
 		Entry("should return correct checkResults when one node's /healthz enpoint can be reached, another has authorization-mode kubelet flag set",
-			[][]string{{"healthy"}, {"Unauthorized", "--authorization-mode=AlwaysAllow"}},
-			[][]error{{nil}, {nil, nil}},
+			[][]string{{"healthy"}, {"Unauthorized", "1", "--authorization-mode=AlwaysAllow"}},
+			[][]error{{nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.FailedCheckResult("Kubelet always allows access (or could not be probed).", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Use of deprecated kubelet config flag authorization-mode.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
@@ -187,8 +187,8 @@ var _ = Describe("#242392", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes have authorization.mode set",
-			[][]string{{"Unauthorized", "--not-authorization-mode=Webhook --config=./config", authorizationModeAllowedConfig}, {"Unauthorized", "--not-authorization-mode=Webhook --config=./config", authorizationModeNotAllowedConfig}},
-			[][]error{{nil, nil, nil}, {nil, nil, nil}},
+			[][]string{{"Unauthorized", "1", "--not-authorization-mode=Webhook --config=./config", authorizationModeAllowedConfig}, {"Unauthorized", "1", "--not-authorization-mode=Webhook --config=./config", authorizationModeNotAllowedConfig}},
+			[][]error{{nil, nil, nil, nil}, {nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("Option authorization.mode set to allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option authorization.mode set to not allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2", "details", "Authorization Mode set to AlwaysAllow")),
@@ -196,8 +196,8 @@ var _ = Describe("#242392", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes do not have authorization.mode set",
-			[][]string{{"Unauthorized", "--not-authorization-mode=Webhook --config=./config", authorizationModeNotSetConfig}, {"Unauthorized", "--not-authorization-mode=Webhook, --config=./config", authorizationModeNotSetConfig}},
-			[][]error{{nil, nil, nil}, {nil, nil, nil}},
+			[][]string{{"Unauthorized", "1", "--not-authorization-mode=Webhook --config=./config", authorizationModeNotSetConfig}, {"Unauthorized", "1", "--not-authorization-mode=Webhook, --config=./config", authorizationModeNotSetConfig}},
+			[][]error{{nil, nil, nil, nil}, {nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.FailedCheckResult("Option authorization.mode not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option authorization.mode not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),

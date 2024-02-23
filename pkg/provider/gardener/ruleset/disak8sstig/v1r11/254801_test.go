@@ -178,8 +178,8 @@ var _ = Describe("#254801", func() {
 		},
 
 		Entry("should return correct checkResults when execute errors, and one pod has feature-gates kubelet flag set",
-			[][]string{{""}, {"--feature-gates=PodSecurity=true"}},
-			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil}},
+			[][]string{{""}, {"1", "--feature-gates=PodSecurity=true"}},
+			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", rule.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
 				rule.FailedCheckResult("Use of deprecated kubelet config flag feature-gates.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
@@ -187,8 +187,8 @@ var _ = Describe("#254801", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes have featureGates.PodSecurity set",
-			[][]string{{"--not-feature-gates=PodSecurity=true --config=./config", podSecurityAllowedConfig}, {"--not-feature-gates=PodSecurity=true --config=./config", podSecurityNotAllowedConfig}},
-			[][]error{{nil, nil}, {nil, nil}},
+			[][]string{{"1", "--not-feature-gates=PodSecurity=true --config=./config", podSecurityAllowedConfig}, {"1", "--not-feature-gates=PodSecurity=true --config=./config", podSecurityNotAllowedConfig}},
+			[][]error{{nil, nil, nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option featureGates.PodSecurity set to not allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
@@ -196,8 +196,8 @@ var _ = Describe("#254801", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes do not have featureGates.PodSecurity set",
-			[][]string{{"--not-feature-gates=PodSecurity=true --config=./config", podSecurityNotSetConfig}, {"--not-feature-gates=PodSecurity=true, --config=./config", podSecurityNotSetConfig}},
-			[][]error{{nil, nil}, {nil, nil}},
+			[][]string{{"1", "--not-feature-gates=PodSecurity=true --config=./config", podSecurityNotSetConfig}, {"1", "--not-feature-gates=PodSecurity=true, --config=./config", podSecurityNotSetConfig}},
+			[][]error{{nil, nil, nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.PassedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),

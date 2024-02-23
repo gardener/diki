@@ -176,8 +176,8 @@ var _ = Describe("#242434", func() {
 		},
 
 		Entry("should return correct checkResults when execute errors, and one pod has protect-kernel-defaults kubelet flag set",
-			[][]string{{""}, {"--protect-kernel-defaults=true"}},
-			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil}},
+			[][]string{{""}, {"1", "--protect-kernel-defaults=true"}},
+			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", rule.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
 				rule.FailedCheckResult("Use of deprecated kubelet config flag protect-kernel-defaults.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
@@ -185,8 +185,8 @@ var _ = Describe("#242434", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes have protectKernelDefaults set",
-			[][]string{{"--not-protect-kernel-defaults=true --config=./config", protectKernelDefaultsAllowedConfig}, {"--not-protect-kernel-defaults=true --config=./config", protectKernelDefaultsNotAllowedConfig}},
-			[][]error{{nil, nil}, {nil, nil}},
+			[][]string{{"1", "--not-protect-kernel-defaults=true --config=./config", protectKernelDefaultsAllowedConfig}, {"1", "--not-protect-kernel-defaults=true --config=./config", protectKernelDefaultsNotAllowedConfig}},
+			[][]error{{nil, nil, nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("Option protectKernelDefaults set to allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option protectKernelDefaults set to not allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
@@ -194,8 +194,8 @@ var _ = Describe("#242434", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes do not have protectKernelDefaults set",
-			[][]string{{"--not-protect-kernel-defaults=true --config=./config", protectKernelDefaultsNotSetConfig}, {"--not-protect-kernel-defaults=true, --config=./config", protectKernelDefaultsNotSetConfig}},
-			[][]error{{nil, nil}, {nil, nil}},
+			[][]string{{"1", "--not-protect-kernel-defaults=true --config=./config", protectKernelDefaultsNotSetConfig}, {"1", "--not-protect-kernel-defaults=true, --config=./config", protectKernelDefaultsNotSetConfig}},
+			[][]error{{nil, nil, nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.FailedCheckResult("Option protectKernelDefaults not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option protectKernelDefaults not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),

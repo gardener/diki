@@ -178,8 +178,8 @@ var _ = Describe("#242425", func() {
 		},
 
 		Entry("should return correct checkResults when execute errors, and one node has ServerTLSBootstrap set to true",
-			[][]string{{""}, {"--not-tls-cert-file=/foo/bar --config=./config", serverTLSBootstrapSetTrue}},
-			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil, nil}},
+			[][]string{{""}, {"1", "--not-tls-cert-file=/foo/bar --config=./config", serverTLSBootstrapSetTrue}},
+			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", rule.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
 				rule.PassedCheckResult("Kubelet rotates server certificates automatically itself.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
@@ -187,8 +187,8 @@ var _ = Describe("#242425", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes have tlsCertFile set",
-			[][]string{{"--not-tls-cert-file=/foo/bar --config=./config", tlsCertFileSetConfig}, {"--not-tls-cert-file=/foo/bar --config=./config", tlsCertFileEmptyConfig}},
-			[][]error{{nil, nil}, {nil, nil}},
+			[][]string{{"1", "--not-tls-cert-file=/foo/bar --config=./config", tlsCertFileSetConfig}, {"1", "--not-tls-cert-file=/foo/bar --config=./config", tlsCertFileEmptyConfig}},
+			[][]error{{nil, nil, nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("Option tlsCertFile set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option tlsCertFile is empty.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
@@ -196,8 +196,8 @@ var _ = Describe("#242425", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes do not have tlsCertFile set",
-			[][]string{{"--not-tls-cert-file=/foo/bar --config=./config", tlsCertFileNotSetConfig}, {"--not-tls-cert-file=/foo/bar, --config=./config", tlsCertFileNotSetConfig}},
-			[][]error{{nil, nil}, {nil, nil}},
+			[][]string{{"1", "--not-tls-cert-file=/foo/bar --config=./config", tlsCertFileNotSetConfig}, {"1", "--not-tls-cert-file=/foo/bar, --config=./config", tlsCertFileNotSetConfig}},
+			[][]error{{nil, nil, nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.FailedCheckResult("Option tlsCertFile not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option tlsCertFile not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
@@ -205,8 +205,8 @@ var _ = Describe("#242425", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when deprecated flags are used",
-			[][]string{{"--feature-gates=RotateKubeletServerCertificate=true"}, {"--tls-cert-file=/foo/bar"}},
-			[][]error{{nil}, {nil}},
+			[][]string{{"1", "--feature-gates=RotateKubeletServerCertificate=true"}, {"1", "--tls-cert-file=/foo/bar"}},
+			[][]error{{nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
 				rule.FailedCheckResult("Use of deprecated kubelet config flag feature-gates.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Use of deprecated kubelet config flag tls-cert-file.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),

@@ -180,8 +180,8 @@ var _ = Describe("#242420", func() {
 		},
 
 		Entry("should return correct checkResults when execute errors, and one node has pod-manifest-path kubelet flag set",
-			[][]string{{""}, {"--client-ca-file=/foo/bar"}},
-			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil}},
+			[][]string{{""}, {"1", "--client-ca-file=/foo/bar"}},
+			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", rule.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
 				rule.FailedCheckResult("Use of deprecated kubelet config flag client-ca-file.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
@@ -189,8 +189,8 @@ var _ = Describe("#242420", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes have authentication.x509.clientCAFile set",
-			[][]string{{"--not-client-ca-file=/foo/bar --config=./config", clientCaFileEmptyConfig}, {"--not-client-ca-file=/foo/bar --config=./config", clientCaFileSetConfig}},
-			[][]error{{nil, nil}, {nil, nil}},
+			[][]string{{"1", "--not-client-ca-file=/foo/bar --config=./config", clientCaFileEmptyConfig}, {"1", "--not-client-ca-file=/foo/bar --config=./config", clientCaFileSetConfig}},
+			[][]error{{nil, nil, nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.FailedCheckResult("Option authentication.x509.clientCAFile is empty.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.PassedCheckResult("Option authentication.x509.clientCAFile set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
@@ -198,8 +198,8 @@ var _ = Describe("#242420", func() {
 				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
 			}),
 		Entry("should return correct checkResults when nodes do not have authentication.x509.clientCAFile set",
-			[][]string{{"--not-client-ca-file=/foo/bar --config=./config", clientCaFileNotSetConfig}, {"--not-client-ca-file=/foo/bar, --config=./config", clientCaFileNotSetConfig}},
-			[][]error{{nil, nil}, {nil, nil}},
+			[][]string{{"1", "--not-client-ca-file=/foo/bar --config=./config", clientCaFileNotSetConfig}, {"1", "--not-client-ca-file=/foo/bar, --config=./config", clientCaFileNotSetConfig}},
+			[][]error{{nil, nil, nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.FailedCheckResult("Option authentication.x509.clientCAFile not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
 				rule.FailedCheckResult("Option authentication.x509.clientCAFile not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
