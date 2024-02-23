@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -16,22 +15,22 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-var _ rule.Rule = &Rule242387{}
+var _ rule.Rule = &Rule242434{}
 
-type Rule242387 struct {
+type Rule242434 struct {
 	Client       client.Client
 	V1RESTClient rest.Interface
 }
 
-func (r *Rule242387) ID() string {
-	return ID242387
+func (r *Rule242434) ID() string {
+	return ID242434
 }
 
-func (r *Rule242387) Name() string {
-	return `The Kubernetes Kubelet must have the "readOnlyPort" flag disabled (HIGH 242387)`
+func (r *Rule242434) Name() string {
+	return "Kubernetes Kubelet must enable kernel protection (HIGH 242434)"
 }
 
-func (r *Rule242387) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242434) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults := []rule.CheckResult{}
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
@@ -43,7 +42,7 @@ func (r *Rule242387) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.WarningCheckResult("No nodes found.", rule.NewTarget())), nil
 	}
 
-	const readOnlyPortConfigOption = "readOnlyPort"
+	const protectKernelDefaultsConfigOption = "protectKernelDefaults"
 	for _, node := range nodes {
 		target := rule.NewTarget("kind", "node", "name", node.Name)
 		if !kubeutils.NodeReadyStatus(node) {
@@ -57,14 +56,14 @@ func (r *Rule242387) Run(ctx context.Context) (rule.RuleResult, error) {
 			continue
 		}
 
-		// readOnlyPort defaults to allowed value disabled. ref https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/
+		// protectKernelDefaults defaults to not allowed value false. ref https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/
 		switch {
-		case kubeletConfig.ReadOnlyPort == nil:
-			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", readOnlyPortConfigOption), target))
-		case *kubeletConfig.ReadOnlyPort == 0:
-			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", readOnlyPortConfigOption), target))
+		case kubeletConfig.ProtectKernelDefaults == nil:
+			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Option %s not set.", protectKernelDefaultsConfigOption), target))
+		case *kubeletConfig.ProtectKernelDefaults:
+			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", protectKernelDefaultsConfigOption), target))
 		default:
-			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", readOnlyPortConfigOption), target.With("details", fmt.Sprintf("Read only port set to %s", strconv.Itoa(int(*kubeletConfig.ReadOnlyPort))))))
+			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", protectKernelDefaultsConfigOption), target))
 		}
 	}
 

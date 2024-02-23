@@ -13,7 +13,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -26,11 +25,11 @@ import (
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
-var _ = Describe("#242387", func() {
+var _ = Describe("#242434", func() {
 	const (
-		readOnlyPortAllowedNodeConfig    = `{"kubeletconfig":{"readOnlyPort":0}}`
-		readOnlyPortNotAllowedNodeConfig = `{"kubeletconfig":{"readOnlyPort":10255}}`
-		readOnlyPortNotSetNodeConfig     = `{"kubeletconfig":{"maxPods":100}}`
+		protectKernelDefaultsAllowedNodeConfig    = `{"kubeletconfig":{"protectKernelDefaults":true}}`
+		protectKernelDefaultsNotAllowedNodeConfig = `{"kubeletconfig":{"protectKernelDefaults":false}}`
+		protectKernelDefaultsNotSetNodeConfig     = `{"kubeletconfig":{"authentication":{"webhook":{"enabled":true,"cacheTTL":"2m0s"}}}}`
 	)
 
 	var (
@@ -45,9 +44,6 @@ var _ = Describe("#242387", func() {
 		fakeClient = fakeclient.NewClientBuilder().Build()
 
 		plainNode = &corev1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Labels: map[string]string{},
-			},
 			Status: corev1.NodeStatus{
 				Conditions: []corev1.NodeCondition{
 					{
@@ -78,26 +74,26 @@ var _ = Describe("#242387", func() {
 			Client: manualfake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
 				switch req.URL.String() {
 				case "https://localhost/nodes/node1/proxy/configz":
-					return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(readOnlyPortAllowedNodeConfig)))}, nil
+					return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(protectKernelDefaultsAllowedNodeConfig)))}, nil
 				case "https://localhost/nodes/node2/proxy/configz":
-					return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(readOnlyPortNotAllowedNodeConfig)))}, nil
+					return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(protectKernelDefaultsNotAllowedNodeConfig)))}, nil
 				case "https://localhost/nodes/node3/proxy/configz":
-					return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(readOnlyPortNotSetNodeConfig)))}, nil
+					return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(protectKernelDefaultsNotSetNodeConfig)))}, nil
 				default:
 					return &http.Response{StatusCode: http.StatusNotFound, Body: io.NopCloser(&bytes.Buffer{})}, nil
 				}
 			}),
 		}
-		r := &v1r11.Rule242387{
+		r := &v1r11.Rule242434{
 			Client:       fakeClient,
 			V1RESTClient: fakeRESTClient,
 		}
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("Option readOnlyPort set to allowed value.", rule.NewTarget("kind", "node", "name", "node1")),
-			rule.FailedCheckResult("Option readOnlyPort set to not allowed value.", rule.NewTarget("kind", "node", "name", "node2", "details", "Read only port set to 10255")),
-			rule.PassedCheckResult("Option readOnlyPort not set.", rule.NewTarget("kind", "node", "name", "node3")),
+			rule.PassedCheckResult("Option protectKernelDefaults set to allowed value.", rule.NewTarget("kind", "node", "name", "node1")),
+			rule.FailedCheckResult("Option protectKernelDefaults set to not allowed value.", rule.NewTarget("kind", "node", "name", "node2")),
+			rule.FailedCheckResult("Option protectKernelDefaults not set.", rule.NewTarget("kind", "node", "name", "node3")),
 		}
 
 		Expect(err).To(BeNil())
@@ -106,7 +102,7 @@ var _ = Describe("#242387", func() {
 
 	It("should return warn when nodes are not found", func() {
 		fakeRESTClient = &manualfake.RESTClient{}
-		r := &v1r11.Rule242387{
+		r := &v1r11.Rule242434{
 			Client:       fakeClient,
 			V1RESTClient: fakeRESTClient,
 		}
