@@ -188,14 +188,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			`"kubectl" is not installed into control plane pods or worker nodes and Gardener does not offer Kubernetes v1.12 or older.`,
 			rule.Skipped,
 		),
-		&v1r11.Rule242397{
-			Logger:                  r.Logger().With("rule", sharedv1r11.ID242397),
-			InstanceID:              r.instanceID,
-			ClusterClient:           shootClient,
-			ClusterCoreV1RESTClient: shootClientSet.CoreV1().RESTClient(),
-			ControlPlaneClient:      seedClient,
-			ClusterPodContext:       shootPodContext,
-			ControlPlaneNamespace:   r.shootNamespace,
+		&sharedv1r11.Rule242397{
+			Client:       shootClient,
+			V1RESTClient: shootClientSet.CoreV1().RESTClient(),
 		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242398,

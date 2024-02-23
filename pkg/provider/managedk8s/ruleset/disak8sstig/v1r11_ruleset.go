@@ -177,12 +177,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"",
 			rule.NotImplemented,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242397,
-			"Kubernetes kubelet static PodPath must not enable static pods (HIGH 242397)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242397{
+			Client:       client,
+			V1RESTClient: clientSet.CoreV1().RESTClient(),
+		},
 		rule.NewSkipRule(
 			// feature-gates.DynamicAuditing removed in v1.19. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
 			sharedv1r11.ID242398,
