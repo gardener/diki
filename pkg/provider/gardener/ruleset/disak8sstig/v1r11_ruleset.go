@@ -122,11 +122,6 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
-	optsPodFiles, err := getV1R11OptionOrNil[option.FileOwnerOptions](ruleOptions[v1r11.IDPodFiles].Args)
-	if err != nil {
-		return err
-	}
-
 	// Gardener images use distroless nonroot user with ID 65532
 	// https://github.com/GoogleContainerTools/distroless/blob/main/base/base.bzl#L8
 	gardenerFileOwnerOptions := &option.FileOwnerOptions{
@@ -511,16 +506,6 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			ControlPlaneClient:    seedClient,
 			ControlPlaneNamespace: r.shootNamespace,
 			ClusterPodContext:     shootPodContext,
-		},
-		&v1r11.RulePodFiles{
-			Logger:                 r.Logger().With("rule", v1r11.IDPodFiles),
-			InstanceID:             r.instanceID,
-			ClusterClient:          shootClient,
-			ControlPlaneClient:     seedClient,
-			ControlPlanePodContext: seedPodContext,
-			ClusterPodContext:      shootPodContext,
-			ControlPlaneNamespace:  r.shootNamespace,
-			Options:                optsPodFiles,
 		},
 	}
 

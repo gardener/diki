@@ -11,7 +11,6 @@ import (
 
 const (
 	IDNodeFiles = "node-files"
-	IDPodFiles  = "pod-files"
 )
 
 type RuleOption interface {
