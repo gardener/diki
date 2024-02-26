@@ -147,13 +147,13 @@ func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
 				continue
 			}
 
-			kubeconfigPath, err := r.GetKubeProxyFlagValue(rawKubeProxyCommand, "kubeconfig")
+			kubeconfigPath, err := r.getKubeProxyFlagValue(rawKubeProxyCommand, "kubeconfig")
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), podTarget))
 				continue
 			}
 
-			configPath, err := r.GetKubeProxyFlagValue(rawKubeProxyCommand, "config")
+			configPath, err := r.getKubeProxyFlagValue(rawKubeProxyCommand, "config")
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), podTarget))
 				continue
@@ -234,7 +234,7 @@ func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (r *Rule242448) GetKubeProxyFlagValue(rawCommand, flag string) (string, error) {
+func (r *Rule242448) getKubeProxyFlagValue(rawCommand, flag string) (string, error) {
 	valueSlice := kubeutils.FindFlagValueRaw(strings.Split(rawCommand, " "), flag)
 
 	if len(valueSlice) == 0 {
