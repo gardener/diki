@@ -18,6 +18,10 @@ providers:                   # contains information about known providers
     #   args:
     #     groupByLabels:
     #     - foo
+    # - ruleID: "242404"
+    #   args:
+    #     groupByLabels:
+    #     - foo
     # - ruleID: "242406"
     #   args:
     #     # Node labels used to group nodes by specified
