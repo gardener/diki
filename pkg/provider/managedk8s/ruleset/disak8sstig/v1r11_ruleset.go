@@ -80,6 +80,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
+	opts242453, err := getV1R11OptionOrNil[sharedv1r11.Options242453](ruleOptions[sharedv1r11.ID242453].Args)
+	if err != nil {
+		return err
+	}
 
 	const (
 		noControlPlaneMsg = "The Managed Kubernetes cluster does not have access to control plane components."
@@ -490,12 +494,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"",
 			rule.NotImplemented,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242453,
-			"The Kubernetes kubelet KubeConfig file must be owned by root (MEDIUM 242453)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242453{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242453),
+			InstanceID: r.instanceID,
+			Client:     client,
+			PodContext: podContext,
+			Options:    opts242453,
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242454,
 			"The Kubernetes kubeadm.conf must be owned by root (MEDIUM 242454)",
