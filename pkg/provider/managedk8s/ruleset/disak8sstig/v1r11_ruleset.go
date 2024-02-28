@@ -92,6 +92,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
+	opts242466, err := getV1R11OptionOrNil[v1r11.Options242466](ruleOptions[sharedv1r11.ID242466].Args)
+	if err != nil {
+		return err
+	}
 
 	const (
 		noControlPlaneMsg = "The Managed Kubernetes cluster does not have access to control plane components."
@@ -577,12 +581,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"Duplicate of 242402. "+noControlPlaneMsg,
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242466,
-			"The Kubernetes PKI CRT must have file permissions set to 644 or more restrictive (MEDIUM 242466)",
-			"",
-			rule.NotImplemented,
-		),
+		&v1r11.Rule242466{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242466),
+			InstanceID: r.instanceID,
+			Client:     client,
+			PodContext: podContext,
+			Options:    opts242466,
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242467,
 			"The Kubernetes PKI keys must have file permissions set to 600 or more restrictive (MEDIUM 242467)",
