@@ -85,6 +85,44 @@ func GetSingleFileStats(
 	return stats, nil
 }
 
+// GetFileStatsByDir returns file stats for files in a specific directory
+func GetFileStatsByDir(
+	ctx context.Context,
+	podExecutor pod.PodExecutor,
+	dirPath string,
+) ([]FileStats, error) {
+	fileStats := []FileStats{}
+	delimiter := "\t"
+	statsRaw, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`find %s -type f -exec stat -Lc "%%a%[2]s%%u%[2]s%%g%[2]s%%F%[2]s%%n" {} \;`, dirPath, delimiter))
+	if err != nil {
+		return fileStats, err
+	}
+	if len(statsRaw) == 0 {
+		fileNum, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`ls %s | wc -l`, dirPath))
+		if err != nil {
+			return fileStats, err
+		}
+
+		if fileNum != "0\n" {
+			return fileStats, fmt.Errorf("could not find files in %s", dirPath)
+		}
+		return fileStats, nil
+	}
+
+	statsRawSlice := strings.Split(strings.TrimSpace(statsRaw), "\n")
+	for _, fileStatString := range statsRawSlice {
+		fileStat, err2 := NewFileStats(fileStatString, delimiter)
+		if err2 != nil {
+			err = errors.Join(err, err2)
+			continue
+		}
+
+		fileStats = append(fileStats, fileStat)
+	}
+
+	return fileStats, nil
+}
+
 // GetMountedFilesStats returns file stats grouped by container name for all
 // mounted files in a pod with the exception of files mounted at `/dev/termination-log` destination.
 // Host sources can be exluded by setting excludeSources.
@@ -189,38 +227,12 @@ func getContainerMountedFileStatResults(
 			!matchHostPathSources(excludedSourcesSet, mount.Destination, containerName, &pod) &&
 			isMountRequiredByContainer(mount.Destination, containerName, &pod) &&
 			mount.Destination != "/dev/termination-log" {
-			delimiter := "\t"
-			mountStats, err2 := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`find %s -type f -exec stat -Lc "%%a%[2]s%%u%[2]s%%g%[2]s%%F%[2]s%%n" {} \;`, mount.Source, delimiter))
-
+			mountFileStats, err2 := GetFileStatsByDir(ctx, podExecutor, mount.Source)
 			if err2 != nil {
 				err = errors.Join(err, err2)
 				continue
 			}
-
-			if len(mountStats) == 0 {
-				fileNum, err2 := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`ls %s | wc -l`, mount.Source))
-				if err2 != nil {
-					err = errors.Join(err, err2)
-					continue
-				}
-
-				if fileNum != "0\n" {
-					err = errors.Join(err, fmt.Errorf("could not find files in %s", mount.Source))
-				}
-				continue
-			}
-
-			mountStatsSlice := strings.Split(strings.TrimSpace(mountStats), "\n")
-			for _, mountStats := range mountStatsSlice {
-				mountStatsFile, err2 := NewFileStats(mountStats, delimiter)
-				if err2 != nil {
-					err = errors.Join(err, err2)
-					continue
-				}
-
-				stats = append(stats, mountStatsFile)
-			}
-
+			stats = append(stats, mountFileStats...)
 		}
 	}
 	return stats, err
