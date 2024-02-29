@@ -7,16 +7,14 @@ package v1r11_test
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 
-	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	kubernetesgardener "github.com/gardener/gardener/pkg/client/kubernetes"
+	"github.com/Masterminds/semver/v3"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -26,70 +24,39 @@ import (
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	fakestrgen "github.com/gardener/diki/pkg/internal/stringgen/fake"
-	"github.com/gardener/diki/pkg/kubernetes/pod"
-	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
 var _ = Describe("#254801", func() {
 	const (
-		podSecurityAllowedConfig = `featureGates:
-  PodSecurity: true
-`
-		podSecurityNotAllowedConfig = `featureGates:
-  PodSecurity: false
-`
-		podSecurityNotSetConfig = `maxPods: 100
-`
 		podSecurityAllowedNodeConfig    = `{"kubeletconfig":{"featureGates":{"PodSecurity":true}}}`
 		podSecurityNotAllowedNodeConfig = `{"kubeletconfig":{"featureGates":{"PodSecurity":false}}}`
 		podSecurityNotSetNodeConfig     = `{"kubeletconfig":{"authentication":{"webhook":{"enabled":true,"cacheTTL":"2m0s"}}}}`
+		controlPlaneNamespace           = "foo"
 	)
 
 	var (
 		fakeControlPlaneClient client.Client
 		fakeClusterClient      client.Client
-		fakeClusterRESTClient  rest.Interface
-		fakeClusterPodContext  pod.PodContext
+		fakeRESTClient         rest.Interface
+		plainNode              *corev1.Node
+		plainDeployment        *appsv1.Deployment
+		kapiDeployment         *appsv1.Deployment
+		kcmDeployment          *appsv1.Deployment
+		ksDeployment           *appsv1.Deployment
+		kubernetesVersion127   *semver.Version
+		kubernetesVersion128   *semver.Version
 		ctx                    = context.TODO()
-		workers                *extensionsv1alpha1.Worker
-		namespace              = "foo"
 	)
 
 	BeforeEach(func() {
-		v1r11.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
-		fakeControlPlaneClient = fakeclient.NewClientBuilder().WithScheme(kubernetesgardener.SeedScheme).Build()
-		fakeClusterClient = fakeclient.NewClientBuilder().WithScheme(kubernetesgardener.ShootScheme).Build()
+		sharedv1r11.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
+		fakeClusterClient = fakeclient.NewClientBuilder().Build()
+		fakeControlPlaneClient = fakeclient.NewClientBuilder().Build()
 
-		workers = &extensionsv1alpha1.Worker{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "worker1",
-				Namespace: namespace,
-			},
-			Spec: extensionsv1alpha1.WorkerSpec{
-				Pools: []extensionsv1alpha1.WorkerPool{
-					{
-						Name: "pool1",
-					},
-					{
-						Name: "pool2",
-					},
-					{
-						Name: "pool3",
-					},
-					{
-						Name: "pool4",
-					},
-				},
-			},
-		}
-		Expect(fakeControlPlaneClient.Create(ctx, workers)).To(Succeed())
-
-		plainAllocatableNode := &corev1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Labels: map[string]string{},
-			},
+		plainNode = &corev1.Node{
 			Status: corev1.NodeStatus{
 				Conditions: []corev1.NodeCondition{
 					{
@@ -97,41 +64,68 @@ var _ = Describe("#254801", func() {
 						Status: corev1.ConditionTrue,
 					},
 				},
-				Allocatable: corev1.ResourceList{
-					"pods": resource.MustParse("100.0"),
+			},
+		}
+
+		plainDeployment = &appsv1.Deployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: controlPlaneNamespace,
+			},
+			Spec: appsv1.DeploymentSpec{
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							{
+								Command: []string{},
+								Args:    []string{},
+							},
+						},
+					},
 				},
 			},
 		}
 
-		node1 := plainAllocatableNode.DeepCopy()
+		kapiDeployment = plainDeployment.DeepCopy()
+		kapiDeployment.Name = "kube-apiserver"
+		kapiDeployment.Spec.Template.Spec.Containers[0].Name = "kube-apiserver"
+
+		kcmDeployment = plainDeployment.DeepCopy()
+		kcmDeployment.Name = "kube-controller-manager"
+		kcmDeployment.Spec.Template.Spec.Containers[0].Name = "kube-controller-manager"
+
+		ksDeployment = plainDeployment.DeepCopy()
+		ksDeployment.Name = "kube-scheduler"
+		ksDeployment.Spec.Template.Spec.Containers[0].Name = "kube-scheduler"
+
+		kubernetesVersion127 = semver.MustParse("1.27.0")
+		kubernetesVersion128 = semver.MustParse("1.28.0")
+	})
+
+	It("should return correct checkResults", func() {
+		kapiDeployment.Spec.Template.Spec.Containers[0].Command = []string{"--flag1=value1", "--flag2=value2"}
+
+		kcmDeployment.Spec.Template.Spec.Containers[0].Command = []string{"--flag1=value1", "--feature-gates=PodSecurity=true"}
+
+		ksDeployment.Spec.Template.Spec.Containers[0].Command = []string{"--flag1=value1", "--feature-gates=PodSecurity=false"}
+
+		Expect(fakeControlPlaneClient.Create(ctx, kapiDeployment)).To(Succeed())
+		Expect(fakeControlPlaneClient.Create(ctx, kcmDeployment)).To(Succeed())
+		Expect(fakeControlPlaneClient.Create(ctx, ksDeployment)).To(Succeed())
+
+		node1 := plainNode.DeepCopy()
 		node1.ObjectMeta.Name = "node1"
-		node1.ObjectMeta.Labels["worker.gardener.cloud/pool"] = "pool1"
-		Expect(fakeClusterClient.Create(ctx, node1)).To(Succeed())
 
-		node2 := plainAllocatableNode.DeepCopy()
+		node2 := plainNode.DeepCopy()
 		node2.ObjectMeta.Name = "node2"
-		node2.ObjectMeta.Labels["worker.gardener.cloud/pool"] = "pool2"
-		Expect(fakeClusterClient.Create(ctx, node2)).To(Succeed())
 
-		node3 := plainAllocatableNode.DeepCopy()
+		node3 := plainNode.DeepCopy()
 		node3.ObjectMeta.Name = "node3"
-		node3.ObjectMeta.Labels["worker.gardener.cloud/pool"] = "pool3"
-		node3.Status.Conditions[0].Type = corev1.NodeReady
-		node3.Status.Conditions[0].Status = corev1.ConditionFalse
+
+		Expect(fakeClusterClient.Create(ctx, node1)).To(Succeed())
+		Expect(fakeClusterClient.Create(ctx, node2)).To(Succeed())
 		Expect(fakeClusterClient.Create(ctx, node3)).To(Succeed())
 
-		node4 := plainAllocatableNode.DeepCopy()
-		node4.ObjectMeta.Name = "node4"
-		node4.ObjectMeta.Labels["worker.gardener.cloud/pool"] = "pool2"
-		Expect(fakeClusterClient.Create(ctx, node4)).To(Succeed())
-
-		node5 := plainAllocatableNode.DeepCopy()
-		node5.ObjectMeta.Name = "node5"
-		node5.ObjectMeta.Labels["worker.gardener.cloud/pool"] = "pool4"
-		node5.Status.Allocatable["pods"] = resource.MustParse("0.0")
-		Expect(fakeClusterClient.Create(ctx, node5)).To(Succeed())
-
-		fakeClusterRESTClient = &manualfake.RESTClient{
+		fakeRESTClient = &manualfake.RESTClient{
 			GroupVersion:         schema.GroupVersion{Group: "", Version: "v1"},
 			NegotiatedSerializer: scheme.Codecs,
 			Client: manualfake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
@@ -140,69 +134,122 @@ var _ = Describe("#254801", func() {
 					return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(podSecurityAllowedNodeConfig)))}, nil
 				case "https://localhost/nodes/node2/proxy/configz":
 					return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(podSecurityNotAllowedNodeConfig)))}, nil
-				case "https://localhost/nodes/node4/proxy/configz":
+				case "https://localhost/nodes/node3/proxy/configz":
 					return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(podSecurityNotSetNodeConfig)))}, nil
-				case "https://localhost/nodes/node5/proxy/configz":
+				default:
+					return &http.Response{StatusCode: http.StatusNotFound, Body: io.NopCloser(&bytes.Buffer{})}, nil
+				}
+			}),
+		}
+		r := &v1r11.Rule254801{
+			ClusterClient:         fakeClusterClient,
+			ControlPlaneClient:    fakeControlPlaneClient,
+			ControlPlaneNamespace: controlPlaneNamespace,
+			ClusterVersion:        kubernetesVersion127,
+			ClusterV1RESTClient:   fakeRESTClient,
+		}
+		ruleResult, err := r.Run(ctx)
+
+		expectedCheckResults := []rule.CheckResult{
+			rule.PassedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-apiserver", "namespace", "foo")),
+			rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-controller-manager", "namespace", "foo")),
+			rule.FailedCheckResult("Option featureGates.PodSecurity set to not allowed value.", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-scheduler", "namespace", "foo")),
+			rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
+			rule.FailedCheckResult("Option featureGates.PodSecurity set to not allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node2")),
+			rule.PassedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
+		}
+
+		Expect(err).To(BeNil())
+		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
+	})
+
+	It("should return correct warning when options are not set properly", func() {
+		kapiDeployment.Spec.Template.Spec.Containers[0].Command = []string{"--feature-gates=PodSecurity=false", "--feature-gates=PodSecurity=true"}
+
+		kcmDeployment.Spec.Template.Spec.Containers[0].Command = []string{"--flag1=value1", "--feature-gates=PodSecurity=not-false"}
+
+		ksDeployment.Spec.Template.Spec.Containers[0].Command = []string{"--feature-gates=PodSecurity=false", "--feature-gates=PodSecurity=true"}
+
+		Expect(fakeControlPlaneClient.Create(ctx, kapiDeployment)).To(Succeed())
+		Expect(fakeControlPlaneClient.Create(ctx, kcmDeployment)).To(Succeed())
+		Expect(fakeControlPlaneClient.Create(ctx, ksDeployment)).To(Succeed())
+
+		node1 := plainNode.DeepCopy()
+		node1.ObjectMeta.Name = "node1"
+
+		Expect(fakeClusterClient.Create(ctx, node1)).To(Succeed())
+
+		fakeRESTClient = &manualfake.RESTClient{
+			GroupVersion:         schema.GroupVersion{Group: "", Version: "v1"},
+			NegotiatedSerializer: scheme.Codecs,
+			Client: manualfake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
+				switch req.URL.String() {
+				case "https://localhost/nodes/node1/proxy/configz":
 					return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(podSecurityAllowedNodeConfig)))}, nil
 				default:
 					return &http.Response{StatusCode: http.StatusNotFound, Body: io.NopCloser(&bytes.Buffer{})}, nil
 				}
 			}),
 		}
+		r := &v1r11.Rule254801{
+			ClusterClient:         fakeClusterClient,
+			ControlPlaneClient:    fakeControlPlaneClient,
+			ControlPlaneNamespace: controlPlaneNamespace,
+			ClusterVersion:        kubernetesVersion127,
+			ClusterV1RESTClient:   fakeRESTClient,
+		}
+		ruleResult, err := r.Run(ctx)
+
+		expectedCheckResults := []rule.CheckResult{
+			rule.WarningCheckResult("Option featureGates.PodSecurity has been set more than once in container command.", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-apiserver", "namespace", "foo")),
+			rule.WarningCheckResult("Option featureGates.PodSecurity set to neither 'true' nor 'false'.", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-controller-manager", "namespace", "foo")),
+			rule.WarningCheckResult("Option featureGates.PodSecurity has been set more than once in container command.", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-scheduler", "namespace", "foo")),
+			rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
+		}
+
+		Expect(err).To(BeNil())
+		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
 	})
 
-	DescribeTable("Run cases",
-		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
-			alwaysExpectedCheckResults := []rule.CheckResult{
-				rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
-				rule.FailedCheckResult("Option featureGates.PodSecurity set to not allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node2")),
-				rule.WarningCheckResult("Node is not in Ready state.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
-				rule.PassedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node4")),
-				rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node5")),
-			}
-			expectedCheckResults = append(expectedCheckResults, alwaysExpectedCheckResults...)
-			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
-			r := &v1r11.Rule254801{
-				Logger:                  testLogger,
-				ControlPlaneClient:      fakeControlPlaneClient,
-				ControlPlaneNamespace:   namespace,
-				ClusterClient:           fakeClusterClient,
-				ClusterCoreV1RESTClient: fakeClusterRESTClient,
-				ClusterPodContext:       fakeClusterPodContext,
-			}
+	It("should skip rule when kubernetes version is > 1.25", func() {
+		fakeRESTClient = &manualfake.RESTClient{}
+		r := &v1r11.Rule254801{
+			ClusterClient:         fakeClusterClient,
+			ControlPlaneClient:    fakeControlPlaneClient,
+			ControlPlaneNamespace: controlPlaneNamespace,
+			ControlPlaneVersion:   kubernetesVersion128,
+			ClusterVersion:        kubernetesVersion128,
+			ClusterV1RESTClient:   fakeRESTClient,
+		}
+		ruleResult, err := r.Run(ctx)
 
-			ruleResult, err := r.Run(ctx)
-			Expect(err).To(BeNil())
+		expectedCheckResults := []rule.CheckResult{
+			rule.SkippedCheckResult("Option featureGates.PodSecurity removed in Kubernetes v1.28.", rule.NewTarget("cluster", "seed", "details", "Used Kubernetes version 1.28.0.")),
+			rule.SkippedCheckResult("Option featureGates.PodSecurity removed in Kubernetes v1.28.", rule.NewTarget("cluster", "shoot", "details", "Used Kubernetes version 1.28.0.")),
+		}
 
-			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
-		},
+		Expect(err).To(BeNil())
+		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
+	})
 
-		Entry("should return correct checkResults when execute errors, and one pod has feature-gates kubelet flag set",
-			[][]string{{""}, {"1", "--feature-gates=PodSecurity=true"}},
-			[][]error{{fmt.Errorf("command stderr output: sh: 1: -c: not found")}, {nil, nil}},
-			[]rule.CheckResult{
-				rule.ErroredCheckResult("command stderr output: sh: 1: -c: not found", rule.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", "diki-node-files-aaaaaaaaaa")),
-				rule.FailedCheckResult("Use of deprecated kubelet config flag feature-gates.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
-			}),
-		Entry("should return correct checkResults when nodes have featureGates.PodSecurity set",
-			[][]string{{"1", "--not-feature-gates=PodSecurity=true --config=./config", podSecurityAllowedConfig}, {"1", "--not-feature-gates=PodSecurity=true --config=./config", podSecurityNotAllowedConfig}},
-			[][]error{{nil, nil, nil}, {nil, nil, nil}},
-			[]rule.CheckResult{
-				rule.PassedCheckResult("Option featureGates.PodSecurity set to allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
-				rule.FailedCheckResult("Option featureGates.PodSecurity set to not allowed value.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
-			}),
-		Entry("should return correct checkResults when nodes do not have featureGates.PodSecurity set",
-			[][]string{{"1", "--not-feature-gates=PodSecurity=true --config=./config", podSecurityNotSetConfig}, {"1", "--not-feature-gates=PodSecurity=true, --config=./config", podSecurityNotSetConfig}},
-			[][]error{{nil, nil, nil}, {nil, nil, nil}},
-			[]rule.CheckResult{
-				rule.PassedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool1")),
-				rule.PassedCheckResult("Option featureGates.PodSecurity not set.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool2")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool3")),
-				rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", "pool4")),
-			}),
-	)
+	It("should return warn when nodes are not found and error if deployments are not found", func() {
+		fakeRESTClient = &manualfake.RESTClient{}
+		r := &v1r11.Rule254801{
+			ClusterClient:         fakeClusterClient,
+			ControlPlaneClient:    fakeControlPlaneClient,
+			ControlPlaneNamespace: controlPlaneNamespace,
+			ClusterV1RESTClient:   fakeRESTClient,
+		}
+		ruleResult, err := r.Run(ctx)
+
+		expectedCheckResults := []rule.CheckResult{
+			rule.ErroredCheckResult("deployments.apps \"kube-apiserver\" not found", rule.NewTarget("cluster", "seed")),
+			rule.ErroredCheckResult("deployments.apps \"kube-controller-manager\" not found", rule.NewTarget("cluster", "seed")),
+			rule.ErroredCheckResult("deployments.apps \"kube-scheduler\" not found", rule.NewTarget("cluster", "seed")),
+			rule.WarningCheckResult("No nodes found.", rule.NewTarget("cluster", "shoot")),
+		}
+
+		Expect(err).To(BeNil())
+		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
+	})
 })

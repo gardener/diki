@@ -7,33 +7,26 @@ package v1r11
 import (
 	"context"
 	"fmt"
-	"log/slog"
-	"slices"
 
-	"k8s.io/apimachinery/pkg/labels"
+	"github.com/Masterminds/semver/v3"
+	versionutils "github.com/gardener/gardener/pkg/utils/version"
 	"k8s.io/client-go/rest"
-	"k8s.io/component-base/version"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/gardener/diki/imagevector"
-	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
-	"github.com/gardener/diki/pkg/provider/gardener/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/images"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
 var _ rule.Rule = &Rule254801{}
 
 type Rule254801 struct {
-	InstanceID              string
-	ControlPlaneClient      client.Client
-	ControlPlaneNamespace   string
-	ClusterClient           client.Client
-	ClusterCoreV1RESTClient rest.Interface
-	ClusterPodContext       pod.PodContext
-	Logger                  *slog.Logger
+	ControlPlaneClient    client.Client
+	ClusterClient         client.Client
+	ControlPlaneNamespace string
+	ClusterVersion        *semver.Version
+	ControlPlaneVersion   *semver.Version
+	ClusterV1RESTClient   rest.Interface
 }
 
 func (r *Rule254801) ID() string {
@@ -45,78 +38,91 @@ func (r *Rule254801) Name() string {
 }
 
 func (r *Rule254801) Run(ctx context.Context) (rule.RuleResult, error) {
-	shootTarget := rule.NewTarget("cluster", "shoot")
 	const option = "featureGates.PodSecurity"
-
-	clusterNodes, err := kubeutils.GetNodes(ctx, r.ClusterClient, 300)
-	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "nodeList"))), nil
-	}
-
-	clusterPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
-	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList"))), nil
-	}
-
-	clusterWorkers, err := utils.GetWorkers(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, 300)
-	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "seed", "kind", "workerList"))), nil
-	}
-
-	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
-	if err != nil {
-		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
-	}
-	image.WithOptionalTag(version.Get().GitVersion)
-
-	nodesAllocatablePodsNum := kubeutils.GetNodesAllocatablePodsNum(clusterPods, clusterNodes)
-	workerGroupNodes := utils.GetSingleAllocatableNodePerWorker(clusterWorkers, clusterNodes, nodesAllocatablePodsNum)
-
-	// TODO use maps.Keys when released with go 1.21 or 1.22
-	workerGroups := make([]string, 0, len(workerGroupNodes))
-	for workerGroup := range workerGroupNodes {
-		workerGroups = append(workerGroups, workerGroup)
-	}
-	slices.Sort(workerGroups)
-
 	checkResults := []rule.CheckResult{}
-	for _, workerGroup := range workerGroups {
-		node, ok := workerGroupNodes[workerGroup]
-		if !ok {
-			// this should never happen
-			checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("Failed retrieving node for worker group %s", workerGroup), rule.NewTarget()))
-			continue
+
+	seedTarget := rule.NewTarget("cluster", "seed")
+
+	// featureGates.PodSecurity removed in v1.28. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
+	if r.ControlPlaneVersion != nil && versionutils.ConstraintK8sGreaterEqual128.Check(r.ControlPlaneVersion) {
+		checkResults = append(checkResults, rule.SkippedCheckResult(fmt.Sprintf("Option %s removed in Kubernetes v1.28.", option), seedTarget.With("details", fmt.Sprintf("Used Kubernetes version %s.", r.ControlPlaneVersion.String()))))
+	} else {
+		const (
+			kapiName = "kube-apiserver"
+			kcmName  = "kube-controller-manager"
+			ksName   = "kube-scheduler"
+		)
+		deploymentNames := []string{kapiName, kcmName, ksName}
+
+		for _, deploymentName := range deploymentNames {
+			target := seedTarget.With("name", deploymentName, "namespace", r.ControlPlaneNamespace, "kind", "deployment")
+			fgOptSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.ControlPlaneClient, deploymentName, deploymentName, r.ControlPlaneNamespace, "feature-gates")
+			if err != nil {
+				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget))
+				continue
+			}
+
+			PodSecurityOptSlice := kubeutils.FindInnerValue(fgOptSlice, "PodSecurity")
+
+			// featureGates.PodSecurity defaults to true in versions >= v1.23. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/#feature-gates-for-alpha-or-beta-features
+			switch {
+			case len(PodSecurityOptSlice) == 0:
+				checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", option), target))
+			case len(PodSecurityOptSlice) > 1:
+				checkResults = append(checkResults, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", option), target))
+			case PodSecurityOptSlice[0] == "true":
+				checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", option), target))
+			case PodSecurityOptSlice[0] == "false":
+				checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", option), target))
+			default:
+				checkResults = append(checkResults, rule.WarningCheckResult(fmt.Sprintf("Option %s set to neither 'true' nor 'false'.", option), target))
+			}
 		}
-		checkResult := r.checkWorkerGroup(ctx, workerGroup, node, image.String())
-		checkResults = append(checkResults, checkResult)
 	}
 
-	for _, clusterNode := range clusterNodes {
-		target := shootTarget.With("kind", "node", "name", clusterNode.Name)
-		if !kubeutils.NodeReadyStatus(clusterNode) {
-			checkResults = append(checkResults, rule.WarningCheckResult("Node is not in Ready state.", target))
-			continue
-		}
+	shootTarget := rule.NewTarget("cluster", "shoot")
 
-		kubeletConfig, err := kubeutils.GetNodeConfigz(ctx, r.ClusterCoreV1RESTClient, clusterNode.Name)
+	// featureGates.PodSecurity removed in v1.28. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
+	if r.ClusterVersion != nil && versionutils.ConstraintK8sGreaterEqual128.Check(r.ClusterVersion) {
+		checkResults = append(checkResults, rule.SkippedCheckResult(fmt.Sprintf("Option %s removed in Kubernetes v1.28.", option), shootTarget.With("details", fmt.Sprintf("Used Kubernetes version %s.", r.ClusterVersion.String()))))
+	} else {
+
+		nodes, err := kubeutils.GetNodes(ctx, r.ClusterClient, 300)
 		if err != nil {
-			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target))
-			continue
+			return rule.RuleResult{
+				RuleID:       r.ID(),
+				RuleName:     r.Name(),
+				CheckResults: append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "nodeList"))),
+			}, nil
 		}
 
-		if kubeletConfig.FeatureGates == nil {
-			kubeletConfig.FeatureGates = map[string]bool{}
+		if len(nodes) == 0 {
+			checkResults = append(checkResults, rule.WarningCheckResult("No nodes found.", shootTarget))
 		}
 
-		// featureGates.PodSecurity defaults to true in versions >= v1.23. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/#feature-gates-for-alpha-or-beta-features
-		podSecurityConfig, ok := kubeletConfig.FeatureGates["PodSecurity"]
-		switch {
-		case !ok:
-			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", option), target))
-		case podSecurityConfig:
-			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", option), target))
-		default:
-			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", option), target))
+		for _, node := range nodes {
+			target := shootTarget.With("kind", "node", "name", node.Name)
+			if !kubeutils.NodeReadyStatus(node) {
+				checkResults = append(checkResults, rule.WarningCheckResult("Node is not in Ready state.", target))
+				continue
+			}
+
+			kubeletConfig, err := kubeutils.GetNodeConfigz(ctx, r.ClusterV1RESTClient, node.Name)
+			if err != nil {
+				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target))
+				continue
+			}
+
+			// featureGates.PodSecurity defaults to true in versions >= v1.23. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/#feature-gates-for-alpha-or-beta-features
+			podSecurityConfig, ok := kubeletConfig.FeatureGates["PodSecurity"]
+			switch {
+			case !ok:
+				checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", option), target))
+			case podSecurityConfig:
+				checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", option), target))
+			default:
+				checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", option), target))
+			}
 		}
 	}
 
@@ -125,62 +131,4 @@ func (r *Rule254801) Run(ctx context.Context) (rule.RuleResult, error) {
 		RuleName:     r.Name(),
 		CheckResults: checkResults,
 	}, nil
-}
-
-func (r *Rule254801) checkWorkerGroup(ctx context.Context, workerGroup string, node utils.AllocatableNode, privPodImage string) rule.CheckResult {
-	target := rule.NewTarget("cluster", "seed", "kind", "workerGroup", "name", workerGroup)
-	if !node.Allocatable {
-		return rule.WarningCheckResult("There are no ready nodes with at least 1 allocatable spot for worker group.", target)
-	}
-
-	podName := fmt.Sprintf("diki-%s-%s", IDNodeFiles, Generator.Generate(10))
-	podTarget := rule.NewTarget("cluster", "shoot", "kind", "pod", "namespace", "kube-system", "name", podName)
-
-	defer func() {
-		if err := r.ClusterPodContext.Delete(ctx, podName, "kube-system"); err != nil {
-			r.Logger.Error(err.Error())
-		}
-	}()
-
-	additionalLabels := map[string]string{
-		pod.LabelInstanceID: r.InstanceID,
-	}
-	clusterPodExecutor, err := r.ClusterPodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", privPodImage, node.Node.Name, additionalLabels))
-	if err != nil {
-		return rule.ErroredCheckResult(err.Error(), podTarget)
-	}
-
-	rawKubeletCommand, err := kubeutils.GetKubeletCommand(ctx, clusterPodExecutor)
-	if err != nil {
-		return rule.ErroredCheckResult(err.Error(), podTarget)
-	}
-
-	const (
-		option = "featureGates.PodSecurity"
-		flag   = "feature-gates"
-	)
-
-	if kubeutils.IsFlagSet(rawKubeletCommand, flag) {
-		return rule.FailedCheckResult(fmt.Sprintf("Use of deprecated kubelet config flag %s.", flag), target)
-	}
-
-	kubeletConfig, err := kubeutils.GetKubeletConfig(ctx, clusterPodExecutor, rawKubeletCommand)
-	if err != nil {
-		return rule.ErroredCheckResult(err.Error(), podTarget)
-	}
-
-	if kubeletConfig.FeatureGates == nil {
-		kubeletConfig.FeatureGates = map[string]bool{}
-	}
-
-	// featureGates.PodSecurity defaults to true in versions >= v1.23. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/#feature-gates-for-alpha-or-beta-features
-	podSecurityConfig, ok := kubeletConfig.FeatureGates["PodSecurity"]
-	switch {
-	case !ok:
-		return rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", option), target)
-	case podSecurityConfig:
-		return rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", option), target)
-	default:
-		return rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", option), target)
-	}
 }
