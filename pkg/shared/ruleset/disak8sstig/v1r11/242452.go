@@ -78,7 +78,6 @@ func (r *Rule242452) Run(ctx context.Context) (rule.RuleResult, error) {
 	image.WithOptionalTag(version.Get().GitVersion)
 
 	for _, node := range selectedNodes {
-		selectedFilePaths := []string{}
 		podName := fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
 		nodeTarget := rule.NewTarget("kind", "node", "name", node.Name)
 		execPodTarget := rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
@@ -107,8 +106,24 @@ func (r *Rule242452) Run(ctx context.Context) (rule.RuleResult, error) {
 			continue
 		}
 
-		var kubeconfigPath string
-		if kubeconfigPath, err = r.getKubeletFlagValue(rawKubeletCommand, "kubeconfig"); err != nil {
+		var (
+			// TODO: extract this function and reuse it across rules
+			getFlagValue = func(rawCommand, flag string) (string, error) {
+				valueSlice := kubeutils.FindFlagValueRaw(strings.Split(rawCommand, " "), flag)
+
+				if len(valueSlice) == 0 {
+					return "", nil
+				}
+				if len(valueSlice) > 1 {
+					return "", fmt.Errorf("kubelet %s flag has been set more than once", flag)
+				}
+				return valueSlice[0], nil
+			}
+			selectedFilePaths []string
+			kubeconfigPath    string
+			configPath        string
+		)
+		if kubeconfigPath, err = getFlagValue(rawKubeletCommand, "kubeconfig"); err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 		} else if len(kubeconfigPath) == 0 {
 			checkResults = append(checkResults, rule.PassedCheckResult("Kubelet uses in-cluster kubeconfig", nodeTarget))
@@ -116,8 +131,7 @@ func (r *Rule242452) Run(ctx context.Context) (rule.RuleResult, error) {
 			selectedFilePaths = append(selectedFilePaths, kubeconfigPath)
 		}
 
-		var configPath string
-		if configPath, err = r.getKubeletFlagValue(rawKubeletCommand, "config"); err != nil {
+		if configPath, err = getFlagValue(rawKubeletCommand, "config"); err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 		} else if len(configPath) == 0 {
 			checkResults = append(checkResults, rule.PassedCheckResult("Kubelet does not use config file", nodeTarget))
@@ -156,16 +170,4 @@ func (r *Rule242452) Run(ctx context.Context) (rule.RuleResult, error) {
 		RuleName:     r.Name(),
 		CheckResults: checkResults,
 	}, nil
-}
-
-func (r *Rule242452) getKubeletFlagValue(rawCommand, flag string) (string, error) {
-	valueSlice := kubeutils.FindFlagValueRaw(strings.Split(rawCommand, " "), flag)
-
-	if len(valueSlice) == 0 {
-		return "", nil
-	}
-	if len(valueSlice) > 1 {
-		return "", fmt.Errorf("kubelet %s flag has been set more than once", flag)
-	}
-	return valueSlice[0], nil
 }
