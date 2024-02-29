@@ -52,7 +52,7 @@ var _ = Describe("#242459", func() {
   }
 ]`
 		emptyMounts       = `[]`
-		compliantStats    = "600\t0\t0\tregular file\t/destination/file1.txt\n400\t0\t65532\tregular file\t/destination/bar/file2.txt"
+		compliantStats    = "640\t0\t0\tregular file\t/destination/file1.txt\n400\t0\t65532\tregular file\t/destination/bar/file2.txt"
 		compliantStats2   = "600\t0\t0\tregular file\t/destination/file3.txt\n600\t1000\t0\tregular file\t/destination/bar/file4.txt\n"
 		nonCompliantStats = "644\t0\t0\tregular file\t/destination/file1.key\n700\t0\t0\tregular file\t/destination/bar/file2.key\n"
 	)
@@ -203,7 +203,7 @@ var _ = Describe("#242459", func() {
 			[][]string{{mounts, compliantStats, mounts, compliantStats2}},
 			[][]error{{nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 640")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 400")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.txt, permissions: 600")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file4.txt, permissions: 600")),
@@ -212,8 +212,8 @@ var _ = Describe("#242459", func() {
 			[][]string{{mounts, nonCompliantStats, emptyMounts}},
 			[][]error{{nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 644, expectedPermissionsMax: 600")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.key, permissions: 700, expectedPermissionsMax: 600")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 644, expectedPermissionsMax: 640")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.key, permissions: 700, expectedPermissionsMax: 640")),
 			}),
 		Entry("should correctly return errored checkResults when commands error",
 			[][]string{{mounts, mounts, compliantStats2}},
@@ -227,7 +227,7 @@ var _ = Describe("#242459", func() {
 			[][]error{{nil, nil, errors.New("bar"), nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242459-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 600")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.txt, permissions: 640")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.txt, permissions: 400")),
 			}),
 		Entry("should correctly return all checkResults when commands error",

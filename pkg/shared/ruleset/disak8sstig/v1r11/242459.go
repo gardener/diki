@@ -142,7 +142,7 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 			}
 
-			expectedFilePermissionsMax := "600"
+			expectedFilePermissionsMax := "640"
 			for containerName, fileStats := range mappedFileStats {
 				for _, fileStat := range fileStats {
 					containerTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)
