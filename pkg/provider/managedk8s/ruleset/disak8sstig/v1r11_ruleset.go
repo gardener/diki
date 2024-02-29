@@ -84,6 +84,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
+	opts242452, err := getV1R11OptionOrNil[sharedv1r11.Options242452](ruleOptions[sharedv1r11.ID242452].Args)
+	if err != nil {
+		return err
+	}
 	opts242453, err := getV1R11OptionOrNil[sharedv1r11.Options242453](ruleOptions[sharedv1r11.ID242453].Args)
 	if err != nil {
 		return err
@@ -493,12 +497,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"",
 			rule.NotImplemented,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242452,
-			"The Kubernetes kubelet KubeConfig must have file permissions set to 644 or more restrictive (MEDIUM 242452)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242452{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242452),
+			InstanceID: r.instanceID,
+			Client:     client,
+			PodContext: podContext,
+			Options:    opts242452,
+		},
 		&sharedv1r11.Rule242453{
 			Logger:     r.Logger().With("rule", sharedv1r11.ID242453),
 			InstanceID: r.instanceID,

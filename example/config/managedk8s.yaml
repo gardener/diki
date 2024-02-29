@@ -81,6 +81,10 @@ providers:                   # contains information about known providers
     #   args:
     #     groupByLabels:
     #     - foo
+    # - ruleID: "242452"
+    #   args:
+    #     groupByLabels:
+    #     - foo
     # - ruleID: "242453"
     #   args:
     #     groupByLabels:
