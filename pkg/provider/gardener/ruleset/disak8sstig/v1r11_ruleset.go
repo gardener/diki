@@ -188,7 +188,15 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 				GroupByLabels: workerPoolGroupByLabels,
 			},
 		},
-		&v1r11.Rule242394{Logger: r.Logger().With("rule", sharedv1r11.ID242394), InstanceID: r.instanceID, ClusterPodContext: shootPodContext},
+		&sharedv1r11.Rule242394{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242394),
+			InstanceID: r.instanceID,
+			Client:     shootClient,
+			PodContext: shootPodContext,
+			Options: &sharedv1r11.Options242394{
+				GroupByLabels: workerPoolGroupByLabels,
+			},
+		},
 		&sharedv1r11.Rule242395{Client: shootClient},
 		rule.NewSkipRule(
 			sharedv1r11.ID242396,
