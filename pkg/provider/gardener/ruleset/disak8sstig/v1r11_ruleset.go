@@ -218,13 +218,14 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedv1r11.Rule242400{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242402{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242403{Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule242404{
-			Logger:                r.Logger().With("rule", sharedv1r11.ID242404),
-			InstanceID:            r.instanceID,
-			ClusterClient:         shootClient,
-			ControlPlaneClient:    seedClient,
-			ClusterPodContext:     shootPodContext,
-			ControlPlaneNamespace: r.shootNamespace,
+		&sharedv1r11.Rule242404{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242404),
+			InstanceID: r.instanceID,
+			Client:     shootClient,
+			PodContext: shootPodContext,
+			Options: &sharedv1r11.Options242404{
+				GroupByLabels: workerPoolGroupByLabels,
+			},
 		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242405,
