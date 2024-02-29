@@ -81,6 +81,13 @@ providers:                   # contains information about known providers
     #   args:
     #     groupByLabels:
     #     - foo
+    # - ruleID: "242450"
+    #   args:
+    #     groupByLabels:
+    #     - foo
+    #     expectedFileOwner:
+    #       users: ["0"]
+    #       groups: ["0"]
     # - ruleID: "242452"
     #   args:
     #     groupByLabels:
