@@ -419,12 +419,16 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			`Rule implemented by "node-files" for correctness, consistency, deduplication, reliability, and performance reasons.`,
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242453,
-			"Kubernetes kubelet config must be owned by root (MEDIUM 242453)",
-			`Rule implemented by "node-files" for correctness, consistency, deduplication, reliability, and performance reasons.`,
-			rule.Skipped,
-		),
+		&sharedv1r11.Rule242453{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242453),
+			InstanceID: r.instanceID,
+			Client:     shootClient,
+			PodContext: shootPodContext,
+			Options: &sharedv1r11.Options242453{
+				GroupByLabels:    workerPoolGroupByLabels,
+				FileOwnerOptions: gardenerFileOwnerOptions,
+			},
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242454,
 			"Kubernetes kubeadm.conf must be owned by root(MEDIUM 242454)",
