@@ -172,7 +172,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	for _, node := range selectedShootNodes {
 		checkResults = append(checkResults,
-			r.checkNodeKubelet(ctx, r.ClusterClient, r.ClusterPodContext, node.Name, image.String(), expectedFilePermissionsMax, shootTarget)...)
+			r.checkNodeKubelet(ctx, node.Name, image.String(), expectedFilePermissionsMax, shootTarget)...)
 	}
 
 	return rule.RuleResult{
@@ -265,8 +265,6 @@ func (r *Rule242466) checkNodePods(
 
 func (r *Rule242466) checkNodeKubelet(
 	ctx context.Context,
-	c client.Client,
-	pc pod.PodContext,
 	nodeName, imageName string,
 	expectedFilePermissionsMax string,
 	target rule.Target) []rule.CheckResult {
