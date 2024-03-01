@@ -5,11 +5,13 @@
 package v1r11
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"slices"
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/component-base/version"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -74,6 +76,10 @@ func (r *Rule242394) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
 	}
 	image.WithOptionalTag(version.Get().GitVersion)
+
+	slices.SortFunc(selectedNodes, func(n1, n2 corev1.Node) int {
+		return cmp.Compare(n1.Name, n2.Name)
+	})
 
 	for _, node := range selectedNodes {
 		podName := fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
