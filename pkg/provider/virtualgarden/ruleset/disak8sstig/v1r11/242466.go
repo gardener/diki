@@ -72,8 +72,11 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", r.Namespace, "kind", "podList"))), nil
 	}
-	podSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector}
-	checkPods := []corev1.Pod{}
+
+	var (
+		checkPods    []corev1.Pod
+		podSelectors = []labels.Selector{etcdMainSelector, etcdEventsSelector}
+	)
 
 	for _, podSelector := range podSelectors {
 		pods := []corev1.Pod{}
@@ -128,8 +131,11 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	image.WithOptionalTag(version.Get().GitVersion)
 
 	for nodeName, pods := range groupedPods {
-		podName := fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
-		execPodTarget := rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
+		var (
+			podName          = fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
+			execPodTarget    = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
+			additionalLabels = map[string]string{pod.LabelInstanceID: r.InstanceID}
+		)
 
 		defer func() {
 			if err := r.PodContext.Delete(ctx, podName, "kube-system"); err != nil {
@@ -137,7 +143,6 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 			}
 		}()
 
-		additionalLabels := map[string]string{pod.LabelInstanceID: r.InstanceID}
 		podExecutor, err := r.PodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", image.String(), nodeName, additionalLabels))
 		if err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))

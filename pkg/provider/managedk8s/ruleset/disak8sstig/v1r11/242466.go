@@ -54,6 +54,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
 		checkResults               []rule.CheckResult
 		nodeLabels                 []string
+		pods                       []corev1.Pod
 		expectedFilePermissionsMax = "644"
 		kubeProxySelector          = labels.SelectorFromSet(labels.Set{"role": "proxy"})
 	)
@@ -72,7 +73,6 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
 	}
 
-	pods := []corev1.Pod{}
 	for _, p := range allPods {
 		if kubeProxySelector.Matches(labels.Set(p.Labels)) {
 			pods = append(pods, p)
@@ -115,6 +115,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 			podName           = fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
 			target            = rule.NewTarget("name", node.Name, "kind", "node")
 			execPodTarget     = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
+			additionalLabels  = map[string]string{pod.LabelInstanceID: r.InstanceID}
 		)
 
 		defer func() {
@@ -122,9 +123,6 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 				r.Logger.Error(err.Error())
 			}
 		}()
-		additionalLabels := map[string]string{
-			pod.LabelInstanceID: r.InstanceID,
-		}
 		podExecutor, err := r.PodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", image.String(), node.Name, additionalLabels))
 		if err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
@@ -160,14 +158,14 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 				selectedFileStats = append(selectedFileStats, certFileStats)
 			}
 		} else {
-			var kubeletPKIDir = "/var/lib/kubelet/pki"
+			kubeletPKIDir := "/var/lib/kubelet/pki"
 			if kubeutils.IsFlagSet(rawKubeletCommand, "cert-dir") {
 				valueSlice := kubeutils.FindFlagValueRaw(strings.Split(rawKubeletCommand, " "), "cert-dir")
 				if len(valueSlice) > 1 {
 					checkResults = append(checkResults, rule.ErroredCheckResult("kubelet cert-dir flag has been set more than once", execPodTarget))
 					continue
 				}
-				kubeletPKIDir := strings.TrimSpace(valueSlice[0])
+				kubeletPKIDir = strings.TrimSpace(valueSlice[0])
 				if len(kubeletPKIDir) == 0 {
 					checkResults = append(checkResults, rule.ErroredCheckResult("kubelet cert-dir flag set to empty", execPodTarget))
 					continue

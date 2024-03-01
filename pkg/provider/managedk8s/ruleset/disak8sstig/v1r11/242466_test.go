@@ -57,6 +57,7 @@ tlsPrivateKeyFile: /var/lib/keys/tls.key
 tlsCertFile: /var/lib/certs/tls.crt`
 		kubeletPID         = "1"
 		kubeletCommand     = "--config=var/lib/kubelet/config"
+		kubeletCommandCert = "--config=var/lib/kubelet/config --cert-dir"
 		emptyMounts        = `[]`
 		compliantStats     = "600\t0\t0\tregular file\t/destination/file1.crt\n400\t0\t65532\tregular file\t/destination/bar/file2.crt"
 		compliantCertStats = "644\t0\t0\tregular file\t/var/lib/certs/tls.crt\n"
@@ -248,13 +249,13 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			}),
 		Entry("should check files when GetMountedFilesStats errors", nil,
 			[][]string{{mountsMulty, compliantStats, emptyMounts, emptyMounts},
-				{kubeletPID, kubeletCommand, tlsKubeletConfig, compliantCertStats}},
+				{kubeletPID, kubeletCommandCert, "", compliantCertStats}},
 			[][]error{{nil, nil, errors.New("bar"), nil, nil}, {nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242466-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.crt, permissions: 600")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.crt, permissions: 400")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "node01", "kind", "node", "details", "fileName: /var/lib/certs/tls.crt, permissions: 644")),
+				rule.ErroredCheckResult("kubelet cert-dir flag set to empty", rule.NewTarget("name", "diki-242466-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
 			}),
 		Entry("should correctly return all checkResults when commands error", nil,
 			[][]string{{mounts, mounts, compliantStats2}, {kubeletPID, kubeletCommand, tlsKubeletConfig}},
