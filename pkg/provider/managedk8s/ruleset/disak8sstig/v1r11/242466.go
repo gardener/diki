@@ -98,7 +98,8 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults = append(checkResults, checks...)
 
 		for nodeName, pods := range groupedShootPods {
-			checkResults = append(checkResults, r.checkNodePods(ctx, r.Client, r.PodContext, pods, nodeName, image.String(), expectedFilePermissionsMax)...)
+			checkResults = append(checkResults,
+				r.checkNodePods(ctx, pods, nodeName, image.String(), expectedFilePermissionsMax)...)
 		}
 	}
 
@@ -110,99 +111,8 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	for _, node := range selectedShootNodes {
-		var (
-			selectedFileStats []intutils.FileStats
-			podName           = fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
-			target            = rule.NewTarget("name", node.Name, "kind", "node")
-			execPodTarget     = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
-			additionalLabels  = map[string]string{pod.LabelInstanceID: r.InstanceID}
-		)
-
-		defer func() {
-			if err := r.PodContext.Delete(ctx, podName, "kube-system"); err != nil {
-				r.Logger.Error(err.Error())
-			}
-		}()
-		podExecutor, err := r.PodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", image.String(), node.Name, additionalLabels))
-		if err != nil {
-			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
-			continue
-		}
-
-		rawKubeletCommand, err := kubeutils.GetKubeletCommand(ctx, podExecutor)
-		if err != nil {
-			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
-			continue
-		}
-
-		if len(rawKubeletCommand) == 0 {
-			checkResults = append(checkResults, rule.ErroredCheckResult("could not retrieve kubelet config: kubelet command not retrived", execPodTarget))
-			continue
-		}
-
-		kubeletConfig, err := kubeutils.GetKubeletConfig(ctx, podExecutor, rawKubeletCommand)
-		if err != nil {
-			checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not retrieve kubelet config: %s", err.Error()), execPodTarget))
-			continue
-		}
-
-		if kubeletConfig.TLSPrivateKeyFile != nil && kubeletConfig.TLSCertFile != nil {
-			if len(*kubeletConfig.TLSCertFile) == 0 {
-				checkResults = append(checkResults, rule.FailedCheckResult("could not find cert file, option tlsCertFile is empty.", target))
-			} else {
-				certFileStats, err := intutils.GetSingleFileStats(ctx, podExecutor, *kubeletConfig.TLSCertFile)
-				if err != nil {
-					checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
-					continue
-				}
-				selectedFileStats = append(selectedFileStats, certFileStats)
-			}
-		} else {
-			kubeletPKIDir := "/var/lib/kubelet/pki"
-			if kubeutils.IsFlagSet(rawKubeletCommand, "cert-dir") {
-				valueSlice := kubeutils.FindFlagValueRaw(strings.Split(rawKubeletCommand, " "), "cert-dir")
-				if len(valueSlice) > 1 {
-					checkResults = append(checkResults, rule.ErroredCheckResult("kubelet cert-dir flag has been set more than once", execPodTarget))
-					continue
-				}
-				kubeletPKIDir = strings.TrimSpace(valueSlice[0])
-				if len(kubeletPKIDir) == 0 {
-					checkResults = append(checkResults, rule.ErroredCheckResult("kubelet cert-dir flag set to empty", execPodTarget))
-					continue
-				}
-			}
-			pkiFilesStats, err := intutils.GetFileStatsByDir(ctx, podExecutor, kubeletPKIDir)
-			if err != nil {
-				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
-				continue
-			}
-
-			certFilesStats := []intutils.FileStats{}
-			for _, pkiFileStat := range pkiFilesStats {
-				if strings.HasSuffix(pkiFileStat.Path, ".crt") {
-					certFilesStats = append(certFilesStats, pkiFileStat)
-				}
-			}
-
-			selectedFileStats = append(selectedFileStats, certFilesStats...)
-		}
-
-		for _, fileStats := range selectedFileStats {
-			exceedFilePermissions, err := intutils.ExceedFilePermissions(fileStats.Permissions, expectedFilePermissionsMax)
-			if err != nil {
-				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target))
-				continue
-			}
-
-			if exceedFilePermissions {
-				detailedTarget := target.With("details", fmt.Sprintf("fileName: %s, permissions: %s, expectedPermissionsMax: %s", fileStats.Path, fileStats.Permissions, expectedFilePermissionsMax))
-				checkResults = append(checkResults, rule.FailedCheckResult("File has too wide permissions", detailedTarget))
-				continue
-			}
-
-			detailedTarget := target.With("details", fmt.Sprintf("fileName: %s, permissions: %s", fileStats.Path, fileStats.Permissions))
-			checkResults = append(checkResults, rule.PassedCheckResult("File has expected permissions", detailedTarget))
-		}
+		checkResults = append(checkResults,
+			r.checkNodeKubelet(ctx, node.Name, image.String(), expectedFilePermissionsMax)...)
 	}
 
 	return rule.RuleResult{
@@ -214,25 +124,24 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 
 func (r *Rule242466) checkNodePods(
 	ctx context.Context,
-	c client.Client,
-	pc pod.PodContext,
 	pods []corev1.Pod,
 	nodeName, imageName string,
 	expectedFilePermissionsMax string,
 ) []rule.CheckResult {
 	var (
+		checkResults     []rule.CheckResult
 		podName          = fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
 		execPodTarget    = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
 		additionalLabels = map[string]string{pod.LabelInstanceID: r.InstanceID}
 	)
 
 	defer func() {
-		if err := pc.Delete(ctx, podName, "kube-system"); err != nil {
+		if err := r.PodContext.Delete(ctx, podName, "kube-system"); err != nil {
 			r.Logger.Error(err.Error())
 		}
 	}()
 
-	podExecutor, err := pc.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", imageName, nodeName, additionalLabels))
+	podExecutor, err := r.PodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", imageName, nodeName, additionalLabels))
 	if err != nil {
 		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
 	}
@@ -244,7 +153,7 @@ func (r *Rule242466) checkNodePods(
 		},
 	}
 
-	if err := c.Get(ctx, client.ObjectKeyFromObject(execPod), execPod); err != nil {
+	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(execPod), execPod); err != nil {
 		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
 	}
 
@@ -258,9 +167,8 @@ func (r *Rule242466) checkNodePods(
 		return cmp.Compare(a.Name, b.Name)
 	})
 
-	checkResults := []rule.CheckResult{}
 	for _, pod := range pods {
-		var excludedSources = []string{"/lib/modules", "/usr/share/ca-certificates", "/var/log/journal", "/var/run/dbus/system_bus_socket"}
+		excludedSources := []string{"/lib/modules", "/usr/share/ca-certificates", "/var/log/journal", "/var/run/dbus/system_bus_socket"}
 		mappedFileStats, err := intutils.GetMountedFilesStats(ctx, execContainerPath, podExecutor, pod, excludedSources)
 		if err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
@@ -289,6 +197,99 @@ func (r *Rule242466) checkNodePods(
 				checkResults = append(checkResults, rule.PassedCheckResult("File has expected permissions", detailedTarget))
 			}
 		}
+	}
+	return checkResults
+}
+
+func (r *Rule242466) checkNodeKubelet(
+	ctx context.Context,
+	nodeName, imageName string,
+	expectedFilePermissionsMax string) []rule.CheckResult {
+	var (
+		checkResults      []rule.CheckResult
+		selectedFileStats []intutils.FileStats
+		podName           = fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
+		nodeTarget        = rule.NewTarget("name", nodeName, "kind", "node")
+		execPodTarget     = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
+		additionalLabels  = map[string]string{pod.LabelInstanceID: r.InstanceID}
+	)
+
+	defer func() {
+		if err := r.PodContext.Delete(ctx, podName, "kube-system"); err != nil {
+			r.Logger.Error(err.Error())
+		}
+	}()
+	podExecutor, err := r.PodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", imageName, nodeName, additionalLabels))
+	if err != nil {
+		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
+	}
+
+	rawKubeletCommand, err := kubeutils.GetKubeletCommand(ctx, podExecutor)
+	if err != nil {
+		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
+	}
+
+	if len(rawKubeletCommand) == 0 {
+		return []rule.CheckResult{rule.ErroredCheckResult("could not retrieve kubelet config: kubelet command not retrived", execPodTarget)}
+	}
+
+	kubeletConfig, err := kubeutils.GetKubeletConfig(ctx, podExecutor, rawKubeletCommand)
+	if err != nil {
+		return []rule.CheckResult{rule.ErroredCheckResult(fmt.Sprintf("could not retrieve kubelet config: %s", err.Error()), execPodTarget)}
+	}
+
+	if kubeletConfig.TLSPrivateKeyFile != nil && kubeletConfig.TLSCertFile != nil {
+		if len(*kubeletConfig.TLSCertFile) == 0 {
+			checkResults = append(checkResults, rule.FailedCheckResult("could not find cert file, option tlsCertFile is empty.", nodeTarget))
+		} else {
+			certFileStats, err := intutils.GetSingleFileStats(ctx, podExecutor, *kubeletConfig.TLSCertFile)
+			if err != nil {
+				return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
+			}
+			selectedFileStats = append(selectedFileStats, certFileStats)
+		}
+	} else {
+		kubeletPKIDir := "/var/lib/kubelet/pki"
+		if kubeutils.IsFlagSet(rawKubeletCommand, "cert-dir") {
+			valueSlice := kubeutils.FindFlagValueRaw(strings.Split(rawKubeletCommand, " "), "cert-dir")
+			if len(valueSlice) > 1 {
+				return []rule.CheckResult{rule.ErroredCheckResult("kubelet cert-dir flag has been set more than once", execPodTarget)}
+			}
+			kubeletPKIDir = strings.TrimSpace(valueSlice[0])
+			if len(kubeletPKIDir) == 0 {
+				return []rule.CheckResult{rule.ErroredCheckResult("kubelet cert-dir flag set to empty", execPodTarget)}
+			}
+		}
+		pkiFilesStats, err := intutils.GetFileStatsByDir(ctx, podExecutor, kubeletPKIDir)
+		if err != nil {
+			return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
+		}
+
+		var certFilesStats []intutils.FileStats
+		for _, pkiFileStat := range pkiFilesStats {
+			if strings.HasSuffix(pkiFileStat.Path, ".crt") {
+				certFilesStats = append(certFilesStats, pkiFileStat)
+			}
+		}
+
+		selectedFileStats = append(selectedFileStats, certFilesStats...)
+	}
+
+	for _, fileStats := range selectedFileStats {
+		exceedFilePermissions, err := intutils.ExceedFilePermissions(fileStats.Permissions, expectedFilePermissionsMax)
+		if err != nil {
+			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), nodeTarget))
+			continue
+		}
+
+		if exceedFilePermissions {
+			detailedTarget := nodeTarget.With("details", fmt.Sprintf("fileName: %s, permissions: %s, expectedPermissionsMax: %s", fileStats.Path, fileStats.Permissions, expectedFilePermissionsMax))
+			checkResults = append(checkResults, rule.FailedCheckResult("File has too wide permissions", detailedTarget))
+			continue
+		}
+
+		detailedTarget := nodeTarget.With("details", fmt.Sprintf("fileName: %s, permissions: %s", fileStats.Path, fileStats.Permissions))
+		checkResults = append(checkResults, rule.PassedCheckResult("File has expected permissions", detailedTarget))
 	}
 	return checkResults
 }

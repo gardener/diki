@@ -50,10 +50,11 @@ func (r *Rule242466) Name() string {
 
 func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
-		checkResults       []rule.CheckResult
-		etcdMainSelector   = labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
-		etcdEventsSelector = labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
-		deploymentNames    = []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
+		checkResults               []rule.CheckResult
+		expectedFilePermissionsMax = "644"
+		etcdMainSelector           = labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
+		etcdEventsSelector         = labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
+		deploymentNames            = []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
 	)
 
 	if r.ETCDMainSelector != nil {
@@ -70,7 +71,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", r.Namespace, "kind", "podList"))), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
 	}
 
 	var (
@@ -131,78 +132,8 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	image.WithOptionalTag(version.Get().GitVersion)
 
 	for nodeName, pods := range groupedPods {
-		var (
-			podName          = fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
-			execPodTarget    = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
-			additionalLabels = map[string]string{pod.LabelInstanceID: r.InstanceID}
-		)
-
-		defer func() {
-			if err := r.PodContext.Delete(ctx, podName, "kube-system"); err != nil {
-				r.Logger.Error(err.Error())
-			}
-		}()
-
-		podExecutor, err := r.PodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", image.String(), nodeName, additionalLabels))
-		if err != nil {
-			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
-			continue
-		}
-
-		execPod := &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      podName,
-				Namespace: "kube-system",
-			},
-		}
-
-		if err := r.Client.Get(ctx, client.ObjectKeyFromObject(execPod), execPod); err != nil {
-			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
-			continue
-		}
-
-		var (
-			execContainerID     = execPod.Status.ContainerStatuses[0].ContainerID
-			execBaseContainerID = strings.Split(execContainerID, "//")[1]
-			execContainerPath   = fmt.Sprintf("/run/containerd/io.containerd.runtime.v2.task/k8s.io/%s/rootfs", execBaseContainerID)
-		)
-
-		slices.SortFunc(pods, func(a, b corev1.Pod) int {
-			return cmp.Compare(a.Name, b.Name)
-		})
-
-		for _, pod := range pods {
-			excludedSources := []string{"/lib/modules", "/usr/share/ca-certificates", "/var/log/journal"}
-			mappedFileStats, err := intutils.GetMountedFilesStats(ctx, execContainerPath, podExecutor, pod, excludedSources)
-			if err != nil {
-				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
-			}
-
-			var expectedFilePermissionsMax = "644"
-			for containerName, fileStats := range mappedFileStats {
-				for _, fileStat := range fileStats {
-					if !strings.HasSuffix(fileStat.Path, ".crt") {
-						continue
-					}
-
-					containerTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)
-					exceedFilePermissions, err := intutils.ExceedFilePermissions(fileStat.Permissions, expectedFilePermissionsMax)
-					if err != nil {
-						checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), containerTarget))
-						continue
-					}
-
-					if exceedFilePermissions {
-						detailedTarget := containerTarget.With("details", fmt.Sprintf("fileName: %s, permissions: %s, expectedPermissionsMax: %s", fileStat.Path, fileStat.Permissions, expectedFilePermissionsMax))
-						checkResults = append(checkResults, rule.FailedCheckResult("File has too wide permissions", detailedTarget))
-						continue
-					}
-
-					detailedTarget := containerTarget.With("details", fmt.Sprintf("fileName: %s, permissions: %s", fileStat.Path, fileStat.Permissions))
-					checkResults = append(checkResults, rule.PassedCheckResult("File has expected permissions", detailedTarget))
-				}
-			}
-		}
+		checkResults = append(checkResults,
+			r.checkNodePods(ctx, pods, nodeName, image.String(), expectedFilePermissionsMax)...)
 	}
 
 	return rule.RuleResult{
@@ -210,4 +141,83 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 		RuleName:     r.Name(),
 		CheckResults: checkResults,
 	}, nil
+}
+
+func (r *Rule242466) checkNodePods(
+	ctx context.Context,
+	pods []corev1.Pod,
+	nodeName, imageName string,
+	expectedFilePermissionsMax string,
+) []rule.CheckResult {
+	var (
+		checkResults     []rule.CheckResult
+		podName          = fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
+		execPodTarget    = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
+		additionalLabels = map[string]string{pod.LabelInstanceID: r.InstanceID}
+	)
+
+	defer func() {
+		if err := r.PodContext.Delete(ctx, podName, "kube-system"); err != nil {
+			r.Logger.Error(err.Error())
+		}
+	}()
+
+	podExecutor, err := r.PodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", imageName, nodeName, additionalLabels))
+	if err != nil {
+		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
+	}
+
+	execPod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      podName,
+			Namespace: "kube-system",
+		},
+	}
+
+	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(execPod), execPod); err != nil {
+		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
+	}
+
+	var (
+		execContainerID     = execPod.Status.ContainerStatuses[0].ContainerID
+		execBaseContainerID = strings.Split(execContainerID, "//")[1]
+		execContainerPath   = fmt.Sprintf("/run/containerd/io.containerd.runtime.v2.task/k8s.io/%s/rootfs", execBaseContainerID)
+	)
+
+	slices.SortFunc(pods, func(a, b corev1.Pod) int {
+		return cmp.Compare(a.Name, b.Name)
+	})
+
+	for _, pod := range pods {
+		excludedSources := []string{"/lib/modules", "/usr/share/ca-certificates", "/var/log/journal", "/var/run/dbus/system_bus_socket"}
+		mappedFileStats, err := intutils.GetMountedFilesStats(ctx, execContainerPath, podExecutor, pod, excludedSources)
+		if err != nil {
+			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
+		}
+
+		for containerName, fileStats := range mappedFileStats {
+			for _, fileStat := range fileStats {
+				if !strings.HasSuffix(fileStat.Path, ".crt") {
+					continue
+				}
+
+				containerTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)
+				exceedFilePermissions, err := intutils.ExceedFilePermissions(fileStat.Permissions, expectedFilePermissionsMax)
+				if err != nil {
+					checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), containerTarget))
+					continue
+				}
+
+				if exceedFilePermissions {
+					detailedTarget := containerTarget.With("details", fmt.Sprintf("fileName: %s, permissions: %s, expectedPermissionsMax: %s", fileStat.Path, fileStat.Permissions, expectedFilePermissionsMax))
+					checkResults = append(checkResults, rule.FailedCheckResult("File has too wide permissions", detailedTarget))
+					continue
+				}
+
+				detailedTarget := containerTarget.With("details", fmt.Sprintf("fileName: %s, permissions: %s", fileStat.Path, fileStat.Permissions))
+				checkResults = append(checkResults, rule.PassedCheckResult("File has expected permissions", detailedTarget))
+			}
+		}
+	}
+	return checkResults
 }
