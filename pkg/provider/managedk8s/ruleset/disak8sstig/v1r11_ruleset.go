@@ -628,10 +628,11 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		rule.NewSkipRule(
+			// featureGates.PodSecurity made GA in v1.25 and removed in v1.28. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
 			sharedv1r11.ID254801,
 			"Kubernetes must enable PodSecurity admission controller on static pods and Kubelets (HIGH 254801)",
-			"",
-			rule.NotImplemented,
+			"Option featureGates.PodSecurity was made GA in v1.25 and removed in v1.28.",
+			rule.Skipped,
 		),
 	}
 
