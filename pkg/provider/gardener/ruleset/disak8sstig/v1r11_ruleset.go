@@ -495,14 +495,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedv1r11.Rule245543{Client: seedClient, Namespace: r.shootNamespace, Options: opts245543},
 		&sharedv1r11.Rule245544{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule254800{Client: seedClient, Namespace: r.shootNamespace, Options: opts254800},
-		&v1r11.Rule254801{
-			ClusterClient:         shootClient,
-			ClusterV1RESTClient:   shootClientSet.CoreV1().RESTClient(),
-			ControlPlaneClient:    seedClient,
-			ControlPlaneNamespace: r.shootNamespace,
-			ClusterVersion:        semverShootKubernetesVersion,
-			ControlPlaneVersion:   semverSeedKubernetesVersion,
-		},
+		rule.NewSkipRule(
+			// featureGates.PodSecurity made GA in v1.25 and removed in v1.28. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
+			sharedv1r11.ID254801,
+			"Kubernetes must enable PodSecurity admission controller on static pods and Kubelets (HIGH 254801)",
+			"Option featureGates.PodSecurity was made GA in v1.25 and removed in v1.28.",
+			rule.Skipped,
+		),
 		&v1r11.RuleNodeFiles{
 			Logger:                r.Logger().With("rule", v1r11.IDNodeFiles),
 			InstanceID:            r.instanceID,
