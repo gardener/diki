@@ -51,10 +51,12 @@ func (r *Rule242466) Name() string {
 }
 
 func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
-	checkResults := []rule.CheckResult{}
-	expectedFilePermissionsMax := "644"
-	kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
-	nodeLabels := []string{}
+	var (
+		checkResults               []rule.CheckResult
+		nodeLabels                 []string
+		expectedFilePermissionsMax = "644"
+		kubeProxySelector          = labels.SelectorFromSet(labels.Set{"role": "proxy"})
+	)
 
 	if r.Options != nil {
 		if len(r.Options.PodMatchLabels) > 0 {
@@ -108,10 +110,13 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	for _, node := range selectedShootNodes {
-		podName := fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
-		target := rule.NewTarget("name", node.Name, "kind", "node")
-		selectedFileStats := []intutils.FileStats{}
-		execPodTarget := rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
+		var (
+			selectedFileStats []intutils.FileStats
+			podName           = fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
+			target            = rule.NewTarget("name", node.Name, "kind", "node")
+			execPodTarget     = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
+		)
+
 		defer func() {
 			if err := r.PodContext.Delete(ctx, podName, "kube-system"); err != nil {
 				r.Logger.Error(err.Error())
@@ -155,7 +160,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 				selectedFileStats = append(selectedFileStats, certFileStats)
 			}
 		} else {
-			kubeletPKIDir := "/var/lib/kubelet/pki"
+			var kubeletPKIDir = "/var/lib/kubelet/pki"
 			if kubeutils.IsFlagSet(rawKubeletCommand, "cert-dir") {
 				valueSlice := kubeutils.FindFlagValueRaw(strings.Split(rawKubeletCommand, " "), "cert-dir")
 				if len(valueSlice) > 1 {
@@ -217,8 +222,11 @@ func (r *Rule242466) checkNodePods(
 	nodeName, imageName string,
 	expectedFilePermissionsMax string,
 ) []rule.CheckResult {
-	podName := fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
-	execPodTarget := rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
+	var (
+		podName          = fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
+		execPodTarget    = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
+		additionalLabels = map[string]string{pod.LabelInstanceID: r.InstanceID}
+	)
 
 	defer func() {
 		if err := pc.Delete(ctx, podName, "kube-system"); err != nil {
@@ -226,7 +234,6 @@ func (r *Rule242466) checkNodePods(
 		}
 	}()
 
-	additionalLabels := map[string]string{pod.LabelInstanceID: r.InstanceID}
 	podExecutor, err := pc.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", imageName, nodeName, additionalLabels))
 	if err != nil {
 		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
@@ -243,9 +250,11 @@ func (r *Rule242466) checkNodePods(
 		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
 	}
 
-	execContainerID := execPod.Status.ContainerStatuses[0].ContainerID
-	execBaseContainerID := strings.Split(execContainerID, "//")[1]
-	execContainerPath := fmt.Sprintf("/run/containerd/io.containerd.runtime.v2.task/k8s.io/%s/rootfs", execBaseContainerID)
+	var (
+		execContainerID     = execPod.Status.ContainerStatuses[0].ContainerID
+		execBaseContainerID = strings.Split(execContainerID, "//")[1]
+		execContainerPath   = fmt.Sprintf("/run/containerd/io.containerd.runtime.v2.task/k8s.io/%s/rootfs", execBaseContainerID)
+	)
 
 	slices.SortFunc(pods, func(a, b corev1.Pod) int {
 		return cmp.Compare(a.Name, b.Name)
@@ -253,7 +262,7 @@ func (r *Rule242466) checkNodePods(
 
 	checkResults := []rule.CheckResult{}
 	for _, pod := range pods {
-		excludedSources := []string{"/lib/modules", "/usr/share/ca-certificates", "/var/log/journal", "/var/run/dbus/system_bus_socket"}
+		var excludedSources = []string{"/lib/modules", "/usr/share/ca-certificates", "/var/log/journal", "/var/run/dbus/system_bus_socket"}
 		mappedFileStats, err := intutils.GetMountedFilesStats(ctx, execContainerPath, podExecutor, pod, excludedSources)
 		if err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))

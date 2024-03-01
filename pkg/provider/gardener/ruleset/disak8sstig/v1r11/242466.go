@@ -48,13 +48,15 @@ func (r *Rule242466) Name() string {
 }
 
 func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
-	checkResults := []rule.CheckResult{}
-	expectedFilePermissionsMax := "644"
-	etcdMainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
-	etcdEventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
-	kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
-	deploymentNames := []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
-	nodeLabels := []string{"worker.gardener.cloud/pool"}
+	var (
+		checkResults               []rule.CheckResult
+		expectedFilePermissionsMax = "644"
+		etcdMainSelector           = labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
+		etcdEventsSelector         = labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
+		kubeProxySelector          = labels.SelectorFromSet(labels.Set{"role": "proxy"})
+		deploymentNames            = []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
+		nodeLabels                 = []string{"worker.gardener.cloud/pool"}
+	)
 
 	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
 	if err != nil {
@@ -65,13 +67,15 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	seedTarget := rule.NewTarget("cluster", "seed")
 	allSeedPods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
+		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList")))
 	} else {
-		podSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector}
-		checkPods := []corev1.Pod{}
+		var (
+			checkPods    []corev1.Pod
+			podSelectors = []labels.Selector{etcdMainSelector, etcdEventsSelector}
+		)
 
 		for _, podSelector := range podSelectors {
-			pods := []corev1.Pod{}
+			var pods []corev1.Pod
 			for _, p := range allSeedPods {
 				if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.ControlPlaneNamespace {
 					pods = append(pods, p)
@@ -119,9 +123,9 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	shootTarget := rule.NewTarget("cluster", "shoot")
 	allShootPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList"))), nil
+		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList")))
 	} else {
-		pods := []corev1.Pod{}
+		var pods []corev1.Pod
 		for _, p := range allShootPods {
 			if kubeProxySelector.Matches(labels.Set(p.Labels)) {
 				pods = append(pods, p)
@@ -153,10 +157,13 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		for _, node := range selectedShootNodes {
-			podName := fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
-			target := shootTarget.With("name", node.Name, "kind", "node")
-			selectedFileStats := []intutils.FileStats{}
-			execPodTarget := shootTarget.With("name", podName, "namespace", "kube-system", "kind", "pod")
+			var (
+				selectedFileStats []intutils.FileStats
+				podName           = fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
+				target            = shootTarget.With("name", node.Name, "kind", "node")
+				execPodTarget     = shootTarget.With("name", podName, "namespace", "kube-system", "kind", "pod")
+			)
+
 			defer func() {
 				if err := r.ClusterPodContext.Delete(ctx, podName, "kube-system"); err != nil {
 					r.Logger.Error(err.Error())
@@ -200,7 +207,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 					selectedFileStats = append(selectedFileStats, certFileStats)
 				}
 			} else {
-				kubeletPKIDir := "/var/lib/kubelet/pki"
+				var kubeletPKIDir = "/var/lib/kubelet/pki"
 				if kubeutils.IsFlagSet(rawKubeletCommand, "cert-dir") {
 					valueSlice := kubeutils.FindFlagValueRaw(strings.Split(rawKubeletCommand, " "), "cert-dir")
 					if len(valueSlice) > 1 {
@@ -263,8 +270,11 @@ func (r *Rule242466) checkNodePods(
 	nodeName, imageName string,
 	expectedFilePermissionsMax string,
 	target rule.Target) []rule.CheckResult {
-	podName := fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
-	execPodTarget := target.With("name", podName, "namespace", "kube-system", "kind", "pod")
+	var (
+		podName          = fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
+		execPodTarget    = target.With("name", podName, "namespace", "kube-system", "kind", "pod")
+		additionalLabels = map[string]string{pod.LabelInstanceID: r.InstanceID}
+	)
 
 	defer func() {
 		if err := pc.Delete(ctx, podName, "kube-system"); err != nil {
@@ -272,7 +282,6 @@ func (r *Rule242466) checkNodePods(
 		}
 	}()
 
-	additionalLabels := map[string]string{pod.LabelInstanceID: r.InstanceID}
 	podExecutor, err := pc.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", imageName, nodeName, additionalLabels))
 	if err != nil {
 		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
@@ -289,9 +298,11 @@ func (r *Rule242466) checkNodePods(
 		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
 	}
 
-	execContainerID := execPod.Status.ContainerStatuses[0].ContainerID
-	execBaseContainerID := strings.Split(execContainerID, "//")[1]
-	execContainerPath := fmt.Sprintf("/run/containerd/io.containerd.runtime.v2.task/k8s.io/%s/rootfs", execBaseContainerID)
+	var (
+		execContainerID     = execPod.Status.ContainerStatuses[0].ContainerID
+		execBaseContainerID = strings.Split(execContainerID, "//")[1]
+		execContainerPath   = fmt.Sprintf("/run/containerd/io.containerd.runtime.v2.task/k8s.io/%s/rootfs", execBaseContainerID)
+	)
 
 	slices.SortFunc(pods, func(a, b corev1.Pod) int {
 		return cmp.Compare(a.Name, b.Name)
@@ -299,7 +310,7 @@ func (r *Rule242466) checkNodePods(
 
 	checkResults := []rule.CheckResult{}
 	for _, pod := range pods {
-		excludedSources := []string{"/lib/modules", "/usr/share/ca-certificates", "/var/log/journal", "/var/run/dbus/system_bus_socket"}
+		var excludedSources = []string{"/lib/modules", "/usr/share/ca-certificates", "/var/log/journal", "/var/run/dbus/system_bus_socket"}
 		mappedFileStats, err := intutils.GetMountedFilesStats(ctx, execContainerPath, podExecutor, pod, excludedSources)
 		if err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))

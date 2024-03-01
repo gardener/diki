@@ -49,10 +49,12 @@ func (r *Rule242466) Name() string {
 }
 
 func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
-	checkResults := []rule.CheckResult{}
-	etcdMainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
-	etcdEventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
-	deploymentNames := []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
+	var (
+		checkResults       []rule.CheckResult
+		etcdMainSelector   = labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
+		etcdEventsSelector = labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
+		deploymentNames    = []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
+	)
 
 	if r.ETCDMainSelector != nil {
 		etcdMainSelector = r.ETCDMainSelector
@@ -66,10 +68,9 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 		deploymentNames = r.DeploymentNames
 	}
 
-	target := rule.NewTarget()
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target.With("namespace", r.Namespace, "kind", "podList"))), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", r.Namespace, "kind", "podList"))), nil
 	}
 	podSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector}
 	checkPods := []corev1.Pod{}
@@ -83,7 +84,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		if len(pods) == 0 {
-			checkResults = append(checkResults, rule.FailedCheckResult("Pods not found!", target.With("namespace", r.Namespace, "selector", podSelector.String())))
+			checkResults = append(checkResults, rule.FailedCheckResult("Pods not found!", rule.NewTarget("namespace", r.Namespace, "selector", podSelector.String())))
 			continue
 		}
 
@@ -93,12 +94,12 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	for _, deploymentName := range deploymentNames {
 		pods, err := kubeutils.GetDeploymentPods(ctx, r.Client, deploymentName, r.Namespace)
 		if err != nil {
-			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target.With("kind", "podList")))
+			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList")))
 			continue
 		}
 
 		if len(pods) == 0 {
-			checkResults = append(checkResults, rule.FailedCheckResult("Pods not found for deployment!", target.With("name", deploymentName, "kind", "Deployment", "namespace", r.Namespace)))
+			checkResults = append(checkResults, rule.FailedCheckResult("Pods not found for deployment!", rule.NewTarget("name", deploymentName, "kind", "Deployment", "namespace", r.Namespace)))
 			continue
 		}
 
@@ -115,10 +116,10 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "nodeList"))), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "nodeList"))), nil
 	}
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
-	groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(checkPods, nodesAllocatablePods, target)
+	groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(checkPods, nodesAllocatablePods, rule.NewTarget())
 	checkResults = append(checkResults, checks...)
 	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
 	if err != nil {
@@ -128,7 +129,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	for nodeName, pods := range groupedPods {
 		podName := fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
-		execPodTarget := target.With("name", podName, "namespace", "kube-system", "kind", "pod")
+		execPodTarget := rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
 
 		defer func() {
 			if err := r.PodContext.Delete(ctx, podName, "kube-system"); err != nil {
@@ -155,9 +156,11 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 			continue
 		}
 
-		execContainerID := execPod.Status.ContainerStatuses[0].ContainerID
-		execBaseContainerID := strings.Split(execContainerID, "//")[1]
-		execContainerPath := fmt.Sprintf("/run/containerd/io.containerd.runtime.v2.task/k8s.io/%s/rootfs", execBaseContainerID)
+		var (
+			execContainerID     = execPod.Status.ContainerStatuses[0].ContainerID
+			execBaseContainerID = strings.Split(execContainerID, "//")[1]
+			execContainerPath   = fmt.Sprintf("/run/containerd/io.containerd.runtime.v2.task/k8s.io/%s/rootfs", execBaseContainerID)
+		)
 
 		slices.SortFunc(pods, func(a, b corev1.Pod) int {
 			return cmp.Compare(a.Name, b.Name)
@@ -170,7 +173,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 			}
 
-			expectedFilePermissionsMax := "644"
+			var expectedFilePermissionsMax = "644"
 			for containerName, fileStats := range mappedFileStats {
 				for _, fileStat := range fileStats {
 					if !strings.HasSuffix(fileStat.Path, ".crt") {
