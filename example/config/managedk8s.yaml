@@ -22,6 +22,10 @@ providers:                   # contains information about known providers
     #   args:
     #     groupByLabels:
     #     - foo
+    # - ruleID: "242400"
+    #   args:
+    #     podMatchLabels:
+    #       foo: bar
     # - ruleID: "242404"
     #   args:
     #     groupByLabels:
