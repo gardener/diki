@@ -7,6 +7,7 @@ package config
 // KubeProxyConfig describes kube-proxy configuration values.
 type KubeProxyConfig struct {
 	ClientConnection KPClientConnection `yaml:"clientConnection" json:"clientConnection"`
+	FeatureGates     map[string]bool    `yaml:"featureGates" json:"featureGates"`
 }
 
 // KPClientConnection describes kube-proxy configuration values for client connection.
