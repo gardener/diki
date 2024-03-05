@@ -215,7 +215,15 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			KubernetesVersion: semverShootKubernetesVersion,
 			V1RESTClient:      shootClientSet.CoreV1().RESTClient(),
 		},
-		&sharedv1r11.Rule242400{Client: seedClient, Namespace: r.shootNamespace},
+		&v1r11.Rule242400{
+			Logger:                r.Logger().With("rule", sharedv1r11.ID242400),
+			InstanceID:            r.instanceID,
+			ControlPlaneClient:    seedClient,
+			ClusterClient:         shootClient,
+			ClusterPodContext:     shootPodContext,
+			ClusterV1RESTClient:   shootClientSet.CoreV1().RESTClient(),
+			ControlPlaneNamespace: r.shootNamespace,
+		},
 		&sharedv1r11.Rule242402{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242403{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242404{

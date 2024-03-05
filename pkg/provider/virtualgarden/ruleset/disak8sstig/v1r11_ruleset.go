@@ -209,11 +209,11 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noKubeletsMsg,
 			rule.Skipped,
 		),
-		&sharedv1r11.Rule242400{
-			Client:         runtimeClient,
-			Namespace:      ns,
-			DeploymentName: apiserverDeploymentName,
-			ContainerName:  apiserverContainerName,
+		&v1r11.Rule242400{
+			Client:          runtimeClient,
+			Namespace:       ns,
+			DeploymentNames: []string{apiserverDeploymentName, kcmDeploymentName},
+			ContainerNames:  []string{apiserverContainerName, kcmContainerName},
 		},
 		&sharedv1r11.Rule242402{
 			Client:         runtimeClient,
