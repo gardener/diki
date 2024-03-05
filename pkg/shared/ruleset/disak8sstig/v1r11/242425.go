@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"k8s.io/client-go/rest"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
@@ -64,7 +64,7 @@ func (r *Rule242425) Run(ctx context.Context) (rule.RuleResult, error) {
 
 		if kubeletConfig.ServerTLSBootstrap == nil {
 			// Defaults to false https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/
-			kubeletConfig.ServerTLSBootstrap = pointer.Bool(false)
+			kubeletConfig.ServerTLSBootstrap = ptr.To(false)
 		}
 		if _, ok := kubeletConfig.FeatureGates["RotateKubeletServerCertificate"]; !ok {
 			// Defaults to true https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/
