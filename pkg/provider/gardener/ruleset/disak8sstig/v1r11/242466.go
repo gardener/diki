@@ -238,7 +238,7 @@ func (r *Rule242466) checkPods(
 
 		for containerName, fileStats := range mappedFileStats {
 			for _, fileStat := range fileStats {
-				if !strings.HasSuffix(fileStat.Path, ".crt") {
+				if !strings.HasSuffix(fileStat.Path, ".crt") && !strings.HasSuffix(fileStat.Path, ".pem") {
 					continue
 				}
 
@@ -330,7 +330,7 @@ func (r *Rule242466) checkKubelet(
 
 		var certFilesStats []intutils.FileStats
 		for _, pkiFileStat := range pkiFilesStats {
-			if strings.HasSuffix(pkiFileStat.Path, ".crt") {
+			if strings.HasSuffix(pkiFileStat.Path, ".crt") || strings.HasSuffix(pkiFileStat.Path, ".pem") {
 				certFilesStats = append(certFilesStats, pkiFileStat)
 			}
 		}

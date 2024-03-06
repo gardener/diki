@@ -197,7 +197,7 @@ func (r *Rule242466) checkPods(
 
 		for containerName, fileStats := range mappedFileStats {
 			for _, fileStat := range fileStats {
-				if !strings.HasSuffix(fileStat.Path, ".crt") {
+				if !strings.HasSuffix(fileStat.Path, ".crt") && !strings.HasSuffix(fileStat.Path, ".pem") {
 					continue
 				}
 
