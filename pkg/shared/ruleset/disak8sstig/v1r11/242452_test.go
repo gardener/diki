@@ -107,7 +107,7 @@ var _ = Describe("#242452", func() {
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "node", "name", "node1", "details", "fileName: /var/lib/kubelet/config/kubelet, permissions: 644")),
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("kind", "node", "name", "node2", "details", "fileName: /var/lib/kubelet/kubeconfig, permissions: 660, expectedPermissionsMax: 644")),
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("kind", "node", "name", "node2", "details", "fileName: /var/lib/kubelet/config/kubelet, permissions: 744, expectedPermissionsMax: 644")),
-				rule.PassedCheckResult("Kubelet uses in-cluster kubeconfig", rule.NewTarget("kind", "node", "name", "node3")),
+				rule.FailedCheckResult("Kubelet does not have set kubeconfig", rule.NewTarget("kind", "node", "name", "node3")),
 				rule.PassedCheckResult("Kubelet does not use config file", rule.NewTarget("kind", "node", "name", "node3")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "node", "name", "node4", "details", "fileName: /var/lib/kubelet/kubeconfig, permissions: 600")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "node", "name", "node4", "details", "fileName: /var/lib/kubelet/config/kubelet, permissions: 644")),
