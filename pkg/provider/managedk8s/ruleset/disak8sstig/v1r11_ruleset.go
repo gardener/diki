@@ -52,6 +52,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
+	opts242396, err := getV1R11OptionOrNil[sharedv1r11.Options242396](ruleOptions[sharedv1r11.ID242396].Args)
+	if err != nil {
+		return err
+	}
 	opts242404, err := getV1R11OptionOrNil[sharedv1r11.Options242404](ruleOptions[sharedv1r11.ID242404].Args)
 	if err != nil {
 		return err
@@ -220,12 +224,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Options:    opts242394,
 		},
 		&sharedv1r11.Rule242395{Client: client},
-		rule.NewSkipRule(
-			sharedv1r11.ID242396,
-			"Kubernetes Kubectl cp command must give expected access and results (MEDIUM 242396)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242396{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242396),
+			InstanceID: r.instanceID,
+			Client:     client,
+			PodContext: podContext,
+			Options:    opts242396,
+		},
 		&sharedv1r11.Rule242397{
 			Client:       client,
 			V1RESTClient: clientSet.CoreV1().RESTClient(),
