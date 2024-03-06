@@ -133,7 +133,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	for nodeName, pods := range groupedPods {
 		checkResults = append(checkResults,
-			r.checkNodePods(ctx, pods, nodeName, image.String(), expectedFilePermissionsMax)...)
+			r.checkPods(ctx, pods, nodeName, image.String(), expectedFilePermissionsMax)...)
 	}
 
 	return rule.RuleResult{
@@ -143,7 +143,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (r *Rule242466) checkNodePods(
+func (r *Rule242466) checkPods(
 	ctx context.Context,
 	pods []corev1.Pod,
 	nodeName, imageName string,

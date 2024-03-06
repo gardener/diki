@@ -62,6 +62,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 		compliantStats     = "600\t0\t0\tregular file\t/destination/file1.crt\n400\t0\t65532\tregular file\t/destination/bar/file2.crt"
 		compliantCertStats = "644\t0\t0\tregular file\t/var/lib/certs/tls.crt\n"
 		compliantStats2    = "600\t0\t0\tregular file\t/destination/file3.crt\n600\t1000\t0\tregular file\t/destination/bar/file4.txt\n"
+		noCrtStats         = "600\t0\t0\tregular file\t/destination/file3.txt\n600\t1000\t0\tregular file\t/destination/bar/file4.txt\n"
 		nonCompliantStats  = "664\t0\t0\tregular file\t/destination/file1.crt\n700\t0\t0\tregular file\t/destination/bar/file2.crt\n"
 	)
 	var (
@@ -213,6 +214,12 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.crt, permissions: 700, expectedPermissionsMax: 644")),
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "node01", "kind", "node", "details", "fileName: /destination/file1.crt, permissions: 664, expectedPermissionsMax: 644")),
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "node01", "kind", "node", "details", "fileName: /destination/bar/file2.crt, permissions: 700, expectedPermissionsMax: 644")),
+			}),
+		Entry("should return failed checkResults when crt files cannot be found in PKI dir", nil,
+			[][]string{{emptyMounts, emptyMounts}, {kubeletPID, kubeletCommand, "", noCrtStats}},
+			[][]error{{nil, nil}, {nil, nil, nil, nil}},
+			[]rule.CheckResult{
+				rule.ErroredCheckResult("no '.crt' files found in PKI directory", rule.NewTarget("name", "node01", "kind", "node", "directory", "/var/lib/kubelet/pki")),
 			}),
 		Entry("should check only pod with matched labels",
 			v1r11.Options242466{

@@ -99,7 +99,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 
 		for nodeName, pods := range groupedShootPods {
 			checkResults = append(checkResults,
-				r.checkNodePods(ctx, pods, nodeName, image.String(), expectedFilePermissionsMax)...)
+				r.checkPods(ctx, pods, nodeName, image.String(), expectedFilePermissionsMax)...)
 		}
 	}
 
@@ -112,7 +112,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	for _, node := range selectedShootNodes {
 		checkResults = append(checkResults,
-			r.checkNodeKubelet(ctx, node.Name, image.String(), expectedFilePermissionsMax)...)
+			r.checkKubelet(ctx, node.Name, image.String(), expectedFilePermissionsMax)...)
 	}
 
 	return rule.RuleResult{
@@ -122,7 +122,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (r *Rule242466) checkNodePods(
+func (r *Rule242466) checkPods(
 	ctx context.Context,
 	pods []corev1.Pod,
 	nodeName, imageName string,
@@ -201,7 +201,7 @@ func (r *Rule242466) checkNodePods(
 	return checkResults
 }
 
-func (r *Rule242466) checkNodeKubelet(
+func (r *Rule242466) checkKubelet(
 	ctx context.Context,
 	nodeName, imageName string,
 	expectedFilePermissionsMax string) []rule.CheckResult {
@@ -240,7 +240,7 @@ func (r *Rule242466) checkNodeKubelet(
 
 	if kubeletConfig.TLSPrivateKeyFile != nil && kubeletConfig.TLSCertFile != nil {
 		if len(*kubeletConfig.TLSCertFile) == 0 {
-			checkResults = append(checkResults, rule.FailedCheckResult("could not find cert file, option tlsCertFile is empty.", nodeTarget))
+			return []rule.CheckResult{rule.FailedCheckResult("could not find cert file, option tlsCertFile is empty.", nodeTarget)}
 		} else {
 			certFileStats, err := intutils.GetSingleFileStats(ctx, podExecutor, *kubeletConfig.TLSCertFile)
 			if err != nil {
@@ -270,6 +270,10 @@ func (r *Rule242466) checkNodeKubelet(
 			if strings.HasSuffix(pkiFileStat.Path, ".crt") {
 				certFilesStats = append(certFilesStats, pkiFileStat)
 			}
+		}
+
+		if len(certFilesStats) == 0 {
+			return []rule.CheckResult{rule.ErroredCheckResult("no '.crt' files found in PKI directory", nodeTarget.With("directory", kubeletPKIDir))}
 		}
 
 		selectedFileStats = append(selectedFileStats, certFilesStats...)
