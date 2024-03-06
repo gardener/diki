@@ -108,6 +108,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
+	opts242467, err := getV1R11OptionOrNil[v1r11.Options242467](ruleOptions[sharedv1r11.ID242467].Args)
+	if err != nil {
+		return err
+	}
 
 	const (
 		noControlPlaneMsg = "The Managed Kubernetes cluster does not have access to control plane components."
@@ -603,12 +607,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			PodContext: podContext,
 			Options:    opts242466,
 		},
-		rule.NewSkipRule(
-			sharedv1r11.ID242467,
-			"The Kubernetes PKI keys must have file permissions set to 600 or more restrictive (MEDIUM 242467)",
-			"",
-			rule.NotImplemented,
-		),
+		&v1r11.Rule242467{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242467),
+			InstanceID: r.instanceID,
+			Client:     client,
+			PodContext: podContext,
+			Options:    opts242467,
+		},
 		&sharedv1r11.Rule245541{
 			Client:       client,
 			V1RESTClient: clientSet.CoreV1().RESTClient(),

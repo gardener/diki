@@ -587,7 +587,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"instance": etcdEvents}),
 			DeploymentNames:    []string{apiserverDeploymentName, kcmDeploymentName},
 		},
-		&sharedv1r11.Rule242467{
+		&v1r11.Rule242467{
 			Logger:             r.Logger().With("rule", sharedv1r11.ID242467),
 			InstanceID:         r.instanceID,
 			Client:             runtimeClient,
