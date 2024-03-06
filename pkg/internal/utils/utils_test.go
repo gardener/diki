@@ -54,9 +54,39 @@ var _ = Describe("utils", func() {
 			Entry("Should return correct error message when command errors",
 				[]string{"600\t0\t1000\tregular file\t/destination/file 1.txt"}, []error{errors.New("foo")},
 				utils.FileStats{}, MatchError("foo")),
-			Entry("Should return correct error message when command errors",
+			Entry("Should return correct error message when file cannot be found",
 				[]string{""}, []error{nil},
 				utils.FileStats{}, MatchError("could not find file file/foo")),
+		)
+	})
+	Describe("#GetFileStatsByDir", func() {
+		DescribeTable("#MatchCases",
+			func(executeReturnString []string, executeReturnError []error, expectedFileStats []utils.FileStats, errorMatcher gomegatypes.GomegaMatcher) {
+				ctx := context.TODO()
+				fakePodExecutor := fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
+				result, err := utils.GetFileStatsByDir(ctx, fakePodExecutor, "foo/dir")
+
+				Expect(err).To(errorMatcher)
+				Expect(result).To(Equal(expectedFileStats))
+			},
+			Entry("Should return correct FileStats objects",
+				[]string{"600\t0\t1000\tregular file\t/destination/file 1.txt\n444\t2000\t1000\tregular file\t/destination/file2.txt"}, []error{nil},
+				[]utils.FileStats{
+					{Path: "/destination/file 1.txt", Permissions: "600", UserOwner: "0", GroupOwner: "1000", FileType: "regular file"},
+					{Path: "/destination/file2.txt", Permissions: "444", UserOwner: "2000", GroupOwner: "1000", FileType: "regular file"},
+				}, BeNil()),
+			Entry("Should return not objects when there are no files",
+				[]string{"", "0\n"}, []error{nil, nil},
+				[]utils.FileStats{}, BeNil()),
+			Entry("Should return correct error message when command errors",
+				[]string{"600\t0\t1000\tregular file\t/destination/file 1.txt\n"}, []error{errors.New("foo")},
+				[]utils.FileStats{}, MatchError("foo")),
+			Entry("Should return correct error message files cannot be found",
+				[]string{"", "2\n"}, []error{nil, nil},
+				[]utils.FileStats{}, MatchError("could not find files in foo/dir")),
+			Entry("Should return correct error message when second command errors",
+				[]string{"", ""}, []error{nil, errors.New("bar")},
+				[]utils.FileStats{}, MatchError("bar")),
 		)
 	})
 	Describe("#GetMountedFilesStats", func() {

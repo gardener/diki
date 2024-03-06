@@ -22,8 +22,9 @@ import (
 	fakestrgen "github.com/gardener/diki/pkg/internal/stringgen/fake"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
+	"github.com/gardener/diki/pkg/provider/virtualgarden/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
+	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
 var _ = Describe("#242466", func() {
@@ -78,7 +79,7 @@ var _ = Describe("#242466", func() {
 	)
 
 	BeforeEach(func() {
-		v1r11.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
+		sharedv1r11.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
 		fakeClient = fakeclient.NewClientBuilder().Build()
 
 		Node = &corev1.Node{
@@ -239,7 +240,7 @@ var _ = Describe("#242466", func() {
 		fooPod.Name = "foo"
 
 		dikiPod = plainPod.DeepCopy()
-		dikiPod.Name = fmt.Sprintf("diki-%s-%s", v1r11.ID242466, "aaaaaaaaaa")
+		dikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedv1r11.ID242466, "aaaaaaaaaa")
 		dikiPod.Namespace = "kube-system"
 		dikiPod.Labels = map[string]string{}
 

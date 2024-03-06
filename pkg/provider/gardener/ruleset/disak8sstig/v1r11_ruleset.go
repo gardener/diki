@@ -488,12 +488,14 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			`Rule is duplicate of "242402"`,
 			rule.Skipped,
 		),
-		&sharedv1r11.Rule242466{
-			Logger:     r.Logger().With("rule", sharedv1r11.ID242466),
-			InstanceID: r.instanceID,
-			Client:     seedClient,
-			PodContext: seedPodContext,
-			Namespace:  r.shootNamespace,
+		&v1r11.Rule242466{
+			Logger:                 r.Logger().With("rule", sharedv1r11.ID242466),
+			InstanceID:             r.instanceID,
+			ControlPlaneClient:     seedClient,
+			ClusterClient:          shootClient,
+			ControlPlanePodContext: seedPodContext,
+			ClusterPodContext:      shootPodContext,
+			ControlPlaneNamespace:  r.shootNamespace,
 		},
 		&sharedv1r11.Rule242467{
 			Logger:     r.Logger().With("rule", sharedv1r11.ID242467),
