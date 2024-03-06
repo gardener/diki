@@ -126,7 +126,7 @@ func (r *Rule242452) Run(ctx context.Context) (rule.RuleResult, error) {
 		if kubeconfigPath, err = getFlagValue(rawKubeletCommand, "kubeconfig"); err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 		} else if len(kubeconfigPath) == 0 {
-			checkResults = append(checkResults, rule.PassedCheckResult("Kubelet uses in-cluster kubeconfig", nodeTarget))
+			checkResults = append(checkResults, rule.FailedCheckResult("Kubelet does not have set kubeconfig", nodeTarget))
 		} else {
 			selectedFilePaths = append(selectedFilePaths, kubeconfigPath)
 		}
