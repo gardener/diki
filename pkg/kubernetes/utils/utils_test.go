@@ -408,7 +408,7 @@ var _ = Describe("utils", func() {
 					Kind: "Deployment",
 				},
 			}
-			replicaSet.Spec.Replicas = ptr.To(int32(1))
+			replicaSet.Spec.Replicas = ptr.To[int32](1)
 			replicaSet.UID = "2"
 			pod := basicPod.DeepCopy()
 			pod.OwnerReferences = []metav1.OwnerReference{
@@ -446,7 +446,7 @@ var _ = Describe("utils", func() {
 					Kind: "Deployment",
 				},
 			}
-			replicaSet.Spec.Replicas = ptr.To(int32(0))
+			replicaSet.Spec.Replicas = ptr.To[int32](0)
 			replicaSet.UID = "2"
 			pod := basicPod.DeepCopy()
 			pod.OwnerReferences = []metav1.OwnerReference{
@@ -1342,7 +1342,7 @@ readOnlyPort: 222
 			},
 			Entry("should return correct kubelet config",
 				[]string{kubeletConfig}, []error{nil}, "--foo=./bar --config=./config",
-				&config.KubeletConfig{MaxPods: ptr.To(int32(111)), ReadOnlyPort: ptr.To(int32(222))}, BeNil()),
+				&config.KubeletConfig{MaxPods: ptr.To[int32](111), ReadOnlyPort: ptr.To[int32](222)}, BeNil()),
 			Entry("should return error if no kubelet config is set in command",
 				[]string{kubeletConfig}, []error{nil}, "--foo=./bar",
 				&config.KubeletConfig{}, MatchError("kubelet config file has not been set")),
