@@ -110,7 +110,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList")))
 	} else {
-		pods := []corev1.Pod{}
+		var pods []corev1.Pod
 		for _, p := range allPods {
 			if kubeProxySelector.Matches(labels.Set(p.Labels)) {
 				pods = append(pods, p)
@@ -120,20 +120,18 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 		if len(pods) == 0 {
 			checkResults = append(checkResults, rule.ErroredCheckResult("kube-proxy pods not found", shootTarget.With("selector", kubeProxySelector.String())))
 		} else {
-			nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
-			groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, shootTarget)
-			checkResults = append(checkResults, checks...)
-
 			image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
 			if err != nil {
 				return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
-			} else {
-				image.WithOptionalTag(version.Get().GitVersion)
+			}
+			image.WithOptionalTag(version.Get().GitVersion)
 
-				for nodeName, pods := range groupedPods {
-					checkResults = append(checkResults,
-						r.checkNodeKubeProxy(ctx, r.ClusterClient, r.ClusterPodContext, pods, nodeName, image.String())...)
-				}
+			nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
+			groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, shootTarget)
+			checkResults = append(checkResults, checks...)
+			for nodeName, pods := range groupedPods {
+				checkResults = append(checkResults,
+					r.checkKubeProxy(ctx, pods, nodeName, image.String())...)
 			}
 		}
 	}
@@ -171,10 +169,8 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (r *Rule242400) checkNodeKubeProxy(
+func (r *Rule242400) checkKubeProxy(
 	ctx context.Context,
-	c client.Client,
-	pc pod.PodContext,
 	pods []corev1.Pod,
 	nodeName, imageName string,
 ) []rule.CheckResult {
@@ -187,12 +183,12 @@ func (r *Rule242400) checkNodeKubeProxy(
 	)
 
 	defer func() {
-		if err := pc.Delete(ctx, podName, "kube-system"); err != nil {
+		if err := r.ClusterPodContext.Delete(ctx, podName, "kube-system"); err != nil {
 			r.Logger.Error(err.Error())
 		}
 	}()
 
-	podExecutor, err := pc.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", imageName, nodeName, additionalLabels))
+	podExecutor, err := r.ClusterPodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", imageName, nodeName, additionalLabels))
 	if err != nil {
 		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
 	}
@@ -204,7 +200,7 @@ func (r *Rule242400) checkNodeKubeProxy(
 		},
 	}
 
-	if err := c.Get(ctx, client.ObjectKeyFromObject(execPod), execPod); err != nil {
+	if err := r.ClusterClient.Get(ctx, client.ObjectKeyFromObject(execPod), execPod); err != nil {
 		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
 	}
 
@@ -272,7 +268,6 @@ func (r *Rule242400) checkNodeKubeProxy(
 			fgOptions := kubeutils.FindFlagValueRaw(strings.Split(rawKubeProxyCommand, " "), "feature-gates")
 
 			allAlphaOptions := kubeutils.FindInnerValue(fgOptions, "AllAlpha")
-
 			switch {
 			case len(allAlphaOptions) > 1:
 				checkResults = append(checkResults, rule.WarningCheckResult(fmt.Sprintf("Option %s set more than once in container command.", option), podTarget))
@@ -295,7 +290,7 @@ func (r *Rule242400) checkNodeKubeProxy(
 			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", option), podTarget))
 		case *allAlpha:
 			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", option), podTarget))
-		case !*allAlpha:
+		default:
 			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", option), podTarget))
 		}
 	}
