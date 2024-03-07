@@ -483,7 +483,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noKubeletsMsg,
 			rule.Skipped,
 		),
-		&sharedv1r11.Rule242451{
+		&v1r11.Rule242451{
 			Logger:             r.Logger().With("rule", sharedv1r11.ID242451),
 			InstanceID:         r.instanceID,
 			Client:             runtimeClient,
