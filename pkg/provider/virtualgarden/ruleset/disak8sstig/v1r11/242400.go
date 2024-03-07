@@ -18,10 +18,8 @@ import (
 var _ rule.Rule = &Rule242400{}
 
 type Rule242400 struct {
-	Client          client.Client
-	Namespace       string
-	DeploymentNames []string
-	ContainerNames  []string
+	Client    client.Client
+	Namespace string
 }
 
 func (r *Rule242400) ID() string {
@@ -35,30 +33,23 @@ func (r *Rule242400) Name() string {
 func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 	const option = "feature-gates.AllAlpha"
 	var (
-		checkResults    []rule.CheckResult
-		deploymentNames = []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
-		containerNames  = []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
+		checkResults []rule.CheckResult
+		deployments  = map[string]string{
+			"virtual-garden-kube-apiserver":          "kube-apiserver",
+			"virtual-garden-kube-controller-manager": "kube-controller-manager",
+		}
 	)
 
-	if r.DeploymentNames != nil {
-		deploymentNames = r.DeploymentNames
-	}
-
-	if r.ContainerNames != nil {
-		containerNames = r.ContainerNames
-	}
-
-	for idx, deploymentName := range deploymentNames {
+	for deploymentName, containerName := range deployments {
 		target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
 
-		fgOptions, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerNames[idx], r.Namespace, "feature-gates")
+		fgOptions, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, "feature-gates")
 		if err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target))
 			continue
 		}
 
 		allAlphaOptions := kubeutils.FindInnerValue(fgOptions, "AllAlpha")
-
 		// featureGates.AllAlpha defaults to false. ref https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/
 		switch {
 		case len(allAlphaOptions) == 0:
