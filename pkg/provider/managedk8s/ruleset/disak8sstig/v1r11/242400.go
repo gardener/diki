@@ -77,7 +77,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList")))
 	} else {
-		pods := []corev1.Pod{}
+		var pods []corev1.Pod
 		for _, p := range allPods {
 			if kubeProxySelector.Matches(labels.Set(p.Labels)) {
 				pods = append(pods, p)
@@ -87,19 +87,17 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 		if len(pods) == 0 {
 			checkResults = append(checkResults, rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget("selector", kubeProxySelector.String())))
 		} else {
-			nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
-			groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.NewTarget())
-			checkResults = append(checkResults, checks...)
-
 			image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
 			if err != nil {
 				return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
-			} else {
-				image.WithOptionalTag(version.Get().GitVersion)
+			}
+			image.WithOptionalTag(version.Get().GitVersion)
 
-				for nodeName, pods := range groupedPods {
-					checkResults = append(checkResults, r.checkNodeKubeProxy(ctx, pods, nodeName, image.String())...)
-				}
+			nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
+			groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.NewTarget())
+			checkResults = append(checkResults, checks...)
+			for nodeName, pods := range groupedPods {
+				checkResults = append(checkResults, r.checkKubeProxy(ctx, pods, nodeName, image.String())...)
 			}
 		}
 	}
@@ -137,7 +135,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (r *Rule242400) checkNodeKubeProxy(
+func (r *Rule242400) checkKubeProxy(
 	ctx context.Context,
 	pods []corev1.Pod,
 	nodeName, imageName string,
@@ -236,7 +234,6 @@ func (r *Rule242400) checkNodeKubeProxy(
 			fgOptions := kubeutils.FindFlagValueRaw(strings.Split(rawKubeProxyCommand, " "), "feature-gates")
 
 			allAlphaOptions := kubeutils.FindInnerValue(fgOptions, "AllAlpha")
-
 			switch {
 			case len(allAlphaOptions) > 1:
 				checkResults = append(checkResults, rule.WarningCheckResult(fmt.Sprintf("Option %s set more than once in container command.", option), podTarget))
@@ -259,7 +256,7 @@ func (r *Rule242400) checkNodeKubeProxy(
 			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", option), podTarget))
 		case *allAlpha:
 			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", option), podTarget))
-		case !*allAlpha:
+		default:
 			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", option), podTarget))
 		}
 	}
