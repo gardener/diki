@@ -56,6 +56,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
+	opts242400, err := getV1R11OptionOrNil[v1r11.Options242400](ruleOptions[sharedv1r11.ID242400].Args)
+	if err != nil {
+		return err
+	}
 	opts242404, err := getV1R11OptionOrNil[sharedv1r11.Options242404](ruleOptions[sharedv1r11.ID242404].Args)
 	if err != nil {
 		return err
@@ -247,12 +251,14 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			KubernetesVersion: semverKubernetesVersion,
 			V1RESTClient:      clientSet.CoreV1().RESTClient(),
 		},
-		rule.NewSkipRule(
-			sharedv1r11.ID242400,
-			"The Kubernetes API server must have Alpha APIs disabled (MEDIUM 242400)",
-			"",
-			rule.NotImplemented,
-		),
+		&v1r11.Rule242400{
+			Logger:       r.Logger().With("rule", sharedv1r11.ID242400),
+			InstanceID:   r.instanceID,
+			Client:       client,
+			PodContext:   podContext,
+			V1RESTClient: clientSet.CoreV1().RESTClient(),
+			Options:      opts242400,
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242402,
 			"The Kubernetes API Server must have an audit log path set (MEDIUM 242402)",
