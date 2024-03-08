@@ -18,6 +18,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,6 +52,34 @@ func GetObjectsMetadata(ctx context.Context, c client.Client, gvk schema.GroupVe
 			return objects, nil
 		}
 	}
+}
+
+// GetAllObjectsMetadata returns the object metadata for all Pods, Services, DaemonSets, Deployments,
+// ReplicaSets, StatefulSets, Jobs and CronJobs in a given namespace or all namespaces if it's set to "".
+// It retrieves objects by portions set by limit.
+func GetAllObjectsMetadata(ctx context.Context, c client.Client, namespace string, selector labels.Selector, limit int64) ([]metav1.PartialObjectMetadata, error) {
+	var (
+		groupVersionKinds = []schema.GroupVersionKind{
+			corev1.SchemeGroupVersion.WithKind("PodList"),
+			corev1.SchemeGroupVersion.WithKind("ServiceList"),
+			appsv1.SchemeGroupVersion.WithKind("DeploymentList"),
+			appsv1.SchemeGroupVersion.WithKind("DaemonSetList"),
+			appsv1.SchemeGroupVersion.WithKind("ReplicaSetList"),
+			appsv1.SchemeGroupVersion.WithKind("StatefulSetList"),
+			batchv1.SchemeGroupVersion.WithKind("JobList"),
+			batchv1.SchemeGroupVersion.WithKind("CronJobList"),
+		}
+		objects []metav1.PartialObjectMetadata
+	)
+
+	for _, groupVersionKind := range groupVersionKinds {
+		if currentObjects, err := GetObjectsMetadata(ctx, c, groupVersionKind, namespace, selector, limit); err != nil {
+			return nil, err
+		} else {
+			objects = append(objects, currentObjects...)
+		}
+	}
+	return objects, nil
 }
 
 // GetPods returns all pods for a given namespace, or all namespaces if it's set to empty string "".
