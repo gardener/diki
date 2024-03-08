@@ -10,6 +10,20 @@ providers:                   # contains information about known providers
     name: DISA Kubernetes Security Technical Implementation Guide
     version: v1r11
     ruleOptions:
+    # - ruleID: "242383"
+    #   args:
+    #     acceptedResources:
+    #     - MatchLabels:
+    #         foo: bar
+    #       # Defaults to ["kube-system", "kube-public", "kube-node-lease"]
+    #       namespaceNames:
+    #       - kube-system
+    #       - kube-public
+    #       - kube-node-lease
+    #       justification: "justification"
+    #       # relates to the result status in the report
+    #       # can be set to Passed or Accepted. Defaults to Accepted
+    #       status: Passed
     # - ruleID: "242393"
     #   args:
     #     groupByLabels:
