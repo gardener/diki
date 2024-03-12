@@ -83,6 +83,19 @@ e.g. to check compliance of your hyperscaler accounts.`,
 	rootCmd.AddCommand(reportCmd)
 	rootCmd.AddCommand(versionCmd)
 
+	var diffOpts diffOptions
+	diffCmd := &cobra.Command{
+		Use:   "diff",
+		Short: "Diff creates difference in 2 reports.",
+		Long:  `Diff creates difference in 2 reports.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return diffCmd(args, diffOpts)
+		},
+	}
+
+	addDiffFlags(diffCmd, &diffOpts)
+	rootCmd.AddCommand(diffCmd)
+
 	return rootCmd
 }
 
@@ -98,6 +111,50 @@ func addRunFlags(cmd *cobra.Command, opts *runOptions) {
 func addReportFlags(cmd *cobra.Command, opts *reportOptions) {
 	cmd.PersistentFlags().StringVar(&opts.output, "output", "html", "Output type.")
 	cmd.PersistentFlags().Var(cliflag.NewMapStringString(&opts.distinctBy), "distinct-by", "If set generates a merged report. The keys are the IDs for the providers which the merged report will include and the values are distinct metadata attributes to be used as IDs for the different reports.")
+}
+
+func addDiffFlags(cmd *cobra.Command, opts *diffOptions) {
+	cmd.PersistentFlags().StringVar(&opts.oldReport, "old-report", "", "Old report path.")
+	cmd.PersistentFlags().StringVar(&opts.newReport, "new-report", "", "New report path.")
+}
+
+func diffCmd(_ []string, opts diffOptions) error {
+	if len(opts.oldReport) == 0 || len(opts.newReport) == 0 {
+		return errors.New("diff command requires 2 report paths")
+	}
+
+	oldReportfileData, err := os.ReadFile(filepath.Clean(opts.oldReport))
+	if err != nil {
+		return fmt.Errorf("failed to read file %s: %w", opts.oldReport, err)
+	}
+
+	newReportfileData, err := os.ReadFile(filepath.Clean(opts.newReport))
+	if err != nil {
+		return fmt.Errorf("failed to read file %s: %w", opts.newReport, err)
+	}
+
+	oldReport := &report.Report{}
+	if err := json.Unmarshal(oldReportfileData, oldReport); err != nil {
+		return fmt.Errorf("failed to unmarshal data: %w", err)
+	}
+
+	newReport := &report.Report{}
+	if err := json.Unmarshal(newReportfileData, newReport); err != nil {
+		return fmt.Errorf("failed to unmarshal data: %w", err)
+	}
+
+	diff, err := report.CreateDiff(*oldReport, *newReport)
+	if err != nil {
+		return fmt.Errorf("failed to create diff: %w", err)
+	}
+
+	jsonDiff, err := json.Marshal(diff)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal data: %w", err)
+	}
+
+	fmt.Print(string(jsonDiff))
+	return nil
 }
 
 func reportCmd(args []string, opts reportOptions) error {
@@ -257,6 +314,11 @@ type runOptions struct {
 type reportOptions struct {
 	output     string
 	distinctBy map[string]string
+}
+
+type diffOptions struct {
+	oldReport string
+	newReport string
 }
 
 func readConfig(filePath string) (*config.DikiConfig, error) {
