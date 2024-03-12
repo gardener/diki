@@ -14,6 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 	gomegatypes "github.com/onsi/gomega/types"
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
@@ -141,18 +142,20 @@ var _ = Describe("utils", func() {
 
 	Describe("#GetAllObjectsMetadata", func() {
 		var (
-			fakeClient       client.Client
-			ctx              = context.TODO()
-			pod              *corev1.Pod
-			service          *corev1.Service
-			deployment       *appsv1.Deployment
-			daemonSet        *appsv1.DaemonSet
-			replicaSet       *appsv1.ReplicaSet
-			statefulSet      *appsv1.StatefulSet
-			job              *batchv1.Job
-			cronJob          *batchv1.CronJob
-			namespaceFoo     = "foo"
-			namespaceDefault = "default"
+			fakeClient              client.Client
+			ctx                     = context.TODO()
+			pod                     *corev1.Pod
+			replicationController   *corev1.ReplicationController
+			service                 *corev1.Service
+			deployment              *appsv1.Deployment
+			daemonSet               *appsv1.DaemonSet
+			replicaSet              *appsv1.ReplicaSet
+			statefulSet             *appsv1.StatefulSet
+			horizontalPodAutoscaler *autoscalingv1.HorizontalPodAutoscaler
+			job                     *batchv1.Job
+			cronJob                 *batchv1.CronJob
+			namespaceFoo            = "foo"
+			namespaceDefault        = "default"
 		)
 
 		BeforeEach(func() {
@@ -167,6 +170,14 @@ var _ = Describe("utils", func() {
 				},
 			}
 			Expect(fakeClient.Create(ctx, pod)).To(Succeed())
+
+			replicationController = &corev1.ReplicationController{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "replicationController",
+					Namespace: namespaceDefault,
+				},
+			}
+			Expect(fakeClient.Create(ctx, replicationController)).To(Succeed())
 
 			service = &corev1.Service{
 				ObjectMeta: metav1.ObjectMeta{
@@ -211,6 +222,14 @@ var _ = Describe("utils", func() {
 			}
 			Expect(fakeClient.Create(ctx, statefulSet)).To(Succeed())
 
+			horizontalPodAutoscaler = &autoscalingv1.HorizontalPodAutoscaler{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "horizontalPodAutoscaler",
+					Namespace: namespaceFoo,
+				},
+			}
+			Expect(fakeClient.Create(ctx, horizontalPodAutoscaler)).To(Succeed())
+
 			job = &batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "job",
@@ -231,21 +250,21 @@ var _ = Describe("utils", func() {
 		It("should return correct number of resources in default namespace", func() {
 			pods, err := utils.GetAllObjectsMetadata(ctx, fakeClient, namespaceDefault, labels.NewSelector(), 2)
 
-			Expect(len(pods)).To(Equal(5))
+			Expect(len(pods)).To(Equal(6))
 			Expect(err).To(BeNil())
 		})
 
 		It("should return correct number of resources in foo namespace", func() {
 			resources, err := utils.GetAllObjectsMetadata(ctx, fakeClient, namespaceFoo, labels.NewSelector(), 2)
 
-			Expect(len(resources)).To(Equal(3))
+			Expect(len(resources)).To(Equal(4))
 			Expect(err).To(BeNil())
 		})
 
 		It("should return correct number of resources in all namespaces", func() {
 			resources, err := utils.GetAllObjectsMetadata(ctx, fakeClient, "", labels.NewSelector(), 2)
 
-			Expect(len(resources)).To(Equal(8))
+			Expect(len(resources)).To(Equal(10))
 			Expect(err).To(BeNil())
 		})
 
