@@ -75,7 +75,6 @@ var _ = Describe("#242451", func() {
 		etcdEventsPod            *corev1.Pod
 		kubeAPIServerPod         *corev1.Pod
 		kubeControllerManagerPod *corev1.Pod
-		kubeSchedulerPod         *corev1.Pod
 		fooPod                   *corev1.Pod
 		dikiPod                  *corev1.Pod
 		ctx                      = context.TODO()
@@ -114,16 +113,12 @@ var _ = Describe("#242451", func() {
 		}
 
 		kubeAPIServerDep := plainDeployment.DeepCopy()
-		kubeAPIServerDep.Name = "kube-apiserver"
+		kubeAPIServerDep.Name = "virtual-garden-kube-apiserver"
 		kubeAPIServerDep.UID = "11"
 
 		kubeControllerManagerDep := plainDeployment.DeepCopy()
-		kubeControllerManagerDep.Name = "kube-controller-manager"
+		kubeControllerManagerDep.Name = "virtual-garden-kube-controller-manager"
 		kubeControllerManagerDep.UID = "21"
-
-		kubeSchedulerDep := plainDeployment.DeepCopy()
-		kubeSchedulerDep.Name = "kube-scheduler"
-		kubeSchedulerDep.UID = "31"
 
 		plainReplicaSet = &appsv1.ReplicaSet{
 			ObjectMeta: metav1.ObjectMeta{
@@ -148,19 +143,14 @@ var _ = Describe("#242451", func() {
 		}
 
 		kubeAPIServerRS := plainReplicaSet.DeepCopy()
-		kubeAPIServerRS.Name = "kube-apiserver"
+		kubeAPIServerRS.Name = "virtual-garden-kube-apiserver"
 		kubeAPIServerRS.UID = "12"
 		kubeAPIServerRS.OwnerReferences[0].UID = "11"
 
 		kubeControllerManagerRS := plainReplicaSet.DeepCopy()
-		kubeControllerManagerRS.Name = "kube-controller-manager"
+		kubeControllerManagerRS.Name = "virtual-garden-kube-controller-manager"
 		kubeControllerManagerRS.UID = "22"
 		kubeControllerManagerRS.OwnerReferences[0].UID = "21"
-
-		kubeSchedulerRS := plainReplicaSet.DeepCopy()
-		kubeSchedulerRS.Name = "kube-scheduler"
-		kubeSchedulerRS.UID = "32"
-		kubeSchedulerRS.OwnerReferences[0].UID = "31"
 
 		plainPod = &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
@@ -215,29 +205,22 @@ var _ = Describe("#242451", func() {
 		etcdMainPod = plainPod.DeepCopy()
 		etcdMainPod.Name = "1-pod"
 		etcdMainPod.Labels["name"] = "etcd"
-		etcdMainPod.Labels["instance"] = "etcd-main"
+		etcdMainPod.Labels["instance"] = "virtual-garden-etcd-main"
 		etcdMainPod.OwnerReferences[0].UID = "1"
 
 		etcdEventsPod = plainPod.DeepCopy()
 		etcdEventsPod.Name = "etcd-events"
 		etcdEventsPod.Labels["name"] = "etcd"
-		etcdEventsPod.Labels["instance"] = "etcd-events"
+		etcdEventsPod.Labels["instance"] = "virtual-garden-etcd-events"
 		etcdEventsPod.OwnerReferences[0].UID = "2"
 
 		kubeAPIServerPod = plainPod.DeepCopy()
-		kubeAPIServerPod.Name = "kube-apiserver"
-		kubeAPIServerPod.Labels["name"] = "kube-apiserver"
+		kubeAPIServerPod.Name = "virtual-garden-kube-apiserver"
 		kubeAPIServerPod.OwnerReferences[0].UID = "12"
 
 		kubeControllerManagerPod = plainPod.DeepCopy()
-		kubeControllerManagerPod.Name = "kube-controller-manager"
-		kubeControllerManagerPod.Labels["name"] = "kube-controller-manager"
+		kubeControllerManagerPod.Name = "virtual-garden-kube-controller-manager"
 		kubeControllerManagerPod.OwnerReferences[0].UID = "22"
-
-		kubeSchedulerPod = plainPod.DeepCopy()
-		kubeSchedulerPod.Name = "kube-scheduler"
-		kubeSchedulerPod.Labels["name"] = "kube-scheduler"
-		kubeSchedulerPod.OwnerReferences[0].UID = "32"
 
 		fooPod = plainPod.DeepCopy()
 		fooPod.Name = "foo"
@@ -251,59 +234,30 @@ var _ = Describe("#242451", func() {
 		Expect(fakeClient.Create(ctx, fooPod)).To(Succeed())
 		Expect(fakeClient.Create(ctx, kubeAPIServerDep)).To(Succeed())
 		Expect(fakeClient.Create(ctx, kubeControllerManagerDep)).To(Succeed())
-		Expect(fakeClient.Create(ctx, kubeSchedulerDep)).To(Succeed())
 		Expect(fakeClient.Create(ctx, kubeAPIServerRS)).To(Succeed())
 		Expect(fakeClient.Create(ctx, kubeControllerManagerRS)).To(Succeed())
-		Expect(fakeClient.Create(ctx, kubeSchedulerRS)).To(Succeed())
 	})
 
 	It("should fail when pods cannot be found", func() {
-		mainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
-		eventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
+		mainSelector := labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-main"})
+		eventsSelector := labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-events"})
 		fakePodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
 		r := &v1r11.Rule242451{
-			Logger:             testLogger,
-			InstanceID:         instanceID,
-			Client:             fakeClient,
-			Namespace:          Namespace,
-			PodContext:         fakePodContext,
-			ETCDMainSelector:   mainSelector,
-			ETCDEventsSelector: eventsSelector,
+			Logger:     testLogger,
+			InstanceID: instanceID,
+			Client:     fakeClient,
+			Namespace:  Namespace,
+			PodContext: fakePodContext,
 		}
 
 		ruleResult, err := r.Run(ctx)
 		target := rule.NewTarget("namespace", r.Namespace)
 		Expect(err).To(BeNil())
-		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
+		Expect(ruleResult.CheckResults).To(ConsistOf([]rule.CheckResult{
 			rule.FailedCheckResult("Pods not found!", target.With("selector", mainSelector.String())),
 			rule.FailedCheckResult("Pods not found!", target.With("selector", eventsSelector.String())),
-			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "kube-apiserver", "kind", "Deployment", "namespace", r.Namespace)),
-			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "kube-controller-manager", "kind", "Deployment", "namespace", r.Namespace)),
-			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "kube-scheduler", "kind", "Deployment", "namespace", r.Namespace)),
-		}))
-	})
-
-	It("should fail when pods cannot be found and deploymentNames is empty", func() {
-		mainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
-		eventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
-		fakePodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
-		r := &v1r11.Rule242451{
-			Logger:             testLogger,
-			InstanceID:         instanceID,
-			Client:             fakeClient,
-			Namespace:          Namespace,
-			PodContext:         fakePodContext,
-			ETCDMainSelector:   mainSelector,
-			ETCDEventsSelector: eventsSelector,
-			DeploymentNames:    []string{},
-		}
-
-		ruleResult, err := r.Run(ctx)
-		target := rule.NewTarget("namespace", r.Namespace)
-		Expect(err).To(BeNil())
-		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
-			rule.FailedCheckResult("Pods not found!", target.With("selector", mainSelector.String())),
-			rule.FailedCheckResult("Pods not found!", target.With("selector", eventsSelector.String())),
+			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "virtual-garden-kube-apiserver", "kind", "Deployment", "namespace", r.Namespace)),
+			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "virtual-garden-kube-controller-manager", "kind", "Deployment", "namespace", r.Namespace)),
 		}))
 	})
 
@@ -313,19 +267,16 @@ var _ = Describe("#242451", func() {
 			Expect(fakeClient.Create(ctx, etcdEventsPod)).To(Succeed())
 			Expect(fakeClient.Create(ctx, kubeAPIServerPod)).To(Succeed())
 			Expect(fakeClient.Create(ctx, kubeControllerManagerPod)).To(Succeed())
-			Expect(fakeClient.Create(ctx, kubeSchedulerPod)).To(Succeed())
 			Expect(fakeClient.Create(ctx, dikiPod)).To(Succeed())
 
 			fakePodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
 			r := &v1r11.Rule242451{
-				Logger:             testLogger,
-				InstanceID:         instanceID,
-				Client:             fakeClient,
-				Namespace:          Namespace,
-				PodContext:         fakePodContext,
-				ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"instance": "etcd-main"}),
-				ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"instance": "etcd-events"}),
-				Options:            options,
+				Logger:     testLogger,
+				InstanceID: instanceID,
+				Client:     fakeClient,
+				Namespace:  Namespace,
+				PodContext: fakePodContext,
+				Options:    options,
 			}
 
 			ruleResult, err := r.Run(ctx)
@@ -334,8 +285,8 @@ var _ = Describe("#242451", func() {
 			Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
 		},
 		Entry("should return passed checkResults when files have expected owners", nil,
-			[][]string{{mounts, compliantFileStats, compliantDirStats, mounts, compliantFileStats2, compliantDirStats, emptyMounts, emptyMounts, emptyMounts}},
-			[][]error{{nil, nil, nil, nil, nil, nil, nil, nil, nil}},
+			[][]string{{mounts, compliantFileStats, compliantDirStats, mounts, compliantFileStats2, compliantDirStats, emptyMounts, emptyMounts}},
+			[][]error{{nil, nil, nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
@@ -344,8 +295,8 @@ var _ = Describe("#242451", func() {
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
 			}),
 		Entry("should return failed checkResults when files do not have expected owners", nil,
-			[][]string{{mounts, nonCompliantFileStats, nonCompliantDirStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
-			[][]error{{nil, nil, nil, nil, nil, nil, nil}},
+			[][]string{{mounts, nonCompliantFileStats, nonCompliantDirStats, emptyMounts, emptyMounts, emptyMounts}},
+			[][]error{{nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerGroup: 1000, expectedOwnerGroups: [0]")),
 				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 2000, expectedOwnerUsers: [0]")),
@@ -357,26 +308,26 @@ var _ = Describe("#242451", func() {
 				Groups: []string{"0", "1000"},
 			},
 		},
-			[][]string{{mounts, nonCompliantFileStats, nonCompliantDirStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
-			[][]error{{nil, nil, nil, nil, nil, nil, nil}},
+			[][]string{{mounts, nonCompliantFileStats, nonCompliantDirStats, emptyMounts, emptyMounts, emptyMounts}},
+			[][]error{{nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 1000")),
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 2000, ownerGroup: 0")),
 				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 65532, expectedOwnerUsers: [0 2000]")),
 			}),
 		Entry("should correctly return errored checkResults when commands error", nil,
-			[][]string{{mounts, mounts, compliantFileStats2, mounts, compliantFileStats, "", emptyMounts, emptyMounts}},
-			[][]error{{errors.New("foo"), nil, errors.New("bar"), nil, nil, errors.New("foo-bar"), nil, nil}},
+			[][]string{{mounts, mounts, compliantFileStats2, mounts, compliantFileStats, "", emptyMounts}},
+			[][]error{{errors.New("foo"), nil, errors.New("bar"), nil, nil, errors.New("foo-bar"), nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
 				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "virtual-garden-kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "virtual-garden-kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
 				rule.ErroredCheckResult("foo-bar", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
 			}),
 		Entry("should check files when GetMountedFilesStats errors", nil,
-			[][]string{{mountsMulty, compliantFileStats, emptyMounts, compliantDirStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
-			[][]error{{nil, nil, errors.New("bar"), nil, nil, nil, nil, nil}},
+			[][]string{{mountsMulty, compliantFileStats, emptyMounts, compliantDirStats, emptyMounts, emptyMounts, emptyMounts}},
+			[][]error{{nil, nil, errors.New("bar"), nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
@@ -384,8 +335,8 @@ var _ = Describe("#242451", func() {
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
 			}),
 		Entry("should correctly return all checkResults when commands error", nil,
-			[][]string{{mounts, mounts, compliantFileStats2, compliantDirStats, emptyMounts, emptyMounts, emptyMounts}},
-			[][]error{{errors.New("foo"), nil, nil, nil, nil, nil, nil}},
+			[][]string{{mounts, mounts, compliantFileStats2, compliantDirStats, emptyMounts, emptyMounts}},
+			[][]error{{errors.New("foo"), nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.crt, ownerUser: 0, ownerGroup: 0")),

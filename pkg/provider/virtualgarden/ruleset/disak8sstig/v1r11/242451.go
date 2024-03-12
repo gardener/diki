@@ -31,15 +31,12 @@ import (
 var _ rule.Rule = &Rule242451{}
 
 type Rule242451 struct {
-	InstanceID         string
-	Client             client.Client
-	Namespace          string
-	PodContext         pod.PodContext
-	ETCDMainSelector   labels.Selector
-	ETCDEventsSelector labels.Selector
-	DeploymentNames    []string
-	Options            *option.FileOwnerOptions
-	Logger             provider.Logger
+	InstanceID string
+	Client     client.Client
+	Namespace  string
+	PodContext pod.PodContext
+	Options    *option.FileOwnerOptions
+	Logger     provider.Logger
 }
 
 func (r *Rule242451) ID() string {
@@ -54,9 +51,9 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
 		checkResults       []rule.CheckResult
 		options            option.FileOwnerOptions
-		etcdMainSelector   = labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
-		etcdEventsSelector = labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
-		deploymentNames    = []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
+		etcdMainSelector   = labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-main"})
+		etcdEventsSelector = labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-events"})
+		deploymentNames    = []string{"virtual-garden-kube-apiserver", "virtual-garden-kube-controller-manager"}
 	)
 
 	if r.Options != nil {
@@ -67,18 +64,6 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 	if len(options.ExpectedFileOwner.Groups) == 0 {
 		options.ExpectedFileOwner.Groups = []string{"0"}
-	}
-
-	if r.ETCDMainSelector != nil {
-		etcdMainSelector = r.ETCDMainSelector
-	}
-
-	if r.ETCDEventsSelector != nil {
-		etcdEventsSelector = r.ETCDEventsSelector
-	}
-
-	if r.DeploymentNames != nil {
-		deploymentNames = r.DeploymentNames
 	}
 
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
