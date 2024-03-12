@@ -147,12 +147,12 @@ var _ = Describe("diff", func() {
 						OldMetadata: map[string]string{
 							"id":   "foo",
 							"bar":  "foo",
-							"time": "2000-01-01T00:00:00+02:00",
+							"time": reportTime.Format(time.RFC3339),
 						},
 						NewMetadata: map[string]string{
 							"id":   "bar",
 							"foo":  "bar",
-							"time": "2000-01-01T00:00:00+02:00",
+							"time": reportTime.Format(time.RFC3339),
 						},
 
 						Rulesets: []report.RulesetDiff{
@@ -222,12 +222,12 @@ var _ = Describe("diff", func() {
 						OldMetadata: map[string]string{
 							"id":   "foo",
 							"bar":  "foo",
-							"time": "2000-01-01T00:00:00+02:00",
+							"time": reportTime.Format(time.RFC3339),
 						},
 						NewMetadata: map[string]string{
 							"id":   "bar",
 							"foo":  "bar",
-							"time": "2000-01-01T00:00:00+02:00",
+							"time": reportTime.Format(time.RFC3339),
 						},
 						Rulesets: []report.RulesetDiff{
 							{
@@ -342,12 +342,12 @@ var _ = Describe("diff", func() {
 						OldMetadata: map[string]string{
 							"id":   "foo",
 							"bar":  "foo",
-							"time": "2000-01-01T00:00:00+02:00",
+							"time": reportTime.Format(time.RFC3339),
 						},
 						NewMetadata: map[string]string{
 							"id":   "bar",
 							"foo":  "bar",
-							"time": "2000-01-01T00:00:00+02:00",
+							"time": reportTime.Format(time.RFC3339),
 						},
 						Rulesets: []report.RulesetDiff{
 							{
@@ -394,11 +394,11 @@ var _ = Describe("diff", func() {
 						Name: "New Provider",
 						OldMetadata: map[string]string{
 							"key":  "value1",
-							"time": "2000-01-01T00:00:00+02:00",
+							"time": reportTime.Format(time.RFC3339),
 						},
 						NewMetadata: map[string]string{
 							"key":  "value2",
-							"time": "2000-01-01T00:00:00+02:00",
+							"time": reportTime.Format(time.RFC3339),
 						},
 						Rulesets: []report.RulesetDiff{
 							{
