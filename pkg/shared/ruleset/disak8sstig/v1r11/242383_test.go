@@ -32,7 +32,8 @@ var _ = Describe("#242383", func() {
 		fakeClient = fakeclient.NewClientBuilder().Build()
 		plainPod = &corev1.Pod{
 			TypeMeta: metav1.TypeMeta{
-				Kind: "Pod",
+				APIVersion: "v1",
+				Kind:       "Pod",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
@@ -42,20 +43,40 @@ var _ = Describe("#242383", func() {
 		options = &v1r11.Options242383{
 			AcceptedResources: []v1r11.AcceptedResources242383{
 				{
-					MatchLabels: map[string]string{},
+					SelectResource: v1r11.SelectResource{
+						APIVersion:  "v1",
+						Kind:        "Pod",
+						MatchLabels: map[string]string{},
+					},
 				},
 			},
 		}
 	})
 
 	It("should return passed checkResult when no user resources are present in system namespaces", func() {
+		kubernetesService := &corev1.Service{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: "v1",
+				Kind:       "Service",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "kubernetes",
+				Namespace: "default",
+				Labels: map[string]string{
+					"component": "apiserver",
+					"provider":  "kubernetes",
+				},
+			},
+		}
+		Expect(fakeClient.Create(ctx, kubernetesService)).To(Succeed())
+
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
 		Expect(fakeClient.Create(ctx, pod1)).To(Succeed())
 
 		pod2 := plainPod.DeepCopy()
 		pod2.Name = "bar"
-		pod2.Namespace = "kube-system"
+		pod2.Namespace = "default"
 		pod2.Labels["label"] = "value"
 		Expect(fakeClient.Create(ctx, pod2)).To(Succeed())
 
@@ -71,7 +92,7 @@ var _ = Describe("#242383", func() {
 		pod4.Labels["compliance.gardener.cloud/role"] = "diki-privileged-pod"
 		Expect(fakeClient.Create(ctx, pod4)).To(Succeed())
 
-		options.AcceptedResources[0].MatchLabels["label"] = "value"
+		options.AcceptedResources[0].SelectResource.MatchLabels["label"] = "value"
 		options.AcceptedResources[0].Status = "Passed"
 		r := &v1r11.Rule242383{
 			Client:  fakeClient,
@@ -82,7 +103,8 @@ var _ = Describe("#242383", func() {
 		Expect(err).To(BeNil())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("System resource in system namespaces.", rule.NewTarget("name", "bar", "namespace", "kube-system", "kind", "Pod")),
+			rule.PassedCheckResult("System resource in system namespaces.", rule.NewTarget("name", "kubernetes", "namespace", "default", "kind", "Service")),
+			rule.PassedCheckResult("System resource in system namespaces.", rule.NewTarget("name", "bar", "namespace", "default", "kind", "Pod")),
 			rule.PassedCheckResult("System resource in system namespaces.", rule.NewTarget("name", "bar", "namespace", "kube-public", "kind", "Pod")),
 		}
 
@@ -92,7 +114,7 @@ var _ = Describe("#242383", func() {
 	It("should return failed checkResult when user resources are present in system namespaces", func() {
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "foo"
-		pod1.Namespace = "kube-system"
+		pod1.Namespace = "default"
 		Expect(fakeClient.Create(ctx, pod1)).To(Succeed())
 
 		pod2 := plainPod.DeepCopy()
@@ -123,7 +145,7 @@ var _ = Describe("#242383", func() {
 	It("should return correct checkResult when different resources are present", func() {
 		pod := plainPod.DeepCopy()
 		pod.Name = "foo"
-		pod.Namespace = "kube-system"
+		pod.Namespace = "default"
 		Expect(fakeClient.Create(ctx, pod)).To(Succeed())
 
 		deployment := &appsv1.Deployment{
@@ -132,7 +154,7 @@ var _ = Describe("#242383", func() {
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "deployment",
-				Namespace: "kube-system",
+				Namespace: "default",
 			},
 		}
 		Expect(fakeClient.Create(ctx, deployment)).To(Succeed())
@@ -177,13 +199,13 @@ var _ = Describe("#242383", func() {
 	It("should return correct checkResult when different statuses are used", func() {
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
-		pod1.Namespace = "kube-system"
+		pod1.Namespace = "default"
 		pod1.Labels["foo-bar"] = "bar"
 		Expect(fakeClient.Create(ctx, pod1)).To(Succeed())
 
 		pod2 := plainPod.DeepCopy()
 		pod2.Name = "bar"
-		pod2.Namespace = "kube-system"
+		pod2.Namespace = "default"
 		pod2.Labels["foo"] = "bar"
 		pod2.Labels["bar"] = "foo"
 		Expect(fakeClient.Create(ctx, pod2)).To(Succeed())
@@ -200,19 +222,23 @@ var _ = Describe("#242383", func() {
 		pod4.Labels["compliance.gardener.cloud/role"] = "diki-privileged-pod"
 		Expect(fakeClient.Create(ctx, pod4)).To(Succeed())
 
-		options.AcceptedResources[0].MatchLabels["foo"] = "bar"
-		options.AcceptedResources[0].MatchLabels["bar"] = "foo"
+		options.AcceptedResources[0].SelectResource.MatchLabels["foo"] = "bar"
+		options.AcceptedResources[0].SelectResource.MatchLabels["bar"] = "foo"
 		options.AcceptedResources[0].Status = "Accepted"
 		options.AcceptedResources[0].Justification = "Accept pod."
-		options.AcceptedResources[0].NamespaceNames = []string{"kube-system"}
+		options.AcceptedResources[0].SelectResource.NamespaceNames = []string{"default"}
 		options.AcceptedResources = append(options.AcceptedResources, v1r11.AcceptedResources242383{
-			MatchLabels: map[string]string{
-				"foo": "bar",
+			SelectResource: v1r11.SelectResource{
+				MatchLabels: map[string]string{
+					"foo": "bar",
+				},
 			},
 		})
 		options.AcceptedResources = append(options.AcceptedResources, v1r11.AcceptedResources242383{
-			MatchLabels: map[string]string{
-				"foo-bar": "bar",
+			SelectResource: v1r11.SelectResource{
+				MatchLabels: map[string]string{
+					"foo-bar": "bar",
+				},
 			},
 			Status: "fake",
 		})
@@ -225,8 +251,8 @@ var _ = Describe("#242383", func() {
 		Expect(err).To(BeNil())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.WarningCheckResult("unrecognized status: fake", rule.NewTarget("name", "pod1", "namespace", "kube-system", "kind", "Pod")),
-			rule.AcceptedCheckResult("Accept pod.", rule.NewTarget("name", "bar", "namespace", "kube-system", "kind", "Pod")),
+			rule.WarningCheckResult("unrecognized status: fake", rule.NewTarget("name", "pod1", "namespace", "default", "kind", "Pod")),
+			rule.AcceptedCheckResult("Accept pod.", rule.NewTarget("name", "bar", "namespace", "default", "kind", "Pod")),
 			rule.AcceptedCheckResult("Accepted user resource in system namespaces.", rule.NewTarget("name", "bar", "namespace", "kube-public", "kind", "Pod")),
 		}
 

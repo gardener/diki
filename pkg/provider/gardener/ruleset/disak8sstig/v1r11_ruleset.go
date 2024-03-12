@@ -145,8 +145,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Options: &sharedv1r11.Options242383{
 				AcceptedResources: []sharedv1r11.AcceptedResources242383{
 					{
-						MatchLabels: map[string]string{
-							resourcesv1alpha1.ManagedBy: "gardener",
+						SelectResource: sharedv1r11.SelectResource{
+							MatchLabels: map[string]string{
+								resourcesv1alpha1.ManagedBy: "gardener",
+							},
 						},
 						Justification: "Gardener managed resources are not user resources",
 						Status:        "Passed",
