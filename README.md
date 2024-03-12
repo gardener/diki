@@ -72,6 +72,15 @@ diki report output.json > report.hmtl
 diki report --distinct-by=gardener=id output1.json output2.json > report.hmtl
 ```
 
+#### Diff
+
+Diki can generate a json containing the difference between 2 output files of `diki run` executions. This command helps distinguish improvements between `diki run` exections.
+
+- Generate json difference between 2 reports
+```bash
+diki diff --old-report=output1.json --new-report=output2.json > diff.json
+```
+
 #### Unit Tests
 
 You can manually run the tests via `make test`.
