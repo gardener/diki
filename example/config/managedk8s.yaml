@@ -80,7 +80,7 @@ providers:                   # contains information about known providers
     #       status: Passed
     # - ruleID: "242442"
     #   args:
-    #     podMatchLabels:
+    #     kubeProxyMatchLabels:
     #       foo: bar
     # - ruleID: "242447"
     #   args:

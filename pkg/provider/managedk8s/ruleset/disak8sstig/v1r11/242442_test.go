@@ -142,7 +142,7 @@ var _ = Describe("#242442", func() {
 		r := &v1r11.Rule242442{
 			Client: client,
 			Options: &v1r11.Options242442{
-				PodMatchLabels: map[string]string{
+				KubeProxyMatchLabels: map[string]string{
 					"foo": "bar",
 				},
 			},
