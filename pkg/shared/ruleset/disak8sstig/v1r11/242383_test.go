@@ -44,9 +44,10 @@ var _ = Describe("#242383", func() {
 			AcceptedResources: []v1r11.AcceptedResources242383{
 				{
 					SelectResource: v1r11.SelectResource{
-						APIVersion:  "v1",
-						Kind:        "Pod",
-						MatchLabels: map[string]string{},
+						APIVersion:     "v1",
+						Kind:           "Pod",
+						MatchLabels:    map[string]string{},
+						NamespaceNames: []string{"default", "kube-public", "kube-node-lease"},
 					},
 				},
 			},
@@ -234,6 +235,7 @@ var _ = Describe("#242383", func() {
 				MatchLabels: map[string]string{
 					"foo": "bar",
 				},
+				NamespaceNames: []string{"default", "kube-public", "kube-node-lease"},
 			},
 		})
 		options.AcceptedResources = append(options.AcceptedResources, v1r11.AcceptedResources242383{
@@ -243,6 +245,7 @@ var _ = Describe("#242383", func() {
 				MatchLabels: map[string]string{
 					"foo-bar": "bar",
 				},
+				NamespaceNames: []string{"default", "kube-public", "kube-node-lease"},
 			},
 			Status: "fake",
 		})

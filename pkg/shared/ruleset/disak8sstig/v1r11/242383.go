@@ -32,9 +32,9 @@ type Options242383 struct {
 }
 
 type AcceptedResources242383 struct {
-	SelectResource SelectResource `json:"selectResource" yaml:"selectResource"`
-	Justification  string         `json:"justification" yaml:"justification"`
-	Status         string         `json:"status" yaml:"status"`
+	SelectResource
+	Justification string `json:"justification" yaml:"justification"`
+	Status        string `json:"status" yaml:"status"`
 }
 
 type SelectResource struct {
@@ -87,14 +87,14 @@ func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
 			return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", namespace, "kind", "allList"))), nil
 		}
 
-		for _, partialMetadata := range partialMetadata {
-			target := rule.NewTarget("name", partialMetadata.Name, "namespace", partialMetadata.Namespace, "kind", partialMetadata.Kind)
+		for _, p := range partialMetadata {
+			target := rule.NewTarget("name", p.Name, "namespace", p.Namespace, "kind", p.Kind)
 
 			acceptedIdx := slices.IndexFunc(acceptedResources, func(acceptedResource AcceptedResources242383) bool {
-				return (partialMetadata.APIVersion == acceptedResource.SelectResource.APIVersion) &&
-					(acceptedResource.SelectResource.Kind == "*" || partialMetadata.Kind == acceptedResource.SelectResource.Kind) &&
-					(len(acceptedResource.SelectResource.NamespaceNames) == 0 || slices.Contains(acceptedResource.SelectResource.NamespaceNames, namespace)) &&
-					utils.MatchLabels(partialMetadata.Labels, acceptedResource.SelectResource.MatchLabels)
+				return (p.APIVersion == acceptedResource.SelectResource.APIVersion) &&
+					(acceptedResource.SelectResource.Kind == "*" || p.Kind == acceptedResource.SelectResource.Kind) &&
+					slices.Contains(acceptedResource.SelectResource.NamespaceNames, namespace) &&
+					utils.MatchLabels(p.Labels, acceptedResource.SelectResource.MatchLabels)
 			})
 
 			if acceptedIdx < 0 {
