@@ -72,7 +72,7 @@ func (r *Rule242417) Run(ctx context.Context) (rule.RuleResult, error) {
 			target := rule.NewTarget("name", podPartialMetadata.Name, "namespace", podPartialMetadata.Namespace, "kind", "pod")
 
 			acceptedPodIdx := slices.IndexFunc(acceptedPods, func(acceptedPod AcceptedPods242417) bool {
-				return (len(acceptedPod.NamespaceNames) == 0 || slices.Contains(acceptedPod.NamespaceNames, namespace)) &&
+				return slices.Contains(acceptedPod.NamespaceNames, namespace) &&
 					utils.MatchLabels(podPartialMetadata.Labels, acceptedPod.PodMatchLabels)
 			})
 

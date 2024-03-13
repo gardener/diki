@@ -38,6 +38,7 @@ var _ = Describe("#242417", func() {
 			AcceptedPods: []v1r11.AcceptedPods242417{
 				{
 					PodMatchLabels: map[string]string{},
+					NamespaceNames: []string{"kube-system", "kube-public", "kube-node-lease"},
 				},
 			},
 		}
@@ -150,12 +151,14 @@ var _ = Describe("#242417", func() {
 			PodMatchLabels: map[string]string{
 				"foo": "bar",
 			},
+			NamespaceNames: []string{"kube-system", "kube-public", "kube-node-lease"},
 		})
 		options.AcceptedPods = append(options.AcceptedPods, v1r11.AcceptedPods242417{
 			PodMatchLabels: map[string]string{
 				"foo-bar": "bar",
 			},
-			Status: "fake",
+			NamespaceNames: []string{"kube-system", "kube-public", "kube-node-lease"},
+			Status:         "fake",
 		})
 		r := &v1r11.Rule242417{
 			Client:  fakeClient,

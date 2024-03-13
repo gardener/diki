@@ -86,7 +86,6 @@ providers:                   # contains information about known providers
     #     acceptedPods:
     #     - podMatchLabels:
     #         foo: bar
-    #       # Defaults to ["kube-system", "kube-public", "kube-node-lease"]
     #       namespaceNames:
     #       - kube-system
     #       - kube-public
