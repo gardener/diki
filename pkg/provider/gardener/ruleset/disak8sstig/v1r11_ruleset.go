@@ -142,19 +142,6 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedv1r11.Rule242382{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242383{
 			Client: shootClient,
-			Options: &sharedv1r11.Options242383{
-				AcceptedResources: []sharedv1r11.AcceptedResources242383{
-					{
-						SelectResource: sharedv1r11.SelectResource{
-							MatchLabels: map[string]string{
-								resourcesv1alpha1.ManagedBy: "gardener",
-							},
-						},
-						Justification: "Gardener managed resources are not user resources",
-						Status:        "Passed",
-					},
-				},
-			},
 		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242384,

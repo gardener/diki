@@ -14,10 +14,9 @@ providers:                   # contains information about known providers
     #   args:
     #     acceptedResources:
     #    - selectResource:
-    #        # if left empty selects all kinds
-    #        kind: "Pod"
-    #        # if left empty selects all apiVersions
     #        apiVersion: "v1"
+    #        # if set to "*" match all kinds
+    #        kind: "Pod"
     #        matchLabels:
     #          foo: bar
     #        # Defaults to ["default", "kube-public", "kube-node-lease"]

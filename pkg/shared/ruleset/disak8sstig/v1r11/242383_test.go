@@ -229,6 +229,8 @@ var _ = Describe("#242383", func() {
 		options.AcceptedResources[0].SelectResource.NamespaceNames = []string{"default"}
 		options.AcceptedResources = append(options.AcceptedResources, v1r11.AcceptedResources242383{
 			SelectResource: v1r11.SelectResource{
+				APIVersion: "v1",
+				Kind:       "*",
 				MatchLabels: map[string]string{
 					"foo": "bar",
 				},
@@ -236,6 +238,8 @@ var _ = Describe("#242383", func() {
 		})
 		options.AcceptedResources = append(options.AcceptedResources, v1r11.AcceptedResources242383{
 			SelectResource: v1r11.SelectResource{
+				APIVersion: "v1",
+				Kind:       "*",
 				MatchLabels: map[string]string{
 					"foo-bar": "bar",
 				},

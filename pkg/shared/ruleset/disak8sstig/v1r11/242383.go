@@ -57,6 +57,7 @@ func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
 	systemNamespaces := []string{"default", "kube-public", "kube-node-lease"}
 	acceptedResources := []AcceptedResources242383{
 		{
+			// The 'kubernetes' Service is a required system resource exposing the kubernetes API server
 			SelectResource: SelectResource{
 				APIVersion: "v1",
 				Kind:       "Service",
@@ -90,8 +91,8 @@ func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
 			target := rule.NewTarget("name", partialMetadata.Name, "namespace", partialMetadata.Namespace, "kind", partialMetadata.Kind)
 
 			acceptedIdx := slices.IndexFunc(acceptedResources, func(acceptedResource AcceptedResources242383) bool {
-				return (len(acceptedResource.SelectResource.APIVersion) == 0 || partialMetadata.APIVersion == acceptedResource.SelectResource.APIVersion) &&
-					(len(acceptedResource.SelectResource.Kind) == 0 || partialMetadata.Kind == acceptedResource.SelectResource.Kind) &&
+				return (partialMetadata.APIVersion == acceptedResource.SelectResource.APIVersion) &&
+					(acceptedResource.SelectResource.Kind == "*" || partialMetadata.Kind == acceptedResource.SelectResource.Kind) &&
 					(len(acceptedResource.SelectResource.NamespaceNames) == 0 || slices.Contains(acceptedResource.SelectResource.NamespaceNames, namespace)) &&
 					utils.MatchLabels(partialMetadata.Labels, acceptedResource.SelectResource.MatchLabels)
 			})
