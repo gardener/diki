@@ -481,16 +481,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noKubeletsMsg,
 			rule.Skipped,
 		),
-		&sharedv1r11.Rule242451{
-			Logger:             r.Logger().With("rule", sharedv1r11.ID242451),
-			InstanceID:         r.instanceID,
-			Client:             runtimeClient,
-			Namespace:          ns,
-			PodContext:         runtimePodContext,
-			ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"instance": etcdMain}),
-			ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"instance": etcdEvents}),
-			DeploymentNames:    []string{apiserverDeploymentName, kcmDeploymentName},
-			Options:            opts242451,
+		&v1r11.Rule242451{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242451),
+			InstanceID: r.instanceID,
+			Client:     runtimeClient,
+			Namespace:  ns,
+			PodContext: runtimePodContext,
+			Options:    opts242451,
 		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242452,

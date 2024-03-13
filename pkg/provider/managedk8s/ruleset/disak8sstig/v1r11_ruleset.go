@@ -100,6 +100,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
+	opts242451, err := getV1R11OptionOrNil[v1r11.Options242451](ruleOptions[sharedv1r11.ID242451].Args)
+	if err != nil {
+		return err
+	}
 	opts242452, err := getV1R11OptionOrNil[sharedv1r11.Options242452](ruleOptions[sharedv1r11.ID242452].Args)
 	if err != nil {
 		return err
@@ -520,12 +524,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			PodContext: podContext,
 			Options:    opts242450,
 		},
-		rule.NewSkipRule(
-			sharedv1r11.ID242451,
-			"The Kubernetes component PKI must be owned by root (MEDIUM 242451)",
-			"",
-			rule.NotImplemented,
-		),
+		&v1r11.Rule242451{
+			Logger:     r.Logger().With("rule", sharedv1r11.ID242451),
+			InstanceID: r.instanceID,
+			Client:     client,
+			PodContext: podContext,
+			Options:    opts242451,
+		},
 		&sharedv1r11.Rule242452{
 			Logger:     r.Logger().With("rule", sharedv1r11.ID242452),
 			InstanceID: r.instanceID,

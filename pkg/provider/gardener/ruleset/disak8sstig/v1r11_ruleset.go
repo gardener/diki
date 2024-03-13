@@ -421,13 +421,15 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 				FileOwnerOptions: gardenerFileOwnerOptions,
 			},
 		},
-		&sharedv1r11.Rule242451{
-			Logger:     r.Logger().With("rule", sharedv1r11.ID242451),
-			InstanceID: r.instanceID,
-			Client:     seedClient,
-			PodContext: seedPodContext,
-			Namespace:  r.shootNamespace,
-			Options:    opts242451,
+		&v1r11.Rule242451{
+			Logger:                 r.Logger().With("rule", sharedv1r11.ID242451),
+			InstanceID:             r.instanceID,
+			ControlPlaneClient:     seedClient,
+			ClusterClient:          shootClient,
+			ControlPlanePodContext: seedPodContext,
+			ClusterPodContext:      shootPodContext,
+			ControlPlaneNamespace:  r.shootNamespace,
+			Options:                opts242451,
 		},
 		&sharedv1r11.Rule242452{
 			Logger:     r.Logger().With("rule", sharedv1r11.ID242452),
