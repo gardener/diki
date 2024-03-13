@@ -78,6 +78,10 @@ providers:                   # contains information about known providers
     #       # relates to the result status in the report
     #       # can be set to Passed or Accepted. Defaults to Accepted
     #       status: Passed
+    # - ruleID: "242442"
+    #   args:
+    #     podMatchLabels:
+    #       foo: bar
     # - ruleID: "242447"
     #   args:
     #     podMatchLabels:

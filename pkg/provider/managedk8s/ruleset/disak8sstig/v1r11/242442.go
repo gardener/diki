@@ -21,7 +21,12 @@ import (
 var _ rule.Rule = &Rule242442{}
 
 type Rule242442 struct {
-	Client client.Client
+	Client  client.Client
+	Options *Options242442
+}
+
+type Options242442 struct {
+	PodMatchLabels map[string]string `json:"podMatchLabels" yaml:"podMatchLabels"`
 }
 
 func (r *Rule242442) ID() string {
@@ -33,12 +38,33 @@ func (r *Rule242442) Name() string {
 }
 
 func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
-	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
+	var (
+		checkResults      []rule.CheckResult
+		nodeKubeProxyPods = map[string][]corev1.Pod{}
+		kubeProxySelector = labels.SelectorFromSet(labels.Set{"role": "proxy"})
+	)
+
+	if r.Options != nil && len(r.Options.PodMatchLabels) > 0 {
+		kubeProxySelector = labels.SelectorFromSet(labels.Set(r.Options.PodMatchLabels))
+	}
+
+	kubeProxyPods, err := kubeutils.GetPods(ctx, r.Client, "", kubeProxySelector, 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
 	}
 
-	checkResults := r.checkImages(pods)
+	if len(kubeProxyPods) == 0 {
+		return rule.SingleCheckResult(r, rule.FailedCheckResult("Kube-proxy pods not found!", rule.NewTarget("selector", kubeProxySelector.String()))), nil
+	}
+
+	for _, pod := range kubeProxyPods {
+		nodeKubeProxyPods[pod.Spec.NodeName] = append(nodeKubeProxyPods[pod.Spec.NodeName], pod)
+	}
+
+	for node, pods := range nodeKubeProxyPods {
+		target := rule.NewTarget("kind", "node", "name", node)
+		checkResults = append(checkResults, r.checkImages(pods, target)...)
+	}
 
 	if len(checkResults) == 0 {
 		return rule.SingleCheckResult(r, rule.PassedCheckResult("All found images use current versions.", rule.Target{})), nil
@@ -51,10 +77,12 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (*Rule242442) checkImages(pods []corev1.Pod) []rule.CheckResult {
-	images := map[string]string{}
-	reportedImages := map[string]struct{}{}
-	checkResults := []rule.CheckResult{}
+func (*Rule242442) checkImages(pods []corev1.Pod, target rule.Target) []rule.CheckResult {
+	var (
+		images         = map[string]string{}
+		reportedImages = map[string]struct{}{}
+		checkResults   = []rule.CheckResult{}
+	)
 	for _, pod := range pods {
 		for _, container := range pod.Spec.Containers {
 			containerStatusIdx := slices.IndexFunc(pod.Status.ContainerStatuses, func(containerStatus corev1.ContainerStatus) bool {
@@ -66,13 +94,14 @@ func (*Rule242442) checkImages(pods []corev1.Pod) []rule.CheckResult {
 				continue
 			}
 
-			imageRef := pod.Status.ContainerStatuses[containerStatusIdx].ImageID
-			imageBase := strings.Split(strings.Split(imageRef, ":")[0], "@")[0]
+			var (
+				imageRef  = pod.Status.ContainerStatuses[containerStatusIdx].ImageID
+				imageBase = strings.Split(strings.Split(imageRef, ":")[0], "@")[0]
+			)
 			if _, ok := images[imageBase]; ok {
 				if images[imageBase] != imageRef {
 					if _, reported := reportedImages[imageBase]; !reported {
-						target := rule.NewTarget("image", imageBase)
-						checkResults = append(checkResults, rule.FailedCheckResult("Image is used with more than one versions.", target))
+						checkResults = append(checkResults, rule.FailedCheckResult("Image is used with more than one versions.", target.With("image", imageBase)))
 						reportedImages[imageBase] = struct{}{}
 					}
 				}
