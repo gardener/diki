@@ -38,7 +38,7 @@ type Rule242396 struct {
 }
 
 type Options242396 struct {
-	GroupByLabels []string `json:"groupByLabels" yaml:"groupByLabels"`
+	NodeGroupByLabels []string `json:"nodeGroupByLabels" yaml:"nodeGroupByLabels"`
 }
 
 func (r *Rule242396) ID() string {
@@ -55,8 +55,8 @@ func (r *Rule242396) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults []rule.CheckResult
 	)
 
-	if r.Options != nil && r.Options.GroupByLabels != nil {
-		nodeLabels = slices.Clone(r.Options.GroupByLabels)
+	if r.Options != nil && r.Options.NodeGroupByLabels != nil {
+		nodeLabels = slices.Clone(r.Options.NodeGroupByLabels)
 	}
 
 	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)

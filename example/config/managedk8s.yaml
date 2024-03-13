@@ -29,15 +29,15 @@ providers:                   # contains information about known providers
     #       status: Passed
     # - ruleID: "242393"
     #   args:
-    #     groupByLabels:
+    #     nodeGroupByLabels:
     #     - foo
     # - ruleID: "242394"
     #   args:
-    #     groupByLabels:
+    #     nodeGroupByLabels:
     #     - foo
     # - ruleID: "242396"
     #   args:
-    #     groupByLabels:
+    #     nodeGroupByLabels:
     #     - foo
     # - ruleID: "242400"
     #   args:
@@ -45,21 +45,21 @@ providers:                   # contains information about known providers
     #       foo: bar
     # - ruleID: "242404"
     #   args:
-    #     groupByLabels:
+    #     nodeGroupByLabels:
     #     - foo
     # - ruleID: "242406"
     #   args:
     #     # Node labels used to group nodes by specified
     #     # label value combinations. Only one node per
     #     # combination will be tested
-    #     groupByLabels:
+    #     nodeGroupByLabels:
     #     - foo
     #     expectedFileOwner:
     #       users: ["0"]
     #       groups: ["0"]
     # - ruleID: "242407"
     #   args:
-    #     groupByLabels:
+    #     nodeGroupByLabels:
     #     - foo
     # - ruleID: "242414"
     #   args:
@@ -107,11 +107,11 @@ providers:                   # contains information about known providers
     #       groups: ["0"]
     # - ruleID: "242449"
     #   args:
-    #     groupByLabels:
+    #     nodeGroupByLabels:
     #     - foo
     # - ruleID: "242450"
     #   args:
-    #     groupByLabels:
+    #     nodeGroupByLabels:
     #     - foo
     #     expectedFileOwner:
     #       users: ["0"]
@@ -120,18 +120,18 @@ providers:                   # contains information about known providers
     #   args:
     #     podMatchLabels:
     #       foo: bar
-    #     groupByLabels:
+    #     nodeGroupByLabels:
     #     - foo
     #     expectedFileOwner:
     #       users: ["0"]
     #       groups: ["0"]
     # - ruleID: "242452"
     #   args:
-    #     groupByLabels:
+    #     nodeGroupByLabels:
     #     - foo
     # - ruleID: "242453"
     #   args:
-    #     groupByLabels:
+    #     nodeGroupByLabels:
     #     - foo
     #     expectedFileOwner:
     #       users: ["0"]
@@ -140,13 +140,13 @@ providers:                   # contains information about known providers
     #   args:
     #     podMatchLabels:
     #       foo: bar
-    #     groupByLabels:
+    #     nodeGroupByLabels:
     #     - foo
     # - ruleID: "242467"
     #   args:
     #     podMatchLabels:
     #       foo: bar
-    #     groupByLabels:
+    #     nodeGroupByLabels:
     #     - foo
 output:
   path: /tmp/test-output.json  # optional, path to summary json report

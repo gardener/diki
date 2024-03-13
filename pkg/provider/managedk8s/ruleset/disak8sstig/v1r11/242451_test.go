@@ -253,7 +253,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			}),
 		Entry("should check only nodes wtih labels",
 			v1r11.Options242451{
-				GroupByLabels: []string{"foo"},
+				NodeGroupByLabels: []string{"foo"},
 			},
 			[][]string{{mounts, compliantStats, compliantDirStats, emptyMounts}},
 			[][]error{{nil, nil, nil, nil}},

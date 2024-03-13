@@ -102,7 +102,7 @@ var _ = Describe("#242394", func() {
 			}),
 		Entry("should return correct checkResults only for selected nodes",
 			v1r11.Options242394{
-				GroupByLabels: []string{"foo"},
+				NodeGroupByLabels: []string{"foo"},
 			},
 			[][]string{{"", "foo"}, {"", ""}},
 			[][]error{{nil, nil}, {nil, errors.New(" foo NO such file or directory  ")}},

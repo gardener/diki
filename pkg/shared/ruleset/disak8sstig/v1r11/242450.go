@@ -35,7 +35,7 @@ type Rule242450 struct {
 }
 
 type Options242450 struct {
-	GroupByLabels []string `json:"groupByLabels" yaml:"groupByLabels"`
+	NodeGroupByLabels []string `json:"nodeGroupByLabels" yaml:"nodeGroupByLabels"`
 	*option.FileOwnerOptions
 }
 
@@ -56,8 +56,8 @@ func (r *Rule242450) Run(ctx context.Context) (rule.RuleResult, error) {
 		if r.Options.FileOwnerOptions != nil {
 			options = *r.Options.FileOwnerOptions
 		}
-		if r.Options.GroupByLabels != nil {
-			nodeLabels = slices.Clone(r.Options.GroupByLabels)
+		if r.Options.NodeGroupByLabels != nil {
+			nodeLabels = slices.Clone(r.Options.NodeGroupByLabels)
 		}
 	}
 	if len(options.ExpectedFileOwner.Users) == 0 {
