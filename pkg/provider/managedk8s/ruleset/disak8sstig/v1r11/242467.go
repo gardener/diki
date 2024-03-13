@@ -38,8 +38,8 @@ type Rule242467 struct {
 }
 
 type Options242467 struct {
-	PodMatchLabels    map[string]string `json:"podMatchLabels" yaml:"podMatchLabels"`
-	NodeGroupByLabels []string          `json:"nodeGroupByLabels" yaml:"nodeGroupByLabels"`
+	KubeProxyMatchLabels map[string]string `json:"kubeProxyMatchLabels" yaml:"kubeProxyMatchLabels"`
+	NodeGroupByLabels    []string          `json:"nodeGroupByLabels" yaml:"nodeGroupByLabels"`
 }
 
 func (r *Rule242467) ID() string {
@@ -60,8 +60,8 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	)
 
 	if r.Options != nil {
-		if len(r.Options.PodMatchLabels) > 0 {
-			kubeProxySelector = labels.SelectorFromSet(labels.Set(r.Options.PodMatchLabels))
+		if len(r.Options.KubeProxyMatchLabels) > 0 {
+			kubeProxySelector = labels.SelectorFromSet(labels.Set(r.Options.KubeProxyMatchLabels))
 		}
 		if r.Options.NodeGroupByLabels != nil {
 			nodeLabels = slices.Clone(r.Options.NodeGroupByLabels)

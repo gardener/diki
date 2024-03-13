@@ -41,7 +41,7 @@ providers:                   # contains information about known providers
     #     - foo
     # - ruleID: "242400"
     #   args:
-    #     podMatchLabels:
+    #     kubeProxyMatchLabels:
     #       foo: bar
     # - ruleID: "242404"
     #   args:
@@ -96,11 +96,11 @@ providers:                   # contains information about known providers
     #       status: Passed
     # - ruleID: "242447"
     #   args:
-    #     podMatchLabels:
+    #     kubeProxyMatchLabels:
     #       foo: bar
     # - ruleID: "242448"
     #   args:
-    #     podMatchLabels:
+    #     kubeProxyMatchLabels:
     #       foo: bar
     #     expectedFileOwner:
     #       users: ["0"]
@@ -118,7 +118,7 @@ providers:                   # contains information about known providers
     #       groups: ["0"]
     # - ruleID: "242451"
     #   args:
-    #     podMatchLabels:
+    #     kubeProxyMatchLabels:
     #       foo: bar
     #     nodeGroupByLabels:
     #     - foo
@@ -138,13 +138,13 @@ providers:                   # contains information about known providers
     #       groups: ["0"]
     # - ruleID: "242466"
     #   args:
-    #     podMatchLabels:
+    #     kubeProxyMatchLabels:
     #       foo: bar
     #     nodeGroupByLabels:
     #     - foo
     # - ruleID: "242467"
     #   args:
-    #     podMatchLabels:
+    #     kubeProxyMatchLabels:
     #       foo: bar
     #     nodeGroupByLabels:
     #     - foo

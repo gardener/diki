@@ -39,8 +39,8 @@ type Rule242451 struct {
 }
 
 type Options242451 struct {
-	PodMatchLabels    map[string]string `json:"podMatchLabels" yaml:"podMatchLabels"`
-	NodeGroupByLabels []string          `json:"nodeGroupByLabels" yaml:"nodeGroupByLabels"`
+	KubeProxyMatchLabels map[string]string `json:"kubeProxyMatchLabels" yaml:"kubeProxyMatchLabels"`
+	NodeGroupByLabels    []string          `json:"nodeGroupByLabels" yaml:"nodeGroupByLabels"`
 	*option.FileOwnerOptions
 }
 
@@ -65,8 +65,8 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 		if r.Options.FileOwnerOptions != nil {
 			options = *r.Options.FileOwnerOptions
 		}
-		if len(r.Options.PodMatchLabels) > 0 {
-			kubeProxySelector = labels.SelectorFromSet(labels.Set(r.Options.PodMatchLabels))
+		if len(r.Options.KubeProxyMatchLabels) > 0 {
+			kubeProxySelector = labels.SelectorFromSet(labels.Set(r.Options.KubeProxyMatchLabels))
 		}
 		if r.Options.NodeGroupByLabels != nil {
 			nodeLabels = slices.Clone(r.Options.NodeGroupByLabels)

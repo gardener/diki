@@ -258,7 +258,7 @@ var _ = Describe("#242400", func() {
 		Expect(fakeClient.Create(ctx, pod3)).To(Succeed())
 
 		options := v1r11.Options242400{
-			PodMatchLabels: map[string]string{
+			KubeProxyMatchLabels: map[string]string{
 				"foo": "bar",
 			},
 		}
