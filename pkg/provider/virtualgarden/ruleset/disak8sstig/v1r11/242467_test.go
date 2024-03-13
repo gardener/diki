@@ -22,8 +22,9 @@ import (
 	fakestrgen "github.com/gardener/diki/pkg/internal/stringgen/fake"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
+	"github.com/gardener/diki/pkg/provider/virtualgarden/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
+	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
 var _ = Describe("#242467", func() {
@@ -53,7 +54,7 @@ var _ = Describe("#242467", func() {
   }
 ]`
 		emptyMounts       = `[]`
-		compliantStats    = "600\t0\t0\tregular file\t/destination/file1.key\n400\t0\t65532\tregular file\t/destination/bar/file2.pem"
+		compliantStats    = "640\t0\t0\tregular file\t/destination/file1.key\n400\t0\t65532\tregular file\t/destination/bar/file2.pem"
 		compliantStats2   = "600\t0\t0\tregular file\t/destination/file3.key\n600\t1000\t0\tregular file\t/destination/bar/file4.txt\n"
 		nonCompliantStats = "644\t0\t0\tregular file\t/destination/file1.key\n700\t0\t0\tregular file\t/destination/bar/file2.pem\n"
 	)
@@ -71,14 +72,13 @@ var _ = Describe("#242467", func() {
 		etcdEventsPod            *corev1.Pod
 		kubeAPIServerPod         *corev1.Pod
 		kubeControllerManagerPod *corev1.Pod
-		kubeSchedulerPod         *corev1.Pod
 		fooPod                   *corev1.Pod
 		dikiPod                  *corev1.Pod
 		ctx                      = context.TODO()
 	)
 
 	BeforeEach(func() {
-		v1r11.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
+		sharedv1r11.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
 		fakeClient = fakeclient.NewClientBuilder().Build()
 
 		Node = &corev1.Node{
@@ -110,16 +110,12 @@ var _ = Describe("#242467", func() {
 		}
 
 		kubeAPIServerDep := plainDeployment.DeepCopy()
-		kubeAPIServerDep.Name = "kube-apiserver"
+		kubeAPIServerDep.Name = "virtual-garden-kube-apiserver"
 		kubeAPIServerDep.UID = "11"
 
 		kubeControllerManagerDep := plainDeployment.DeepCopy()
-		kubeControllerManagerDep.Name = "kube-controller-manager"
+		kubeControllerManagerDep.Name = "virtual-garden-kube-controller-manager"
 		kubeControllerManagerDep.UID = "21"
-
-		kubeSchedulerDep := plainDeployment.DeepCopy()
-		kubeSchedulerDep.Name = "kube-scheduler"
-		kubeSchedulerDep.UID = "31"
 
 		plainReplicaSet = &appsv1.ReplicaSet{
 			ObjectMeta: metav1.ObjectMeta{
@@ -144,19 +140,14 @@ var _ = Describe("#242467", func() {
 		}
 
 		kubeAPIServerRS := plainReplicaSet.DeepCopy()
-		kubeAPIServerRS.Name = "kube-apiserver"
+		kubeAPIServerRS.Name = "virtual-garden-kube-apiserver"
 		kubeAPIServerRS.UID = "12"
 		kubeAPIServerRS.OwnerReferences[0].UID = "11"
 
 		kubeControllerManagerRS := plainReplicaSet.DeepCopy()
-		kubeControllerManagerRS.Name = "kube-controller-manager"
+		kubeControllerManagerRS.Name = "virtual-garden-kube-controller-manager"
 		kubeControllerManagerRS.UID = "22"
 		kubeControllerManagerRS.OwnerReferences[0].UID = "21"
-
-		kubeSchedulerRS := plainReplicaSet.DeepCopy()
-		kubeSchedulerRS.Name = "kube-scheduler"
-		kubeSchedulerRS.UID = "32"
-		kubeSchedulerRS.OwnerReferences[0].UID = "31"
 
 		plainPod = &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
@@ -211,35 +202,28 @@ var _ = Describe("#242467", func() {
 		etcdMainPod = plainPod.DeepCopy()
 		etcdMainPod.Name = "1-pod"
 		etcdMainPod.Labels["name"] = "etcd"
-		etcdMainPod.Labels["instance"] = "etcd-main"
+		etcdMainPod.Labels["instance"] = "virtual-garden-etcd-main"
 		etcdMainPod.OwnerReferences[0].UID = "1"
 
 		etcdEventsPod = plainPod.DeepCopy()
 		etcdEventsPod.Name = "etcd-events"
 		etcdEventsPod.Labels["name"] = "etcd"
-		etcdEventsPod.Labels["instance"] = "etcd-events"
+		etcdEventsPod.Labels["instance"] = "virtual-garden-etcd-events"
 		etcdEventsPod.OwnerReferences[0].UID = "2"
 
 		kubeAPIServerPod = plainPod.DeepCopy()
-		kubeAPIServerPod.Name = "kube-apiserver"
-		kubeAPIServerPod.Labels["name"] = "kube-apiserver"
+		kubeAPIServerPod.Name = "virtual-garden-kube-apiserver"
 		kubeAPIServerPod.OwnerReferences[0].UID = "12"
 
 		kubeControllerManagerPod = plainPod.DeepCopy()
-		kubeControllerManagerPod.Name = "kube-controller-manager"
-		kubeControllerManagerPod.Labels["name"] = "kube-controller-manager"
+		kubeControllerManagerPod.Name = "virtual-garden-kube-controller-manager"
 		kubeControllerManagerPod.OwnerReferences[0].UID = "22"
-
-		kubeSchedulerPod = plainPod.DeepCopy()
-		kubeSchedulerPod.Name = "kube-scheduler"
-		kubeSchedulerPod.Labels["name"] = "kube-scheduler"
-		kubeSchedulerPod.OwnerReferences[0].UID = "32"
 
 		fooPod = plainPod.DeepCopy()
 		fooPod.Name = "foo"
 
 		dikiPod = plainPod.DeepCopy()
-		dikiPod.Name = fmt.Sprintf("diki-%s-%s", v1r11.ID242467, "aaaaaaaaaa")
+		dikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedv1r11.ID242467, "aaaaaaaaaa")
 		dikiPod.Namespace = "kube-system"
 		dikiPod.Labels = map[string]string{}
 
@@ -247,59 +231,30 @@ var _ = Describe("#242467", func() {
 		Expect(fakeClient.Create(ctx, fooPod)).To(Succeed())
 		Expect(fakeClient.Create(ctx, kubeAPIServerDep)).To(Succeed())
 		Expect(fakeClient.Create(ctx, kubeControllerManagerDep)).To(Succeed())
-		Expect(fakeClient.Create(ctx, kubeSchedulerDep)).To(Succeed())
 		Expect(fakeClient.Create(ctx, kubeAPIServerRS)).To(Succeed())
 		Expect(fakeClient.Create(ctx, kubeControllerManagerRS)).To(Succeed())
-		Expect(fakeClient.Create(ctx, kubeSchedulerRS)).To(Succeed())
 	})
 
 	It("should fail when pods cannot be found", func() {
-		mainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
-		eventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
+		mainSelector := labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-main"})
+		eventsSelector := labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-events"})
 		fakePodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
 		r := &v1r11.Rule242467{
-			Logger:             testLogger,
-			InstanceID:         instanceID,
-			Client:             fakeClient,
-			Namespace:          Namespace,
-			PodContext:         fakePodContext,
-			ETCDMainSelector:   mainSelector,
-			ETCDEventsSelector: eventsSelector,
+			Logger:     testLogger,
+			InstanceID: instanceID,
+			Client:     fakeClient,
+			Namespace:  Namespace,
+			PodContext: fakePodContext,
 		}
 
 		ruleResult, err := r.Run(ctx)
 		target := rule.NewTarget("namespace", r.Namespace)
 		Expect(err).To(BeNil())
-		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
+		Expect(ruleResult.CheckResults).To(ConsistOf([]rule.CheckResult{
 			rule.FailedCheckResult("Pods not found!", target.With("selector", mainSelector.String())),
 			rule.FailedCheckResult("Pods not found!", target.With("selector", eventsSelector.String())),
-			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "kube-apiserver", "kind", "Deployment", "namespace", r.Namespace)),
-			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "kube-controller-manager", "kind", "Deployment", "namespace", r.Namespace)),
-			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "kube-scheduler", "kind", "Deployment", "namespace", r.Namespace)),
-		}))
-	})
-
-	It("should fail when pods cannot be found and deploymentNames is empty", func() {
-		mainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
-		eventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
-		fakePodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
-		r := &v1r11.Rule242467{
-			Logger:             testLogger,
-			InstanceID:         instanceID,
-			Client:             fakeClient,
-			Namespace:          Namespace,
-			PodContext:         fakePodContext,
-			ETCDMainSelector:   mainSelector,
-			ETCDEventsSelector: eventsSelector,
-			DeploymentNames:    []string{},
-		}
-
-		ruleResult, err := r.Run(ctx)
-		target := rule.NewTarget("namespace", r.Namespace)
-		Expect(err).To(BeNil())
-		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
-			rule.FailedCheckResult("Pods not found!", target.With("selector", mainSelector.String())),
-			rule.FailedCheckResult("Pods not found!", target.With("selector", eventsSelector.String())),
+			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "virtual-garden-kube-apiserver", "kind", "Deployment", "namespace", r.Namespace)),
+			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "virtual-garden-kube-controller-manager", "kind", "Deployment", "namespace", r.Namespace)),
 		}))
 	})
 
@@ -309,18 +264,15 @@ var _ = Describe("#242467", func() {
 			Expect(fakeClient.Create(ctx, etcdEventsPod)).To(Succeed())
 			Expect(fakeClient.Create(ctx, kubeAPIServerPod)).To(Succeed())
 			Expect(fakeClient.Create(ctx, kubeControllerManagerPod)).To(Succeed())
-			Expect(fakeClient.Create(ctx, kubeSchedulerPod)).To(Succeed())
 			Expect(fakeClient.Create(ctx, dikiPod)).To(Succeed())
 
 			fakePodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
 			r := &v1r11.Rule242467{
-				Logger:             testLogger,
-				InstanceID:         instanceID,
-				Client:             fakeClient,
-				Namespace:          Namespace,
-				PodContext:         fakePodContext,
-				ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"instance": "etcd-main"}),
-				ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"instance": "etcd-events"}),
+				Logger:     testLogger,
+				InstanceID: instanceID,
+				Client:     fakeClient,
+				Namespace:  Namespace,
+				PodContext: fakePodContext,
 			}
 
 			ruleResult, err := r.Run(ctx)
@@ -332,7 +284,7 @@ var _ = Describe("#242467", func() {
 			[][]string{{mounts, compliantStats, mounts, compliantStats2, emptyMounts, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 600")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 640")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.key, permissions: 600")),
 			}),
@@ -355,7 +307,7 @@ var _ = Describe("#242467", func() {
 			[][]error{{nil, nil, errors.New("bar"), nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242467-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 600")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 640")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
 			}),
 		Entry("should correctly return all checkResults when commands error",

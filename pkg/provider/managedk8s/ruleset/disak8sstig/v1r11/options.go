@@ -27,5 +27,6 @@ type RuleOption interface {
 		sharedv1r11.Options242452 |
 		sharedv1r11.Options242453 |
 		Options242466 |
+		Options242467 |
 		option.FileOwnerOptions
 }

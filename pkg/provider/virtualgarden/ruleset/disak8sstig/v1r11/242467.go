@@ -27,9 +27,9 @@ import (
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
-var _ rule.Rule = &Rule242466{}
+var _ rule.Rule = &Rule242467{}
 
-type Rule242466 struct {
+type Rule242467 struct {
 	InstanceID string
 	Client     client.Client
 	Namespace  string
@@ -37,18 +37,18 @@ type Rule242466 struct {
 	Logger     provider.Logger
 }
 
-func (r *Rule242466) ID() string {
-	return sharedv1r11.ID242466
+func (r *Rule242467) ID() string {
+	return sharedv1r11.ID242467
 }
 
-func (r *Rule242466) Name() string {
-	return "The Kubernetes PKI CRT must have file permissions set to 644 or more restrictive (MEDIUM 242466)"
+func (r *Rule242467) Name() string {
+	return "The Kubernetes PKI keys must have file permissions set to 600 or more restrictive (MEDIUM 242467)"
 }
 
-func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
 		checkResults               []rule.CheckResult
-		expectedFilePermissionsMax = "644"
+		expectedFilePermissionsMax = "640"
 		etcdMainSelector           = labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-main"})
 		etcdEventsSelector         = labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-events"})
 		deploymentNames            = []string{"virtual-garden-kube-apiserver", "virtual-garden-kube-controller-manager"}
@@ -128,7 +128,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (r *Rule242466) checkPods(
+func (r *Rule242467) checkPods(
 	ctx context.Context,
 	pods []corev1.Pod,
 	nodeName, imageName string,
@@ -182,7 +182,7 @@ func (r *Rule242466) checkPods(
 
 		for containerName, fileStats := range mappedFileStats {
 			for _, fileStat := range fileStats {
-				if !strings.HasSuffix(fileStat.Path, ".crt") && !strings.HasSuffix(fileStat.Path, ".pem") {
+				if !strings.HasSuffix(fileStat.Path, ".key") && !strings.HasSuffix(fileStat.Path, ".pem") {
 					continue
 				}
 
