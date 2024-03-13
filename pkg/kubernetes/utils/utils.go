@@ -74,13 +74,12 @@ func GetAllObjectsMetadata(ctx context.Context, c client.Client, namespace strin
 			batchv1.SchemeGroupVersion.WithKind("JobList"),
 			batchv1.SchemeGroupVersion.WithKind("CronJobList"),
 		}
-		objects        []metav1.PartialObjectMetadata
-		currentObjects []metav1.PartialObjectMetadata
-		err            error
+		objects []metav1.PartialObjectMetadata
 	)
 
 	for _, groupVersionKind := range groupVersionKinds {
-		if currentObjects, err = GetObjectsMetadata(ctx, c, groupVersionKind, namespace, selector, limit); err != nil {
+		currentObjects, err := GetObjectsMetadata(ctx, c, groupVersionKind, namespace, selector, limit)
+		if err != nil {
 			return nil, err
 		}
 		objects = append(objects, currentObjects...)
