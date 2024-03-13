@@ -18,6 +18,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,6 +53,38 @@ func GetObjectsMetadata(ctx context.Context, c client.Client, gvk schema.GroupVe
 			return objects, nil
 		}
 	}
+}
+
+// GetAllObjectsMetadata returns the object metadata for resources returned by
+// 'kubectl get all' in a given namespace or all namespaces if it's set to "".
+// It retrieves objects by portions set by limit.
+func GetAllObjectsMetadata(ctx context.Context, c client.Client, namespace string, selector labels.Selector, limit int64) ([]metav1.PartialObjectMetadata, error) {
+	var (
+		// 'all' is replaced via an Expand method( ref https://github.com/kubernetes/kubernetes/blob/3f7a50f38688eb332e2a1b013678c6435d539ae6/staging/src/k8s.io/client-go/restmapper/category_expansion.go#L72-L83)
+		// to resources contained in the 'all' category. Ex: https://github.com/kubernetes/kubernetes/blob/3f7a50f38688eb332e2a1b013678c6435d539ae6/pkg/registry/core/pod/storage/storage.go#L139-L142
+		groupVersionKinds = []schema.GroupVersionKind{
+			corev1.SchemeGroupVersion.WithKind("PodList"),
+			corev1.SchemeGroupVersion.WithKind("ReplicationControllerList"),
+			corev1.SchemeGroupVersion.WithKind("ServiceList"),
+			appsv1.SchemeGroupVersion.WithKind("DeploymentList"),
+			appsv1.SchemeGroupVersion.WithKind("DaemonSetList"),
+			appsv1.SchemeGroupVersion.WithKind("ReplicaSetList"),
+			appsv1.SchemeGroupVersion.WithKind("StatefulSetList"),
+			autoscalingv1.SchemeGroupVersion.WithKind("HorizontalPodAutoscalerList"),
+			batchv1.SchemeGroupVersion.WithKind("JobList"),
+			batchv1.SchemeGroupVersion.WithKind("CronJobList"),
+		}
+		objects []metav1.PartialObjectMetadata
+	)
+
+	for _, groupVersionKind := range groupVersionKinds {
+		currentObjects, err := GetObjectsMetadata(ctx, c, groupVersionKind, namespace, selector, limit)
+		if err != nil {
+			return nil, err
+		}
+		objects = append(objects, currentObjects...)
+	}
+	return objects, nil
 }
 
 // GetPods returns all pods for a given namespace, or all namespaces if it's set to empty string "".

@@ -44,6 +44,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
+	opts242383, err := getV1R11OptionOrNil[sharedv1r11.Options242383](ruleOptions[sharedv1r11.ID242383].Args)
+	if err != nil {
+		return err
+	}
 	opts242393, err := getV1R11OptionOrNil[sharedv1r11.Options242393](ruleOptions[sharedv1r11.ID242393].Args)
 	if err != nil {
 		return err
@@ -167,12 +171,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noControlPlaneMsg,
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242383,
-			"User-managed resources must be created in dedicated namespaces (HIGH 242383)",
-			"",
-			rule.NotImplemented,
-		),
+		&sharedv1r11.Rule242383{
+			Client:  client,
+			Options: opts242383,
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242384,
 			"The Kubernetes Scheduler must have secure binding (MEDIUM 242384)",

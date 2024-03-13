@@ -14,6 +14,8 @@ import (
 	. "github.com/onsi/gomega"
 	gomegatypes "github.com/onsi/gomega/types"
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -134,6 +136,142 @@ var _ = Describe("utils", func() {
 			nodes, err := utils.GetObjectsMetadata(ctx, fakeClient, corev1.SchemeGroupVersion.WithKind("NodeList"), "", labels.NewSelector(), 2)
 
 			Expect(len(nodes)).To(Equal(3))
+			Expect(err).To(BeNil())
+		})
+	})
+
+	Describe("#GetAllObjectsMetadata", func() {
+		var (
+			fakeClient              client.Client
+			ctx                     = context.TODO()
+			pod                     *corev1.Pod
+			replicationController   *corev1.ReplicationController
+			service                 *corev1.Service
+			deployment              *appsv1.Deployment
+			daemonSet               *appsv1.DaemonSet
+			replicaSet              *appsv1.ReplicaSet
+			statefulSet             *appsv1.StatefulSet
+			horizontalPodAutoscaler *autoscalingv1.HorizontalPodAutoscaler
+			job                     *batchv1.Job
+			cronJob                 *batchv1.CronJob
+			namespaceFoo            = "foo"
+			namespaceDefault        = "default"
+		)
+
+		BeforeEach(func() {
+			fakeClient = fakeclient.NewClientBuilder().Build()
+			pod = &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "pod",
+					Namespace: namespaceDefault,
+					Labels: map[string]string{
+						"foo": "bar",
+					},
+				},
+			}
+			Expect(fakeClient.Create(ctx, pod)).To(Succeed())
+
+			replicationController = &corev1.ReplicationController{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "replicationController",
+					Namespace: namespaceDefault,
+				},
+			}
+			Expect(fakeClient.Create(ctx, replicationController)).To(Succeed())
+
+			service = &corev1.Service{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "service",
+					Namespace: namespaceFoo,
+				},
+			}
+			Expect(fakeClient.Create(ctx, service)).To(Succeed())
+
+			deployment = &appsv1.Deployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "deployment",
+					Namespace: namespaceDefault,
+				},
+			}
+			Expect(fakeClient.Create(ctx, deployment)).To(Succeed())
+
+			daemonSet = &appsv1.DaemonSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "daemonSet",
+					Namespace: namespaceDefault,
+				},
+			}
+			Expect(fakeClient.Create(ctx, daemonSet)).To(Succeed())
+
+			replicaSet = &appsv1.ReplicaSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "replicaSet",
+					Namespace: namespaceDefault,
+				},
+			}
+			Expect(fakeClient.Create(ctx, replicaSet)).To(Succeed())
+
+			statefulSet = &appsv1.StatefulSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "statefulSet",
+					Namespace: namespaceFoo,
+					Labels: map[string]string{
+						"foo": "bar",
+					},
+				},
+			}
+			Expect(fakeClient.Create(ctx, statefulSet)).To(Succeed())
+
+			horizontalPodAutoscaler = &autoscalingv1.HorizontalPodAutoscaler{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "horizontalPodAutoscaler",
+					Namespace: namespaceFoo,
+				},
+			}
+			Expect(fakeClient.Create(ctx, horizontalPodAutoscaler)).To(Succeed())
+
+			job = &batchv1.Job{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "job",
+					Namespace: namespaceDefault,
+				},
+			}
+			Expect(fakeClient.Create(ctx, job)).To(Succeed())
+
+			cronJob = &batchv1.CronJob{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "cronJob",
+					Namespace: namespaceFoo,
+				},
+			}
+			Expect(fakeClient.Create(ctx, cronJob)).To(Succeed())
+		})
+
+		It("should return correct number of resources in default namespace", func() {
+			pods, err := utils.GetAllObjectsMetadata(ctx, fakeClient, namespaceDefault, labels.NewSelector(), 2)
+
+			Expect(len(pods)).To(Equal(6))
+			Expect(err).To(BeNil())
+		})
+
+		It("should return correct number of resources in foo namespace", func() {
+			resources, err := utils.GetAllObjectsMetadata(ctx, fakeClient, namespaceFoo, labels.NewSelector(), 2)
+
+			Expect(len(resources)).To(Equal(4))
+			Expect(err).To(BeNil())
+		})
+
+		It("should return correct number of resources in all namespaces", func() {
+			resources, err := utils.GetAllObjectsMetadata(ctx, fakeClient, "", labels.NewSelector(), 2)
+
+			Expect(len(resources)).To(Equal(10))
+			Expect(err).To(BeNil())
+		})
+
+		It("should return correct number of labeled resources", func() {
+			resources, err := utils.GetAllObjectsMetadata(ctx, fakeClient, "", labels.SelectorFromSet(labels.Set{"foo": "bar"}), 2)
+
+			Expect(len(resources)).To(Equal(2))
 			Expect(err).To(BeNil())
 		})
 	})

@@ -140,12 +140,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedv1r11.Rule242380{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242381{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242382{Client: seedClient, Namespace: r.shootNamespace},
-		rule.NewSkipRule(
-			sharedv1r11.ID242383,
-			"User-managed resources must be created in dedicated namespaces (HIGH 242383)",
-			"By definition, all resources that Gardener creates are no end-user resources.",
-			rule.Skipped,
-		),
+		&sharedv1r11.Rule242383{
+			Client: shootClient,
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242384,
 			"The Kubernetes Scheduler must have secure binding (MEDIUM 242384)",
@@ -313,8 +310,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 						PodMatchLabels: map[string]string{
 							resourcesv1alpha1.ManagedBy: "gardener",
 						},
-						Justification: "Gardener managed pods are not user pods",
-						Status:        "Passed",
+						NamespaceNames: []string{"kube-system", "kube-public", "kube-node-lease"},
+						Justification:  "Gardener managed pods are not user pods",
+						Status:         "Passed",
 					},
 				},
 			},
