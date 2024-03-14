@@ -89,7 +89,7 @@ var _ = Describe("#242404", func() {
 			}),
 		Entry("should return correct checkResults only for selected nodes",
 			v1r11.Options242404{
-				GroupByLabels: []string{"foo"},
+				NodeGroupByLabels: []string{"foo"},
 			},
 			[][]string{{kubeletPID, "--hostname-override=/foo/bar --config=./config"}},
 			[][]error{{nil, nil}},

@@ -209,7 +209,7 @@ var _ = Describe("#242447", func() {
 			}),
 		Entry("should check only pod with matched labels",
 			v1r11.Options242447{
-				PodMatchLabels: map[string]string{
+				KubeProxyMatchLabels: map[string]string{
 					"component": "kube-proxy",
 				},
 			},

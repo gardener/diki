@@ -37,7 +37,7 @@ type Rule242447 struct {
 }
 
 type Options242447 struct {
-	PodMatchLabels map[string]string `json:"podMatchLabels" yaml:"podMatchLabels"`
+	KubeProxyMatchLabels map[string]string `json:"kubeProxyMatchLabels" yaml:"kubeProxyMatchLabels"`
 }
 
 func (r *Rule242447) ID() string {
@@ -52,8 +52,8 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults := []rule.CheckResult{}
 	kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
 
-	if r.Options != nil && len(r.Options.PodMatchLabels) > 0 {
-		kubeProxySelector = labels.SelectorFromSet(labels.Set(r.Options.PodMatchLabels))
+	if r.Options != nil && len(r.Options.KubeProxyMatchLabels) > 0 {
+		kubeProxySelector = labels.SelectorFromSet(labels.Set(r.Options.KubeProxyMatchLabels))
 	}
 
 	target := rule.NewTarget()

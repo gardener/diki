@@ -223,7 +223,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			}),
 		Entry("should check only pod with matched labels",
 			v1r11.Options242466{
-				PodMatchLabels: map[string]string{
+				KubeProxyMatchLabels: map[string]string{
 					"component": "kube-proxy",
 				},
 			},
@@ -236,7 +236,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			}),
 		Entry("should check only nodes wtih labels",
 			v1r11.Options242466{
-				GroupByLabels: []string{"foo"},
+				NodeGroupByLabels: []string{"foo"},
 			},
 			[][]string{{mounts, compliantStats, emptyMounts}},
 			[][]error{{nil, nil, nil}},

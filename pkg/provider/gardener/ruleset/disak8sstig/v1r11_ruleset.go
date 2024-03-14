@@ -177,7 +177,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Client:     shootClient,
 			PodContext: shootPodContext,
 			Options: &sharedv1r11.Options242393{
-				GroupByLabels: workerPoolGroupByLabels,
+				NodeGroupByLabels: workerPoolGroupByLabels,
 			},
 		},
 		&sharedv1r11.Rule242394{
@@ -186,7 +186,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Client:     shootClient,
 			PodContext: shootPodContext,
 			Options: &sharedv1r11.Options242394{
-				GroupByLabels: workerPoolGroupByLabels,
+				NodeGroupByLabels: workerPoolGroupByLabels,
 			},
 		},
 		&sharedv1r11.Rule242395{Client: shootClient},
@@ -229,7 +229,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Client:     shootClient,
 			PodContext: shootPodContext,
 			Options: &sharedv1r11.Options242404{
-				GroupByLabels: workerPoolGroupByLabels,
+				NodeGroupByLabels: workerPoolGroupByLabels,
 			},
 		},
 		rule.NewSkipRule(
@@ -244,8 +244,8 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Client:     shootClient,
 			PodContext: shootPodContext,
 			Options: &sharedv1r11.Options242406{
-				GroupByLabels:    workerPoolGroupByLabels,
-				FileOwnerOptions: gardenerFileOwnerOptions,
+				NodeGroupByLabels: workerPoolGroupByLabels,
+				FileOwnerOptions:  gardenerFileOwnerOptions,
 			},
 		},
 		&sharedv1r11.Rule242407{
@@ -254,7 +254,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Client:     shootClient,
 			PodContext: shootPodContext,
 			Options: &sharedv1r11.Options242407{
-				GroupByLabels: workerPoolGroupByLabels,
+				NodeGroupByLabels: workerPoolGroupByLabels,
 			},
 		},
 		rule.NewSkipRule(
@@ -406,7 +406,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Client:     shootClient,
 			PodContext: shootPodContext,
 			Options: &sharedv1r11.Options242449{
-				GroupByLabels: workerPoolGroupByLabels,
+				NodeGroupByLabels: workerPoolGroupByLabels,
 			},
 		},
 		&sharedv1r11.Rule242450{
@@ -415,8 +415,8 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Client:     shootClient,
 			PodContext: shootPodContext,
 			Options: &sharedv1r11.Options242450{
-				GroupByLabels:    workerPoolGroupByLabels,
-				FileOwnerOptions: gardenerFileOwnerOptions,
+				NodeGroupByLabels: workerPoolGroupByLabels,
+				FileOwnerOptions:  gardenerFileOwnerOptions,
 			},
 		},
 		&v1r11.Rule242451{
@@ -435,7 +435,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Client:     seedClient,
 			PodContext: seedPodContext,
 			Options: &sharedv1r11.Options242452{
-				GroupByLabels: workerPoolGroupByLabels,
+				NodeGroupByLabels: workerPoolGroupByLabels,
 			},
 		},
 		&sharedv1r11.Rule242453{
@@ -444,8 +444,8 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Client:     shootClient,
 			PodContext: shootPodContext,
 			Options: &sharedv1r11.Options242453{
-				GroupByLabels:    workerPoolGroupByLabels,
-				FileOwnerOptions: gardenerFileOwnerOptions,
+				NodeGroupByLabels: workerPoolGroupByLabels,
+				FileOwnerOptions:  gardenerFileOwnerOptions,
 			},
 		},
 		rule.NewSkipRule(

@@ -108,7 +108,7 @@ var _ = Describe("#242396", func() {
 			}),
 		Entry("should return correct checkResults only for selected nodes",
 			v1r11.Options242396{
-				GroupByLabels: []string{"foo"},
+				NodeGroupByLabels: []string{"foo"},
 			},
 			[][]string{{allowedKubectlVersion}, {allowedKubectlVersion}},
 			[][]error{{nil}, {nil}},

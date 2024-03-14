@@ -109,7 +109,7 @@ var _ = Describe("#242407", func() {
 			}),
 		Entry("should return correct checkResults only for selected nodes",
 			v1r11.Options242407{
-				GroupByLabels: []string{"foo"},
+				NodeGroupByLabels: []string{"foo"},
 			},
 			[][]string{{kubeletServicePath, compliantKubeletServiceFileStats}, {kubeletServicePath, compliantKubeletServiceFileStats}},
 			[][]error{{nil, nil}, {nil, nil}},
