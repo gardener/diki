@@ -529,14 +529,6 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"Option featureGates.PodSecurity was made GA in v1.25 and removed in v1.28.",
 			rule.Skipped,
 		),
-		&v1r11.RuleNodeFiles{
-			Logger:                r.Logger().With("rule", v1r11.IDNodeFiles),
-			InstanceID:            r.instanceID,
-			ClusterClient:         shootClient,
-			ControlPlaneClient:    seedClient,
-			ControlPlaneNamespace: r.shootNamespace,
-			ClusterPodContext:     shootPodContext,
-		},
 	}
 
 	for i, r := range rules {

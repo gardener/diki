@@ -9,10 +9,6 @@ import (
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
-const (
-	IDNodeFiles = "node-files"
-)
-
 type RuleOption interface {
 	Options242414 | Options242415 | sharedv1r11.Options245543 | sharedv1r11.Options254800 | option.FileOwnerOptions
 }
