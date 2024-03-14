@@ -17,10 +17,6 @@ issues:
   - indent-error-flow # if block ends with a return statement, so drop this else and outdent its block
   - package-comments
   exclude-rules:
-    - path: 'pkg/provider/gardener/ruleset/disak8sstig/v1r10/'
-      linters:
-        - revive
-      text: "exported: exported"
     - path: 'pkg/provider/gardener/ruleset/disak8sstig/v1r11/'
       linters:
         - revive
