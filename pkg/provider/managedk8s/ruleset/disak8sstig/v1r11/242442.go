@@ -98,12 +98,10 @@ func (*Rule242442) checkImages(pods []corev1.Pod, target rule.Target) []rule.Che
 				imageRef  = pod.Status.ContainerStatuses[containerStatusIdx].ImageID
 				imageBase = strings.Split(strings.Split(imageRef, ":")[0], "@")[0]
 			)
-			if _, ok := images[imageBase]; ok {
-				if images[imageBase] != imageRef {
-					if _, reported := reportedImages[imageBase]; !reported {
-						checkResults = append(checkResults, rule.FailedCheckResult("Image is used with more than one versions.", target.With("image", imageBase)))
-						reportedImages[imageBase] = struct{}{}
-					}
+			if _, ok := images[imageBase]; ok && images[imageBase] != imageRef {
+				if _, reported := reportedImages[imageBase]; !reported {
+					checkResults = append(checkResults, rule.FailedCheckResult("Image is used with more than one versions.", target.With("image", imageBase)))
+					reportedImages[imageBase] = struct{}{}
 				}
 			} else {
 				images[imageBase] = imageRef

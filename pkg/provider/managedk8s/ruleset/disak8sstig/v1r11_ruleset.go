@@ -471,7 +471,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		&v1r11.Rule242442{
-			// We check only system( kube-proxy) pods in this rule, since there can be a user case to run different versions of images.
+			// We check only system (kube-proxy) pods in this rule, since there can be a user case to run different versions of images.
 			Client:  client,
 			Options: opts242442,
 		},
