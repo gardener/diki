@@ -4,10 +4,6 @@
 
 ---
 images:
-- name: ops-toolbelt
-  sourceRepository: github.com/gardener/ops-toolbelt
-  repository: eu.gcr.io/gardener-project/gardener/ops-toolbelt
-  tag: "0.25.0"
 - name: diki-ops
   sourceRepository: github.com/gardener/diki
   repository: europe-docker.pkg.dev/gardener-project/releases/gardener/diki-ops
