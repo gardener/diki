@@ -21,7 +21,6 @@ import (
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -195,25 +194,6 @@ func GetNamespaces(ctx context.Context, c client.Client) (map[string]corev1.Name
 		res[n.Name] = n
 	}
 	return res, nil
-}
-
-// GetPodSecurityPolicies returns all pod security policies.
-// It retrieves policies by portions set by limit.
-func GetPodSecurityPolicies(ctx context.Context, c client.Client, limit int64) ([]policyv1beta1.PodSecurityPolicy, error) {
-	podSecurityPoliciesList := &policyv1beta1.PodSecurityPolicyList{}
-	podSecurityPolicies := []policyv1beta1.PodSecurityPolicy{}
-
-	for {
-		if err := c.List(ctx, podSecurityPoliciesList, client.Limit(limit), client.Continue(podSecurityPoliciesList.Continue)); err != nil {
-			return nil, err
-		}
-
-		podSecurityPolicies = append(podSecurityPolicies, podSecurityPoliciesList.Items...)
-
-		if len(podSecurityPoliciesList.Continue) == 0 {
-			return podSecurityPolicies, nil
-		}
-	}
 }
 
 // NodeReadyStatus returns true if the given node has NodeReady status condition true and false in every other case.
