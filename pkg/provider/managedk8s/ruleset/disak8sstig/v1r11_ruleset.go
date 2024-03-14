@@ -88,6 +88,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return err
 	}
+	opts242442, err := getV1R11OptionOrNil[v1r11.Options242442](ruleOptions[sharedv1r11.ID242442].Args)
+	if err != nil {
+		return err
+	}
 	opts242447, err := getV1R11OptionOrNil[sharedv1r11.Options242447](ruleOptions[sharedv1r11.ID242447].Args)
 	if err != nil {
 		return err
@@ -468,12 +472,11 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noControlPlaneMsg,
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedv1r11.ID242442,
-			"Kubernetes must remove old components after updated versions have been installed (MEDIUM 242442)",
-			"",
-			rule.NotImplemented,
-		),
+		&v1r11.Rule242442{
+			// We check only system (kube-proxy) pods in this rule, since there can be a user case to run different versions of images.
+			Client:  client,
+			Options: opts242442,
+		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242443,
 			"Kubernetes must contain the latest updates as authorized by IAVMs, CTOs, DTMs, and STIGs (MEDIUM 242443)",
