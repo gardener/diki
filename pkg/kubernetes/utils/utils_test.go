@@ -17,7 +17,6 @@ import (
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -767,32 +766,6 @@ var _ = Describe("utils", func() {
 			}
 
 			Expect(namespaces).To(Equal(expectedNamespaces))
-			Expect(err).To(BeNil())
-		})
-	})
-
-	Describe("#GetPodSecurityPolicies", func() {
-		var (
-			fakeClient client.Client
-			ctx        = context.TODO()
-		)
-
-		BeforeEach(func() {
-			fakeClient = fakeclient.NewClientBuilder().Build()
-			for i := 0; i < 6; i++ {
-				podSecurityPolicy := &policyv1beta1.PodSecurityPolicy{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: strconv.Itoa(i),
-					},
-				}
-				Expect(fakeClient.Create(ctx, podSecurityPolicy)).To(Succeed())
-			}
-		})
-
-		It("should return correct number of podSecurityPolicies", func() {
-			podSecurityPolicies, err := utils.GetPodSecurityPolicies(ctx, fakeClient, 2)
-
-			Expect(len(podSecurityPolicies)).To(Equal(6))
 			Expect(err).To(BeNil())
 		})
 	})

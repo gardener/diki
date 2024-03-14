@@ -78,21 +78,6 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
-	seedClientSet, err := kubernetes.NewForConfig(r.SeedConfig)
-	if err != nil {
-		return err
-	}
-
-	seedKubernetesVersion, err := seedClientSet.Discovery().ServerVersion()
-	if err != nil {
-		return err
-	}
-
-	semverSeedKubernetesVersion, err := semver.NewVersion(seedKubernetesVersion.String())
-	if err != nil {
-		return err
-	}
-
 	opts242414, err := getV1R11OptionOrNil[v1r11.Options242414](ruleOptions[sharedv1r11.ID242414].Args)
 	if err != nil {
 		return err
@@ -347,14 +332,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			V1RESTClient: shootClientSet.CoreV1().RESTClient(),
 		},
 		&sharedv1r11.Rule242436{Client: seedClient, Namespace: r.shootNamespace},
-		&v1r11.Rule242437{
-			Logger:                r.Logger().With("rule", sharedv1r11.ID242437),
-			ClusterClient:         shootClient,
-			ClusterVersion:        semverShootKubernetesVersion,
-			ControlPlaneClient:    seedClient,
-			ControlPlaneVersion:   semverSeedKubernetesVersion,
-			ControlPlaneNamespace: r.shootNamespace,
-		},
+		rule.NewSkipRule(
+			sharedv1r11.ID242437,
+			"Kubernetes must have a pod security policy set (HIGH 242437)",
+			"PSPs are removed in K8s version 1.25.",
+			rule.Skipped,
+		),
 		&sharedv1r11.Rule242438{Client: seedClient, Namespace: r.shootNamespace},
 		&v1r11.Rule242442{Logger: r.Logger().With("rule", sharedv1r11.ID242442), ClusterClient: shootClient, ControlPlaneClient: seedClient, ControlPlaneNamespace: r.shootNamespace},
 		rule.NewSkipRule(
