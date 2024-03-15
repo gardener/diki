@@ -22,7 +22,6 @@ func VirtualGardenProviderFromConfig(conf config.ProviderConfig) (provider.Provi
 		return nil, err
 	}
 
-	setConfigDefaults(p.GardenConfig)
 	setConfigDefaults(p.RuntimeConfig)
 	providerLogger := slog.Default().With("provider", p.ID())
 	setLoggerFunc := virtualgarden.WithLogger(providerLogger)
@@ -31,7 +30,7 @@ func VirtualGardenProviderFromConfig(conf config.ProviderConfig) (provider.Provi
 	for _, rulesetConfig := range conf.Rulesets {
 		switch rulesetConfig.ID {
 		case disak8sstig.RulesetID:
-			ruleset, err := disak8sstig.FromGenericConfig(rulesetConfig, p.GardenConfig, p.RuntimeConfig)
+			ruleset, err := disak8sstig.FromGenericConfig(rulesetConfig, p.RuntimeConfig)
 			if err != nil {
 				return nil, err
 			}

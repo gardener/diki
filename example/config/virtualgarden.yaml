@@ -4,7 +4,6 @@ providers:               # contains information about known providers
   metadata:
     foo: bar
   args:
-    gardenKubeconfigPath: /tmp/garden.config    # path to garden cluster admin kubeconfig
     runtimeKubeconfigPath: /tmp/runtime.config  # path to runtime cluster admin kubeconfig
   rulesets:
   - id: disa-kubernetes-stig

@@ -21,13 +21,6 @@ func WithVersion(version string) CreateOption {
 	}
 }
 
-// WithGardenConfig sets the GardenConfig of a [Ruleset].
-func WithGardenConfig(config *rest.Config) CreateOption {
-	return func(r *Ruleset) {
-		r.GardenConfig = config
-	}
-}
-
 // WithRuntimeConfig sets the RuntimeConfig of a [Ruleset].
 func WithRuntimeConfig(config *rest.Config) CreateOption {
 	return func(r *Ruleset) {
