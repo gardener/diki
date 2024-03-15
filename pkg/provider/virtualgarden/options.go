@@ -35,13 +35,6 @@ func WithRuntimeConfig(config *rest.Config) CreateOption {
 	}
 }
 
-// WithGardenConfig sets the SeedConfig of a [Provider].
-func WithGardenConfig(config *rest.Config) CreateOption {
-	return func(p *Provider) {
-		p.GardenConfig = config
-	}
-}
-
 // WithMetadata sets the metadata of a [Provider].
 func WithMetadata(metadata map[string]string) CreateOption {
 	return func(p *Provider) {

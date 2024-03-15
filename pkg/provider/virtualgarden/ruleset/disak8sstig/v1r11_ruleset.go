@@ -7,7 +7,6 @@ package disak8sstig
 import (
 	"encoding/json"
 
-	kubernetesgardener "github.com/gardener/gardener/pkg/client/kubernetes"
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -21,11 +20,6 @@ import (
 
 func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
 	runtimeClient, err := client.New(r.RuntimeConfig, client.Options{})
-	if err != nil {
-		return err
-	}
-
-	_, err = client.New(r.GardenConfig, client.Options{Scheme: kubernetesgardener.GardenScheme})
 	if err != nil {
 		return err
 	}
