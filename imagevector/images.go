@@ -4,7 +4,9 @@
 
 package imagevector
 
-import _ "embed"
+import (
+	_ "embed"
+)
 
 // Images YAML contains the contents of the images.yaml file.
 //

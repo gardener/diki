@@ -4,7 +4,9 @@
 
 package v1r11
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	ErrShootClientNil      = errors.New("shoot client is nil")
