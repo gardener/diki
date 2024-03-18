@@ -119,28 +119,35 @@ func addDiffFlags(cmd *cobra.Command, opts *diffOptions) {
 }
 
 func diffCmd(_ []string, opts diffOptions) error {
-	if len(opts.oldReport) == 0 || len(opts.newReport) == 0 {
-		return errors.New("diff command requires 2 report paths")
+	if len(opts.oldReport) == 0 && len(opts.newReport) == 0 {
+		return errors.New("diff command requires at least 1 report path")
 	}
 
-	oldReportfileData, err := os.ReadFile(filepath.Clean(opts.oldReport))
-	if err != nil {
-		return fmt.Errorf("failed to read file %s: %w", opts.oldReport, err)
+	var (
+		oldReport *report.Report
+		newReport *report.Report
+	)
+
+	if len(opts.oldReport) > 0 {
+		oldReportfileData, err := os.ReadFile(filepath.Clean(opts.oldReport))
+		if err != nil {
+			return fmt.Errorf("failed to read file %s: %w", opts.oldReport, err)
+		}
+
+		if err := json.Unmarshal(oldReportfileData, oldReport); err != nil {
+			return fmt.Errorf("failed to unmarshal data: %w", err)
+		}
 	}
 
-	newReportfileData, err := os.ReadFile(filepath.Clean(opts.newReport))
-	if err != nil {
-		return fmt.Errorf("failed to read file %s: %w", opts.newReport, err)
-	}
+	if len(opts.newReport) > 0 {
+		newReportfileData, err := os.ReadFile(filepath.Clean(opts.newReport))
+		if err != nil {
+			return fmt.Errorf("failed to read file %s: %w", opts.newReport, err)
+		}
 
-	oldReport := &report.Report{}
-	if err := json.Unmarshal(oldReportfileData, oldReport); err != nil {
-		return fmt.Errorf("failed to unmarshal data: %w", err)
-	}
-
-	newReport := &report.Report{}
-	if err := json.Unmarshal(newReportfileData, newReport); err != nil {
-		return fmt.Errorf("failed to unmarshal data: %w", err)
+		if err := json.Unmarshal(newReportfileData, newReport); err != nil {
+			return fmt.Errorf("failed to unmarshal data: %w", err)
+		}
 	}
 
 	diff, err := report.CreateDiff(*oldReport, *newReport)

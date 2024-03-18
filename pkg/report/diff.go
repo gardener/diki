@@ -127,48 +127,75 @@ func getRulesDiff(oldRules, newRules []Rule) []RuleDiff {
 
 // CreateDiff created the diff of 2 reports.
 func CreateDiff(oldReport Report, newReport Report) (*Diff, error) {
-	if oldReport.MinStatus != newReport.MinStatus {
+	var minStatus rule.Status
+	switch {
+	case oldReport.MinStatus == newReport.MinStatus:
+		minStatus = oldReport.MinStatus
+	case len(oldReport.MinStatus) == 0:
+		minStatus = newReport.MinStatus
+	case len(newReport.MinStatus) == 0:
+		minStatus = oldReport.MinStatus
+	default:
 		return nil, errors.New("reports must have equal minStatus")
 	}
 
 	diff := &Diff{
 		Time:      time.Now(),
-		MinStatus: oldReport.MinStatus,
+		MinStatus: minStatus,
 		Providers: []ProviderDiff{},
 	}
 
-	for _, provider := range newReport.Providers {
+	for _, newProvider := range newReport.Providers {
 		oldProviderIdx := slices.IndexFunc(oldReport.Providers, func(p Provider) bool {
-			return p.ID == provider.ID
+			return p.ID == newProvider.ID
 		})
 
+		var oldProvider = Provider{}
 		if oldProviderIdx >= 0 {
-			var rulesetDiff []RulesetDiff
-			for _, ruleset := range provider.Rulesets {
-				oldRulesetIdx := slices.IndexFunc(oldReport.Providers[oldProviderIdx].Rulesets, func(r Ruleset) bool {
-					return r.ID == ruleset.ID && r.Version == ruleset.Version
-				})
+			oldProvider = oldReport.Providers[oldProviderIdx]
+		}
 
-				if oldRulesetIdx >= 0 {
-					rulesetDiff = append(rulesetDiff, RulesetDiff{
-						ID:      ruleset.ID,
-						Name:    ruleset.Name,
-						Version: ruleset.Version,
-						Rules:   getRulesDiff(oldReport.Providers[oldProviderIdx].Rulesets[oldRulesetIdx].Rules, ruleset.Rules),
-					})
-				}
+		var rulesetDiff []RulesetDiff
+		for _, newRuleset := range newProvider.Rulesets {
+			oldRulesetIdx := slices.IndexFunc(oldProvider.Rulesets, func(r Ruleset) bool {
+				return r.ID == newRuleset.ID && r.Version == newRuleset.Version
+			})
+
+			var oldRuleset = Ruleset{}
+			if oldRulesetIdx >= 0 {
+				oldRuleset = oldProvider.Rulesets[oldRulesetIdx]
 			}
-			oldReport.Providers[oldProviderIdx].Metadata["time"] = oldReport.Time.Format(time.RFC3339)
-			provider.Metadata["time"] = oldReport.Time.Format(time.RFC3339)
 
-			diff.Providers = append(diff.Providers, ProviderDiff{
-				ID:          provider.ID,
-				Name:        provider.Name,
-				OldMetadata: oldReport.Providers[oldProviderIdx].Metadata,
-				NewMetadata: provider.Metadata,
-				Rulesets:    rulesetDiff,
+			rulesetDiff = append(rulesetDiff, RulesetDiff{
+				ID:      newRuleset.ID,
+				Name:    newRuleset.Name,
+				Version: newRuleset.Version,
+				Rules:   getRulesDiff(oldRuleset.Rules, newRuleset.Rules),
 			})
 		}
+
+		var (
+			oldMetadata = map[string]string{}
+			newMetadata = map[string]string{}
+		)
+
+		if oldProvider.Metadata != nil {
+			oldMetadata = oldProvider.Metadata
+		}
+		if newProvider.Metadata != nil {
+			newMetadata = newProvider.Metadata
+		}
+
+		oldMetadata["time"] = oldReport.Time.Format(time.RFC3339)
+		newMetadata["time"] = oldReport.Time.Format(time.RFC3339)
+
+		diff.Providers = append(diff.Providers, ProviderDiff{
+			ID:          newProvider.ID,
+			Name:        newProvider.Name,
+			OldMetadata: oldMetadata,
+			NewMetadata: newMetadata,
+			Rulesets:    rulesetDiff,
+		})
 	}
 	return diff, nil
 }

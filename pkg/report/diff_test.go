@@ -135,6 +135,7 @@ var _ = Describe("diff", func() {
 			Expect(err).To(MatchError("reports must have equal minStatus"))
 		})
 		It("should create correct diff", func() {
+			simpleReport2.MinStatus = ""
 			diff, err := report.CreateDiff(simpleReport1, simpleReport2)
 
 			expectedDiff := &report.Diff{
@@ -201,11 +202,7 @@ var _ = Describe("diff", func() {
 			Expect(err).To(BeNil())
 		})
 		It("should create correct diff of 2 reports with more than 1 ruleset", func() {
-			simpleReport1.Providers[0].Rulesets = append(simpleReport1.Providers[0].Rulesets, report.Ruleset{
-				ID:      "ruleset-bar",
-				Name:    "Ruleset Bar",
-				Version: rulesetVersion,
-			})
+			simpleReport1.MinStatus = ""
 			simpleReport2.Providers[0].Rulesets = append(simpleReport2.Providers[0].Rulesets, simpleReport1.Providers[0].Rulesets[0])
 			simpleReport2.Providers[0].Rulesets[1].ID = "ruleset-bar"
 			simpleReport2.Providers[0].Rulesets[1].Name = "Ruleset Bar"
@@ -306,21 +303,6 @@ var _ = Describe("diff", func() {
 			Expect(err).To(BeNil())
 		})
 		It("should create correct diff of 2 reports with more than 1 provider", func() {
-			simpleReport1.Providers = append(simpleReport1.Providers, report.Provider{
-				ID:   "new-provider",
-				Name: "New Provider",
-				Metadata: map[string]string{
-					"key": "value1",
-				},
-				Rulesets: []report.Ruleset{
-					{
-						ID:      rulesetID,
-						Name:    rulesetName,
-						Version: rulesetVersion,
-						Rules:   []report.Rule{},
-					},
-				},
-			})
 			simpleReport2.Providers = append(simpleReport2.Providers, report.Provider{
 				ID:   "new-provider",
 				Name: "New Provider",
@@ -393,7 +375,6 @@ var _ = Describe("diff", func() {
 						ID:   "new-provider",
 						Name: "New Provider",
 						OldMetadata: map[string]string{
-							"key":  "value1",
 							"time": reportTime.Format(time.RFC3339),
 						},
 						NewMetadata: map[string]string{
