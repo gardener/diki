@@ -6,6 +6,7 @@ package disak8sstig
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -30,19 +31,19 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	}
 	opts242445, err := getV1R11OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedv1r11.ID242445].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242445 error: %s", err.Error())
 	}
 	opts242446, err := getV1R11OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedv1r11.ID242446].Args)
 	if err != nil {
-		return err
-	}
-	opts245543, err := getV1R11OptionOrNil[sharedv1r11.Options245543](ruleOptions[sharedv1r11.ID245543].Args)
-	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242446 error: %s", err.Error())
 	}
 	opts242451, err := getV1R11OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedv1r11.ID242451].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242451 error: %s", err.Error())
+	}
+	opts245543, err := getV1R11OptionOrNil[sharedv1r11.Options245543](ruleOptions[sharedv1r11.ID245543].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 245543 error: %s", err.Error())
 	}
 
 	const (
@@ -638,6 +639,12 @@ func parseV1R11Options[O v1r11.RuleOption](options any) (*O, error) {
 	var parsedOptions O
 	if err := json.Unmarshal(optionsByte, &parsedOptions); err != nil {
 		return nil, err
+	}
+
+	if val, ok := any(parsedOptions).(option.Option); ok {
+		if err := val.Validate().ToAggregate(); err != nil {
+			return nil, err
+		}
 	}
 
 	return &parsedOptions, nil

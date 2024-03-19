@@ -9,10 +9,12 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -264,5 +266,81 @@ var _ = Describe("#242383", func() {
 		}
 
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
+	})
+
+	Describe("#Validate", func() {
+		It("should correctly validate options", func() {
+			options = &v1r11.Options242383{
+				AcceptedResources: []v1r11.AcceptedResources242383{
+					{
+						SelectResource: v1r11.SelectResource{
+							APIVersion:     "v1",
+							Kind:           "Pod",
+							MatchLabels:    map[string]string{},
+							NamespaceNames: []string{"kube-system", "kube-public", "kube-node-lease"},
+						},
+					},
+					{
+						SelectResource: v1r11.SelectResource{
+							APIVersion: "v1",
+							Kind:       "Deployment",
+							MatchLabels: map[string]string{
+								"-foo": "bar",
+							},
+							NamespaceNames: []string{"default"},
+						},
+					},
+					{
+						SelectResource: v1r11.SelectResource{
+							APIVersion: "fake",
+							Kind:       "Deployment",
+							MatchLabels: map[string]string{
+								"foo": "?bar",
+							},
+							NamespaceNames: []string{},
+						},
+						Status: "asd",
+					},
+				},
+			}
+
+			result := options.Validate()
+
+			Expect(result).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
+				"Type":     Equal(field.ErrorTypeInvalid),
+				"Field":    Equal("acceptedResources.namespaceNames"),
+				"BadValue": Equal("kube-system"),
+				"Detail":   Equal("must be one of 'default', 'kube-public' or 'kube-node-lease'"),
+			})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("acceptedResources.kind"),
+					"BadValue": Equal("Deployment"),
+					"Detail":   Equal("not checked kind for apiVerion v1"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("acceptedResources.matchLabels"),
+					"BadValue": Equal("-foo"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("acceptedResources.apiVersion"),
+					"BadValue": Equal("fake"),
+					"Detail":   Equal("not checked apiVersion"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("acceptedResources.matchLabels"),
+					"BadValue": Equal("?bar"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("acceptedResources.status"),
+					"BadValue": Equal("asd"),
+					"Detail":   Equal("must be a valid status"),
+				})),
+			))
+		})
 	})
 })

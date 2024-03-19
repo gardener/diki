@@ -6,6 +6,7 @@ package disak8sstig
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/Masterminds/semver/v3"
 	resourcesv1alpha1 "github.com/gardener/gardener/pkg/apis/resources/v1alpha1"
@@ -30,6 +31,12 @@ func parseV1R11Options[O v1r11.RuleOption](options any) (*O, error) {
 	var parsedOptions O
 	if err := json.Unmarshal(optionsByte, &parsedOptions); err != nil {
 		return nil, err
+	}
+
+	if val, ok := any(parsedOptions).(option.Option); ok {
+		if err := val.Validate().ToAggregate(); err != nil {
+			return nil, err
+		}
 	}
 
 	return &parsedOptions, nil
@@ -78,33 +85,33 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
-	opts242414, err := getV1R11OptionOrNil[v1r11.Options242414](ruleOptions[sharedv1r11.ID242414].Args)
+	opts242414, err := getV1R11OptionOrNil[option.Options242414](ruleOptions[sharedv1r11.ID242414].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242414 error: %s", err.Error())
 	}
-	opts242415, err := getV1R11OptionOrNil[v1r11.Options242415](ruleOptions[sharedv1r11.ID242415].Args)
+	opts242415, err := getV1R11OptionOrNil[option.Options242415](ruleOptions[sharedv1r11.ID242415].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242415 error: %s", err.Error())
 	}
 	opts242445, err := getV1R11OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedv1r11.ID242445].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242445 error: %s", err.Error())
 	}
 	opts242446, err := getV1R11OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedv1r11.ID242446].Args)
 	if err != nil {
-		return err
-	}
-	opts245543, err := getV1R11OptionOrNil[sharedv1r11.Options245543](ruleOptions[sharedv1r11.ID245543].Args)
-	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242446 error: %s", err.Error())
 	}
 	opts242451, err := getV1R11OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedv1r11.ID242451].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242451 error: %s", err.Error())
+	}
+	opts245543, err := getV1R11OptionOrNil[sharedv1r11.Options245543](ruleOptions[sharedv1r11.ID245543].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 245543 error: %s", err.Error())
 	}
 	opts254800, err := getV1R11OptionOrNil[sharedv1r11.Options254800](ruleOptions[sharedv1r11.ID254800].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 254800 error: %s", err.Error())
 	}
 
 	// Gardener images use distroless nonroot user with ID 65532

@@ -9,10 +9,12 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 	gomegatypes "github.com/onsi/gomega/types"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -246,4 +248,44 @@ bar,for,bar,`
 			},
 			BeNil()),
 	)
+	Describe("#Validate", func() {
+		It("should correctly validate options", func() {
+			options = v1r11.Options245543{
+				AcceptedTokens: []struct {
+					User   string `yaml:"user"`
+					UID    string `yaml:"uid"`
+					Groups string `yaml:"groups"`
+				}{
+					{
+						User: "health-check",
+						UID:  "health-check",
+					},
+					{
+						User:   "",
+						UID:    "0",
+						Groups: "group",
+					},
+					{
+						User:   "groups",
+						UID:    "",
+						Groups: "group1,group2,group3",
+					},
+				},
+			}
+
+			result := options.Validate()
+
+			Expect(result).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
+				"Type":   Equal(field.ErrorTypeRequired),
+				"Field":  Equal("acceptedTokens.users"),
+				"Detail": Equal("must be set"),
+			})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("acceptedTokens.uid"),
+					"Detail": Equal("must be set"),
+				})),
+			))
+		})
+	})
 })

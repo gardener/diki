@@ -11,6 +11,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
@@ -33,6 +34,23 @@ type Options245543 struct {
 		UID    string `yaml:"uid"`
 		Groups string `yaml:"groups"`
 	}
+}
+
+func (o Options245543) Validate() field.ErrorList {
+	var (
+		allErrs   field.ErrorList
+		usersPath = "acceptedTokens.users"
+		uidPath   = "acceptedTokens.uid"
+	)
+	for _, acceptedToken := range o.AcceptedTokens {
+		if len(acceptedToken.User) == 0 {
+			allErrs = append(allErrs, field.Required(field.NewPath(usersPath), "must be set"))
+		}
+		if len(acceptedToken.UID) == 0 {
+			allErrs = append(allErrs, field.Required(field.NewPath(uidPath), "must be set"))
+		}
+	}
+	return allErrs
 }
 
 func (r *Rule245543) ID() string {

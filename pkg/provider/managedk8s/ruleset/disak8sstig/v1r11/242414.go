@@ -15,6 +15,7 @@ import (
 	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
@@ -22,18 +23,7 @@ var _ rule.Rule = &Rule242414{}
 
 type Rule242414 struct {
 	Client  client.Client
-	Options *Options242414
-}
-
-type Options242414 struct {
-	AcceptedPods []AcceptedPods242414 `json:"acceptedPods" yaml:"acceptedPods"`
-}
-
-type AcceptedPods242414 struct {
-	PodMatchLabels       map[string]string `json:"podMatchLabels" yaml:"podMatchLabels"`
-	NamespaceMatchLabels map[string]string `json:"namespaceMatchLabels" yaml:"namespaceMatchLabels"`
-	Justification        string            `json:"justification" yaml:"justification"`
-	Ports                []int32           `json:"ports" yaml:"ports"`
+	Options *option.Options242414
 }
 
 func (r *Rule242414) ID() string {

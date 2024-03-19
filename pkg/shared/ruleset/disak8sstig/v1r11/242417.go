@@ -11,8 +11,10 @@ import (
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/internal/utils"
@@ -37,6 +39,25 @@ type AcceptedPods242417 struct {
 	NamespaceNames []string          `json:"namespaceNames" yaml:"namespaceNames"`
 	Justification  string            `json:"justification" yaml:"justification"`
 	Status         string            `json:"status" yaml:"status"`
+}
+
+func (o Options242417) Validate() field.ErrorList {
+	var (
+		allErrs  field.ErrorList
+		pathRoot = field.NewPath("acceptedPods")
+	)
+	for _, p := range o.AcceptedPods {
+		allErrs = append(allErrs, metav1validation.ValidateLabels(p.PodMatchLabels, pathRoot.Child("podMatchLabels"))...)
+		for _, namespaceName := range p.NamespaceNames {
+			if !slices.Contains([]string{"kube-system", "kube-public", "kube-node-lease"}, namespaceName) {
+				allErrs = append(allErrs, field.Invalid(pathRoot.Child("namespaceNames"), namespaceName, "must be one of 'kube-system', 'kube-public' or 'kube-node-lease'"))
+			}
+		}
+		if !slices.Contains(rule.Statuses(), rule.Status(p.Status)) && len(p.Status) > 0 {
+			allErrs = append(allErrs, field.Invalid(pathRoot.Child("status"), p.Status, "must be a valid status"))
+		}
+	}
+	return allErrs
 }
 
 func (r *Rule242417) ID() string {

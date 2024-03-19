@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/component-base/version"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -37,6 +38,11 @@ type Rule242453 struct {
 type Options242453 struct {
 	NodeGroupByLabels []string `json:"nodeGroupByLabels" yaml:"nodeGroupByLabels"`
 	*option.FileOwnerOptions
+}
+
+func (o Options242453) Validate() field.ErrorList {
+	var allErrs = option.ValidateLabelNames(o.NodeGroupByLabels, field.NewPath("nodeGroupByLabels"))
+	return append(allErrs, o.FileOwnerOptions.Validate()...)
 }
 
 func (r *Rule242453) ID() string {
