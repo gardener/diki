@@ -44,6 +44,8 @@ type Options242448 struct {
 	*option.FileOwnerOptions
 }
 
+var _ option.Option = (*Options242448)(nil)
+
 func (o Options242448) Validate() field.ErrorList {
 	var allErrs = validation.ValidateLabels(o.KubeProxyMatchLabels, field.NewPath("kubeProxyMatchLabels"))
 	return append(allErrs, o.FileOwnerOptions.Validate()...)

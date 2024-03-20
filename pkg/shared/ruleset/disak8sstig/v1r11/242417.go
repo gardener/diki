@@ -21,6 +21,7 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var _ rule.Rule = &Rule242417{}
@@ -33,6 +34,8 @@ type Rule242417 struct {
 type Options242417 struct {
 	AcceptedPods []AcceptedPods242417 `json:"acceptedPods" yaml:"acceptedPods"`
 }
+
+var _ option.Option = (*Options242417)(nil)
 
 type AcceptedPods242417 struct {
 	PodMatchLabels map[string]string `json:"podMatchLabels" yaml:"podMatchLabels"`

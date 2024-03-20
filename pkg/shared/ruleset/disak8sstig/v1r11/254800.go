@@ -22,6 +22,7 @@ import (
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var _ rule.Rule = &Rule254800{}
@@ -37,6 +38,8 @@ type Rule254800 struct {
 type Options254800 struct {
 	MinPodSecurityLevel string `json:"minPodSecurityLevel" yaml:"minPodSecurityLevel"`
 }
+
+var _ option.Option = (*Options254800)(nil)
 
 func (o Options254800) Validate() field.ErrorList {
 	if slices.Contains([]string{"restricted", "baseline", "privileged"}, o.MinPodSecurityLevel) || len(o.MinPodSecurityLevel) == 0 {

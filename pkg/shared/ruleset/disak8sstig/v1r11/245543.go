@@ -16,6 +16,7 @@ import (
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var _ rule.Rule = &Rule245543{}
@@ -35,6 +36,8 @@ type Options245543 struct {
 		Groups string `yaml:"groups"`
 	}
 }
+
+var _ option.Option = (*Options245543)(nil)
 
 func (o Options245543) Validate() field.ErrorList {
 	var (

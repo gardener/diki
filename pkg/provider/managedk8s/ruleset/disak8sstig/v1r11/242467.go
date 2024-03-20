@@ -45,6 +45,8 @@ type Options242467 struct {
 	NodeGroupByLabels    []string          `json:"nodeGroupByLabels" yaml:"nodeGroupByLabels"`
 }
 
+var _ option.Option = (*Options242467)(nil)
+
 func (o Options242467) Validate() field.ErrorList {
 	var allErrs = validation.ValidateLabels(o.KubeProxyMatchLabels, field.NewPath("kubeProxyMatchLabels"))
 	return append(allErrs, option.ValidateLabelNames(o.NodeGroupByLabels, field.NewPath("nodeGroupByLabels"))...)

@@ -28,6 +28,7 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/images"
 	"github.com/gardener/diki/pkg/shared/provider"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
@@ -45,6 +46,8 @@ type Rule242400 struct {
 type Options242400 struct {
 	KubeProxyMatchLabels map[string]string `json:"kubeProxyMatchLabels" yaml:"kubeProxyMatchLabels"`
 }
+
+var _ option.Option = (*Options242400)(nil)
 
 func (o Options242400) Validate() field.ErrorList {
 	return validation.ValidateLabels(o.KubeProxyMatchLabels, field.NewPath("kubeProxyMatchLabels"))

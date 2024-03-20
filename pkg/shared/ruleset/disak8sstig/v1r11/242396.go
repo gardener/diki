@@ -43,6 +43,8 @@ type Options242396 struct {
 	NodeGroupByLabels []string `json:"nodeGroupByLabels" yaml:"nodeGroupByLabels"`
 }
 
+var _ option.Option = (*Options242396)(nil)
+
 func (o Options242396) Validate() field.ErrorList {
 	return option.ValidateLabelNames(o.NodeGroupByLabels, field.NewPath("nodeGroupByLabels"))
 }
