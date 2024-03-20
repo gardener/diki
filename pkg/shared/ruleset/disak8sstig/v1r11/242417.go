@@ -44,17 +44,17 @@ type AcceptedPods242417 struct {
 func (o Options242417) Validate() field.ErrorList {
 	var (
 		allErrs  field.ErrorList
-		pathRoot = field.NewPath("acceptedPods")
+		rootPath = field.NewPath("acceptedPods")
 	)
 	for _, p := range o.AcceptedPods {
-		allErrs = append(allErrs, metav1validation.ValidateLabels(p.PodMatchLabels, pathRoot.Child("podMatchLabels"))...)
+		allErrs = append(allErrs, metav1validation.ValidateLabels(p.PodMatchLabels, rootPath.Child("podMatchLabels"))...)
 		for _, namespaceName := range p.NamespaceNames {
 			if !slices.Contains([]string{"kube-system", "kube-public", "kube-node-lease"}, namespaceName) {
-				allErrs = append(allErrs, field.Invalid(pathRoot.Child("namespaceNames"), namespaceName, "must be one of 'kube-system', 'kube-public' or 'kube-node-lease'"))
+				allErrs = append(allErrs, field.Invalid(rootPath.Child("namespaceNames"), namespaceName, "must be one of 'kube-system', 'kube-public' or 'kube-node-lease'"))
 			}
 		}
 		if !slices.Contains(rule.Statuses(), rule.Status(p.Status)) && len(p.Status) > 0 {
-			allErrs = append(allErrs, field.Invalid(pathRoot.Child("status"), p.Status, "must be a valid status"))
+			allErrs = append(allErrs, field.Invalid(rootPath.Child("status"), p.Status, "must be a valid status"))
 		}
 	}
 	return allErrs

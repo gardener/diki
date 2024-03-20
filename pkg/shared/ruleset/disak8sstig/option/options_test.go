@@ -61,6 +61,7 @@ var _ = Describe("options", func() {
 						NamespaceMatchLabels: map[string]string{
 							"foo": "!bar",
 						},
+						Ports: []int32{0, 100},
 					},
 					{
 						PodMatchLabels: map[string]string{
@@ -69,6 +70,7 @@ var _ = Describe("options", func() {
 						NamespaceMatchLabels: map[string]string{
 							".foo": "bar",
 						},
+						Ports: []int32{-1},
 					},
 				},
 			}
@@ -94,6 +96,17 @@ var _ = Describe("options", func() {
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("acceptedPods.namespaceMatchLabels"),
 					"BadValue": Equal(".foo"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("acceptedPods.ports"),
+					"Detail": Equal("must not be empty"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("acceptedPods.ports"),
+					"BadValue": Equal(int32(-1)),
+					"Detail":   Equal("must not be lower than 0"),
 				})),
 			))
 		})

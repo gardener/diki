@@ -79,11 +79,19 @@ type AcceptedPods242414 struct {
 func (o Options242414) Validate() field.ErrorList {
 	var (
 		allErrs  field.ErrorList
-		pathRoot = field.NewPath("acceptedPods")
+		rootPath = field.NewPath("acceptedPods")
 	)
 	for _, p := range o.AcceptedPods {
-		allErrs = append(allErrs, metav1validation.ValidateLabels(p.PodMatchLabels, pathRoot.Child("podMatchLabels"))...)
-		allErrs = append(allErrs, metav1validation.ValidateLabels(p.NamespaceMatchLabels, pathRoot.Child("namespaceMatchLabels"))...)
+		allErrs = append(allErrs, metav1validation.ValidateLabels(p.PodMatchLabels, rootPath.Child("podMatchLabels"))...)
+		allErrs = append(allErrs, metav1validation.ValidateLabels(p.NamespaceMatchLabels, rootPath.Child("namespaceMatchLabels"))...)
+		if len(p.Ports) == 0 {
+			allErrs = append(allErrs, field.Required(rootPath.Child("ports"), "must not be empty"))
+		}
+		for _, port := range p.Ports {
+			if port < 0 {
+				allErrs = append(allErrs, field.Invalid(rootPath.Child("ports"), port, "must not be lower than 0"))
+			}
+		}
 	}
 	return allErrs
 }
@@ -107,17 +115,17 @@ type AcceptedPods242415 struct {
 func (o Options242415) Validate() field.ErrorList {
 	var (
 		allErrs  field.ErrorList
-		pathRoot = field.NewPath("acceptedPods")
+		rootPath = field.NewPath("acceptedPods")
 	)
 	for _, p := range o.AcceptedPods {
-		allErrs = append(allErrs, metav1validation.ValidateLabels(p.PodMatchLabels, pathRoot.Child("podMatchLabels"))...)
-		allErrs = append(allErrs, metav1validation.ValidateLabels(p.NamespaceMatchLabels, pathRoot.Child("namespaceMatchLabels"))...)
+		allErrs = append(allErrs, metav1validation.ValidateLabels(p.PodMatchLabels, rootPath.Child("podMatchLabels"))...)
+		allErrs = append(allErrs, metav1validation.ValidateLabels(p.NamespaceMatchLabels, rootPath.Child("namespaceMatchLabels"))...)
 		if len(p.EnvironmentVariables) == 0 {
-			allErrs = append(allErrs, field.Required(pathRoot.Child("environmentVariables"), "must not be empty"))
+			allErrs = append(allErrs, field.Required(rootPath.Child("environmentVariables"), "must not be empty"))
 		}
 		for _, env := range p.EnvironmentVariables {
 			for _, msg := range validation.IsEnvVarName(env) {
-				allErrs = append(allErrs, field.Invalid(pathRoot.Child("environmentVariables"), env, msg))
+				allErrs = append(allErrs, field.Invalid(rootPath.Child("environmentVariables"), env, msg))
 			}
 		}
 	}

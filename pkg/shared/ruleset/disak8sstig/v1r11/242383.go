@@ -49,7 +49,7 @@ type SelectResource struct {
 func (o Options242383) Validate() field.ErrorList {
 	var (
 		allErrs          field.ErrorList
-		pathRoot         = field.NewPath("acceptedResources")
+		rootPath         = field.NewPath("acceptedResources")
 		checkedResources = map[string][]string{
 			"v1":             {"Pod", "ReplicationController", "Service"},
 			"apps/v1":        {"Deployment", "DaemonSet", "ReplicaSet", "StatefulSet"},
@@ -59,18 +59,18 @@ func (o Options242383) Validate() field.ErrorList {
 	)
 	for _, p := range o.AcceptedResources {
 		if kinds, ok := checkedResources[p.APIVersion]; !ok {
-			allErrs = append(allErrs, field.Invalid(pathRoot.Child("apiVersion"), p.APIVersion, "not checked apiVersion"))
+			allErrs = append(allErrs, field.Invalid(rootPath.Child("apiVersion"), p.APIVersion, "not checked apiVersion"))
 		} else if !slices.Contains(kinds, p.Kind) && p.Kind != "*" {
-			allErrs = append(allErrs, field.Invalid(pathRoot.Child("kind"), p.Kind, fmt.Sprintf("not checked kind for apiVerion %s", p.APIVersion)))
+			allErrs = append(allErrs, field.Invalid(rootPath.Child("kind"), p.Kind, fmt.Sprintf("not checked kind for apiVerion %s", p.APIVersion)))
 		}
-		allErrs = append(allErrs, metav1validation.ValidateLabels(p.MatchLabels, pathRoot.Child("matchLabels"))...)
+		allErrs = append(allErrs, metav1validation.ValidateLabels(p.MatchLabels, rootPath.Child("matchLabels"))...)
 		for _, namespaceName := range p.NamespaceNames {
 			if !slices.Contains([]string{"default", "kube-public", "kube-node-lease"}, namespaceName) {
-				allErrs = append(allErrs, field.Invalid(pathRoot.Child("namespaceNames"), namespaceName, "must be one of 'default', 'kube-public' or 'kube-node-lease'"))
+				allErrs = append(allErrs, field.Invalid(rootPath.Child("namespaceNames"), namespaceName, "must be one of 'default', 'kube-public' or 'kube-node-lease'"))
 			}
 		}
 		if !slices.Contains(rule.Statuses(), rule.Status(p.Status)) && len(p.Status) > 0 {
-			allErrs = append(allErrs, field.Invalid(pathRoot.Child("status"), p.Status, "must be a valid status"))
+			allErrs = append(allErrs, field.Invalid(rootPath.Child("status"), p.Status, "must be a valid status"))
 		}
 	}
 	return allErrs
