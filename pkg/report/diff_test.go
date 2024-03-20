@@ -138,7 +138,7 @@ var _ = Describe("diff", func() {
 			simpleReport2.MinStatus = ""
 			diff, err := report.CreateDiff(simpleReport1, simpleReport2)
 
-			expectedDiff := &report.Diff{
+			expectedDiff := &report.Difference{
 				Time:      diff.Time,
 				MinStatus: rule.Passed,
 				Providers: []report.ProviderDiff{
@@ -209,7 +209,7 @@ var _ = Describe("diff", func() {
 
 			diff, err := report.CreateDiff(simpleReport1, simpleReport2)
 
-			expectedDiff := &report.Diff{
+			expectedDiff := &report.Difference{
 				Time:      diff.Time,
 				MinStatus: rule.Passed,
 				Providers: []report.ProviderDiff{
@@ -314,7 +314,7 @@ var _ = Describe("diff", func() {
 
 			diff, err := report.CreateDiff(simpleReport1, simpleReport2)
 
-			expectedDiff := &report.Diff{
+			expectedDiff := &report.Difference{
 				Time:      diff.Time,
 				MinStatus: rule.Passed,
 				Providers: []report.ProviderDiff{
