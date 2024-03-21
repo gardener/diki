@@ -266,7 +266,7 @@ var _ = Describe("#242400", func() {
 		fakeRESTClient = &manualfake.RESTClient{
 			GroupVersion:         schema.GroupVersion{Group: "", Version: "v1"},
 			NegotiatedSerializer: scheme.Codecs,
-			Client: manualfake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
+			Client: manualfake.CreateHTTPClient(func(_ *http.Request) (*http.Response, error) {
 				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(podSecurityNotSetNodeConfig)))}, nil
 			}),
 		}
@@ -299,7 +299,7 @@ var _ = Describe("#242400", func() {
 		fakeRESTClient = &manualfake.RESTClient{
 			GroupVersion:         schema.GroupVersion{Group: "", Version: "v1"},
 			NegotiatedSerializer: scheme.Codecs,
-			Client: manualfake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
+			Client: manualfake.CreateHTTPClient(func(_ *http.Request) (*http.Response, error) {
 				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(podSecurityNotSetNodeConfig)))}, nil
 			}),
 		}

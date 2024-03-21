@@ -36,7 +36,7 @@ func NewDikiCommand(ctx context.Context, providerCreateFuncs map[string]provider
 		Long: `Diki a "compliance checker" or sorts, a detective control framework. 
 It is part of the Gardener family, but can be used also on other Kubernetes distros or even on non-Kubernetes environments, 
 e.g. to check compliance of your hyperscaler accounts.`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return cmd.Help()
 		},
 	}
@@ -45,7 +45,7 @@ e.g. to check compliance of your hyperscaler accounts.`,
 		Use:   "version",
 		Short: "Show version details.",
 		Long:  "Show version details.",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			info := version.Get()
 			jsonInfo, err := json.Marshal(info)
 			if err != nil {
@@ -61,7 +61,7 @@ e.g. to check compliance of your hyperscaler accounts.`,
 		Use:   "run",
 		Short: "Run some rulesets and rules.",
 		Long:  `Run allows running rulesets and rules for the given provider(s).`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			return runCmd(ctx, providerCreateFuncs, opts)
 		},
 	}
@@ -74,7 +74,7 @@ e.g. to check compliance of your hyperscaler accounts.`,
 		Use:   "report",
 		Short: "Report converts output files.",
 		Long:  `Report converts output files.`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			return reportCmd(args, reportOpts)
 		},
 	}
