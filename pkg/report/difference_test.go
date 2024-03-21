@@ -228,6 +228,37 @@ var _ = Describe("diff", func() {
 						},
 						Rulesets: []report.RulesetDifference{
 							{
+								ID:      "ruleset-bar",
+								Name:    "Ruleset Bar",
+								Version: "v1",
+								Rules: []report.RuleDifference{
+									{
+										ID:   "1",
+										Name: "1",
+										Added: []report.Check{
+											{
+												Status:  "Passed",
+												Message: "foo",
+											},
+										},
+									},
+									{
+										ID:   "2",
+										Name: "2",
+										Added: []report.Check{
+											{
+												Status:  "Passed",
+												Message: "foo",
+											},
+											{
+												Status:  "Failed",
+												Message: "foo",
+											},
+										},
+									},
+								},
+							},
+							{
 								ID:      "ruleset-foo",
 								Name:    "Ruleset Foo",
 								Version: "v1",
@@ -258,37 +289,6 @@ var _ = Describe("diff", func() {
 										Added: []report.Check{
 											{
 												Status:  "Passed",
-												Message: "foo",
-											},
-										},
-									},
-								},
-							},
-							{
-								ID:      "ruleset-bar",
-								Name:    "Ruleset Bar",
-								Version: "v1",
-								Rules: []report.RuleDifference{
-									{
-										ID:   "1",
-										Name: "1",
-										Added: []report.Check{
-											{
-												Status:  "Passed",
-												Message: "foo",
-											},
-										},
-									},
-									{
-										ID:   "2",
-										Name: "2",
-										Added: []report.Check{
-											{
-												Status:  "Passed",
-												Message: "foo",
-											},
-											{
-												Status:  "Failed",
 												Message: "foo",
 											},
 										},
@@ -408,6 +408,150 @@ var _ = Describe("diff", func() {
 											{
 												Status:  "Failed",
 												Message: "foo",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+			Expect(diff).To(Equal(expectedDiff))
+			Expect(err).To(BeNil())
+		})
+		It("should create correct diff when both reports have different providers and rulesets", func() {
+			simpleReport1.Providers = append(simpleReport1.Providers, report.Provider{
+				ID:   "provider-bar",
+				Name: "Provider bar",
+				Metadata: map[string]string{
+					"foo": "bar",
+				},
+				Rulesets: []report.Ruleset{
+					{
+						ID:      rulesetID,
+						Name:    rulesetName,
+						Version: rulesetVersion,
+						Rules: []report.Rule{
+							{
+								ID:   "1",
+								Name: "1",
+								Checks: []report.Check{
+									{
+										Message: "Warning",
+										Status:  "Warning",
+									},
+								},
+							},
+						},
+					},
+				},
+			})
+			simpleReport2.Providers[0].Rulesets[0].Version = "v1.1"
+
+			diff, err := report.CreateDifference(simpleReport1, simpleReport2)
+
+			expectedDiff := &report.Difference{
+				Time:      diff.Time,
+				MinStatus: rule.Passed,
+				Providers: []report.ProviderDifference{
+					{
+						ID:   "provider-foo",
+						Name: "Provider Foo",
+						OldMetadata: map[string]string{
+							"id":   "foo",
+							"bar":  "foo",
+							"time": reportTime.Format(time.RFC3339),
+						},
+						NewMetadata: map[string]string{
+							"id":   "bar",
+							"foo":  "bar",
+							"time": reportTime.Format(time.RFC3339),
+						},
+						Rulesets: []report.RulesetDifference{
+							{
+								ID:      "ruleset-foo",
+								Name:    "Ruleset Foo",
+								Version: "v1",
+								Rules: []report.RuleDifference{
+									{
+										ID:   "1",
+										Name: "1",
+										Removed: []report.Check{
+											{
+												Status:  "Passed",
+												Message: "foo",
+											},
+										},
+									},
+									{
+										ID:   "2",
+										Name: "2",
+										Removed: []report.Check{
+											{
+												Status:  "Passed",
+												Message: "foo",
+											},
+											{
+												Status:  "Failed",
+												Message: "foo",
+											},
+										},
+									},
+								},
+							},
+							{
+								ID:      "ruleset-foo",
+								Name:    "Ruleset Foo",
+								Version: "v1.1",
+								Rules: []report.RuleDifference{
+									{
+										ID:   "2",
+										Name: "2",
+										Added: []report.Check{
+											{
+												Status:  "Passed",
+												Message: "foo",
+											},
+										},
+									},
+									{
+										ID:   "3",
+										Name: "3",
+										Added: []report.Check{
+											{
+												Status:  "Passed",
+												Message: "foo",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					{
+						ID:   "provider-bar",
+						Name: "Provider bar",
+						OldMetadata: map[string]string{
+							"foo":  "bar",
+							"time": reportTime.Format(time.RFC3339),
+						},
+						NewMetadata: map[string]string{
+							"time": reportTime.Format(time.RFC3339),
+						},
+						Rulesets: []report.RulesetDifference{
+							{
+								ID:      "ruleset-foo",
+								Name:    "Ruleset Foo",
+								Version: "v1",
+								Rules: []report.RuleDifference{
+									{
+										ID:   "1",
+										Name: "1",
+										Removed: []report.Check{
+											{
+												Status:  "Warning",
+												Message: "Warning",
 											},
 										},
 									},

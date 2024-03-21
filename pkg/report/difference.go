@@ -67,9 +67,11 @@ func CreateDifference(oldReport Report, newReport Report) (*Difference, error) {
 		Providers: []ProviderDifference{},
 	}
 
-	for _, newProvider := range newReport.Providers {
+	providers := getUniqueProviders(oldReport.Providers, newReport.Providers)
+
+	for _, provider := range providers {
 		oldProviderIdx := slices.IndexFunc(oldReport.Providers, func(p Provider) bool {
-			return p.ID == newProvider.ID
+			return p.ID == provider
 		})
 
 		oldProvider := Provider{}
@@ -77,24 +79,55 @@ func CreateDifference(oldReport Report, newReport Report) (*Difference, error) {
 			oldProvider = oldReport.Providers[oldProviderIdx]
 		}
 
-		var rulesetDiff []RulesetDifference
-		for _, newRuleset := range newProvider.Rulesets {
-			oldRulesetIdx := slices.IndexFunc(oldProvider.Rulesets, func(r Ruleset) bool {
-				return r.ID == newRuleset.ID && r.Version == newRuleset.Version
-			})
+		newProviderIdx := slices.IndexFunc(newReport.Providers, func(p Provider) bool {
+			return p.ID == provider
+		})
 
-			oldRuleset := Ruleset{}
-			if oldRulesetIdx >= 0 {
-				oldRuleset = oldProvider.Rulesets[oldRulesetIdx]
-			}
-
-			rulesetDiff = append(rulesetDiff, RulesetDifference{
-				ID:      newRuleset.ID,
-				Name:    newRuleset.Name,
-				Version: newRuleset.Version,
-				Rules:   getRulesDifference(oldRuleset.Rules, newRuleset.Rules),
-			})
+		newProvider := Provider{}
+		if newProviderIdx >= 0 {
+			newProvider = newReport.Providers[newProviderIdx]
 		}
+
+		rulesets := getUniqueRulesets(oldProvider.Rulesets, newProvider.Rulesets)
+
+		var rulesetDiff []RulesetDifference
+		for id, versions := range rulesets {
+			for _, version := range versions {
+				oldRulesetIdx := slices.IndexFunc(oldProvider.Rulesets, func(r Ruleset) bool {
+					return r.ID == id && r.Version == version
+				})
+
+				oldRuleset := Ruleset{}
+				if oldRulesetIdx >= 0 {
+					oldRuleset = oldProvider.Rulesets[oldRulesetIdx]
+				}
+
+				newRulesetIdx := slices.IndexFunc(newProvider.Rulesets, func(r Ruleset) bool {
+					return r.ID == id && r.Version == version
+				})
+
+				newRuleset := Ruleset{}
+				if newRulesetIdx >= 0 {
+					newRuleset = newProvider.Rulesets[newRulesetIdx]
+				}
+
+				rulesetName := newRuleset.Name
+				if len(rulesetName) == 0 {
+					rulesetName = oldRuleset.Name
+				}
+				rulesetDiff = append(rulesetDiff, RulesetDifference{
+					ID:      id,
+					Name:    rulesetName,
+					Version: version,
+					Rules:   getRulesDifference(oldRuleset.Rules, newRuleset.Rules),
+				})
+			}
+		}
+
+		// sort ruleset alphabetically to ensure static order
+		slices.SortFunc(rulesetDiff, func(a, b RulesetDifference) int {
+			return cmp.Compare(a.ID, b.ID)
+		})
 
 		var (
 			oldMetadata = map[string]string{}
@@ -111,9 +144,13 @@ func CreateDifference(oldReport Report, newReport Report) (*Difference, error) {
 		oldMetadata["time"] = oldReport.Time.Format(time.RFC3339)
 		newMetadata["time"] = newReport.Time.Format(time.RFC3339)
 
+		providerName := newProvider.Name
+		if len(providerName) == 0 {
+			providerName = oldProvider.Name
+		}
 		diff.Providers = append(diff.Providers, ProviderDifference{
-			ID:          newProvider.ID,
-			Name:        newProvider.Name,
+			ID:          provider,
+			Name:        providerName,
 			OldMetadata: oldMetadata,
 			NewMetadata: newMetadata,
 			Rulesets:    rulesetDiff,
@@ -200,4 +237,45 @@ func getCheckDifference(rules1, rules2 []Rule) []Rule {
 	}
 
 	return uniqueRulesChecks
+}
+
+// getUniqueProviders returns a list of all unique
+// provider IDs contained in ps1 and ps2.
+func getUniqueProviders(ps1, ps2 []Provider) []string {
+	var ps []string
+	for _, p1 := range ps1 {
+		ps = append(ps, p1.ID)
+	}
+
+	for _, p2 := range ps2 {
+		p1Idx := slices.IndexFunc(ps1, func(p1 Provider) bool {
+			return p2.ID == p1.ID
+		})
+
+		if p1Idx < 0 {
+			ps = append(ps, p2.ID)
+		}
+	}
+	return ps
+}
+
+// getUniqueRulesets returns a map of all unique rulesets,
+// where the maps keys are ruleset IDs and the values are a
+// list of all unique versions in rss1 and rss2.
+func getUniqueRulesets(rss1, rss2 []Ruleset) map[string][]string {
+	rss := map[string][]string{}
+	for _, rs1 := range rss1 {
+		rss[rs1.ID] = append(rss[rs1.ID], rs1.Version)
+	}
+
+	for _, rs2 := range rss2 {
+		rs1Idx := slices.IndexFunc(rss1, func(rs1 Ruleset) bool {
+			return rs2.ID == rs1.ID && rs2.Version == rs1.Version
+		})
+
+		if rs1Idx < 0 {
+			rss[rs2.ID] = append(rss[rs2.ID], rs2.Version)
+		}
+	}
+	return rss
 }
