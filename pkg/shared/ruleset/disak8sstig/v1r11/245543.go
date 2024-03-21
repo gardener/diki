@@ -40,17 +40,13 @@ type Options245543 struct {
 var _ option.Option = (*Options245543)(nil)
 
 func (o Options245543) Validate() field.ErrorList {
-	var (
-		allErrs   field.ErrorList
-		usersPath = "acceptedTokens.users"
-		uidPath   = "acceptedTokens.uid"
-	)
+	var allErrs field.ErrorList
 	for _, acceptedToken := range o.AcceptedTokens {
 		if len(acceptedToken.User) == 0 {
-			allErrs = append(allErrs, field.Required(field.NewPath(usersPath), "must be set"))
+			allErrs = append(allErrs, field.Required(field.NewPath("acceptedTokens.users"), "must be set"))
 		}
 		if len(acceptedToken.UID) == 0 {
-			allErrs = append(allErrs, field.Required(field.NewPath(uidPath), "must be set"))
+			allErrs = append(allErrs, field.Required(field.NewPath("acceptedTokens.uid"), "must be set"))
 		}
 	}
 	return allErrs
