@@ -26,6 +26,23 @@
       "matchPackagePatterns": ["golang"],
     },
     {
+      // Update only patchlevels of major dependencies like kubernetes and controller-runtime.
+      // Minor and major upgrades most likely require manual adaptations of the code.
+      "matchDatasources": ["go"],
+      "matchUpdateTypes": ["major", "minor"],
+      "matchPackagePatterns": [
+        "k8s\\.io\/.+",
+        "sigs\\.k8s\\.io\/controller-runtime",
+      ],
+      "enabled": false
+    },
+    {
+      // Ignore dependency updates from k8s.io/kube-openapi because it depends on k8s.io/apiserver.
+      "matchDatasources": ["go"],
+      "matchPackagePatterns": ["k8s\\.io\/kube-openapi"],
+      "enabled": false
+    },
+    {
       // Group github-actions minor updates in one PR
       "matchManagers": ["github-actions"],
       "groupName": "github-actions"
