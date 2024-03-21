@@ -15,40 +15,40 @@ import (
 
 // Difference contains the difference between 2 reports.
 type Difference struct {
-	Time      time.Time      `json:"time"`
-	MinStatus rule.Status    `json:"minStatus,omitempty"`
-	Providers []ProviderDiff `json:"providers"`
+	Time      time.Time            `json:"time"`
+	MinStatus rule.Status          `json:"minStatus,omitempty"`
+	Providers []ProviderDifference `json:"providers"`
 }
 
-// ProviderDiff contains the difference between 2 reports
+// ProviderDifference contains the difference between 2 reports
 // for a known provider and its ran rulesets.
-type ProviderDiff struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	OldMetadata map[string]string `json:"oldMetadata,omitempty"`
-	NewMetadata map[string]string `json:"newMetadata,omitempty"`
-	Rulesets    []RulesetDiff     `json:"rulesets"`
+type ProviderDifference struct {
+	ID          string              `json:"id"`
+	Name        string              `json:"name"`
+	OldMetadata map[string]string   `json:"oldMetadata,omitempty"`
+	NewMetadata map[string]string   `json:"newMetadata,omitempty"`
+	Rulesets    []RulesetDifference `json:"rulesets"`
 }
 
-// RulesetDiff contains the difference between 2 reports
+// RulesetDifference contains the difference between 2 reports
 // for a ruleset and its rules.
-type RulesetDiff struct {
-	ID      string     `json:"id"`
-	Name    string     `json:"name"`
-	Version string     `json:"version"`
-	Rules   []RuleDiff `json:"rules"`
+type RulesetDifference struct {
+	ID      string           `json:"id"`
+	Name    string           `json:"name"`
+	Version string           `json:"version"`
+	Rules   []RuleDifference `json:"rules"`
 }
 
-// RuleDiff contains the difference between 2 reports for a single rule.
-type RuleDiff struct {
+// RuleDifference contains the difference between 2 reports for a single rule.
+type RuleDifference struct {
 	ID      string  `json:"id"`
 	Name    string  `json:"name"`
 	Added   []Check `json:"added,omitempty"`
 	Removed []Check `json:"removed,omitempty"`
 }
 
-// CreateDiff creates the difference between 2 reports.
-func CreateDiff(oldReport Report, newReport Report) (*Difference, error) {
+// CreateDifference creates the difference between 2 reports.
+func CreateDifference(oldReport Report, newReport Report) (*Difference, error) {
 	var minStatus rule.Status
 	switch {
 	case oldReport.MinStatus == newReport.MinStatus:
@@ -64,7 +64,7 @@ func CreateDiff(oldReport Report, newReport Report) (*Difference, error) {
 	diff := &Difference{
 		Time:      time.Now(),
 		MinStatus: minStatus,
-		Providers: []ProviderDiff{},
+		Providers: []ProviderDifference{},
 	}
 
 	for _, newProvider := range newReport.Providers {
@@ -77,7 +77,7 @@ func CreateDiff(oldReport Report, newReport Report) (*Difference, error) {
 			oldProvider = oldReport.Providers[oldProviderIdx]
 		}
 
-		var rulesetDiff []RulesetDiff
+		var rulesetDiff []RulesetDifference
 		for _, newRuleset := range newProvider.Rulesets {
 			oldRulesetIdx := slices.IndexFunc(oldProvider.Rulesets, func(r Ruleset) bool {
 				return r.ID == newRuleset.ID && r.Version == newRuleset.Version
@@ -88,11 +88,11 @@ func CreateDiff(oldReport Report, newReport Report) (*Difference, error) {
 				oldRuleset = oldProvider.Rulesets[oldRulesetIdx]
 			}
 
-			rulesetDiff = append(rulesetDiff, RulesetDiff{
+			rulesetDiff = append(rulesetDiff, RulesetDifference{
 				ID:      newRuleset.ID,
 				Name:    newRuleset.Name,
 				Version: newRuleset.Version,
-				Rules:   getRulesDiff(oldRuleset.Rules, newRuleset.Rules),
+				Rules:   getRulesDifference(oldRuleset.Rules, newRuleset.Rules),
 			})
 		}
 
@@ -109,9 +109,9 @@ func CreateDiff(oldReport Report, newReport Report) (*Difference, error) {
 		}
 
 		oldMetadata["time"] = oldReport.Time.Format(time.RFC3339)
-		newMetadata["time"] = oldReport.Time.Format(time.RFC3339)
+		newMetadata["time"] = newReport.Time.Format(time.RFC3339)
 
-		diff.Providers = append(diff.Providers, ProviderDiff{
+		diff.Providers = append(diff.Providers, ProviderDifference{
 			ID:          newProvider.ID,
 			Name:        newProvider.Name,
 			OldMetadata: oldMetadata,
@@ -122,15 +122,15 @@ func CreateDiff(oldReport Report, newReport Report) (*Difference, error) {
 	return diff, nil
 }
 
-func getRulesDiff(oldRules, newRules []Rule) []RuleDiff {
+func getRulesDifference(oldRules, newRules []Rule) []RuleDifference {
 	var (
-		ruleDiff      []RuleDiff
+		ruleDiff      []RuleDifference
 		addedChecks   = getCheckDifference(newRules, oldRules)
 		removedChecks = getCheckDifference(oldRules, newRules)
 	)
 
 	for _, newCheck := range addedChecks {
-		ruleDiff = append(ruleDiff, RuleDiff{
+		ruleDiff = append(ruleDiff, RuleDifference{
 			ID:    newCheck.ID,
 			Name:  newCheck.Name,
 			Added: newCheck.Checks,
@@ -138,7 +138,7 @@ func getRulesDiff(oldRules, newRules []Rule) []RuleDiff {
 	}
 
 	for _, removedCheck := range removedChecks {
-		idx := slices.IndexFunc(ruleDiff, func(r RuleDiff) bool {
+		idx := slices.IndexFunc(ruleDiff, func(r RuleDifference) bool {
 			return r.ID == removedCheck.ID
 		})
 
@@ -147,7 +147,7 @@ func getRulesDiff(oldRules, newRules []Rule) []RuleDiff {
 			continue
 		}
 
-		ruleDiff = append(ruleDiff, RuleDiff{
+		ruleDiff = append(ruleDiff, RuleDifference{
 			ID:      removedCheck.ID,
 			Name:    removedCheck.Name,
 			Removed: removedCheck.Checks,
@@ -155,7 +155,7 @@ func getRulesDiff(oldRules, newRules []Rule) []RuleDiff {
 	}
 
 	// sort rules by id
-	slices.SortFunc(ruleDiff, func(a, b RuleDiff) int {
+	slices.SortFunc(ruleDiff, func(a, b RuleDifference) int {
 		return cmp.Compare(a.ID, b.ID)
 	})
 	return ruleDiff
