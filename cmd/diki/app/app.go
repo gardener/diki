@@ -219,7 +219,7 @@ func generateCmd(args []string, rootOpts reportOptions, opts generateOptions, lo
 	var writer io.Writer = os.Stdout
 	if len(rootOpts.outputPath) > 0 {
 		var file *os.File
-		if file, err = os.Create(rootOpts.outputPath); err != nil {
+		if file, err = os.OpenFile(rootOpts.outputPath, os.O_WRONLY|os.O_CREATE, 0600); err != nil {
 			return err
 		}
 		defer func() {
