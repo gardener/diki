@@ -7,7 +7,7 @@ toolchain go1.22.1
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/gardener/gardener v1.90.4
-	github.com/google/uuid v1.4.0
+	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo/v2 v2.15.0
 	github.com/onsi/gomega v1.31.1
 	github.com/spf13/cobra v1.8.0
