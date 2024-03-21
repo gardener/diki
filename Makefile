@@ -9,9 +9,6 @@ HACK_DIR            := $(REPO_ROOT)/hack
 VERSION             := $(shell cat "$(REPO_ROOT)/VERSION")
 EFFECTIVE_VERSION   := $(VERSION)-$(shell git rev-parse HEAD)
 
-# TODO: remove this once g/g updates to this or newer version
-GOIMPORTSREVISER_VERSION = v3.4.0
-
 
 LD_FLAGS := "-w $(shell EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) bash $(HACK_DIR)/get-build-ld-flags.sh)"
 

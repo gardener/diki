@@ -4,7 +4,9 @@
 
 package utils
 
-import "slices"
+import (
+	"slices"
+)
 
 // EqualSets checks if two slices contain exactly the same elements independent of the ordering.
 func EqualSets(s1, s2 []string) bool {

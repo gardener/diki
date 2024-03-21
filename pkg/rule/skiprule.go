@@ -4,7 +4,9 @@
 
 package rule
 
-import "context"
+import (
+	"context"
+)
 
 var _ Rule = &SkipRule{}
 

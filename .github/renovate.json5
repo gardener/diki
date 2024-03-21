@@ -1,0 +1,33 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommitsDisabled",
+    "regexManagers:githubActionsVersions",
+    "group:monorepos"
+  ],
+  "labels": ["kind/enhancement"],
+  "automergeStrategy": "squash",
+  "customManagers": [
+    {
+      // Generic detection for pod-like image specifications.
+      "customType": "regex",
+      "fileMatch": ["^\.ci\/pipeline_definitions$"],
+      "matchStrings": ["image: ['\"]?(?<depName>.*?):(?<currentValue>.*?)['\"]?\\s"],
+      "datasourceTemplate": "docker"
+    },
+  ],
+  "packageRules": [
+    {
+      // Group golang updates in one PR.
+      "groupName": "golang",
+      "matchDatasources": ["docker", "go-version"],
+      "matchPackagePatterns": ["golang"],
+    },
+    {
+      // Group github-actions minor updates in one PR
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions"
+    }
+  ]
+}
