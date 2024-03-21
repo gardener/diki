@@ -12,7 +12,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-// Option validates that configurations are correctly defined
+// Option that can be validated in order to ensure
+// that configurations are correctly defined
 type Option interface {
 	Validate() field.ErrorList
 }
