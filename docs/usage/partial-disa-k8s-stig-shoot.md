@@ -30,7 +30,5 @@ diki run --config=./example/guides/managedshoot.yaml --provider=managedk8s --rul
 
 After running diki an output file is generated if the `output.path` configuration is set. In the example config it is set to `/tmp/output.json`. We can use this file to create a html diki report using the following command:
 ```bash
-diki run --config=./example/guides/managedshoot.yaml --provider=managedk8s --ruleset-id=disa-kubernetes-stig --ruleset-version=v1r11
-```
-diki report /tmp/output.json > /tmp/output.html
+diki report generate --output=/tmp/output.html /tmp/output.json
 ```
