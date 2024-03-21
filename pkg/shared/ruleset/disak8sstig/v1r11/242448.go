@@ -13,7 +13,9 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/component-base/version"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -40,6 +42,13 @@ type Rule242448 struct {
 type Options242448 struct {
 	KubeProxyMatchLabels map[string]string `json:"kubeProxyMatchLabels" yaml:"kubeProxyMatchLabels"`
 	*option.FileOwnerOptions
+}
+
+var _ option.Option = (*Options242448)(nil)
+
+func (o Options242448) Validate() field.ErrorList {
+	allErrs := validation.ValidateLabels(o.KubeProxyMatchLabels, field.NewPath("kubeProxyMatchLabels"))
+	return append(allErrs, o.FileOwnerOptions.Validate()...)
 }
 
 func (r *Rule242448) ID() string {

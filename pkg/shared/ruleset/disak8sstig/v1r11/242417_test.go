@@ -9,8 +9,10 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -175,5 +177,57 @@ var _ = Describe("#242417", func() {
 		}
 
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
+	})
+
+	Describe("#Validate", func() {
+		It("should correctly validate options", func() {
+			options = &v1r11.Options242417{
+				AcceptedPods: []v1r11.AcceptedPods242417{
+					{
+						PodMatchLabels: map[string]string{},
+						NamespaceNames: []string{"default", "kube-public", "kube-node-lease"},
+					},
+					{
+						PodMatchLabels: map[string]string{
+							"-foo": "bar",
+						},
+						NamespaceNames: []string{"kube-system"},
+					},
+					{
+						PodMatchLabels: map[string]string{
+							"foo": "?bar",
+						},
+						NamespaceNames: []string{},
+						Status:         "asd",
+					},
+				},
+			}
+
+			result := options.Validate()
+
+			Expect(result).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
+				"Type":     Equal(field.ErrorTypeInvalid),
+				"Field":    Equal("acceptedPods.namespaceNames"),
+				"BadValue": Equal("default"),
+				"Detail":   Equal("must be one of 'kube-system', 'kube-public' or 'kube-node-lease'"),
+			})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("acceptedPods.podMatchLabels"),
+					"BadValue": Equal("-foo"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("acceptedPods.podMatchLabels"),
+					"BadValue": Equal("?bar"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("acceptedPods.status"),
+					"BadValue": Equal("asd"),
+					"Detail":   Equal("must be a valid status"),
+				})),
+			))
+		})
 	})
 })

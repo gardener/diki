@@ -10,14 +10,17 @@ import (
 	"slices"
 	"strings"
 
+	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/internal/utils"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var _ rule.Rule = &Rule242383{}
@@ -31,6 +34,8 @@ type Options242383 struct {
 	AcceptedResources []AcceptedResources242383 `json:"acceptedResources" yaml:"acceptedResources"`
 }
 
+var _ option.Option = (*Options242383)(nil)
+
 type AcceptedResources242383 struct {
 	SelectResource
 	Justification string `json:"justification" yaml:"justification"`
@@ -42,6 +47,36 @@ type SelectResource struct {
 	Kind           string            `json:"kind" yaml:"kind"`
 	MatchLabels    map[string]string `json:"matchLabels" yaml:"matchLabels"`
 	NamespaceNames []string          `json:"namespaceNames" yaml:"namespaceNames"`
+}
+
+func (o Options242383) Validate() field.ErrorList {
+	var (
+		allErrs          field.ErrorList
+		rootPath         = field.NewPath("acceptedResources")
+		checkedResources = map[string][]string{
+			"v1":             {"Pod", "ReplicationController", "Service"},
+			"apps/v1":        {"Deployment", "DaemonSet", "ReplicaSet", "StatefulSet"},
+			"batch/v1":       {"Job", "CronJob"},
+			"autoscaling/v1": {"HorizontalPodAutoscaler"},
+		}
+	)
+	for _, p := range o.AcceptedResources {
+		if kinds, ok := checkedResources[p.APIVersion]; !ok {
+			allErrs = append(allErrs, field.Invalid(rootPath.Child("apiVersion"), p.APIVersion, "not checked apiVersion"))
+		} else if !slices.Contains(kinds, p.Kind) && p.Kind != "*" {
+			allErrs = append(allErrs, field.Invalid(rootPath.Child("kind"), p.Kind, fmt.Sprintf("not checked kind for apiVerion %s", p.APIVersion)))
+		}
+		allErrs = append(allErrs, metav1validation.ValidateLabels(p.MatchLabels, rootPath.Child("matchLabels"))...)
+		for _, namespaceName := range p.NamespaceNames {
+			if !slices.Contains([]string{"default", "kube-public", "kube-node-lease"}, namespaceName) {
+				allErrs = append(allErrs, field.Invalid(rootPath.Child("namespaceNames"), namespaceName, "must be one of 'default', 'kube-public' or 'kube-node-lease'"))
+			}
+		}
+		if !slices.Contains(rule.Statuses(), rule.Status(p.Status)) && len(p.Status) > 0 {
+			allErrs = append(allErrs, field.Invalid(rootPath.Child("status"), p.Status, "must be a valid status"))
+		}
+	}
+	return allErrs
 }
 
 func (r *Rule242383) ID() string {

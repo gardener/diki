@@ -6,6 +6,7 @@ package disak8sstig
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/Masterminds/semver/v3"
 	"k8s.io/client-go/kubernetes"
@@ -15,6 +16,7 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
@@ -46,87 +48,87 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 
 	opts242383, err := getV1R11OptionOrNil[sharedv1r11.Options242383](ruleOptions[sharedv1r11.ID242383].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242383 error: %s", err.Error())
 	}
 	opts242393, err := getV1R11OptionOrNil[sharedv1r11.Options242393](ruleOptions[sharedv1r11.ID242393].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242393 error: %s", err.Error())
 	}
 	opts242394, err := getV1R11OptionOrNil[sharedv1r11.Options242394](ruleOptions[sharedv1r11.ID242394].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242394 error: %s", err.Error())
 	}
 	opts242396, err := getV1R11OptionOrNil[sharedv1r11.Options242396](ruleOptions[sharedv1r11.ID242396].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242396 error: %s", err.Error())
 	}
 	opts242400, err := getV1R11OptionOrNil[v1r11.Options242400](ruleOptions[sharedv1r11.ID242400].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242400 error: %s", err.Error())
 	}
 	opts242404, err := getV1R11OptionOrNil[sharedv1r11.Options242404](ruleOptions[sharedv1r11.ID242404].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242404 error: %s", err.Error())
 	}
 	opts242406, err := getV1R11OptionOrNil[sharedv1r11.Options242406](ruleOptions[sharedv1r11.ID242406].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242406 error: %s", err.Error())
 	}
 	opts242407, err := getV1R11OptionOrNil[sharedv1r11.Options242407](ruleOptions[sharedv1r11.ID242407].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242407 error: %s", err.Error())
 	}
-	opts242414, err := getV1R11OptionOrNil[v1r11.Options242414](ruleOptions[sharedv1r11.ID242414].Args)
+	opts242414, err := getV1R11OptionOrNil[option.Options242414](ruleOptions[sharedv1r11.ID242414].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242414 error: %s", err.Error())
 	}
-	opts242415, err := getV1R11OptionOrNil[v1r11.Options242415](ruleOptions[sharedv1r11.ID242415].Args)
+	opts242415, err := getV1R11OptionOrNil[option.Options242415](ruleOptions[sharedv1r11.ID242415].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242415 error: %s", err.Error())
 	}
 	opts242417, err := getV1R11OptionOrNil[sharedv1r11.Options242417](ruleOptions[sharedv1r11.ID242417].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242417 error: %s", err.Error())
 	}
 	opts242442, err := getV1R11OptionOrNil[v1r11.Options242442](ruleOptions[sharedv1r11.ID242442].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242442 error: %s", err.Error())
 	}
 	opts242447, err := getV1R11OptionOrNil[sharedv1r11.Options242447](ruleOptions[sharedv1r11.ID242447].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242447 error: %s", err.Error())
 	}
 	opts242448, err := getV1R11OptionOrNil[sharedv1r11.Options242448](ruleOptions[sharedv1r11.ID242448].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242448 error: %s", err.Error())
 	}
 	opts242449, err := getV1R11OptionOrNil[sharedv1r11.Options242449](ruleOptions[sharedv1r11.ID242449].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242449 error: %s", err.Error())
 	}
 	opts242450, err := getV1R11OptionOrNil[sharedv1r11.Options242450](ruleOptions[sharedv1r11.ID242450].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242450 error: %s", err.Error())
 	}
 	opts242451, err := getV1R11OptionOrNil[v1r11.Options242451](ruleOptions[sharedv1r11.ID242451].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242451 error: %s", err.Error())
 	}
 	opts242452, err := getV1R11OptionOrNil[sharedv1r11.Options242452](ruleOptions[sharedv1r11.ID242452].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242452 error: %s", err.Error())
 	}
 	opts242453, err := getV1R11OptionOrNil[sharedv1r11.Options242453](ruleOptions[sharedv1r11.ID242453].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242453 error: %s", err.Error())
 	}
 	opts242466, err := getV1R11OptionOrNil[v1r11.Options242466](ruleOptions[sharedv1r11.ID242466].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242466 error: %s", err.Error())
 	}
 	opts242467, err := getV1R11OptionOrNil[v1r11.Options242467](ruleOptions[sharedv1r11.ID242467].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 242467 error: %s", err.Error())
 	}
 
 	const (
@@ -686,6 +688,12 @@ func parseV1R11Options[O v1r11.RuleOption](options any) (*O, error) {
 	var parsedOptions O
 	if err := json.Unmarshal(optionsByte, &parsedOptions); err != nil {
 		return nil, err
+	}
+
+	if val, ok := any(parsedOptions).(option.Option); ok {
+		if err := val.Validate().ToAggregate(); err != nil {
+			return nil, err
+		}
 	}
 
 	return &parsedOptions, nil

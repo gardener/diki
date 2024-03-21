@@ -9,10 +9,12 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 	gomegatypes "github.com/onsi/gomega/types"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -21,6 +23,46 @@ import (
 )
 
 var _ = Describe("#254800", func() {
+	const (
+		admissionConfig = `apiVersion: apiserver.config.k8s.io/v1
+kind: AdmissionConfiguration
+plugins:
+- name: PodSecurity
+  configuration:
+    apiVersion: pod-security.admission.config.k8s.io/v1
+    kind: PodSecurityConfiguration
+    defaults:
+      enforce: baseline
+      audit: baseline
+      warn: baseline`
+		admissionConfigWithPath = `apiVersion: apiserver.k8s.io/v1alpha1
+kind: AdmissionConfiguration
+plugins:
+- configuration: null
+  name: PodSecurity
+  path: /foo/bar/podsecurity.yaml`
+		admissionConfigWithoutPlugins = `apiVersion: apiserver.config.k8s.io/v1
+kind: AdmissionConfiguration`
+		podSecurityPrivileged = `apiVersion: pod-security.admission.config.k8s.io/v1alpha1
+defaults:
+  audit: privileged
+  enforce: privileged
+  warn: privileged
+kind: PodSecurityConfiguration`
+		podSecurityBaseline = `apiVersion: pod-security.admission.config.k8s.io/v1beta1
+defaults:
+  audit: baseline
+  enforce: baseline
+  warn: baseline
+kind: PodSecurityConfiguration`
+		podSecurityRestricted = `apiVersion: pod-security.admission.config.k8s.io/v1
+defaults:
+  audit: restricted
+  enforce: restricted
+  warn: restricted
+kind: PodSecurityConfiguration`
+	)
+
 	var (
 		fakeClient        client.Client
 		ctx               = context.TODO()
@@ -158,44 +200,30 @@ var _ = Describe("#254800", func() {
 			[]rule.CheckResult{{Status: rule.Passed, Message: "PodSecurity is properly configured", Target: podSecurityTarget}},
 			BeNil()),
 	)
-})
 
-const (
-	admissionConfig = `apiVersion: apiserver.config.k8s.io/v1
-kind: AdmissionConfiguration
-plugins:
-- name: PodSecurity
-  configuration:
-    apiVersion: pod-security.admission.config.k8s.io/v1
-    kind: PodSecurityConfiguration
-    defaults:
-      enforce: baseline
-      audit: baseline
-      warn: baseline`
-	admissionConfigWithPath = `apiVersion: apiserver.k8s.io/v1alpha1
-kind: AdmissionConfiguration
-plugins:
-- configuration: null
-  name: PodSecurity
-  path: /foo/bar/podsecurity.yaml`
-	admissionConfigWithoutPlugins = `apiVersion: apiserver.config.k8s.io/v1
-kind: AdmissionConfiguration`
-	podSecurityPrivileged = `apiVersion: pod-security.admission.config.k8s.io/v1alpha1
-defaults:
-  audit: privileged
-  enforce: privileged
-  warn: privileged
-kind: PodSecurityConfiguration`
-	podSecurityBaseline = `apiVersion: pod-security.admission.config.k8s.io/v1beta1
-defaults:
-  audit: baseline
-  enforce: baseline
-  warn: baseline
-kind: PodSecurityConfiguration`
-	podSecurityRestricted = `apiVersion: pod-security.admission.config.k8s.io/v1
-defaults:
-  audit: restricted
-  enforce: restricted
-  warn: restricted
-kind: PodSecurityConfiguration`
-)
+	Describe("#Validate", func() {
+		It("should not error when options are correct", func() {
+			options := &v1r11.Options254800{
+				MinPodSecurityLevel: "baseline",
+			}
+
+			result := options.Validate()
+
+			Expect(result).To(BeNil())
+		})
+		It("should return correct error when option is misconfigured", func() {
+			options := &v1r11.Options254800{
+				MinPodSecurityLevel: "foo",
+			}
+
+			result := options.Validate()
+
+			Expect(result).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
+				"Type":     Equal(field.ErrorTypeInvalid),
+				"Field":    Equal("minPodSecurityLevel"),
+				"BadValue": Equal("foo"),
+				"Detail":   Equal("must be one of 'restricted', 'baseline' or 'privileged'"),
+			}))))
+		})
+	})
+})

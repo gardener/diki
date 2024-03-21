@@ -11,10 +11,12 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var _ rule.Rule = &Rule245543{}
@@ -33,6 +35,21 @@ type Options245543 struct {
 		UID    string `yaml:"uid"`
 		Groups string `yaml:"groups"`
 	}
+}
+
+var _ option.Option = (*Options245543)(nil)
+
+func (o Options245543) Validate() field.ErrorList {
+	var allErrs field.ErrorList
+	for _, acceptedToken := range o.AcceptedTokens {
+		if len(acceptedToken.User) == 0 {
+			allErrs = append(allErrs, field.Required(field.NewPath("acceptedTokens.users"), "must be set"))
+		}
+		if len(acceptedToken.UID) == 0 {
+			allErrs = append(allErrs, field.Required(field.NewPath("acceptedTokens.uid"), "must be set"))
+		}
+	}
+	return allErrs
 }
 
 func (r *Rule245543) ID() string {

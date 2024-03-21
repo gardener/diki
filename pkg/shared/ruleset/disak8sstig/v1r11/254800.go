@@ -7,12 +7,14 @@ package v1r11
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	apiserverv1 "k8s.io/apiserver/pkg/apis/apiserver/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	admissionapiv1 "k8s.io/pod-security-admission/admission/api/v1"
@@ -20,6 +22,7 @@ import (
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var _ rule.Rule = &Rule254800{}
@@ -33,7 +36,16 @@ type Rule254800 struct {
 }
 
 type Options254800 struct {
-	MinPodSecurityLevel string
+	MinPodSecurityLevel string `json:"minPodSecurityLevel" yaml:"minPodSecurityLevel"`
+}
+
+var _ option.Option = (*Options254800)(nil)
+
+func (o Options254800) Validate() field.ErrorList {
+	if !slices.Contains([]string{"restricted", "baseline", "privileged"}, o.MinPodSecurityLevel) && len(o.MinPodSecurityLevel) > 0 {
+		return field.ErrorList{field.Invalid(field.NewPath("minPodSecurityLevel"), o.MinPodSecurityLevel, "must be one of 'restricted', 'baseline' or 'privileged'")}
+	}
+	return nil
 }
 
 func (r *Rule254800) ID() string {

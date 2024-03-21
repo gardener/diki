@@ -16,13 +16,14 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var _ = Describe("#242414", func() {
 	var (
 		fakeSeedClient     client.Client
 		fakeShootClient    client.Client
-		options            v1r11.Options242414
+		options            option.Options242414
 		seedPod            *corev1.Pod
 		shootPod           *corev1.Pod
 		ctx                = context.TODO()
@@ -148,8 +149,8 @@ var _ = Describe("#242414", func() {
 	})
 
 	It("should return correct results when options are present", func() {
-		options = v1r11.Options242414{
-			AcceptedPods: []v1r11.AcceptedPods242414{
+		options = option.Options242414{
+			AcceptedPods: []option.AcceptedPods242414{
 				{
 					PodMatchLabels:       map[string]string{"foo": "bar"},
 					NamespaceMatchLabels: map[string]string{"foo": "not-bar"},
