@@ -42,10 +42,10 @@ type Options254800 struct {
 var _ option.Option = (*Options254800)(nil)
 
 func (o Options254800) Validate() field.ErrorList {
-	if slices.Contains([]string{"restricted", "baseline", "privileged"}, o.MinPodSecurityLevel) || len(o.MinPodSecurityLevel) == 0 {
-		return nil
+	if !slices.Contains([]string{"restricted", "baseline", "privileged"}, o.MinPodSecurityLevel) && len(o.MinPodSecurityLevel) > 0 {
+		return field.ErrorList{field.Invalid(field.NewPath("minPodSecurityLevel"), o.MinPodSecurityLevel, "must be one of 'restricted', 'baseline' or 'privileged'")}
 	}
-	return field.ErrorList{field.Invalid(field.NewPath("minPodSecurityLevel"), o.MinPodSecurityLevel, "must be one of 'restricted', 'baseline' or 'privileged'")}
+	return nil
 }
 
 func (r *Rule254800) ID() string {
