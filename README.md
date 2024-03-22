@@ -48,6 +48,11 @@ Most of Diki's `run` configurations are provided through its [config file](./con
 diki run --config=config.yaml --all
 ```
 
+- Run all known rulesets for all known providers and save json report data into a file
+```bash
+diki run --config=config.yaml --all --output=/tmp/report.json
+```
+
 - Run a specific ruleset for a known provider
 ```bash
 diki run --config=config.yaml --provider=gardener --ruleset-id=disa-kubernetes-stig --ruleset-version=v1r11

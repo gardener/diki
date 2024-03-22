@@ -81,6 +81,3 @@ providers:             # contains information about known providers
     - ruleID: "254800"
       args:
         minPodSecurityLevel: "baseline"
-output:
-  path: /tmp/test-output.json          #  optional, path to summary json report
-  minStatus: Passed

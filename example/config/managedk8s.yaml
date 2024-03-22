@@ -152,6 +152,3 @@ providers:                   # contains information about known providers
     #       foo: bar
     #     nodeGroupByLabels:
     #     - foo
-output:
-  path: /tmp/test-output.json  # optional, path to summary json report
-  minStatus: Passed
