@@ -22,7 +22,7 @@ FROM alpine:3.19.1 AS diki-ops
 ARG TARGETARCH
 
 RUN apk --no-cache add curl &&\
-    curl -sLf https://github.com/containerd/nerdctl/releases/download/v1.7.4/nerdctl-1.7.4-linux-${TARGETARCH}.tar.gz -o /nerdctl.tar.gz &&\
+    curl -sLf https://github.com/containerd/nerdctl/releases/download/v1.7.5/nerdctl-1.7.5-linux-${TARGETARCH}.tar.gz -o /nerdctl.tar.gz &&\
     tar -C /usr/local/bin -xzvf nerdctl.tar.gz &&\
     rm -f nerdctl.tar.gz &&\
     mkdir /etc/nerdctl &&\
