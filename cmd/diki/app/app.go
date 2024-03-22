@@ -77,7 +77,7 @@ e.g. to check compliance of your hyperscaler accounts.`,
 		Use:   "report",
 		Short: "Report is the root command for report operations.",
 		Long:  "Report is the root command for report operations.",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			return errors.New("report subcommand not selected")
 		},
 	}
@@ -90,7 +90,7 @@ e.g. to check compliance of your hyperscaler accounts.`,
 		Use:   "generate",
 		Short: "Report generate converts output files.",
 		Long:  "Report generate converts output files.",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			return generateCmd(args, reportOpts, generateOpts, logger)
 		},
 	}
@@ -103,7 +103,7 @@ e.g. to check compliance of your hyperscaler accounts.`,
 		Use:   "diff",
 		Short: "Report diff creates difference between two reports.",
 		Long:  "Report diff creates difference between two reports.",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			return diffCmd(reportOpts, diffOpts)
 		},
 	}
