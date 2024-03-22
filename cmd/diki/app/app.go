@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -56,11 +57,13 @@ e.g. to check compliance of your hyperscaler accounts.`,
 		},
 	}
 
+	rootCmd.AddCommand(versionCmd)
+
 	var opts runOptions
 	runCmd := &cobra.Command{
 		Use:   "run",
 		Short: "Run some rulesets and rules.",
-		Long:  `Run allows running rulesets and rules for the given provider(s).`,
+		Long:  "Run allows running rulesets and rules for the given provider(s).",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return runCmd(ctx, providerCreateFuncs, opts)
 		},
@@ -72,18 +75,47 @@ e.g. to check compliance of your hyperscaler accounts.`,
 	var reportOpts reportOptions
 	reportCmd := &cobra.Command{
 		Use:   "report",
-		Short: "Report converts output files.",
-		Long:  `Report converts output files.`,
-		RunE: func(_ *cobra.Command, args []string) error {
-			return reportCmd(args, reportOpts)
+		Short: "Report is the root command for report operations.",
+		Long:  "Report is the root command for report operations.",
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return errors.New("report subcommand not selected")
 		},
 	}
 
 	addReportFlags(reportCmd, &reportOpts)
 	rootCmd.AddCommand(reportCmd)
-	rootCmd.AddCommand(versionCmd)
+
+	var generateOpts generateOptions
+	generateCmd := &cobra.Command{
+		Use:   "generate",
+		Short: "Report generate converts output files.",
+		Long:  "Report generate converts output files.",
+		RunE: func(_ *cobra.Command, args []string) error {
+			return generateCmd(args, reportOpts, generateOpts, logger)
+		},
+	}
+
+	addReportGenerateFlags(generateCmd, &generateOpts)
+	reportCmd.AddCommand(generateCmd)
+
+	var diffOpts diffOptions
+	diffCmd := &cobra.Command{
+		Use:   "diff",
+		Short: "Report diff creates difference between two reports.",
+		Long:  "Report diff creates difference between two reports.",
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return diffCmd(reportOpts, diffOpts)
+		},
+	}
+
+	addReportDiffFlags(diffCmd, &diffOpts)
+	reportCmd.AddCommand(diffCmd)
 
 	return rootCmd
+}
+
+func addReportFlags(cmd *cobra.Command, opts *reportOptions) {
+	cmd.PersistentFlags().StringVar(&opts.outputPath, "output", "", "Output path.")
 }
 
 func addRunFlags(cmd *cobra.Command, opts *runOptions) {
@@ -95,22 +127,72 @@ func addRunFlags(cmd *cobra.Command, opts *runOptions) {
 	cmd.PersistentFlags().StringVar(&opts.ruleID, "rule-id", "", "If set only the rule with the provided id will be run.")
 }
 
-func addReportFlags(cmd *cobra.Command, opts *reportOptions) {
-	cmd.PersistentFlags().StringVar(&opts.output, "output", "html", "Output type.")
+func addReportGenerateFlags(cmd *cobra.Command, opts *generateOptions) {
 	cmd.PersistentFlags().Var(cliflag.NewMapStringString(&opts.distinctBy), "distinct-by", "If set generates a merged report. The keys are the IDs for the providers which the merged report will include and the values are distinct metadata attributes to be used as IDs for the different reports.")
 }
 
-func reportCmd(args []string, opts reportOptions) error {
+func addReportDiffFlags(cmd *cobra.Command, opts *diffOptions) {
+	cmd.PersistentFlags().StringVar(&opts.oldReport, "old", "", "Old report path.")
+	cmd.PersistentFlags().StringVar(&opts.newReport, "new", "", "New report path.")
+}
+
+func diffCmd(rootOpts reportOptions, opts diffOptions) error {
+	if len(opts.oldReport) == 0 && len(opts.newReport) == 0 {
+		return errors.New("diff command requires at least 1 report path")
+	}
+
+	var (
+		oldReport report.Report
+		newReport report.Report
+	)
+
+	if len(opts.oldReport) > 0 {
+		oldReportfileData, err := os.ReadFile(filepath.Clean(opts.oldReport))
+		if err != nil {
+			return fmt.Errorf("failed to read file %s: %w", opts.oldReport, err)
+		}
+
+		if err := json.Unmarshal(oldReportfileData, &oldReport); err != nil {
+			return fmt.Errorf("failed to unmarshal data: %w", err)
+		}
+	}
+
+	if len(opts.newReport) > 0 {
+		newReportfileData, err := os.ReadFile(filepath.Clean(opts.newReport))
+		if err != nil {
+			return fmt.Errorf("failed to read file %s: %w", opts.newReport, err)
+		}
+
+		if err := json.Unmarshal(newReportfileData, &newReport); err != nil {
+			return fmt.Errorf("failed to unmarshal data: %w", err)
+		}
+	}
+
+	diff, err := report.CreateDifference(oldReport, newReport)
+	if err != nil {
+		return fmt.Errorf("failed to create diff: %w", err)
+	}
+
+	jsonDiff, err := json.Marshal(diff)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal data: %w", err)
+	}
+
+	if len(rootOpts.outputPath) > 0 {
+		return os.WriteFile(rootOpts.outputPath, jsonDiff, 0600)
+	}
+
+	fmt.Print(string(jsonDiff))
+	return nil
+}
+
+func generateCmd(args []string, rootOpts reportOptions, opts generateOptions, logger *slog.Logger) error {
 	if len(args) == 0 {
 		return errors.New("report command requires a minimum of one filepath argument")
 	}
 
 	if len(args) > 1 && len(opts.distinctBy) == 0 {
 		return errors.New("report command requires a single filepath argument when the distinct-by flag is not set")
-	}
-
-	if opts.output != "html" {
-		return fmt.Errorf("unsuported output format: %s", opts.output)
 	}
 
 	reports := []*report.Report{}
@@ -134,15 +216,29 @@ func reportCmd(args []string, opts reportOptions) error {
 		return fmt.Errorf("failed to initialize renderer: %w", err)
 	}
 
+	var writer io.Writer = os.Stdout
+	if len(rootOpts.outputPath) > 0 {
+		var file *os.File
+		if file, err = os.OpenFile(rootOpts.outputPath, os.O_WRONLY|os.O_CREATE, 0600); err != nil {
+			return err
+		}
+		defer func() {
+			if err := file.Close(); err != nil {
+				logger.Error(err.Error())
+			}
+		}()
+		writer = file
+	}
+
 	if len(opts.distinctBy) > 0 {
 		mergedReport, err := report.MergeReport(reports, opts.distinctBy)
 		if err != nil {
 			return err
 		}
-		return htlmRenderer.Render(os.Stdout, mergedReport)
+		return htlmRenderer.Render(writer, mergedReport)
 	}
 
-	return htlmRenderer.Render(os.Stdout, reports[0])
+	return htlmRenderer.Render(writer, reports[0])
 }
 
 func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.ProviderFromConfigFunc, opts runOptions) error {
@@ -155,8 +251,6 @@ func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.Provide
 	if err != nil {
 		return err
 	}
-
-	// outputPath := dikiConfig.Output.Path
 
 	if opts.all {
 		providerResults := []provider.ProviderResult{}
@@ -245,6 +339,10 @@ func runRule(ctx context.Context, p provider.Provider, rulesetID, rulesetVersion
 	return nil
 }
 
+type reportOptions struct {
+	outputPath string
+}
+
 type runOptions struct {
 	configFile     string
 	all            bool
@@ -254,9 +352,13 @@ type runOptions struct {
 	ruleID         string
 }
 
-type reportOptions struct {
-	output     string
+type generateOptions struct {
 	distinctBy map[string]string
+}
+
+type diffOptions struct {
+	oldReport string
+	newReport string
 }
 
 func readConfig(filePath string) (*config.DikiConfig, error) {

@@ -64,12 +64,21 @@ Diki can generate a human readable report from the output files of a `diki run` 
 
 - Generate an html report
 ```bash
-diki report output.json > report.hmtl
+diki report generate --output=report.hmtl output.json
 ```
 
 - Generate merged html report
 ```bash
-diki report --distinct-by=gardener=id output1.json output2.json > report.hmtl
+diki report generate --distinct-by=gardener=id --output=report.hmtl output1.json output2.json
+```
+
+#### Difference
+
+Diki can generate a json containing the difference between 2 output files of `diki run` executions. This can help to identify improvements (or regressions).
+
+- Generate json difference between 2 reports
+```bash
+diki report diff --old=output1.json --new=output2.json --output=difference.json
 ```
 
 #### Unit Tests
