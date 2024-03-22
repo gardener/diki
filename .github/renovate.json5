@@ -17,6 +17,16 @@
       "matchStrings": ["image: ['\"]?(?<depName>.*?):(?<currentValue>.*?)['\"]?\\s"],
       "datasourceTemplate": "docker"
     },
+    {
+      // Generic detection for install manifests from GitHub releases.
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": [
+        "https:\/\/github\\.com\/(?<depName>[^/]*\/[^/]*?)\/releases\/download\/(?<currentValue>.*?)\/",
+        "https:\/\/raw\\.githubusercontent\\.com\/(?<depName>[^/]*\/[^/]*?)\/(?<currentValue>.*?)\/",
+      ],
+      "datasourceTemplate": "github-releases"
+    }
   ],
   "packageRules": [
     {
