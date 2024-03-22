@@ -240,42 +240,42 @@ func getCheckDifference(rules1, rules2 []Rule) []Rule {
 }
 
 // getUniqueProviders returns a list of all unique
-// provider IDs contained in ps1 and ps2.
-func getUniqueProviders(ps1, ps2 []Provider) []string {
-	var ps []string
-	for _, p1 := range ps1 {
-		ps = append(ps, p1.ID)
+// provider IDs contained in providers1 and providers2.
+func getUniqueProviders(providers1, providers2 []Provider) []string {
+	var providers []string
+	for _, p1 := range providers1 {
+		providers = append(providers, p1.ID)
 	}
 
-	for _, p2 := range ps2 {
-		p1Idx := slices.IndexFunc(ps1, func(p1 Provider) bool {
+	for _, p2 := range providers2 {
+		p1Idx := slices.IndexFunc(providers1, func(p1 Provider) bool {
 			return p2.ID == p1.ID
 		})
 
 		if p1Idx < 0 {
-			ps = append(ps, p2.ID)
+			providers = append(providers, p2.ID)
 		}
 	}
-	return ps
+	return providers
 }
 
 // getUniqueRulesets returns a map of all unique rulesets,
 // where the maps keys are ruleset IDs and the values are a
-// list of all unique versions in rss1 and rss2.
-func getUniqueRulesets(rss1, rss2 []Ruleset) map[string][]string {
-	rss := map[string][]string{}
-	for _, rs1 := range rss1 {
-		rss[rs1.ID] = append(rss[rs1.ID], rs1.Version)
+// list of all unique versions in rulests1 and rulests2.
+func getUniqueRulesets(rulesets1, rulesets2 []Ruleset) map[string][]string {
+	rulesets := map[string][]string{}
+	for _, rs1 := range rulesets1 {
+		rulesets[rs1.ID] = append(rulesets[rs1.ID], rs1.Version)
 	}
 
-	for _, rs2 := range rss2 {
-		rs1Idx := slices.IndexFunc(rss1, func(rs1 Ruleset) bool {
+	for _, rs2 := range rulesets2 {
+		rs1Idx := slices.IndexFunc(rulesets1, func(rs1 Ruleset) bool {
 			return rs2.ID == rs1.ID && rs2.Version == rs1.Version
 		})
 
 		if rs1Idx < 0 {
-			rss[rs2.ID] = append(rss[rs2.ID], rs2.Version)
+			rulesets[rs2.ID] = append(rulesets[rs2.ID], rs2.Version)
 		}
 	}
-	return rss
+	return rulesets
 }
