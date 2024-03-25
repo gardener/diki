@@ -48,7 +48,7 @@ Most of Diki's `run` configurations are provided through its [config file](./con
 diki run --config=config.yaml --all
 ```
 
-- Run all known rulesets for all known providers and save json report data into a file
+- Run all known rulesets for all known providers and create a summary json report file
 ```bash
 diki run --config=config.yaml --all --output=/tmp/report.json
 ```

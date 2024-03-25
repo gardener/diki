@@ -119,7 +119,7 @@ func addReportFlags(cmd *cobra.Command, opts *reportOptions) {
 }
 
 func addRunFlags(cmd *cobra.Command, opts *runOptions) {
-	cmd.PersistentFlags().StringVar(&opts.outputPath, "output", "", "Output path.")
+	cmd.PersistentFlags().StringVar(&opts.outputPath, "output", "", "If set diki creates an summary json report at the given path.")
 	cmd.PersistentFlags().StringVar(&opts.minStatus, "min-status", "Passed", "Minimal status for json report. Defaults to Passed.")
 	cmd.PersistentFlags().StringVar(&opts.configFile, "config", "", "Configuration file for diki containing info about providers and rulesets.")
 	cmd.PersistentFlags().BoolVar(&opts.all, "all", false, "If set to true diki will run all rulesets for all known providers.")
