@@ -120,7 +120,6 @@ func addReportFlags(cmd *cobra.Command, opts *reportOptions) {
 
 func addRunFlags(cmd *cobra.Command, opts *runOptions) {
 	cmd.PersistentFlags().StringVar(&opts.outputPath, "output", "", "If set diki creates an summary json report at the given path.")
-	cmd.PersistentFlags().StringVar(&opts.minStatus, "min-status", "Passed", "Minimal status for json report. Defaults to Passed.")
 	cmd.PersistentFlags().StringVar(&opts.configFile, "config", "", "Configuration file for diki containing info about providers and rulesets.")
 	cmd.PersistentFlags().BoolVar(&opts.all, "all", false, "If set to true diki will run all rulesets for all known providers.")
 	cmd.PersistentFlags().StringVar(&opts.provider, "provider", "", "The provider that should be used to run checks.")
@@ -249,6 +248,11 @@ func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.Provide
 		return err
 	}
 
+	outputPath := opts.outputPath
+	if len(outputPath) == 0 && dikiConfig.Output != nil && len(dikiConfig.Output.Path) > 0 {
+		outputPath = dikiConfig.Output.Path
+	}
+
 	providers, err := getProvidersFromConfig(dikiConfig, providerCreateFuncs)
 	if err != nil {
 		return err
@@ -264,10 +268,13 @@ func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.Provide
 			providerResults = append(providerResults, res)
 		}
 
-		if len(opts.outputPath) > 0 {
-			reportOpts := []report.ReportOption{report.MinStatus(opts.minStatus)}
+		if len(outputPath) > 0 {
+			reportOpts := []report.ReportOption{}
+			if dikiConfig.Output != nil && len(dikiConfig.Output.MinStatus) > 0 {
+				reportOpts = append(reportOpts, report.MinStatus(dikiConfig.Output.MinStatus))
+			}
 			rep := report.FromProviderResults(providerResults, reportOpts...)
-			return rep.WriteToFile(opts.outputPath)
+			return rep.WriteToFile(outputPath)
 		}
 		return nil
 	}
@@ -286,10 +293,13 @@ func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.Provide
 		}
 		providerResults := []provider.ProviderResult{res}
 
-		if len(opts.outputPath) > 0 {
-			reportOpts := []report.ReportOption{report.MinStatus(opts.minStatus)}
+		if len(outputPath) > 0 {
+			reportOpts := []report.ReportOption{}
+			if dikiConfig.Output != nil && len(dikiConfig.Output.MinStatus) > 0 {
+				reportOpts = append(reportOpts, report.MinStatus(dikiConfig.Output.MinStatus))
+			}
 			rep := report.FromProviderResults(providerResults, reportOpts...)
-			return rep.WriteToFile(opts.outputPath)
+			return rep.WriteToFile(outputPath)
 		}
 		return nil
 	case opts.rulesetID != "" && opts.rulesetVersion == "":
@@ -306,10 +316,13 @@ func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.Provide
 		}
 		providerResults := []provider.ProviderResult{{ProviderID: p.ID(), ProviderName: p.Name(), RulesetResults: []ruleset.RulesetResult{res}}}
 
-		if len(opts.outputPath) > 0 {
-			reportOpts := []report.ReportOption{report.MinStatus(opts.minStatus)}
+		if len(outputPath) > 0 {
+			reportOpts := []report.ReportOption{}
+			if dikiConfig.Output != nil && len(dikiConfig.Output.MinStatus) > 0 {
+				reportOpts = append(reportOpts, report.MinStatus(dikiConfig.Output.MinStatus))
+			}
 			rep := report.FromProviderResults(providerResults, reportOpts...)
-			return rep.WriteToFile(opts.outputPath)
+			return rep.WriteToFile(outputPath)
 		}
 		return nil
 	}
@@ -338,7 +351,6 @@ type reportOptions struct {
 
 type runOptions struct {
 	outputPath     string
-	minStatus      string
 	configFile     string
 	all            bool
 	provider       string

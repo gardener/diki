@@ -43,3 +43,6 @@ providers:               # contains information about known providers
         - user: "health-check"
           uid: "health-check"
           # groups: "group1,group2,group3"
+output:
+  path: /tmp/test-output.json # optional, path to summary json report. If --output flag is set this configuration is ignored
+  minStatus: Passed

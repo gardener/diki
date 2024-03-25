@@ -8,6 +8,8 @@ package config
 type DikiConfig struct {
 	// Providers is a list of all known providers.
 	Providers []ProviderConfig `yaml:"providers"`
+	// Output describes options related to diki's output configuration.
+	Output *OutputConfig `yaml:"output,omitempty"`
 }
 
 // ProviderConfig is used to describe and configure a provider.
@@ -52,4 +54,13 @@ type RuleOptionSkipConfig struct {
 	Enabled bool `yaml:"enabled"`
 	// Justification represents the reason why a rule is skipped.
 	Justification string `yaml:"justification"`
+}
+
+// OutputConfig represents output configurations.
+type OutputConfig struct {
+	// Path is the location which will be used to write a diki report.
+	// Deprecated: This field is deprecated and will be removed in a future release.
+	Path string `yaml:"path"`
+	// MinStatus is the minimal status that diki will report.
+	MinStatus string `yaml:"minStatus"`
 }
