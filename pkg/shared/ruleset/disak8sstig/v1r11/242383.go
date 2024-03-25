@@ -72,8 +72,8 @@ func (o Options242383) Validate() field.ErrorList {
 				allErrs = append(allErrs, field.Invalid(rootPath.Child("namespaceNames"), namespaceName, "must be one of 'default', 'kube-public' or 'kube-node-lease'"))
 			}
 		}
-		if !slices.Contains(rule.Statuses(), rule.Status(p.Status)) && len(p.Status) > 0 {
-			allErrs = append(allErrs, field.Invalid(rootPath.Child("status"), p.Status, "must be a valid status"))
+		if !slices.Contains([]string{"Passed", "passed", "Accepted", "accepted"}, p.Status) && len(p.Status) > 0 {
+			allErrs = append(allErrs, field.Invalid(rootPath.Child("status"), p.Status, "must be one of 'Passed' or 'Accepted'"))
 		}
 	}
 	return allErrs

@@ -186,12 +186,14 @@ var _ = Describe("#242417", func() {
 					{
 						PodMatchLabels: map[string]string{},
 						NamespaceNames: []string{"default", "kube-public", "kube-node-lease"},
+						Status:         "Passed",
 					},
 					{
 						PodMatchLabels: map[string]string{
 							"-foo": "bar",
 						},
 						NamespaceNames: []string{"kube-system"},
+						Status:         "accepted",
 					},
 					{
 						PodMatchLabels: map[string]string{
@@ -225,7 +227,7 @@ var _ = Describe("#242417", func() {
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("acceptedPods.status"),
 					"BadValue": Equal("asd"),
-					"Detail":   Equal("must be a valid status"),
+					"Detail":   Equal("must be one of 'Passed' or 'Accepted'"),
 				})),
 			))
 		})

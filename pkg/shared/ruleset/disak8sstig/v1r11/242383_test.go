@@ -279,6 +279,7 @@ var _ = Describe("#242383", func() {
 							MatchLabels:    map[string]string{},
 							NamespaceNames: []string{"kube-system", "kube-public", "kube-node-lease"},
 						},
+						Status: "Passed",
 					},
 					{
 						SelectResource: v1r11.SelectResource{
@@ -289,6 +290,7 @@ var _ = Describe("#242383", func() {
 							},
 							NamespaceNames: []string{"default"},
 						},
+						Status: "accepted",
 					},
 					{
 						SelectResource: v1r11.SelectResource{
@@ -338,7 +340,7 @@ var _ = Describe("#242383", func() {
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("acceptedResources.status"),
 					"BadValue": Equal("asd"),
-					"Detail":   Equal("must be a valid status"),
+					"Detail":   Equal("must be one of 'Passed' or 'Accepted'"),
 				})),
 			))
 		})
