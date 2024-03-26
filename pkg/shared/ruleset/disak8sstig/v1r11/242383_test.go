@@ -290,7 +290,7 @@ var _ = Describe("#242383", func() {
 							},
 							NamespaceNames: []string{"default"},
 						},
-						Status: "accepted",
+						Status: "Accepted",
 					},
 					{
 						SelectResource: v1r11.SelectResource{

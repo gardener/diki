@@ -56,7 +56,7 @@ func (o Options242417) Validate() field.ErrorList {
 				allErrs = append(allErrs, field.Invalid(rootPath.Child("namespaceNames"), namespaceName, "must be one of 'kube-system', 'kube-public' or 'kube-node-lease'"))
 			}
 		}
-		if !slices.Contains([]string{"Passed", "passed", "Accepted", "accepted"}, p.Status) && len(p.Status) > 0 {
+		if !slices.Contains([]string{"Passed", "Accepted"}, p.Status) && len(p.Status) > 0 {
 			allErrs = append(allErrs, field.Invalid(rootPath.Child("status"), p.Status, "must be one of 'Passed' or 'Accepted'"))
 		}
 	}
@@ -110,12 +110,12 @@ func (r *Rule242417) Run(ctx context.Context) (rule.RuleResult, error) {
 			msg := strings.TrimSpace(acceptedPod.Justification)
 			status := strings.TrimSpace(acceptedPod.Status)
 			switch status {
-			case "Passed", "passed":
+			case "Passed":
 				if len(msg) == 0 {
 					msg = "System pod in system namespaces."
 				}
 				checkResults = append(checkResults, rule.PassedCheckResult(msg, target))
-			case "Accepted", "accepted", "":
+			case "Accepted", "":
 				if len(msg) == 0 {
 					msg = "Accepted user pod in system namespaces."
 				}

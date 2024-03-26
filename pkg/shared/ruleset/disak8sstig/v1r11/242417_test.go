@@ -193,7 +193,7 @@ var _ = Describe("#242417", func() {
 							"-foo": "bar",
 						},
 						NamespaceNames: []string{"kube-system"},
-						Status:         "accepted",
+						Status:         "Accepted",
 					},
 					{
 						PodMatchLabels: map[string]string{
