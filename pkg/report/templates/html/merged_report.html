@@ -61,7 +61,7 @@
                 <label class="font-bold text-2xl">Provider {{ .Name }}</label><br>
                 <button onclick="collapse(event)" class="text-lg pr-2"><i
                         class="arrow right"></i></button>
-                <span class="text-lg">Assessed targets</span>
+                <span class="text-lg">Evaluated targets</span>
                 <ul class="list-disc  list-inside pl-5 hidden">
                     {{- $meta := MergedMetadataTexts . }}
                     {{- $keys := SortedMapKeys $meta }}
