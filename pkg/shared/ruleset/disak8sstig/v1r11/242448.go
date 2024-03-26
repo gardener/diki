@@ -48,7 +48,10 @@ var _ option.Option = (*Options242448)(nil)
 
 func (o Options242448) Validate() field.ErrorList {
 	allErrs := validation.ValidateLabels(o.KubeProxyMatchLabels, field.NewPath("kubeProxyMatchLabels"))
-	return append(allErrs, o.FileOwnerOptions.Validate()...)
+	if o.FileOwnerOptions != nil {
+		return append(allErrs, o.FileOwnerOptions.Validate()...)
+	}
+	return allErrs
 }
 
 func (r *Rule242448) ID() string {

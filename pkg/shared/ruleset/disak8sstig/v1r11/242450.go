@@ -44,7 +44,10 @@ var _ option.Option = (*Options242450)(nil)
 
 func (o Options242450) Validate() field.ErrorList {
 	allErrs := option.ValidateLabelNames(o.NodeGroupByLabels, field.NewPath("nodeGroupByLabels"))
-	return append(allErrs, o.FileOwnerOptions.Validate()...)
+	if o.FileOwnerOptions != nil {
+		return append(allErrs, o.FileOwnerOptions.Validate()...)
+	}
+	return allErrs
 }
 
 func (r *Rule242450) ID() string {
