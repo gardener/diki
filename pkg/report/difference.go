@@ -7,14 +7,23 @@ package report
 import (
 	"cmp"
 	"errors"
+	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/gardener/diki/pkg/rule"
 )
 
-// Difference contains the difference between 2 reports.
-type Difference struct {
+// DifferenceReportWrapper wraps DifferenceReports and adds additional attributes needed for html rendering.
+type DifferenceReportWrapper struct {
+	DifferenceReports []*DifferenceReport `json:"differenceReports"`
+	UniqueAttributes  map[string]string   `json:"uniqueAttributes"`
+}
+
+// DifferenceReport contains the difference between 2 reports.
+type DifferenceReport struct {
+	Title     string               `json:"title,omitempty"`
 	Time      time.Time            `json:"time"`
 	MinStatus rule.Status          `json:"minStatus,omitempty"`
 	Providers []ProviderDifference `json:"providers"`
@@ -48,7 +57,7 @@ type RuleDifference struct {
 }
 
 // CreateDifference creates the difference between 2 reports.
-func CreateDifference(oldReport Report, newReport Report) (*Difference, error) {
+func CreateDifference(oldReport Report, newReport Report, title string) (*DifferenceReport, error) {
 	var minStatus rule.Status
 	switch {
 	case oldReport.MinStatus == newReport.MinStatus:
@@ -61,7 +70,8 @@ func CreateDifference(oldReport Report, newReport Report) (*Difference, error) {
 		return nil, errors.New("reports must have equal minStatus")
 	}
 
-	diff := &Difference{
+	diff := &DifferenceReport{
+		Title:     title,
 		Time:      time.Now(),
 		MinStatus: minStatus,
 		Providers: []ProviderDifference{},
@@ -278,4 +288,59 @@ func getUniqueRulesets(rulesets1, rulesets2 []Ruleset) map[string][]string {
 		}
 	}
 	return rulesets
+}
+
+// rulesetDiffSummaryText returns a summary string with the number of added and returned rules with results per status.
+func rulesetDiffSummaryText(ruleset *RulesetDifference) string {
+	var (
+		summaryBuilder strings.Builder
+		addedBuilder   strings.Builder
+		removedBuilder strings.Builder
+		statuses       = rule.Statuses()
+		added          = map[rule.Status]int{}
+		removed        = map[rule.Status]int{}
+	)
+	for _, rule := range ruleset.Rules {
+		for _, check := range rule.Added {
+			added[check.Status]++
+		}
+		for _, check := range rule.Removed {
+			removed[check.Status]++
+		}
+	}
+	for _, status := range statuses {
+		if val, ok := added[status]; ok {
+			if addedBuilder.Len() > 0 {
+				addedBuilder.WriteString(", ")
+			}
+			addedBuilder.WriteString(fmt.Sprintf("%dx %s %c", val, status, rule.GetStatusIcon(status)))
+		}
+		if val, ok := removed[status]; ok {
+			if removedBuilder.Len() > 0 {
+				removedBuilder.WriteString(", ")
+			}
+			removedBuilder.WriteString(fmt.Sprintf("%dx %s %c", val, status, rule.GetStatusIcon(status)))
+		}
+	}
+	if addedBuilder.Len() > 0 {
+		summaryBuilder.WriteString(fmt.Sprintf("Added: (%s)", addedBuilder.String()))
+	}
+	if removedBuilder.Len() > 0 {
+		if summaryBuilder.Len() > 0 {
+			summaryBuilder.WriteString(", ")
+		}
+		summaryBuilder.WriteString(fmt.Sprintf("Removed: (%s)", removedBuilder.String()))
+	}
+	return summaryBuilder.String()
+}
+
+func getDiffUniqAttrsText(key string, pd ProviderDifference) string {
+	switch {
+	case len(pd.OldMetadata[key]) == 0 && len(pd.NewMetadata[key]) == 0:
+		return ""
+	case pd.OldMetadata[key] == pd.NewMetadata[key]:
+		return fmt.Sprintf("- %s", pd.NewMetadata[key])
+	default:
+		return fmt.Sprintf("- %s/%s", pd.OldMetadata[key], pd.NewMetadata[key])
+	}
 }
