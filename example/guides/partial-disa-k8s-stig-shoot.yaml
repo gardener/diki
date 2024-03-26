@@ -4,7 +4,7 @@ providers:
   metadata:
     foo: bar
   args:
-    kubeconfigPath: /tmp/kubeconfig.config  # path to shoot admin kubeconfig
+    kubeconfigPath: /shoot-abcd-access/kubeconfig  # path to shoot admin kubeconfig
   rulesets:
   - id: disa-kubernetes-stig
     name: DISA Kubernetes Security Technical Implementation Guide
@@ -12,6 +12,13 @@ providers:
     ruleOptions:
     - ruleID: "242393"
       args:
+        # Diki will group nodes by the value of this label
+        # and perform the rule checks on a single node from each group.
+        # Skip these labels if you want diki 
+        # to perform checks on all nodes in the cluster.
+        # Mind that not providing a set of labels to group by
+        # can slow down the execution of the ruleset and spawn
+        # additional pods in the cluster.
         nodeGroupByLabels:
         - worker.gardener.cloud/pool
     - ruleID: "242394"
@@ -84,5 +91,4 @@ providers:
         nodeGroupByLabels:
         - worker.gardener.cloud/pool
 output:
-  path: /tmp/output.json  # optional, path to summary json report
   minStatus: Passed
