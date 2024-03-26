@@ -2,7 +2,8 @@ providers:
 - id: managedk8s
   name: "Managed Kubernetes"
   metadata:
-    foo: bar
+    # foo: bar
+    shootName: shoot-abcd
   args:
     kubeconfigPath: /shoot-abcd-access/kubeconfig  # path to shoot admin kubeconfig
   rulesets:

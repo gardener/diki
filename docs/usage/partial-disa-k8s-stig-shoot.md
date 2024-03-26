@@ -10,7 +10,7 @@ Make sure you have diki installed ([diki installation instructions](../../README
 
 ### Configuration
 
-We will be using the sample [partial-disa-k8s-stig-shoot configuration file](../../example/guides/partial-disa-k8s-stig-shoot.yaml) for this run. You will need to set the `provider.args.kubeconfigPath` field pointing to a shoot admin kubeconfig. In case you need instructions on how to generate such kubeconfig, please read the [shoot access guide](https://github.com/gardener/gardener/blob/master/docs/usage/shoot_access.md).
+We will be using the sample [partial-disa-k8s-stig-shoot configuration file](../../example/guides/partial-disa-k8s-stig-shoot.yaml) for this run. You will need to set the `provider.args.kubeconfigPath` field pointing to a shoot admin kubeconfig. In case you need instructions on how to generate such kubeconfig, please read the [shoot access guide](https://github.com/gardener/gardener/blob/master/docs/usage/shoot_access.md). Additional metadata such as the shoot's name can also be included in the `provider.metadata` section. The metadata section can be used to add addtional context to different diki runs.
 
 The provided configuration contains the recommended rule options for running the `managedk8s` provider ruleset against a shoot cluster, but one can modify rule options parameters according to requirements. All available options can be found in the [managedk8s example configuration](../../example/config/managedk8s.yaml).
 
