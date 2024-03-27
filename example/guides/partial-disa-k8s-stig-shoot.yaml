@@ -1,0 +1,95 @@
+providers:
+- id: managedk8s
+  name: "Managed Kubernetes"
+  metadata:
+    # foo: bar
+    shootName: shoot-abcd
+  args:
+    kubeconfigPath: /shoot-abcd-access/kubeconfig  # path to shoot admin kubeconfig
+  rulesets:
+  - id: disa-kubernetes-stig
+    name: DISA Kubernetes Security Technical Implementation Guide
+    version: v1r11
+    ruleOptions:
+    - ruleID: "242393"
+      args:
+        # Diki will group nodes by the value of this label
+        # and perform the rule checks on a single node from each group.
+        # Skip these labels if you want diki 
+        # to perform checks on all nodes in the cluster.
+        # Mind that not providing a set of labels to group by
+        # can slow down the execution of the ruleset and spawn
+        # additional pods in the cluster.
+        nodeGroupByLabels:
+        - worker.gardener.cloud/pool
+    - ruleID: "242394"
+      args:
+        nodeGroupByLabels:
+        - worker.gardener.cloud/pool
+    - ruleID: "242396"
+      args:
+        nodeGroupByLabels:
+        - worker.gardener.cloud/pool
+    - ruleID: "242404"
+      args:
+        nodeGroupByLabels:
+        - worker.gardener.cloud/pool
+    - ruleID: "242406"
+      args:
+        nodeGroupByLabels:
+        - worker.gardener.cloud/pool
+    - ruleID: "242407"
+      args:
+        nodeGroupByLabels:
+        - worker.gardener.cloud/pool
+    - ruleID: "242414"
+      args:
+        acceptedPods:
+        - podMatchLabels:
+            k8s-app: node-local-dns
+          namespaceMatchLabels:
+            kubernetes.io/metadata.name: kube-system
+          justification: "node local dns requires port 53 in order to operate properly"
+          ports:
+          - 53
+    - ruleID: "242417"
+      args:
+        acceptedPods:
+        - podMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          namespaceNames:
+          - kube-system
+          - kube-public
+          - kube-node-lease
+          justification: "justification"
+          status: Passed
+    - ruleID: "242449"
+      args:
+        nodeGroupByLabels:
+        - worker.gardener.cloud/pool
+    - ruleID: "242450"
+      args:
+        nodeGroupByLabels:
+        - worker.gardener.cloud/pool
+    - ruleID: "242451"
+      args:
+        nodeGroupByLabels:
+        - worker.gardener.cloud/pool
+    - ruleID: "242452"
+      args:
+        nodeGroupByLabels:
+        - worker.gardener.cloud/pool
+    - ruleID: "242453"
+      args:
+        nodeGroupByLabels:
+        - worker.gardener.cloud/pool
+    - ruleID: "242466"
+      args:
+        nodeGroupByLabels:
+        - worker.gardener.cloud/pool
+    - ruleID: "242467"
+      args:
+        nodeGroupByLabels:
+        - worker.gardener.cloud/pool
+output:
+  minStatus: Passed
