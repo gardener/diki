@@ -15,11 +15,13 @@ import (
 )
 
 const (
-	tmplReportName       = "report"
-	tmplReportPath       = "templates/html/report.html"
-	tmplMergedReportName = "merged_report"
-	tmplMergedReportPath = "templates/html/merged_report.html"
-	tmplStylesPath       = "templates/html/_styles.tpl"
+	tmplReportName           = "report"
+	tmplReportPath           = "templates/html/report.html"
+	tmplMergedReportName     = "merged_report"
+	tmplMergedReportPath     = "templates/html/merged_report.html"
+	tmplDifferenceReportName = "difference_report"
+	tmplDifferenceReportPath = "templates/html/difference_report.html"
+	tmplStylesPath           = "templates/html/_styles.tpl"
 )
 
 var (
@@ -36,6 +38,13 @@ type HTMLRenderer struct {
 func NewHTMLRenderer() (*HTMLRenderer, error) {
 	convTimeFunc := func(time time.Time) string {
 		return time.Format("01-02-2006")
+	}
+	add := func(a, b int) int {
+		return a + b
+	}
+	keyExists := func(m map[string]string, k string) bool {
+		_, ok := m[k]
+		return ok
 	}
 	templates := make(map[string]*template.Template)
 
@@ -66,6 +75,21 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 	}
 	templates[tmplMergedReportName] = parsedMergedReport
 
+	parsedDifferenceReport, err := template.New(tmplDifferenceReportName+".html").Funcs(template.FuncMap{
+		"Add":                    add,
+		"Statuses":               rule.Statuses,
+		"Icon":                   rule.GetStatusIcon,
+		"Time":                   convTimeFunc,
+		"DiffRulesetSummaryText": rulesetDiffSummaryText,
+		"keyExists":              keyExists,
+		"getAttrString":          getDiffUniqAttrsText,
+		"SortedMapKeys":          sortedKeys[string],
+	}).ParseFS(files, tmplDifferenceReportPath, tmplStylesPath)
+	if err != nil {
+		return nil, err
+	}
+	templates[tmplDifferenceReportName] = parsedDifferenceReport
+
 	return &HTMLRenderer{
 		templates: templates,
 	}, nil
@@ -78,6 +102,8 @@ func (r *HTMLRenderer) Render(w io.Writer, report any) error {
 		return r.templates[tmplReportName].Execute(w, rep)
 	case *MergedReport:
 		return r.templates[tmplMergedReportName].Execute(w, rep)
+	case *DifferenceReportWrapper:
+		return r.templates[tmplDifferenceReportName].Execute(w, rep)
 	default:
 		return fmt.Errorf("unsupported report type: %T", report)
 	}

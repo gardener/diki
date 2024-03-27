@@ -111,6 +111,19 @@ e.g. to check compliance of your hyperscaler accounts.`,
 	addReportDiffFlags(diffCmd, &diffOpts)
 	reportCmd.AddCommand(diffCmd)
 
+	var generateDiffOpts generateDiffOptions
+	generateDiffCmd := &cobra.Command{
+		Use:   "diff",
+		Short: "Generate diff converts difference reports to html.",
+		Long:  "Generate diff converts difference reports to html.",
+		RunE: func(_ *cobra.Command, args []string) error {
+			return generateDiffCmd(args, generateDiffOpts, reportOpts, logger)
+		},
+	}
+
+	addReportGenerateDiffFlags(generateDiffCmd, &generateDiffOpts)
+	generateCmd.AddCommand(generateDiffCmd)
+
 	return rootCmd
 }
 
@@ -135,6 +148,59 @@ func addReportGenerateFlags(cmd *cobra.Command, opts *generateOptions) {
 func addReportDiffFlags(cmd *cobra.Command, opts *diffOptions) {
 	cmd.PersistentFlags().StringVar(&opts.oldReport, "old", "", "Old report path.")
 	cmd.PersistentFlags().StringVar(&opts.newReport, "new", "", "New report path.")
+	cmd.PersistentFlags().StringVar(&opts.title, "title", "", "Title for difference report.")
+}
+
+func addReportGenerateDiffFlags(cmd *cobra.Command, opts *generateDiffOptions) {
+	cmd.PersistentFlags().Var(cliflag.NewMapStringString(&opts.uniqueAttributes), "unique-attributes", "The keys are the IDs for the providers that will be present in the generated diff report and the values are metadata attributes to be used as IDs")
+}
+
+func generateDiffCmd(args []string, generateDiffOpts generateDiffOptions, rootOpts reportOptions, logger *slog.Logger) error {
+	if len(args) == 0 {
+		return errors.New("generate diff command requires a minimum of one filepath argument")
+	}
+	if len(generateDiffOpts.uniqueAttributes) == 0 {
+		return errors.New("--unique-attributes is not set but required")
+	}
+
+	differences := []*report.DifferenceReport{}
+	for _, arg := range args {
+		fileData, err := os.ReadFile(filepath.Clean(arg))
+		if err != nil {
+			return fmt.Errorf("failed to read file %s: %w", arg, err)
+		}
+
+		diff := &report.DifferenceReport{}
+		if err := json.Unmarshal(fileData, diff); err != nil {
+			return fmt.Errorf("failed to unmarshal data: %w", err)
+		}
+
+		differences = append(differences, diff)
+	}
+
+	htlmRenderer, err := report.NewHTMLRenderer()
+	if err != nil {
+		return fmt.Errorf("failed to initialize renderer: %w", err)
+	}
+
+	var writer io.Writer = os.Stdout
+	if len(rootOpts.outputPath) > 0 {
+		var file *os.File
+		if file, err = os.OpenFile(rootOpts.outputPath, os.O_WRONLY|os.O_CREATE, 0600); err != nil {
+			return err
+		}
+		defer func() {
+			if err := file.Close(); err != nil {
+				logger.Error(err.Error())
+			}
+		}()
+		writer = file
+	}
+
+	return htlmRenderer.Render(writer, &report.DifferenceReportWrapper{
+		DifferenceReports: differences,
+		UniqueAttributes:  generateDiffOpts.uniqueAttributes,
+	})
 }
 
 func diffCmd(rootOpts reportOptions, opts diffOptions) error {
@@ -169,7 +235,7 @@ func diffCmd(rootOpts reportOptions, opts diffOptions) error {
 		}
 	}
 
-	diff, err := report.CreateDifference(oldReport, newReport)
+	diff, err := report.CreateDifference(oldReport, newReport, opts.title)
 	if err != nil {
 		return fmt.Errorf("failed to create diff: %w", err)
 	}
@@ -189,11 +255,11 @@ func diffCmd(rootOpts reportOptions, opts diffOptions) error {
 
 func generateCmd(args []string, rootOpts reportOptions, opts generateOptions, logger *slog.Logger) error {
 	if len(args) == 0 {
-		return errors.New("report command requires a minimum of one filepath argument")
+		return errors.New("generate command requires a minimum of one filepath argument")
 	}
 
 	if len(args) > 1 && len(opts.distinctBy) == 0 {
-		return errors.New("report command requires a single filepath argument when the distinct-by flag is not set")
+		return errors.New("generate command requires a single filepath argument when the distinct-by flag is not set")
 	}
 
 	reports := []*report.Report{}
@@ -363,9 +429,14 @@ type generateOptions struct {
 	distinctBy map[string]string
 }
 
+type generateDiffOptions struct {
+	uniqueAttributes map[string]string
+}
+
 type diffOptions struct {
 	oldReport string
 	newReport string
+	title     string
 }
 
 func readConfig(filePath string) (*config.DikiConfig, error) {
