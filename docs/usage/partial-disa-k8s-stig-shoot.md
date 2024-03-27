@@ -2,7 +2,7 @@
 
 ### Introduction
 
-This part shows how to run the DISA K8s STIGs ruleset against a Gardener shoot cluster when you do not have access to the seed's kubeconfig. The `managedk8s` provider is used which does not check control plane components.
+This part shows how to run the DISA K8s STIGs ruleset against a Gardener shoot cluster. The guide features the `managedk8s` provider which does not implement all of the DISA K8s STIG rules since it assumes that the user running the ruleset does not have access to the environment (the seed in this particular case) in which the control plane components reside.
 
 ### Prerequisites
 
