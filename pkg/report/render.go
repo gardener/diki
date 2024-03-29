@@ -80,7 +80,7 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 		"Statuses":               rule.Statuses,
 		"Icon":                   rule.GetStatusIcon,
 		"Time":                   convTimeFunc,
-		"DiffRulesetSummaryText": rulesetDiffSummaryText,
+		"RulesetDiffSummaryText": rulesetDiffSummaryHTML,
 		"keyExists":              keyExists,
 		"getAttrString":          getDiffUniqAttrsText,
 		"SortedMapKeys":          sortedKeys[string],

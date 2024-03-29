@@ -85,7 +85,7 @@
                     {{- range .Rulesets }}
                     {{- $ruleset := . }}
                     <li>
-                        <span class="text-lg"><span class="font-semibold">{{ .Version }} {{ .Name }}</span> ({{ DiffRulesetSummaryText $ruleset }})</span>
+                        <span class="text-lg"><span class="font-semibold">{{ .Version }} {{ .Name }}</span>{{ RulesetDiffSummaryText $ruleset }}</span>
                         <ul class="list-inside pl-2">
                             {{- range .Rules }}
                             <li>
@@ -97,7 +97,7 @@
                                     <li>
                                         <button onclick="collapse(event)" class="pr-2"><i
                                                 class="arrow right"></i></button>
-                                        <span class="font-semibold">Added</span>
+                                        <span class="font-semibold">Added statuses</span>
                                         <ul class="list-inside pl-5 hidden">
                                             {{- range .Added }}
                                             <li>
@@ -111,7 +111,7 @@
                                     <li>
                                         <button onclick="collapse(event)" class="pr-2"><i
                                                 class="arrow right"></i></button>
-                                        <span class="font-semibold">Removed</span>
+                                        <span class="font-semibold">Removed statuses</span>
                                         <ul class="list-inside pl-5 hidden">
                                             {{- range .Removed }}
                                             <li>

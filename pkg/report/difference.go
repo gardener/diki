@@ -8,6 +8,7 @@ import (
 	"cmp"
 	"errors"
 	"fmt"
+	"html/template"
 	"slices"
 	"strings"
 	"time"
@@ -290,8 +291,8 @@ func getUniqueRulesets(rulesets1, rulesets2 []Ruleset) map[string][]string {
 	return rulesets
 }
 
-// rulesetDiffSummaryText returns a summary string with the number of added and returned rules with results per status.
-func rulesetDiffSummaryText(ruleset *RulesetDifference) string {
+// rulesetDiffSummaryHTML returns a summary template html with the number of added and returned rules with results per status.
+func rulesetDiffSummaryHTML(ruleset *RulesetDifference) template.HTML {
 	var (
 		summaryBuilder strings.Builder
 		addedBuilder   strings.Builder
@@ -323,15 +324,12 @@ func rulesetDiffSummaryText(ruleset *RulesetDifference) string {
 		}
 	}
 	if addedBuilder.Len() > 0 {
-		summaryBuilder.WriteString(fmt.Sprintf("Added: (%s)", addedBuilder.String()))
+		summaryBuilder.WriteString(fmt.Sprintf("<br>Added statuses: %s", addedBuilder.String()))
 	}
 	if removedBuilder.Len() > 0 {
-		if summaryBuilder.Len() > 0 {
-			summaryBuilder.WriteString(", ")
-		}
-		summaryBuilder.WriteString(fmt.Sprintf("Removed: (%s)", removedBuilder.String()))
+		summaryBuilder.WriteString(fmt.Sprintf("<br>Removed statuses: %s", removedBuilder.String()))
 	}
-	return summaryBuilder.String()
+	return template.HTML(summaryBuilder.String())
 }
 
 func getDiffUniqAttrsText(key string, pd ProviderDifference) string {
