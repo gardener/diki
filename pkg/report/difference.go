@@ -329,7 +329,7 @@ func rulesetDiffSummaryHTML(ruleset *RulesetDifference) template.HTML {
 	if removedBuilder.Len() > 0 {
 		summaryBuilder.WriteString(fmt.Sprintf("<br>Removed statuses: %s", removedBuilder.String()))
 	}
-	return template.HTML(summaryBuilder.String())
+	return template.HTML(summaryBuilder.String()) //nolint:gosec
 }
 
 func getDiffUniqAttrsText(key string, pd ProviderDifference) string {
