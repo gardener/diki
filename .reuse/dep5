@@ -7,7 +7,6 @@ Source: https://github.com/gardener/diki
 # source code
 
 Files:
-    .ci/hack/*
     .github/*
     .gitignore
     .golangci.yaml
