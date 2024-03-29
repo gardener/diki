@@ -7,11 +7,10 @@ Source: https://github.com/gardener/diki
 # source code
 
 Files:
-    .ci/hack/*
     .github/*
     .gitignore
     .golangci.yaml
-    example/config/*
+    example/*
     CODEOWNERS
     VERSION
     go.mod
@@ -26,7 +25,8 @@ License: Apache-2.0
 # --------------------------------------------------
 # documentation
 
-Files: *.md
+Files:
+    *.md
 Copyright: 2017-2024 SAP SE or an SAP affiliate company and Gardener contributors
 License: CC-BY-4.0
 
