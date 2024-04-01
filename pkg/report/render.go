@@ -49,12 +49,12 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 	templates := make(map[string]*template.Template)
 
 	parsedReport, err := template.New(tmplReportName+".html").Funcs(template.FuncMap{
-		"Statuses":           rule.Statuses,
-		"Icon":               rule.GetStatusIcon,
-		"Time":               convTimeFunc,
-		"RulesetSummaryText": rulesetSummaryText,
-		"RulesWithStatus":    rulesWithStatus,
-		"SortedMapKeys":      sortedKeys[string],
+		"getStatuses":        rule.Statuses,
+		"icon":               rule.GetStatusIcon,
+		"time":               convTimeFunc,
+		"rulesetSummaryText": rulesetSummaryText,
+		"rulesWithStatus":    rulesWithStatus,
+		"sortedMapKeys":      sortedKeys[string],
 	}).ParseFS(files, tmplReportPath, tmplStylesPath)
 	if err != nil {
 		return nil, err
@@ -62,13 +62,13 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 	templates[tmplReportName] = parsedReport
 
 	parsedMergedReport, err := template.New(tmplMergedReportName+".html").Funcs(template.FuncMap{
-		"Statuses":                 rule.Statuses,
-		"Icon":                     rule.GetStatusIcon,
-		"Time":                     convTimeFunc,
-		"MergedMetadataTexts":      metadataTextForMergedProvider,
-		"MergedRulesetSummaryText": mergedRulesetSummaryText,
-		"MergedRulesWithStatus":    mergedRulesWithStatus,
-		"SortedMapKeys":            sortedKeys[string],
+		"getStatuses":              rule.Statuses,
+		"icon":                     rule.GetStatusIcon,
+		"time":                     convTimeFunc,
+		"mergedMetadataTexts":      metadataTextForMergedProvider,
+		"mergedRulesetSummaryText": mergedRulesetSummaryText,
+		"mergedRulesWithStatus":    mergedRulesWithStatus,
+		"sortedMapKeys":            sortedKeys[string],
 	}).ParseFS(files, tmplMergedReportPath, tmplStylesPath)
 	if err != nil {
 		return nil, err
@@ -76,14 +76,12 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 	templates[tmplMergedReportName] = parsedMergedReport
 
 	parsedDifferenceReport, err := template.New(tmplDifferenceReportName+".html").Funcs(template.FuncMap{
-		"Add":                    add,
-		"Statuses":               rule.Statuses,
-		"Icon":                   rule.GetStatusIcon,
-		"Time":                   convTimeFunc,
-		"RulesetDiffSummaryText": rulesetDiffSummaryHTML,
+		"add":                    add,
+		"icon":                   rule.GetStatusIcon,
+		"rulesetDiffSummaryText": rulesetDiffSummaryHTML,
 		"keyExists":              keyExists,
 		"getAttrString":          getDiffUniqAttrsText,
-		"SortedMapKeys":          sortedKeys[string],
+		"sortedMapKeys":          sortedKeys[string],
 	}).ParseFS(files, tmplDifferenceReportPath, tmplStylesPath)
 	if err != nil {
 		return nil, err

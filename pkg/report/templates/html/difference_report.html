@@ -58,13 +58,13 @@
         <div class="content px-6">
             {{- $uniqAttr := .UniqueAttributes }}
             {{- range $index, $element := .DifferenceReports }}
-            <label class="font-bold text-2xl">{{ Add $index 1 }}. {{ .Title }}</label>
+            <label class="font-bold text-2xl">{{ add $index 1 }}. {{ .Title }}</label>
             {{- range .Providers }}
             {{- if (keyExists $uniqAttr .ID) }}
             <div>
-                <label class="font-bold text-2xl">Provider {{ .Name }} {{ getAttrString (index $uniqAttr .ID)  . }}</label>
+                <label class="font-bold text-2xl">Provider {{ .Name }} {{ getAttrString . (index $uniqAttr .ID)}}</label>
                 <ul class="list-disc  list-inside">
-                    {{- $keys := SortedMapKeys .OldMetadata }}
+                    {{- $keys := sortedMapKeys .OldMetadata }}
                     {{- $meta := .OldMetadata }}
                     <li><span class="font-bold">OldMetadata:</span>
                     {{- range $key := $keys -}}
@@ -73,7 +73,7 @@
                     </li>
                 </ul>
                 <ul class="list-disc  list-inside">
-                    {{- $keys := SortedMapKeys .NewMetadata }}
+                    {{- $keys := sortedMapKeys .NewMetadata }}
                     {{- $meta := .NewMetadata }}
                     <li><span class="font-bold">NewMetadata:</span>
                     {{- range $key := $keys -}}
@@ -85,7 +85,7 @@
                     {{- range .Rulesets }}
                     {{- $ruleset := . }}
                     <li>
-                        <span class="text-lg"><span class="font-semibold">{{ .Version }} {{ .Name }}</span>{{ RulesetDiffSummaryText $ruleset }}</span>
+                        <span class="text-lg"><span class="font-semibold">{{ .Version }} {{ .Name }}</span>{{ rulesetDiffSummaryText $ruleset }}</span>
                         <ul class="list-inside pl-2">
                             {{- range .Rules }}
                             <li>
@@ -101,7 +101,7 @@
                                         <ul class="list-inside pl-5 hidden">
                                             {{- range .Added }}
                                             <li>
-                                                <span class="font-medium">{{ .Status }} &#{{ Icon .Status }} {{ .Message }}</span>
+                                                <span class="font-medium">{{ .Status }} &#{{ icon .Status }} {{ .Message }}</span>
                                             </li>
                                             {{- end }}
                                         </ul>
@@ -115,7 +115,7 @@
                                         <ul class="list-inside pl-5 hidden">
                                             {{- range .Removed }}
                                             <li>
-                                                <span class="font-medium">{{ .Status }} &#{{ Icon .Status }} {{ .Message }}</span>
+                                                <span class="font-medium">{{ .Status }} &#{{ icon .Status }} {{ .Message }}</span>
                                             </li>
                                             {{- end }}
                                         </ul>

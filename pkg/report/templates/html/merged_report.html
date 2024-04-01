@@ -54,7 +54,7 @@
 
 <body>
     <div class="flex-col">
-        <h1 class="text-3xl font-bold pb-5 pt-2 flex justify-center">Compliance Run ({{ Time .Time }})</h1>
+        <h1 class="text-3xl font-bold pb-5 pt-2 flex justify-center">Compliance Run ({{ time .Time }})</h1>
         <div class="content px-6">
             {{- range .Providers }}
             <div>
@@ -63,25 +63,25 @@
                         class="arrow right"></i></button>
                 <span class="text-lg">Evaluated targets</span>
                 <ul class="list-disc  list-inside pl-5 hidden">
-                    {{- $meta := MergedMetadataTexts . }}
-                    {{- $keys := SortedMapKeys $meta }}
+                    {{- $meta := mergedMetadataTexts . }}
+                    {{- $keys := sortedMapKeys $meta }}
                     {{- range $id := $keys }}
                     <li><span class="font-bold">{{ $id }}</span> {{ index $meta $id }}</li>
                     {{- end }}
                 </ul>
                 <ul class="list-none list-inside">
                     {{- range .Rulesets }}
-                    {{- $statuses := Statuses }}
+                    {{- $statuses := getStatuses }}
                     {{- $ruleset := . }}
                     <li>
-                        <span class="text-lg"><span class="font-semibold">{{ $ruleset.Version }} {{ $ruleset.Name }}</span> ({{ MergedRulesetSummaryText $ruleset }})</span>
+                        <span class="text-lg"><span class="font-semibold">{{ $ruleset.Version }} {{ $ruleset.Name }}</span> ({{ mergedRulesetSummaryText $ruleset }})</span>
                         {{- range $key, $value := $statuses }}
-                        {{- with MergedRulesWithStatus $ruleset $value }}
+                        {{- with mergedRulesWithStatus $ruleset $value }}
                         <ul class="list-inside pl-2">
                             <li>
                                 <button onclick="collapse(event)" class="text-lg pr-2"><i
                                         class="arrow right"></i></button>
-                                <span class="text-lg">&#{{ Icon $value }} {{ $value }}</span>
+                                <span class="text-lg">&#{{ icon $value }} {{ $value }}</span>
                                 <ul class="list-inside pl-5 hidden">
                                     {{- range . }}
                                     <li>
