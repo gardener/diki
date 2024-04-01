@@ -7,20 +7,29 @@ package report
 import (
 	"cmp"
 	"errors"
+	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/gardener/diki/pkg/rule"
 )
 
-// Difference contains the difference between 2 reports.
-type Difference struct {
+// DifferenceReportsWrapper wraps DifferenceReports and additional attributes needed for html rendering.
+type DifferenceReportsWrapper struct {
+	DifferenceReports  []*DifferenceReport `json:"differenceReports"`
+	IdentityAttributes map[string]string   `json:"identityAttributes"`
+}
+
+// DifferenceReport contains the difference between two reports.
+type DifferenceReport struct {
+	Title     string               `json:"title,omitempty"`
 	Time      time.Time            `json:"time"`
 	MinStatus rule.Status          `json:"minStatus,omitempty"`
 	Providers []ProviderDifference `json:"providers"`
 }
 
-// ProviderDifference contains the difference between 2 reports
+// ProviderDifference contains the difference between two reports
 // for a known provider and its ran rulesets.
 type ProviderDifference struct {
 	ID          string              `json:"id"`
@@ -30,7 +39,7 @@ type ProviderDifference struct {
 	Rulesets    []RulesetDifference `json:"rulesets"`
 }
 
-// RulesetDifference contains the difference between 2 reports
+// RulesetDifference contains the difference between two reports
 // for a ruleset and its rules.
 type RulesetDifference struct {
 	ID      string           `json:"id"`
@@ -39,7 +48,7 @@ type RulesetDifference struct {
 	Rules   []RuleDifference `json:"rules"`
 }
 
-// RuleDifference contains the difference between 2 reports for a single rule.
+// RuleDifference contains the difference between two reports for a single rule.
 type RuleDifference struct {
 	ID      string  `json:"id"`
 	Name    string  `json:"name"`
@@ -47,8 +56,8 @@ type RuleDifference struct {
 	Removed []Check `json:"removed,omitempty"`
 }
 
-// CreateDifference creates the difference between 2 reports.
-func CreateDifference(oldReport Report, newReport Report) (*Difference, error) {
+// CreateDifference creates the difference between two reports.
+func CreateDifference(oldReport Report, newReport Report, title string) (*DifferenceReport, error) {
 	var minStatus rule.Status
 	switch {
 	case oldReport.MinStatus == newReport.MinStatus:
@@ -61,7 +70,8 @@ func CreateDifference(oldReport Report, newReport Report) (*Difference, error) {
 		return nil, errors.New("reports must have equal minStatus")
 	}
 
-	diff := &Difference{
+	diff := &DifferenceReport{
+		Title:     title,
 		Time:      time.Now(),
 		MinStatus: minStatus,
 		Providers: []ProviderDifference{},
@@ -278,4 +288,56 @@ func getUniqueRulesets(rulesets1, rulesets2 []Ruleset) map[string][]string {
 		}
 	}
 	return rulesets
+}
+
+// rulesetDiffAddedSummaryText returns a summary string with the number of added status types.
+func rulesetDiffAddedSummaryText(ruleset *RulesetDifference) string {
+	var added = map[rule.Status]int{}
+	for _, rule := range ruleset.Rules {
+		for _, check := range rule.Added {
+			added[check.Status]++
+		}
+	}
+	return rulesetDiffSummaryText(added)
+}
+
+// rulesetDiffRemovedSummaryText returns a summary string with the number of removed status types.
+func rulesetDiffRemovedSummaryText(ruleset *RulesetDifference) string {
+	var removed = map[rule.Status]int{}
+	for _, rule := range ruleset.Rules {
+		for _, check := range rule.Removed {
+			removed[check.Status]++
+		}
+	}
+	return rulesetDiffSummaryText(removed)
+}
+
+func rulesetDiffSummaryText(statusesCount map[rule.Status]int) string {
+	var (
+		summaryBuilder strings.Builder
+		statuses       = rule.Statuses()
+	)
+	for _, status := range statuses {
+		if val, ok := statusesCount[status]; ok {
+			if summaryBuilder.Len() > 0 {
+				summaryBuilder.WriteString(", ")
+			}
+			summaryBuilder.WriteString(fmt.Sprintf("%dx %s %c", val, status, rule.GetStatusIcon(status)))
+		}
+	}
+	if summaryBuilder.Len() == 0 {
+		return "None"
+	}
+	return summaryBuilder.String()
+}
+
+func getProviderDiffIDText(providerDiff ProviderDifference, key string) string {
+	switch {
+	case len(providerDiff.OldMetadata[key]) == 0 && len(providerDiff.NewMetadata[key]) == 0:
+		return ""
+	case providerDiff.OldMetadata[key] == providerDiff.NewMetadata[key]:
+		return fmt.Sprintf("- %s", providerDiff.NewMetadata[key])
+	default:
+		return fmt.Sprintf("- %s/%s", providerDiff.OldMetadata[key], providerDiff.NewMetadata[key])
+	}
 }

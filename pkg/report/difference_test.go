@@ -19,6 +19,7 @@ var _ = Describe("diff", func() {
 		var (
 			minStatus      rule.Status
 			reportTime     time.Time
+			title          = "Foo"
 			providerID     = "provider-foo"
 			providerName   = "Provider Foo"
 			rulesetID      = "ruleset-foo"
@@ -129,16 +130,17 @@ var _ = Describe("diff", func() {
 		It("should return error when reports do not have equal minStatus", func() {
 			simpleReport2.MinStatus = rule.Failed
 
-			diff, err := report.CreateDifference(simpleReport1, simpleReport2)
+			diff, err := report.CreateDifference(simpleReport1, simpleReport2, title)
 
 			Expect(diff).To(BeNil())
 			Expect(err).To(MatchError("reports must have equal minStatus"))
 		})
 		It("should create correct diff", func() {
 			simpleReport2.MinStatus = ""
-			diff, err := report.CreateDifference(simpleReport1, simpleReport2)
+			diff, err := report.CreateDifference(simpleReport1, simpleReport2, title)
 
-			expectedDiff := &report.Difference{
+			expectedDiff := &report.DifferenceReport{
+				Title:     "Foo",
 				Time:      diff.Time,
 				MinStatus: rule.Passed,
 				Providers: []report.ProviderDifference{
@@ -203,13 +205,15 @@ var _ = Describe("diff", func() {
 		})
 		It("should create correct diff of 2 reports with more than 1 ruleset", func() {
 			simpleReport1.MinStatus = ""
+			simpleReport2.Providers[0].Metadata["id"] = "foo"
 			simpleReport2.Providers[0].Rulesets = append(simpleReport2.Providers[0].Rulesets, simpleReport1.Providers[0].Rulesets[0])
 			simpleReport2.Providers[0].Rulesets[1].ID = "ruleset-bar"
 			simpleReport2.Providers[0].Rulesets[1].Name = "Ruleset Bar"
 
-			diff, err := report.CreateDifference(simpleReport1, simpleReport2)
+			diff, err := report.CreateDifference(simpleReport1, simpleReport2, title)
 
-			expectedDiff := &report.Difference{
+			expectedDiff := &report.DifferenceReport{
+				Title:     "Foo",
 				Time:      diff.Time,
 				MinStatus: rule.Passed,
 				Providers: []report.ProviderDifference{
@@ -222,7 +226,7 @@ var _ = Describe("diff", func() {
 							"time": reportTime.Format(time.RFC3339),
 						},
 						NewMetadata: map[string]string{
-							"id":   "bar",
+							"id":   "foo",
 							"foo":  "bar",
 							"time": reportTime.Format(time.RFC3339),
 						},
@@ -312,9 +316,10 @@ var _ = Describe("diff", func() {
 				Rulesets: simpleReport1.Providers[0].Rulesets,
 			})
 
-			diff, err := report.CreateDifference(simpleReport1, simpleReport2)
+			diff, err := report.CreateDifference(simpleReport1, simpleReport2, title)
 
-			expectedDiff := &report.Difference{
+			expectedDiff := &report.DifferenceReport{
+				Title:     "Foo",
 				Time:      diff.Time,
 				MinStatus: rule.Passed,
 				Providers: []report.ProviderDifference{
@@ -449,9 +454,10 @@ var _ = Describe("diff", func() {
 			})
 			simpleReport2.Providers[0].Rulesets[0].Version = "v1.1"
 
-			diff, err := report.CreateDifference(simpleReport1, simpleReport2)
+			diff, err := report.CreateDifference(simpleReport1, simpleReport2, title)
 
-			expectedDiff := &report.Difference{
+			expectedDiff := &report.DifferenceReport{
+				Title:     "Foo",
 				Time:      diff.Time,
 				MinStatus: rule.Passed,
 				Providers: []report.ProviderDifference{
