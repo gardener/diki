@@ -114,8 +114,8 @@ e.g. to check compliance of your hyperscaler accounts.`,
 	var generateDiffOpts generateDiffOptions
 	generateDiffCmd := &cobra.Command{
 		Use:   "diff",
-		Short: "Generate diff converts difference reports to html.",
-		Long:  "Generate diff converts difference reports to html.",
+		Short: "Generate diff combines difference reports into an html report.",
+		Long:  "Generate diff combines difference reports into an html report.",
 		RunE: func(_ *cobra.Command, args []string) error {
 			return generateDiffCmd(args, generateDiffOpts, reportOpts, logger)
 		},
@@ -148,19 +148,19 @@ func addReportGenerateFlags(cmd *cobra.Command, opts *generateOptions) {
 func addReportDiffFlags(cmd *cobra.Command, opts *diffOptions) {
 	cmd.PersistentFlags().StringVar(&opts.oldReport, "old", "", "Old report path.")
 	cmd.PersistentFlags().StringVar(&opts.newReport, "new", "", "New report path.")
-	cmd.PersistentFlags().StringVar(&opts.title, "title", "", "Title for difference report.")
+	cmd.PersistentFlags().StringVar(&opts.title, "title", "", "The title of a difference report.")
 }
 
 func addReportGenerateDiffFlags(cmd *cobra.Command, opts *generateDiffOptions) {
-	cmd.PersistentFlags().Var(cliflag.NewMapStringString(&opts.uniqueAttributes), "unique-attributes", "The keys are the IDs for the providers that will be present in the generated difference report and the values are metadata attributes to be used as IDs")
+	cmd.PersistentFlags().Var(cliflag.NewMapStringString(&opts.identityAttributes), "identity-attributes", "The keys are the IDs of the providers that will be present in the generated difference report and the values are metadata attributes to be used as identifiers.")
 }
 
 func generateDiffCmd(args []string, generateDiffOpts generateDiffOptions, rootOpts reportOptions, logger *slog.Logger) error {
 	if len(args) == 0 {
 		return errors.New("generate diff command requires a minimum of one filepath argument")
 	}
-	if len(generateDiffOpts.uniqueAttributes) == 0 {
-		return errors.New("--unique-attributes is not set but required")
+	if len(generateDiffOpts.identityAttributes) == 0 {
+		return errors.New("--identity-attributes is not set but required")
 	}
 
 	differences := []*report.DifferenceReport{}
@@ -178,15 +178,10 @@ func generateDiffCmd(args []string, generateDiffOpts generateDiffOptions, rootOp
 		differences = append(differences, diff)
 	}
 
-	htlmRenderer, err := report.NewHTMLRenderer()
-	if err != nil {
-		return fmt.Errorf("failed to initialize renderer: %w", err)
-	}
-
 	var writer io.Writer = os.Stdout
 	if len(rootOpts.outputPath) > 0 {
-		var file *os.File
-		if file, err = os.OpenFile(rootOpts.outputPath, os.O_WRONLY|os.O_CREATE, 0600); err != nil {
+		file, err := os.OpenFile(rootOpts.outputPath, os.O_WRONLY|os.O_CREATE, 0600)
+		if err != nil {
 			return err
 		}
 		defer func() {
@@ -197,9 +192,14 @@ func generateDiffCmd(args []string, generateDiffOpts generateDiffOptions, rootOp
 		writer = file
 	}
 
-	return htlmRenderer.Render(writer, &report.DifferenceReportWrapper{
-		DifferenceReports: differences,
-		UniqueAttributes:  generateDiffOpts.uniqueAttributes,
+	htlmRenderer, err := report.NewHTMLRenderer()
+	if err != nil {
+		return fmt.Errorf("failed to initialize renderer: %w", err)
+	}
+
+	return htlmRenderer.Render(writer, &report.DifferenceReportsWrapper{
+		DifferenceReports:  differences,
+		IdentityAttributes: generateDiffOpts.identityAttributes,
 	})
 }
 
@@ -278,15 +278,10 @@ func generateCmd(args []string, rootOpts reportOptions, opts generateOptions, lo
 		reports = append(reports, rep)
 	}
 
-	htlmRenderer, err := report.NewHTMLRenderer()
-	if err != nil {
-		return fmt.Errorf("failed to initialize renderer: %w", err)
-	}
-
 	var writer io.Writer = os.Stdout
 	if len(rootOpts.outputPath) > 0 {
-		var file *os.File
-		if file, err = os.OpenFile(rootOpts.outputPath, os.O_WRONLY|os.O_CREATE, 0600); err != nil {
+		file, err := os.OpenFile(rootOpts.outputPath, os.O_WRONLY|os.O_CREATE, 0600)
+		if err != nil {
 			return err
 		}
 		defer func() {
@@ -295,6 +290,11 @@ func generateCmd(args []string, rootOpts reportOptions, opts generateOptions, lo
 			}
 		}()
 		writer = file
+	}
+
+	htlmRenderer, err := report.NewHTMLRenderer()
+	if err != nil {
+		return fmt.Errorf("failed to initialize renderer: %w", err)
 	}
 
 	if len(opts.distinctBy) > 0 {
@@ -430,7 +430,7 @@ type generateOptions struct {
 }
 
 type generateDiffOptions struct {
-	uniqueAttributes map[string]string
+	identityAttributes map[string]string
 }
 
 type diffOptions struct {

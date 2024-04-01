@@ -56,13 +56,13 @@
     <div class="flex-col">
         <h1 class="text-3xl font-bold pb-5 pt-2 flex justify-center">Difference report</h1>
         <div class="content px-6">
-            {{- $uniqAttr := .UniqueAttributes }}
+            {{- $IDAttr := .IdentityAttributes }}
             {{- range $index, $element := .DifferenceReports }}
             <label class="font-bold text-2xl">{{ add $index 1 }}. {{ .Title }}</label>
             {{- range .Providers }}
-            {{- if (keyExists $uniqAttr .ID) }}
+            {{- if (keyExists $IDAttr .ID) }}
             <div>
-                <label class="font-bold text-2xl">Provider {{ .Name }} {{ getAttrString . (index $uniqAttr .ID)}}</label>
+                <label class="font-bold text-2xl">Provider {{ .Name }} {{ getAttrString . (index $IDAttr .ID)}}</label>
                 <ul class="list-disc  list-inside">
                     {{- $keys := sortedMapKeys .OldMetadata }}
                     {{- $meta := .OldMetadata }}
@@ -85,7 +85,9 @@
                     {{- range .Rulesets }}
                     {{- $ruleset := . }}
                     <li>
-                        <span class="text-lg"><span class="font-semibold">{{ .Version }} {{ .Name }}</span>{{ rulesetDiffSummaryText $ruleset }}</span>
+                        <span class="text-lg"><span class="font-semibold">{{ .Version }} {{ .Name }}</span>
+                        <br>Added statuses: {{ rulesetDiffAddedSummaryText $ruleset }}
+                        <br>Removed statuses: {{ rulesetDiffRemovedSummaryText $ruleset }}</span>
                         <ul class="list-inside pl-2">
                             {{- range .Rules }}
                             <li>

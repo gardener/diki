@@ -8,7 +8,6 @@ import (
 	"cmp"
 	"errors"
 	"fmt"
-	"html/template"
 	"slices"
 	"strings"
 	"time"
@@ -16,13 +15,13 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-// DifferenceReportWrapper wraps DifferenceReports and additional attributes needed for html rendering.
-type DifferenceReportWrapper struct {
-	DifferenceReports []*DifferenceReport `json:"differenceReports"`
-	UniqueAttributes  map[string]string   `json:"uniqueAttributes"`
+// DifferenceReportsWrapper wraps DifferenceReports and additional attributes needed for html rendering.
+type DifferenceReportsWrapper struct {
+	DifferenceReports  []*DifferenceReport `json:"differenceReports"`
+	IdentityAttributes map[string]string   `json:"identityAttributes"`
 }
 
-// DifferenceReport contains the difference between 2 reports.
+// DifferenceReport contains the difference between two reports.
 type DifferenceReport struct {
 	Title     string               `json:"title,omitempty"`
 	Time      time.Time            `json:"time"`
@@ -30,7 +29,7 @@ type DifferenceReport struct {
 	Providers []ProviderDifference `json:"providers"`
 }
 
-// ProviderDifference contains the difference between 2 reports
+// ProviderDifference contains the difference between two reports
 // for a known provider and its ran rulesets.
 type ProviderDifference struct {
 	ID          string              `json:"id"`
@@ -40,7 +39,7 @@ type ProviderDifference struct {
 	Rulesets    []RulesetDifference `json:"rulesets"`
 }
 
-// RulesetDifference contains the difference between 2 reports
+// RulesetDifference contains the difference between two reports
 // for a ruleset and its rules.
 type RulesetDifference struct {
 	ID      string           `json:"id"`
@@ -49,7 +48,7 @@ type RulesetDifference struct {
 	Rules   []RuleDifference `json:"rules"`
 }
 
-// RuleDifference contains the difference between 2 reports for a single rule.
+// RuleDifference contains the difference between two reports for a single rule.
 type RuleDifference struct {
 	ID      string  `json:"id"`
 	Name    string  `json:"name"`
@@ -57,7 +56,7 @@ type RuleDifference struct {
 	Removed []Check `json:"removed,omitempty"`
 }
 
-// CreateDifference creates the difference between 2 reports.
+// CreateDifference creates the difference between two reports.
 func CreateDifference(oldReport Report, newReport Report, title string) (*DifferenceReport, error) {
 	var minStatus rule.Status
 	switch {
@@ -291,48 +290,48 @@ func getUniqueRulesets(rulesets1, rulesets2 []Ruleset) map[string][]string {
 	return rulesets
 }
 
-// rulesetDiffSummaryHTML returns a summary html template with the number of added and removed status types.
-func rulesetDiffSummaryHTML(ruleset *RulesetDifference) template.HTML {
-	var (
-		summaryBuilder strings.Builder
-		addedBuilder   strings.Builder
-		removedBuilder strings.Builder
-		statuses       = rule.Statuses()
-		added          = map[rule.Status]int{}
-		removed        = map[rule.Status]int{}
-	)
+// rulesetDiffAddedSummaryText returns a summary string with the number of added status types.
+func rulesetDiffAddedSummaryText(ruleset *RulesetDifference) string {
+	var added = map[rule.Status]int{}
 	for _, rule := range ruleset.Rules {
 		for _, check := range rule.Added {
 			added[check.Status]++
 		}
+	}
+	return rulesetDiffSummaryText(added)
+}
+
+// rulesetDiffRemovedSummaryText returns a summary string with the number of removed status types.
+func rulesetDiffRemovedSummaryText(ruleset *RulesetDifference) string {
+	var removed = map[rule.Status]int{}
+	for _, rule := range ruleset.Rules {
 		for _, check := range rule.Removed {
 			removed[check.Status]++
 		}
 	}
-	for _, status := range statuses {
-		if val, ok := added[status]; ok {
-			if addedBuilder.Len() > 0 {
-				addedBuilder.WriteString(", ")
-			}
-			addedBuilder.WriteString(fmt.Sprintf("%dx %s %c", val, status, rule.GetStatusIcon(status)))
-		}
-		if val, ok := removed[status]; ok {
-			if removedBuilder.Len() > 0 {
-				removedBuilder.WriteString(", ")
-			}
-			removedBuilder.WriteString(fmt.Sprintf("%dx %s %c", val, status, rule.GetStatusIcon(status)))
-		}
-	}
-	if addedBuilder.Len() > 0 {
-		summaryBuilder.WriteString(fmt.Sprintf("<br>Added statuses: %s", addedBuilder.String()))
-	}
-	if removedBuilder.Len() > 0 {
-		summaryBuilder.WriteString(fmt.Sprintf("<br>Removed statuses: %s", removedBuilder.String()))
-	}
-	return template.HTML(summaryBuilder.String()) //nolint:gosec
+	return rulesetDiffSummaryText(removed)
 }
 
-func getDiffUniqAttrsText(providerDiff ProviderDifference, key string) string {
+func rulesetDiffSummaryText(statusesCount map[rule.Status]int) string {
+	var (
+		summaryBuilder strings.Builder
+		statuses       = rule.Statuses()
+	)
+	for _, status := range statuses {
+		if val, ok := statusesCount[status]; ok {
+			if summaryBuilder.Len() > 0 {
+				summaryBuilder.WriteString(", ")
+			}
+			summaryBuilder.WriteString(fmt.Sprintf("%dx %s %c", val, status, rule.GetStatusIcon(status)))
+		}
+	}
+	if summaryBuilder.Len() == 0 {
+		return "None"
+	}
+	return summaryBuilder.String()
+}
+
+func getProviderDiffIDText(providerDiff ProviderDifference, key string) string {
 	switch {
 	case len(providerDiff.OldMetadata[key]) == 0 && len(providerDiff.NewMetadata[key]) == 0:
 		return ""

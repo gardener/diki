@@ -76,12 +76,13 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 	templates[tmplMergedReportName] = parsedMergedReport
 
 	parsedDifferenceReport, err := template.New(tmplDifferenceReportName+".html").Funcs(template.FuncMap{
-		"add":                    add,
-		"icon":                   rule.GetStatusIcon,
-		"rulesetDiffSummaryText": rulesetDiffSummaryHTML,
-		"keyExists":              keyExists,
-		"getAttrString":          getDiffUniqAttrsText,
-		"sortedMapKeys":          sortedKeys[string],
+		"add":                           add,
+		"icon":                          rule.GetStatusIcon,
+		"rulesetDiffAddedSummaryText":   rulesetDiffAddedSummaryText,
+		"rulesetDiffRemovedSummaryText": rulesetDiffRemovedSummaryText,
+		"keyExists":                     keyExists,
+		"getAttrString":                 getProviderDiffIDText,
+		"sortedMapKeys":                 sortedKeys[string],
 	}).ParseFS(files, tmplDifferenceReportPath, tmplStylesPath)
 	if err != nil {
 		return nil, err
@@ -100,7 +101,7 @@ func (r *HTMLRenderer) Render(w io.Writer, report any) error {
 		return r.templates[tmplReportName].Execute(w, rep)
 	case *MergedReport:
 		return r.templates[tmplMergedReportName].Execute(w, rep)
-	case *DifferenceReportWrapper:
+	case *DifferenceReportsWrapper:
 		return r.templates[tmplDifferenceReportName].Execute(w, rep)
 	default:
 		return fmt.Errorf("unsupported report type: %T", report)
