@@ -152,7 +152,7 @@ func addReportDiffFlags(cmd *cobra.Command, opts *diffOptions) {
 }
 
 func addReportGenerateDiffFlags(cmd *cobra.Command, opts *generateDiffOptions) {
-	cmd.PersistentFlags().Var(cliflag.NewMapStringString(&opts.uniqueAttributes), "unique-attributes", "The keys are the IDs for the providers that will be present in the generated diff report and the values are metadata attributes to be used as IDs")
+	cmd.PersistentFlags().Var(cliflag.NewMapStringString(&opts.uniqueAttributes), "unique-attributes", "The keys are the IDs for the providers that will be present in the generated difference report and the values are metadata attributes to be used as IDs")
 }
 
 func generateDiffCmd(args []string, generateDiffOpts generateDiffOptions, rootOpts reportOptions, logger *slog.Logger) error {

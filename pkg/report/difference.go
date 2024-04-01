@@ -16,7 +16,7 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-// DifferenceReportWrapper wraps DifferenceReports and adds additional attributes needed for html rendering.
+// DifferenceReportWrapper wraps DifferenceReports and additional attributes needed for html rendering.
 type DifferenceReportWrapper struct {
 	DifferenceReports []*DifferenceReport `json:"differenceReports"`
 	UniqueAttributes  map[string]string   `json:"uniqueAttributes"`
@@ -291,7 +291,7 @@ func getUniqueRulesets(rulesets1, rulesets2 []Ruleset) map[string][]string {
 	return rulesets
 }
 
-// rulesetDiffSummaryHTML returns a summary template html with the number of added and returned rules with results per status.
+// rulesetDiffSummaryHTML returns a summary html template with the number of added and removed status types.
 func rulesetDiffSummaryHTML(ruleset *RulesetDifference) template.HTML {
 	var (
 		summaryBuilder strings.Builder
@@ -332,13 +332,13 @@ func rulesetDiffSummaryHTML(ruleset *RulesetDifference) template.HTML {
 	return template.HTML(summaryBuilder.String()) //nolint:gosec
 }
 
-func getDiffUniqAttrsText(key string, pd ProviderDifference) string {
+func getDiffUniqAttrsText(providerDiff ProviderDifference, key string) string {
 	switch {
-	case len(pd.OldMetadata[key]) == 0 && len(pd.NewMetadata[key]) == 0:
+	case len(providerDiff.OldMetadata[key]) == 0 && len(providerDiff.NewMetadata[key]) == 0:
 		return ""
-	case pd.OldMetadata[key] == pd.NewMetadata[key]:
-		return fmt.Sprintf("- %s", pd.NewMetadata[key])
+	case providerDiff.OldMetadata[key] == providerDiff.NewMetadata[key]:
+		return fmt.Sprintf("- %s", providerDiff.NewMetadata[key])
 	default:
-		return fmt.Sprintf("- %s/%s", pd.OldMetadata[key], pd.NewMetadata[key])
+		return fmt.Sprintf("- %s/%s", providerDiff.OldMetadata[key], providerDiff.NewMetadata[key])
 	}
 }
