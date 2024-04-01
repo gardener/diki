@@ -86,11 +86,9 @@ Diki can generate a json containing the difference between 2 output files of `di
 diki report diff --title=Title --old=output1.json --new=output2.json --output=difference.json
 ```
 
-Diki can generate a human readable difference report from the json difference reports.
-
 - Generate html difference report from 1 or more json difference reports.
 ```bash
-diki report generate diff --unique-attributes=gardener=id --output=difference.html difference1.json difference1.json
+diki report generate diff --unique-attributes=gardener=id --output=difference.html difference1.json difference2.json
 ```
 
 #### Unit Tests
