@@ -53,7 +53,6 @@ diki:
             internal_scp_workspace:
               channel_name: 'C9CEBQPGE' #sap-tech-gardener
               slack_cfg_name: 'scp_workspace'
-        component_descriptor: ~
         publish:
           dockerimages:
             diki:
