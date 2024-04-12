@@ -422,8 +422,8 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedv1r11.Rule242452{
 			Logger:     r.Logger().With("rule", sharedv1r11.ID242452),
 			InstanceID: r.instanceID,
-			Client:     seedClient,
-			PodContext: seedPodContext,
+			Client:     shootClient,
+			PodContext: shootPodContext,
 			Options: &sharedv1r11.Options242452{
 				NodeGroupByLabels: workerPoolGroupByLabels,
 			},
