@@ -5,6 +5,7 @@
 package report
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -150,6 +151,10 @@ func rulesWithStatus(ruleset *Ruleset, status rule.Status) []Rule {
 			result = append(result, ruleWithStatus)
 		}
 	}
+	// sort rules by id
+	slices.SortFunc(result, func(a, b Rule) int {
+		return cmp.Compare(a.ID, b.ID)
+	})
 	return result
 }
 
