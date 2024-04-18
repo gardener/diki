@@ -5,6 +5,7 @@
 package report
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"slices"
@@ -207,6 +208,10 @@ func mergedRulesWithStatus(ruleset *MergedRuleset, status rule.Status) []MergedR
 			result = append(result, ruleWithStatus)
 		}
 	}
+	// sort rules by id
+	slices.SortFunc(result, func(a, b MergedRule) int {
+		return cmp.Compare(a.ID, b.ID)
+	})
 	return result
 }
 
