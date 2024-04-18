@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-FROM golang:1.22.2 AS builder
+FROM golang:1.22.2 AS go-builder
 
 ARG TARGETARCH
 WORKDIR /workspace
@@ -13,18 +13,26 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -a -ldflags="$(/workspa
 
 FROM gcr.io/distroless/static-debian12:nonroot AS diki
 WORKDIR /
-COPY --from=builder /workspace/diki .
+COPY --from=go-builder /workspace/diki .
 
 ENTRYPOINT ["/diki"]
 
-FROM alpine:3.19.1 AS diki-ops
+FROM alpine:3.19.1 AS diki-ops-builder
 
 ARG TARGETARCH
 
 RUN apk --no-cache add curl &&\
     curl -sLf https://github.com/containerd/nerdctl/releases/download/v1.7.5/nerdctl-1.7.5-linux-${TARGETARCH}.tar.gz -o /nerdctl.tar.gz &&\
-    tar -C /usr/local/bin -xzvf nerdctl.tar.gz &&\
-    rm -f nerdctl.tar.gz &&\
-    mkdir /etc/nerdctl &&\
-    echo address = "\"unix:///host/run/containerd/containerd.sock\"" >> /etc/nerdctl/nerdctl.toml &&\
-    echo namespace = "\"k8s.io\"" >> /etc/nerdctl/nerdctl.toml
+    tar -C /usr/local/bin -xzvf nerdctl.tar.gz
+
+WORKDIR /volume
+
+RUN mkdir -p ./bin ./usr/local/bin ./sbin ./lib ./tmp \
+    && cp -d /bin/busybox ./bin                      && echo "package busybox" \
+    && cp -d /lib/ld-musl-* ./lib                    && echo "package musl" \
+    && cp -d /usr/sbin/chroot ./sbin                 && echo "package chroot" \
+    && cp -d /usr/local/bin/nerdctl ./usr/local/bin  && echo "package nerdctl"
+
+FROM scratch as diki-ops
+WORKDIR /
+COPY --from=diki-ops-builder /volume .
