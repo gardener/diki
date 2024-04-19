@@ -47,7 +47,7 @@ func Run(
 	rulesCh := make(chan rule.Rule)
 	resultCh := make(chan run)
 	wg := sync.WaitGroup{}
-	log.Info("starting ruleset run", "rules", len(rules), "concurrent workers", workers)
+	log.Info("starting ruleset run", "number_of_rules", len(rules), "number_of_workers", workers)
 	for i := 0; i < workers; i++ {
 		wg.Add(1)
 		go func() {

@@ -34,7 +34,7 @@ func RunAll(ctx context.Context, p provider.Provider, rulesets map[string]rulese
 	}
 
 	var errAgg error
-	log.Info("starting provider run", "rulesets", len(rulesets))
+	log.Info("starting provider run", "number_of_rulesets", len(rulesets))
 	finishMsg := "finished ruleset run"
 	for _, rs := range rulesets {
 		log.Info("starting ruleset run", "ruleset", rs.ID(), "version", rs.Version())
