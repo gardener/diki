@@ -47,12 +47,12 @@ func Run(
 	rulesCh := make(chan rule.Rule)
 	resultCh := make(chan run)
 	wg := sync.WaitGroup{}
-	log.Info(fmt.Sprintf("ruleset will run %d rules with %d concurrent workers", len(rules), workers))
+	log.Info("starting ruleset run", "rules", len(rules), "concurrent workers", workers)
 	for i := 0; i < workers; i++ {
 		wg.Add(1)
 		go func() {
 			for rule := range rulesCh {
-				log.Info(fmt.Sprintf("starting rule %s run", rule.ID()))
+				log.Info("starting rule run", "rule_id", rule.ID())
 				res, err := rule.Run(ctx)
 				res.RuleID = rule.ID()
 				res.RuleName = rule.Name()
@@ -79,12 +79,12 @@ func Run(
 	for run := range resultCh {
 		resultCount++
 		remaining := len(rules) - resultCount
-		finishMsg := fmt.Sprintf("finished rule %s run (%d remaining)", run.result.RuleID, remaining)
+		finishMsg := "finished rule run"
 		if run.err != nil {
-			log.Error(finishMsg, "error", run.err)
+			log.Error(finishMsg, "rule_id", run.result.RuleID, "remaining", remaining, "error", run.err)
 			err = errors.Join(err, fmt.Errorf("rule with id %s errored: %w", run.result.RuleID, run.err))
 		} else {
-			log.Info(finishMsg)
+			log.Info(finishMsg, "rule_id", run.result.RuleID, "remaining", remaining)
 			result.RuleResults = append(result.RuleResults, run.result)
 		}
 	}
