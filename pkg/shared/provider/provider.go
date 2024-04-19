@@ -34,17 +34,19 @@ func RunAll(ctx context.Context, p provider.Provider, rulesets map[string]rulese
 	}
 
 	var errAgg error
-	log.Info(fmt.Sprintf("provider will run %d rulesets", len(rulesets)))
+	log.Info("starting provider run", "number_of_rulesets", len(rulesets))
+	finishMsg := "finished ruleset run"
 	for _, rs := range rulesets {
-		log.Info(fmt.Sprintf("starting run of ruleset %s version %s", rs.ID(), rs.Version()))
+		log.Info("starting ruleset run", "ruleset", rs.ID(), "version", rs.Version())
 		if res, err := rs.Run(ctx); err != nil {
 			errAgg = errors.Join(errAgg, fmt.Errorf("ruleset with id %s and version %s errored: %w", res.RulesetID, res.RulesetVersion, err))
-			log.Error(fmt.Sprintf("finished ruleset %s version %s run", rs.ID(), rs.Version()), "error", err)
+			log.Error(finishMsg, "ruleset", rs.ID(), "version", rs.Version(), "error", err)
 		} else {
 			result.RulesetResults = append(result.RulesetResults, res)
-			log.Info(fmt.Sprintf("finished ruleset %s version %s run", rs.ID(), rs.Version()))
+			log.Info(finishMsg, "ruleset", rs.ID(), "version", rs.Version())
 		}
 	}
+	log.Info("finished provider run")
 
 	if errAgg != nil {
 		return provider.ProviderResult{}, errAgg
