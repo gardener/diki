@@ -24,7 +24,7 @@ To run diki against a Gardener shoot cluster, run the following command:
 
 ```bash
 diki run \
-    --config=./example/guides/managedshoot.yaml \
+    --config=./example/guides/partial-disa-k8s-stig-shoot.yaml \
     --provider=managedk8s \
     --ruleset-id=disa-kubernetes-stig \
     --ruleset-version=v1r11 \
@@ -37,6 +37,6 @@ We can use the file generated in the previous step to create an html report by u
 
 ```bash
 diki report generate \
-    --output=disa-k8s-stigs-report.json \
-    disa-k8s-stigs-report.html
+    --output=disa-k8s-stigs-report.html \
+    disa-k8s-stigs-report.json
 ```
