@@ -25,6 +25,7 @@ import (
 // against a virtual garden cluster and its controlplane (residing in a runtime cluster).
 type Provider struct {
 	id, name      string
+	OpsPodLabels  map[string]string
 	RuntimeConfig *rest.Config
 	rulesets      map[string]ruleset.Ruleset
 	metadata      map[string]string
@@ -32,7 +33,8 @@ type Provider struct {
 }
 
 type providerArgs struct {
-	RuntimeKubeconfigPath string
+	OpsPodLabels          map[string]string `json:"opsPodLabels" yaml:"opsPodLabels"`
+	RuntimeKubeconfigPath string            `json:"runtimeKubeconfigPath" yaml:"runtimeKubeconfigPath"`
 }
 
 var _ provider.Provider = &Provider{}
@@ -136,6 +138,7 @@ func FromGenericConfig(providerConf config.ProviderConfig) (*Provider, error) {
 	gardenProvider, err := New(
 		WithID(providerConf.ID),
 		WithName(providerConf.Name),
+		WithOpsPodLabels(providerGardenArgs.OpsPodLabels),
 		WithRuntimeConfig(runtimeKubeconfig),
 		WithMetadata(providerConf.Metadata),
 	)

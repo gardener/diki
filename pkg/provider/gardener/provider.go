@@ -25,6 +25,7 @@ import (
 // against a shoot cluster and its controlplane (residing in a seed cluster).
 type Provider struct {
 	id, name                string
+	OpsPodLabels            map[string]string
 	ShootConfig, SeedConfig *rest.Config
 	Args                    Args
 	rulesets                map[string]ruleset.Ruleset
@@ -33,10 +34,11 @@ type Provider struct {
 }
 
 type providerArgs struct {
-	ShootKubeconfigPath string
-	SeedKubeconfigPath  string
-	ShootName           string
-	ShootNamespace      string
+	OpsPodLabels        map[string]string `json:"opsPodLabels" yaml:"opsPodLabels"`
+	ShootKubeconfigPath string            `json:"shootKubeconfigPath" yaml:"shootKubeconfigPath"`
+	SeedKubeconfigPath  string            `json:"seedKubeconfigPath" yaml:"seedKubeconfigPath"`
+	ShootName           string            `json:"shootName" yaml:"shootName"`
+	ShootNamespace      string            `json:"shootNamespace" yaml:"shootNamespace"`
 }
 
 // Args are Gardener Provider specific arguments.
@@ -179,6 +181,7 @@ func FromGenericConfig(providerConf config.ProviderConfig) (*Provider, error) {
 	gardenerProvider, err := New(
 		WithID(providerConf.ID),
 		WithName(providerConf.Name),
+		WithOpsPodLabels(providerGardenerArgs.OpsPodLabels),
 		WithSeedConfig(seedKubeConfig),
 		WithShootConfig(shootKubeConfig),
 		WithMetadata(providerConf.Metadata),

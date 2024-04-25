@@ -29,6 +29,7 @@ var _ ruleset.Ruleset = &Ruleset{}
 type Ruleset struct {
 	version       string
 	rules         map[string]rule.Rule
+	OpsPodLabels  map[string]string
 	RuntimeConfig *rest.Config
 	numWorkers    int
 	instanceID    string
@@ -66,9 +67,10 @@ func (r *Ruleset) Version() string {
 }
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
-func FromGenericConfig(rulesetConfig config.RulesetConfig, runtimeConfig *rest.Config) (*Ruleset, error) {
+func FromGenericConfig(rulesetConfig config.RulesetConfig, opsPodLabels map[string]string, runtimeConfig *rest.Config) (*Ruleset, error) {
 	ruleset, err := New(
 		WithVersion(rulesetConfig.Version),
+		WithOpsPodLabels(opsPodLabels),
 		WithRuntimeConfig(runtimeConfig),
 	)
 	if err != nil {

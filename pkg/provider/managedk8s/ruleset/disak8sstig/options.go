@@ -21,6 +21,13 @@ func WithVersion(version string) CreateOption {
 	}
 }
 
+// WithOpsPodLabels sets the OpsPodLabels of a [Ruleset].
+func WithOpsPodLabels(labels map[string]string) CreateOption {
+	return func(r *Ruleset) {
+		r.OpsPodLabels = labels
+	}
+}
+
 // WithConfig sets the Config of a [Ruleset].
 func WithConfig(config *rest.Config) CreateOption {
 	return func(r *Ruleset) {

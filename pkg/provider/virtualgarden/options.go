@@ -28,6 +28,13 @@ func WithName(name string) CreateOption {
 	}
 }
 
+// WithOpsPodLabels sets the OpsPodLabels of a [Provider].
+func WithOpsPodLabels(labels map[string]string) CreateOption {
+	return func(p *Provider) {
+		p.OpsPodLabels = labels
+	}
+}
+
 // WithRuntimeConfig sets the ShootConfig of a [Provider].
 func WithRuntimeConfig(config *rest.Config) CreateOption {
 	return func(p *Provider) {
