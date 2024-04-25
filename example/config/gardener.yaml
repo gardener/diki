@@ -6,6 +6,8 @@ providers:             # contains information about known providers
     shootName: local
     # foo: bar
   args:
+    # opsPodLabels: # pod labels that will be added to diki ops pods
+    #   foo: bar
     shootKubeconfigPath: /tmp/shoot.config  # path to shoot admin kubeconfig
     seedKubeconfigPath: /tmp/seed.config    # path to seed admin kubeconfig
     shootName: local                           # name of shoot cluster to be tested

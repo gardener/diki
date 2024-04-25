@@ -4,6 +4,8 @@ providers:               # contains information about known providers
   metadata:
     foo: bar
   args:
+    # opsPodLabels: # pod labels that will be added to diki ops pods
+    #   foo: bar
     runtimeKubeconfigPath: /tmp/runtime.config  # path to runtime cluster admin kubeconfig
   rulesets:
   - id: disa-kubernetes-stig
