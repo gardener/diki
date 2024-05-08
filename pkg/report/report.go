@@ -12,6 +12,8 @@ import (
 	"slices"
 	"time"
 
+	"k8s.io/component-base/version"
+
 	"github.com/gardener/diki/pkg/provider"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
@@ -20,9 +22,10 @@ import (
 // Report contains information about a Diki run
 // in a suitable for reporting format.
 type Report struct {
-	Time      time.Time   `json:"time"`
-	MinStatus rule.Status `json:"minStatus,omitempty"`
-	Providers []Provider  `json:"providers"`
+	Time        time.Time   `json:"time"`
+	MinStatus   rule.Status `json:"minStatus,omitempty"`
+	DikiVersion string      `json:"dikiVersion"`
+	Providers   []Provider  `json:"providers"`
 }
 
 // Provider contains information about a known provider
@@ -83,9 +86,10 @@ func FromProviderResults(results []provider.ProviderResult, options ...ReportOpt
 		o.ApplyToReport(opts)
 	}
 	report := &Report{
-		Time:      time.Now().UTC(),
-		MinStatus: opts.MinStatus,
-		Providers: make([]Provider, 0, len(results)),
+		Time:        time.Now().UTC(),
+		MinStatus:   opts.MinStatus,
+		DikiVersion: version.Get().GitVersion,
+		Providers:   make([]Provider, 0, len(results)),
 	}
 	for _, providerResult := range results {
 		p := Provider{
