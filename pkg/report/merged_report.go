@@ -8,6 +8,7 @@ import (
 	"cmp"
 	"errors"
 	"fmt"
+	"reflect"
 	"slices"
 	"strings"
 	"time"
@@ -20,6 +21,7 @@ import (
 type MergedReport struct {
 	Time      time.Time        `json:"time"`
 	MinStatus rule.Status      `json:"minStatus,omitempty"`
+	Metadata  map[string]any   `json:"metadata,omitempty"`
 	Providers []MergedProvider `json:"providers"`
 }
 
@@ -127,9 +129,26 @@ func MergeReport(reports []*Report, distinctByAttrs map[string]string) (*MergedR
 	if len(reports) == 0 {
 		return nil, errors.New("zero reports provided for merging")
 	}
+	mergedReportMetadata := reports[0].Metadata
+	hasReportWithDifferentMetadata := slices.ContainsFunc(reports, func(report *Report) bool {
+		if len(mergedReportMetadata) != len(report.Metadata) {
+			return true
+		}
+		for k, v := range mergedReportMetadata {
+			if v2, ok := report.Metadata[k]; !ok || !reflect.DeepEqual(v, v2) {
+				return true
+			}
+		}
+		return false
+	})
+	if hasReportWithDifferentMetadata {
+		mergedReportMetadata = map[string]any{}
+	}
+
 	mergedReport := &MergedReport{
 		Time:      time.Now(),
 		MinStatus: reports[0].MinStatus,
+		Metadata:  mergedReportMetadata,
 		Providers: []MergedProvider{},
 	}
 

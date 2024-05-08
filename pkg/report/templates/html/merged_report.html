@@ -56,6 +56,9 @@
     <div class="tw-flex-col">
         <h1 class="tw-text-3xl tw-font-bold tw-pb-5 tw-pt-2 tw-flex tw-justify-center">Compliance Run ({{ time .Time }})</h1>
         <div class="tw-content tw-px-6">
+            {{if .Metadata}}
+                <span class="tw-text-2l"><span class="tw-font-bold">Report Metadata:</span> {{ jsonFormat .Metadata }}</span>
+            {{end}}
             {{- range .Providers }}
             <div>
                 <label class="tw-font-bold tw-text-2xl">Provider {{ .Name }}</label><br>

@@ -6,9 +6,11 @@ package report
 
 import (
 	"embed"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
+	"log"
 	"time"
 
 	"github.com/gardener/diki/pkg/rule"
@@ -46,12 +48,20 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 		_, ok := m[k]
 		return ok
 	}
+	jsonFormat := func(m map[string]any) string {
+		jsonData, err := json.Marshal(m)
+		if err != nil {
+			log.Println(err)
+		}
+		return string(jsonData)
+	}
 	templates := make(map[string]*template.Template)
 
 	parsedReport, err := template.New(tmplReportName+".html").Funcs(template.FuncMap{
 		"getStatuses":        rule.Statuses,
 		"icon":               rule.GetStatusIcon,
 		"time":               convTimeFunc,
+		"jsonFormat":         jsonFormat,
 		"rulesetSummaryText": rulesetSummaryText,
 		"rulesWithStatus":    rulesWithStatus,
 		"sortedMapKeys":      sortedKeys[string],
@@ -65,6 +75,7 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 		"getStatuses":              rule.Statuses,
 		"icon":                     rule.GetStatusIcon,
 		"time":                     convTimeFunc,
+		"jsonFormat":               jsonFormat,
 		"mergedMetadataTexts":      metadataTextForMergedProvider,
 		"mergedRulesetSummaryText": mergedRulesetSummaryText,
 		"mergedRulesWithStatus":    mergedRulesWithStatus,
