@@ -24,15 +24,17 @@ import (
 // Provider is a Garden Cluster Provider that can be used to implement rules
 // against a virtual garden cluster and its controlplane (residing in a runtime cluster).
 type Provider struct {
-	id, name      string
-	RuntimeConfig *rest.Config
-	rulesets      map[string]ruleset.Ruleset
-	metadata      map[string]string
-	logger        *slog.Logger
+	id, name               string
+	AdditionalOpsPodLabels map[string]string
+	RuntimeConfig          *rest.Config
+	rulesets               map[string]ruleset.Ruleset
+	metadata               map[string]string
+	logger                 *slog.Logger
 }
 
 type providerArgs struct {
-	RuntimeKubeconfigPath string
+	AdditionalOpsPodLabels map[string]string `json:"additionalOpsPodLabels" yaml:"additionalOpsPodLabels"`
+	RuntimeKubeconfigPath  string            `json:"runtimeKubeconfigPath" yaml:"runtimeKubeconfigPath"`
 }
 
 var _ provider.Provider = &Provider{}
@@ -136,6 +138,7 @@ func FromGenericConfig(providerConf config.ProviderConfig) (*Provider, error) {
 	gardenProvider, err := New(
 		WithID(providerConf.ID),
 		WithName(providerConf.Name),
+		WithAdditionalOpsPodLabels(providerGardenArgs.AdditionalOpsPodLabels),
 		WithRuntimeConfig(runtimeKubeconfig),
 		WithMetadata(providerConf.Metadata),
 	)

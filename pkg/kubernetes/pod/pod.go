@@ -48,6 +48,8 @@ type SimplePodExecutor struct {
 type SimplePodContext struct {
 	client client.Client
 	config *rest.Config
+	// AdditionalPodLabels are labels to be added to the created pods. If the a label key is already set by the pod constructor function it is not overwritten.
+	AdditionalPodLabels map[string]string
 	// IntervalWait is the time between wait API calls.
 	IntervalWait time.Duration
 	// TimeoutWait is the time waited for a pod to reach Running state or be deleted.
@@ -55,18 +57,28 @@ type SimplePodContext struct {
 }
 
 // NewSimplePodContext creates a new SimplePodContext.
-func NewSimplePodContext(client client.Client, config *rest.Config) (*SimplePodContext, error) {
+func NewSimplePodContext(client client.Client, config *rest.Config, additionalPodLabels map[string]string) (*SimplePodContext, error) {
 	return &SimplePodContext{
-		client:       client,
-		config:       config,
-		IntervalWait: 2 * time.Second,
-		TimeoutWait:  time.Minute,
+		client:              client,
+		config:              config,
+		AdditionalPodLabels: additionalPodLabels,
+		IntervalWait:        2 * time.Second,
+		TimeoutWait:         time.Minute,
 	}, nil
 }
 
 // Create creates a Pod and waits for it to get in Running state.
 func (spc *SimplePodContext) Create(ctx context.Context, podConstructorFn func() *corev1.Pod) (PodExecutor, error) {
 	pod := podConstructorFn()
+	if pod.Labels == nil {
+		pod.Labels = map[string]string{}
+	}
+
+	for label, value := range spc.AdditionalPodLabels {
+		if _, ok := pod.Labels[label]; !ok {
+			pod.Labels[label] = value
+		}
+	}
 
 	if err := spc.client.Create(ctx, pod); err != nil {
 		return nil, err

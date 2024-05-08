@@ -29,6 +29,7 @@ var _ ruleset.Ruleset = &Ruleset{}
 type Ruleset struct {
 	version                 string
 	rules                   map[string]rule.Rule
+	AdditionalOpsPodLabels  map[string]string
 	ShootConfig, SeedConfig *rest.Config
 	shootNamespace          string
 	numWorkers              int
@@ -68,10 +69,11 @@ func (r *Ruleset) Version() string {
 }
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
-func FromGenericConfig(rulesetConfig config.RulesetConfig, shootConfig, seedConfig *rest.Config, shootNamespace string) (*Ruleset, error) {
+func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabels map[string]string, shootConfig, seedConfig *rest.Config, shootNamespace string) (*Ruleset, error) {
 	// TODO: add all known rules and validate
 	ruleset, err := New(
 		WithVersion(rulesetConfig.Version),
+		WithAdditionalOpsPodLabels(additionalOpsPodLabels),
 		WithShootConfig(shootConfig),
 		WithSeedConfig(seedConfig),
 		WithShootNamespace(shootNamespace),

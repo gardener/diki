@@ -33,7 +33,7 @@ func GardenerProviderFromConfig(conf config.ProviderConfig) (provider.Provider, 
 	for _, rulesetConfig := range conf.Rulesets {
 		switch rulesetConfig.ID {
 		case disak8sstig.RulesetID:
-			ruleset, err := disak8sstig.FromGenericConfig(rulesetConfig, p.ShootConfig, p.SeedConfig, p.Args.ShootNamespace)
+			ruleset, err := disak8sstig.FromGenericConfig(rulesetConfig, p.AdditionalOpsPodLabels, p.ShootConfig, p.SeedConfig, p.Args.ShootNamespace)
 			if err != nil {
 				return nil, err
 			}

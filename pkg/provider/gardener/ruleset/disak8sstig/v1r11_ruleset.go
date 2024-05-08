@@ -60,12 +60,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
-	shootPodContext, err := pod.NewSimplePodContext(shootClient, r.ShootConfig)
+	shootPodContext, err := pod.NewSimplePodContext(shootClient, r.ShootConfig, r.AdditionalOpsPodLabels)
 	if err != nil {
 		return err
 	}
 
-	seedPodContext, err := pod.NewSimplePodContext(seedClient, r.SeedConfig)
+	seedPodContext, err := pod.NewSimplePodContext(seedClient, r.SeedConfig, r.AdditionalOpsPodLabels)
 	if err != nil {
 		return err
 	}
