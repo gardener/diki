@@ -57,11 +57,11 @@ type SimplePodContext struct {
 }
 
 // NewSimplePodContext creates a new SimplePodContext.
-func NewSimplePodContext(client client.Client, config *rest.Config, podLabels map[string]string) (*SimplePodContext, error) {
+func NewSimplePodContext(client client.Client, config *rest.Config, additionalPodLabels map[string]string) (*SimplePodContext, error) {
 	return &SimplePodContext{
 		client:              client,
 		config:              config,
-		AdditionalPodLabels: podLabels,
+		AdditionalPodLabels: additionalPodLabels,
 		IntervalWait:        2 * time.Second,
 		TimeoutWait:         time.Minute,
 	}, nil
