@@ -27,13 +27,13 @@ var _ ruleset.Ruleset = &Ruleset{}
 
 // Ruleset implements DISA Kubernetes STIG.
 type Ruleset struct {
-	version       string
-	rules         map[string]rule.Rule
-	OpsPodLabels  map[string]string
-	RuntimeConfig *rest.Config
-	numWorkers    int
-	instanceID    string
-	logger        *slog.Logger
+	version                string
+	rules                  map[string]rule.Rule
+	AdditionalOpsPodLabels map[string]string
+	RuntimeConfig          *rest.Config
+	numWorkers             int
+	instanceID             string
+	logger                 *slog.Logger
 }
 
 // New creates a new Ruleset.
@@ -67,10 +67,10 @@ func (r *Ruleset) Version() string {
 }
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
-func FromGenericConfig(rulesetConfig config.RulesetConfig, opsPodLabels map[string]string, runtimeConfig *rest.Config) (*Ruleset, error) {
+func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabels map[string]string, runtimeConfig *rest.Config) (*Ruleset, error) {
 	ruleset, err := New(
 		WithVersion(rulesetConfig.Version),
-		WithOpsPodLabels(opsPodLabels),
+		WithAdditionalOpsPodLabels(additionalOpsPodLabels),
 		WithRuntimeConfig(runtimeConfig),
 	)
 	if err != nil {

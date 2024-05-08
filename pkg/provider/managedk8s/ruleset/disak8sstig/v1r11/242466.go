@@ -145,11 +145,11 @@ func (r *Rule242466) checkPods(
 		additionalLabels = map[string]string{pod.LabelInstanceID: r.InstanceID}
 	)
 
-	defer func() {
-		if err := r.PodContext.Delete(ctx, podName, "kube-system"); err != nil {
-			r.Logger.Error(err.Error())
-		}
-	}()
+	// defer func() {
+	// 	if err := r.PodContext.Delete(ctx, podName, "kube-system"); err != nil {
+	// 		r.Logger.Error(err.Error())
+	// 	}
+	// }()
 
 	podExecutor, err := r.PodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", imageName, nodeName, additionalLabels))
 	if err != nil {

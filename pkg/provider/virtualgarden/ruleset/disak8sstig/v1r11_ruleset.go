@@ -25,7 +25,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
-	runtimePodContext, err := pod.NewSimplePodContext(runtimeClient, r.RuntimeConfig, r.OpsPodLabels)
+	runtimePodContext, err := pod.NewSimplePodContext(runtimeClient, r.RuntimeConfig, r.AdditionalOpsPodLabels)
 	if err != nil {
 		return err
 	}
