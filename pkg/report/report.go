@@ -22,10 +22,11 @@ import (
 // Report contains information about a Diki run
 // in a suitable for reporting format.
 type Report struct {
-	Time        time.Time   `json:"time"`
-	MinStatus   rule.Status `json:"minStatus,omitempty"`
-	DikiVersion string      `json:"dikiVersion"`
-	Providers   []Provider  `json:"providers"`
+	Time        time.Time      `json:"time"`
+	MinStatus   rule.Status    `json:"minStatus,omitempty"`
+	DikiVersion string         `json:"dikiVersion"`
+	Metadata    map[string]any `json:"metadata,omitempty"`
+	Providers   []Provider     `json:"providers"`
 }
 
 // Provider contains information about a known provider
@@ -62,6 +63,7 @@ type Check struct {
 // ReportOptions are options that can be applied to a Report.
 type ReportOptions struct {
 	MinStatus rule.Status
+	Metadata  map[string]any
 }
 
 // ReportOption defines a single option that can be applied to a Report.
@@ -79,6 +81,14 @@ func (ms MinStatus) ApplyToReport(opts *ReportOptions) {
 	}
 }
 
+// Metadata is additional report values.
+type Metadata map[string]any
+
+// ApplyToReport implements ReportOption.
+func (md Metadata) ApplyToReport(opts *ReportOptions) {
+	opts.Metadata = md
+}
+
 // FromProviderResults returns a Diki report from ProviderResults.
 func FromProviderResults(results []provider.ProviderResult, options ...ReportOption) *Report {
 	opts := &ReportOptions{}
@@ -89,6 +99,7 @@ func FromProviderResults(results []provider.ProviderResult, options ...ReportOpt
 		Time:        time.Now().UTC(),
 		MinStatus:   opts.MinStatus,
 		DikiVersion: version.Get().GitVersion,
+		Metadata:    opts.Metadata,
 		Providers:   make([]Provider, 0, len(results)),
 	}
 	for _, providerResult := range results {
