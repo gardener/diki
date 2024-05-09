@@ -12,8 +12,9 @@ import (
 	"log"
 	"time"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/gardener/diki/pkg/rule"
-	"gopkg.in/yaml.v2"
 )
 
 const (
