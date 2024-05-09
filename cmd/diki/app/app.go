@@ -180,7 +180,7 @@ func generateDiffCmd(args []string, generateDiffOpts generateDiffOptions, rootOp
 
 	var writer io.Writer = os.Stdout
 	if len(rootOpts.outputPath) > 0 {
-		file, err := os.OpenFile(rootOpts.outputPath, os.O_WRONLY|os.O_CREATE, 0600)
+		file, err := os.OpenFile(rootOpts.outputPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		if err != nil {
 			return err
 		}
@@ -280,7 +280,7 @@ func generateCmd(args []string, rootOpts reportOptions, opts generateOptions, lo
 
 	var writer io.Writer = os.Stdout
 	if len(rootOpts.outputPath) > 0 {
-		file, err := os.OpenFile(rootOpts.outputPath, os.O_WRONLY|os.O_CREATE, 0600)
+		file, err := os.OpenFile(rootOpts.outputPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		if err != nil {
 			return err
 		}
