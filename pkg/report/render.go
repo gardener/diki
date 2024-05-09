@@ -6,7 +6,6 @@ package report
 
 import (
 	"embed"
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
@@ -14,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gardener/diki/pkg/rule"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -48,12 +48,12 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 		_, ok := m[k]
 		return ok
 	}
-	jsonFormat := func(m map[string]any) string {
-		jsonData, err := json.Marshal(m)
+	yamlFormat := func(m map[string]any) string {
+		yaml, err := yaml.Marshal(m)
 		if err != nil {
 			log.Println(err)
 		}
-		return string(jsonData)
+		return string(yaml)
 	}
 	templates := make(map[string]*template.Template)
 
@@ -61,7 +61,7 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 		"getStatuses":        rule.Statuses,
 		"icon":               rule.GetStatusIcon,
 		"time":               convTimeFunc,
-		"jsonFormat":         jsonFormat,
+		"yamlFormat":         yamlFormat,
 		"rulesetSummaryText": rulesetSummaryText,
 		"rulesWithStatus":    rulesWithStatus,
 		"sortedMapKeys":      sortedKeys[string],
@@ -75,7 +75,7 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 		"getStatuses":              rule.Statuses,
 		"icon":                     rule.GetStatusIcon,
 		"time":                     convTimeFunc,
-		"jsonFormat":               jsonFormat,
+		"yamlFormat":               yamlFormat,
 		"mergedMetadataTexts":      metadataTextForMergedProvider,
 		"mergedRulesetSummaryText": mergedRulesetSummaryText,
 		"mergedRulesWithStatus":    mergedRulesWithStatus,
