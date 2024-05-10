@@ -31,8 +31,12 @@ var _ = Describe("merged report", func() {
 			minStatus = rule.Passed
 			reportTime = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.Local)
 			simpleReport1 = report.Report{
-				Time:      reportTime,
-				MinStatus: minStatus,
+				Time:        reportTime,
+				MinStatus:   minStatus,
+				DikiVersion: "1",
+				Metadata: map[string]any{
+					"foo": "bar",
+				},
 				Providers: []report.Provider{
 					{
 						ID:   providerID,
@@ -81,8 +85,12 @@ var _ = Describe("merged report", func() {
 				},
 			}
 			simpleReport2 = report.Report{
-				Time:      reportTime,
-				MinStatus: minStatus,
+				Time:        reportTime,
+				MinStatus:   minStatus,
+				DikiVersion: "1",
+				Metadata: map[string]any{
+					"foo": "bar",
+				},
 				Providers: []report.Provider{
 					{
 						ID:   providerID,
@@ -175,8 +183,12 @@ var _ = Describe("merged report", func() {
 			mergedReport, err := report.MergeReport(reports, map[string]string{providerID: "id"})
 
 			expectedMergedReport := &report.MergedReport{
-				Time:      mergedReport.Time,
-				MinStatus: rule.Passed,
+				Time:        mergedReport.Time,
+				MinStatus:   rule.Passed,
+				DikiVersion: "1",
+				Metadata: map[string]any{
+					"foo": "bar",
+				},
 				Providers: []report.MergedProvider{
 					{
 						ID:         "provider-foo",
@@ -264,8 +276,12 @@ var _ = Describe("merged report", func() {
 			mergedReport, err := report.MergeReport(reports, map[string]string{providerID: "id"})
 
 			expectedMergedReport := &report.MergedReport{
-				Time:      mergedReport.Time,
-				MinStatus: rule.Passed,
+				Time:        mergedReport.Time,
+				MinStatus:   rule.Passed,
+				DikiVersion: "1",
+				Metadata: map[string]any{
+					"foo": "bar",
+				},
 				Providers: []report.MergedProvider{
 					{
 						ID:         "provider-foo",
@@ -427,8 +443,12 @@ var _ = Describe("merged report", func() {
 			mergedReport, err := report.MergeReport(reports, map[string]string{providerID: "id", "new-provider": "key"})
 
 			expectedMergedReport := &report.MergedReport{
-				Time:      mergedReport.Time,
-				MinStatus: rule.Passed,
+				Time:        mergedReport.Time,
+				MinStatus:   rule.Passed,
+				DikiVersion: "1",
+				Metadata: map[string]any{
+					"foo": "bar",
+				},
 				Providers: []report.MergedProvider{
 					{
 						ID:         "new-provider",
@@ -468,6 +488,188 @@ var _ = Describe("merged report", func() {
 							},
 						},
 					},
+					{
+						ID:         "provider-foo",
+						Name:       "Provider Foo",
+						DistinctBy: "id",
+						Metadata: map[string]map[string]string{
+							"foo": {
+								"id":   "foo",
+								"bar":  "foo",
+								"time": "01-01-2000 00:00:00",
+							},
+							"bar": {
+								"id":   "bar",
+								"foo":  "bar",
+								"time": "01-01-2000 00:00:00",
+							},
+						},
+						Rulesets: []report.MergedRuleset{
+							{
+								ID:      "ruleset-foo",
+								Name:    "Ruleset Foo",
+								Version: "v1",
+								Rules: []report.MergedRule{
+									{
+										ID:   "1",
+										Name: "1",
+										Checks: []report.MergedCheck{
+											{
+												Status:  "Passed",
+												Message: "foo",
+												ReportsTargets: map[string][]rule.Target{
+													"foo": {},
+												},
+											},
+										},
+									},
+									{
+										ID:   "2",
+										Name: "2",
+										Checks: []report.MergedCheck{
+											{
+												Status:  "Passed",
+												Message: "foo",
+												ReportsTargets: map[string][]rule.Target{
+													"foo": {},
+													"bar": {},
+												},
+											},
+											{
+												Status:  "Failed",
+												Message: "foo",
+												ReportsTargets: map[string][]rule.Target{
+													"foo": {},
+												},
+											},
+										},
+									},
+									{
+										ID:   "3",
+										Name: "3",
+										Checks: []report.MergedCheck{
+											{
+												Status:  "Passed",
+												Message: "foo",
+												ReportsTargets: map[string][]rule.Target{
+													"bar": {},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+			Expect(mergedReport).To(Equal(expectedMergedReport))
+			Expect(err).To(BeNil())
+		})
+		It("should correctly merge 2 reports when their metadata is different", func() {
+			simpleReport2.Metadata = map[string]any{
+				"bar": "foo",
+			}
+			reports := []*report.Report{&simpleReport1, &simpleReport2}
+			mergedReport, err := report.MergeReport(reports, map[string]string{providerID: "id"})
+
+			expectedMergedReport := &report.MergedReport{
+				Time:        mergedReport.Time,
+				MinStatus:   rule.Passed,
+				DikiVersion: "1",
+				Metadata:    map[string]any{},
+				Providers: []report.MergedProvider{
+					{
+						ID:         "provider-foo",
+						Name:       "Provider Foo",
+						DistinctBy: "id",
+						Metadata: map[string]map[string]string{
+							"foo": {
+								"id":   "foo",
+								"bar":  "foo",
+								"time": "01-01-2000 00:00:00",
+							},
+							"bar": {
+								"id":   "bar",
+								"foo":  "bar",
+								"time": "01-01-2000 00:00:00",
+							},
+						},
+						Rulesets: []report.MergedRuleset{
+							{
+								ID:      "ruleset-foo",
+								Name:    "Ruleset Foo",
+								Version: "v1",
+								Rules: []report.MergedRule{
+									{
+										ID:   "1",
+										Name: "1",
+										Checks: []report.MergedCheck{
+											{
+												Status:  "Passed",
+												Message: "foo",
+												ReportsTargets: map[string][]rule.Target{
+													"foo": {},
+												},
+											},
+										},
+									},
+									{
+										ID:   "2",
+										Name: "2",
+										Checks: []report.MergedCheck{
+											{
+												Status:  "Passed",
+												Message: "foo",
+												ReportsTargets: map[string][]rule.Target{
+													"foo": {},
+													"bar": {},
+												},
+											},
+											{
+												Status:  "Failed",
+												Message: "foo",
+												ReportsTargets: map[string][]rule.Target{
+													"foo": {},
+												},
+											},
+										},
+									},
+									{
+										ID:   "3",
+										Name: "3",
+										Checks: []report.MergedCheck{
+											{
+												Status:  "Passed",
+												Message: "foo",
+												ReportsTargets: map[string][]rule.Target{
+													"bar": {},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+			Expect(mergedReport).To(Equal(expectedMergedReport))
+			Expect(err).To(BeNil())
+		})
+		It("should correctly merge 2 reports when their Diki version is different", func() {
+			simpleReport2.DikiVersion = "2"
+			reports := []*report.Report{&simpleReport1, &simpleReport2}
+			mergedReport, err := report.MergeReport(reports, map[string]string{providerID: "id"})
+
+			expectedMergedReport := &report.MergedReport{
+				Time:        mergedReport.Time,
+				MinStatus:   rule.Passed,
+				DikiVersion: "This report was produced from reports generated by different Diki versions.",
+				Metadata: map[string]any{
+					"foo": "bar",
+				},
+				Providers: []report.MergedProvider{
 					{
 						ID:         "provider-foo",
 						Name:       "Provider Foo",

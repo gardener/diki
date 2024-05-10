@@ -11,6 +11,8 @@ import (
 	"io"
 	"time"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -46,12 +48,20 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 		_, ok := m[k]
 		return ok
 	}
+	yamlFormat := func(m map[string]any) string {
+		yaml, err := yaml.Marshal(m)
+		if err != nil {
+			return err.Error()
+		}
+		return string(yaml)
+	}
 	templates := make(map[string]*template.Template)
 
 	parsedReport, err := template.New(tmplReportName+".html").Funcs(template.FuncMap{
 		"getStatuses":        rule.Statuses,
 		"icon":               rule.GetStatusIcon,
 		"time":               convTimeFunc,
+		"yamlFormat":         yamlFormat,
 		"rulesetSummaryText": rulesetSummaryText,
 		"rulesWithStatus":    rulesWithStatus,
 		"sortedMapKeys":      sortedKeys[string],
@@ -65,6 +75,7 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 		"getStatuses":              rule.Statuses,
 		"icon":                     rule.GetStatusIcon,
 		"time":                     convTimeFunc,
+		"yamlFormat":               yamlFormat,
 		"mergedMetadataTexts":      metadataTextForMergedProvider,
 		"mergedRulesetSummaryText": mergedRulesetSummaryText,
 		"mergedRulesWithStatus":    mergedRulesWithStatus,

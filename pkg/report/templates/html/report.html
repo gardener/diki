@@ -49,6 +49,11 @@
         list.classList.add('tw-hidden')
         arrow.classList.replace('down', 'right')
     }
+    function cpCode(event) {
+        const parent = event.currentTarget.parentElement
+        const code = parent.getElementsByTagName('pre')[0].innerText
+        navigator.clipboard.writeText(code);
+    }
 </script>
 </head>
 
@@ -56,9 +61,21 @@
     <div class="tw-flex-col">
         <h1 class="tw-text-3xl tw-font-bold tw-pb-5 tw-pt-2 tw-flex tw-justify-center">Compliance Run ({{ time .Time }})</h1>
         <div class="tw-content tw-px-6">
+            <span class="tw-text-2xl"><span class="tw-font-bold">Diki Version: </span>{{.DikiVersion}}</span><br>
+            {{if .Metadata}}
+            <span class="tw-text-2xl tw-font-bold">Metadata</span>
+            <button onclick="collapse(event)" class="tw-text-lg tw-pr-2"><i
+                    class="arrow right"></i></button>
+            <ul class="tw-hidden">
+            <div class="tw-flex tw-bg-gray-200 tw-p-4 tw-rounded-lg tw-relative">
+                <button onclick="cpCode(event)" class="tw-absolute tw-top-3 tw-right-3 tw-bg-gray-200 hover:tw-bg-gray-100 tw-rounded tw-p-1">Copy</button>
+                <pre class="tw-overflow-x-auto">{{ yamlFormat .Metadata }}</pre>
+            </div>
+            </ul>
+            {{end}}
             {{- range .Providers }}
             <div>
-                <label class="tw-font-bold tw-text-2xl">Provider {{ .Name }}</label>
+                <label class="tw-font-bold tw-text-xl">Provider {{ .Name }}</label>
                 <ul class="tw-list-disc  tw-list-inside">
                     {{- $keys := sortedMapKeys .Metadata }}
                     {{- $meta := .Metadata }}

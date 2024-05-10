@@ -8,6 +8,8 @@ package config
 type DikiConfig struct {
 	// Providers is a list of all known providers.
 	Providers []ProviderConfig `yaml:"providers"`
+	// Metadata represents additional values to be added to the generated report.
+	Metadata map[string]any `yaml:"metadata,omitempty"`
 	// Output describes options related to diki's output configuration.
 	Output *OutputConfig `yaml:"output,omitempty"`
 }
