@@ -8,6 +8,7 @@ import (
 	"cmp"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"slices"
 	"time"
@@ -86,7 +87,7 @@ type Metadata map[string]any
 
 // ApplyToReport implements ReportOption.
 func (md Metadata) ApplyToReport(opts *ReportOptions) {
-	opts.Metadata = md
+	opts.Metadata = maps.Clone(md)
 }
 
 // FromProviderResults returns a Diki report from ProviderResults.

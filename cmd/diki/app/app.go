@@ -339,7 +339,7 @@ func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.Provide
 			if dikiConfig.Output != nil && len(dikiConfig.Output.MinStatus) > 0 {
 				reportOpts = append(reportOpts, report.MinStatus(dikiConfig.Output.MinStatus))
 			}
-			if dikiConfig.Metadata != nil && len(dikiConfig.Metadata) > 0 {
+			if len(dikiConfig.Metadata) > 0 {
 				reportOpts = append(reportOpts, report.Metadata(dikiConfig.Metadata))
 			}
 			rep := report.FromProviderResults(providerResults, reportOpts...)
@@ -367,7 +367,7 @@ func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.Provide
 			if dikiConfig.Output != nil && len(dikiConfig.Output.MinStatus) > 0 {
 				reportOpts = append(reportOpts, report.MinStatus(dikiConfig.Output.MinStatus))
 			}
-			if dikiConfig.Metadata != nil && len(dikiConfig.Metadata) > 0 {
+			if len(dikiConfig.Metadata) > 0 {
 				reportOpts = append(reportOpts, report.Metadata(dikiConfig.Metadata))
 			}
 			rep := report.FromProviderResults(providerResults, reportOpts...)
@@ -393,7 +393,7 @@ func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.Provide
 			if dikiConfig.Output != nil && len(dikiConfig.Output.MinStatus) > 0 {
 				reportOpts = append(reportOpts, report.MinStatus(dikiConfig.Output.MinStatus))
 			}
-			if dikiConfig.Metadata != nil && len(dikiConfig.Metadata) > 0 {
+			if len(dikiConfig.Metadata) > 0 {
 				reportOpts = append(reportOpts, report.Metadata(dikiConfig.Metadata))
 			}
 			rep := report.FromProviderResults(providerResults, reportOpts...)

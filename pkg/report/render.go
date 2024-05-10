@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"log"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -52,7 +51,7 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 	yamlFormat := func(m map[string]any) string {
 		yaml, err := yaml.Marshal(m)
 		if err != nil {
-			log.Println(err)
+			return err.Error()
 		}
 		return string(yaml)
 	}
