@@ -18,7 +18,7 @@ providers:             # contains information about known providers
     # - ruleID: "242376"
     #   skip:
     #     enabled: true
-    #     justification: "whole rule is allowed"
+    #     justification: "the whole rule is accepted for ... reasons"
     - ruleID: "242414"
       args:
         acceptedPods:
