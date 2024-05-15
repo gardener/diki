@@ -41,7 +41,7 @@ sudo mv "./diki-${os}-${arch}" /usr/local/bin/diki
 
 #### Run
 
-Most of Diki's `run` configurations are provided through its [config file](./config.yaml). Options depend on the different providers and rulesets. Here are a couple of commands to get you started:
+Most of Diki's `run` configurations are provided through its [config file](./example/config/). Options depend on the different providers and rulesets. Here are a couple of commands to get you started:
 
 - Run all known rulesets for all known providers
 ```bash
