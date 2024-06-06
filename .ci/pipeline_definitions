@@ -19,10 +19,28 @@ diki:
             image: 'europe-docker.pkg.dev/gardener-project/snapshots/gardener/diki'
             dockerfile: 'Dockerfile'
             target: diki
+            resource_labels:
+            - name: "gardener.cloud/cve-categorisation"
+              value:
+                network_exposure: 'private'
+                authentication_enforced: false
+                user_interaction: 'gardener-operator'
+                confidentiality_requirement: 'high'
+                integrity_requirement: 'low'
+                availability_requirement: 'none'
           diki-ops:
             image: 'europe-docker.pkg.dev/gardener-project/snapshots/gardener/diki-ops'
             dockerfile: 'Dockerfile'
             target: diki-ops
+            resource_labels:
+            - name: "gardener.cloud/cve-categorisation"
+              value:
+                network_exposure: 'private'
+                authentication_enforced: false
+                user_interaction: 'end-user'
+                confidentiality_requirement: 'low'
+                integrity_requirement: 'none'
+                availability_requirement: 'none'
   jobs:
     head-update:
       traits:
