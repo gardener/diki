@@ -29,8 +29,8 @@ diki:
                 confidentiality_requirement: 'high'
                 integrity_requirement: 'high'
                 availability_requirement: 'none'
-          # diki-ops is used for the priviledged pods created by diki on the control-plane and the evaluated cluster.
-          # it is a minimized image that has 2 commands: `chroot` and `nerdctl`
+          # diki-ops is used for the privileged pods created by diki on the evaluated clusters.
+          # It is a minimized image that is primarily used to run the following commands: `chroot` and `nerdctl`
           diki-ops:
             image: 'europe-docker.pkg.dev/gardener-project/snapshots/gardener/diki-ops'
             dockerfile: 'Dockerfile'
