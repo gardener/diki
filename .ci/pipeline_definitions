@@ -22,11 +22,11 @@ diki:
             resource_labels:
             - name: "gardener.cloud/cve-categorisation"
               value:
-                network_exposure: 'private'
+                network_exposure: 'protected'
                 authentication_enforced: false
-                user_interaction: 'gardener-operator'
+                user_interaction: 'end-user'
                 confidentiality_requirement: 'high'
-                integrity_requirement: 'low'
+                integrity_requirement: 'high'
                 availability_requirement: 'none'
           diki-ops:
             image: 'europe-docker.pkg.dev/gardener-project/snapshots/gardener/diki-ops'
@@ -38,8 +38,8 @@ diki:
                 network_exposure: 'private'
                 authentication_enforced: false
                 user_interaction: 'end-user'
-                confidentiality_requirement: 'low'
-                integrity_requirement: 'none'
+                confidentiality_requirement: 'high'
+                integrity_requirement: 'high'
                 availability_requirement: 'none'
   jobs:
     head-update:
