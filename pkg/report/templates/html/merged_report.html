@@ -62,7 +62,7 @@
         <h1 class="tw-text-3xl tw-font-bold tw-pb-5 tw-pt-2 tw-flex tw-justify-center">Compliance Run ({{ time .Time }})</h1>
         <div class="tw-content tw-px-6">
             <span class="tw-text-2xl"><span class="tw-font-bold">Diki Version: </span>{{.DikiVersion}}</span><br>
-            {{if .Metadata}}
+            {{- if .Metadata}}
             <span class="tw-text-2xl tw-font-bold">Metadata</span>
             <button onclick="collapse(event)" class="tw-text-lg tw-pr-2"><i
                     class="arrow right"></i></button>
@@ -72,7 +72,7 @@
                 <pre class="tw-overflow-x-auto">{{ yamlFormat .Metadata }}</pre>
             </div>
             </ul>
-            {{end}}
+            {{- end}}
             {{- range .Providers }}
             <div>
                 <label class="tw-font-bold tw-text-xl">Provider {{ .Name }}</label><br>
