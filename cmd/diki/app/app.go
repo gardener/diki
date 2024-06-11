@@ -143,6 +143,7 @@ func addRunFlags(cmd *cobra.Command, opts *runOptions) {
 
 func addReportGenerateFlags(cmd *cobra.Command, opts *generateOptions) {
 	cmd.PersistentFlags().Var(cliflag.NewMapStringString(&opts.distinctBy), "distinct-by", "If set generates a merged report. The keys are the IDs for the providers which the merged report will include and the values are distinct metadata attributes to be used as IDs for the different reports.")
+	cmd.PersistentFlags().StringVar(&opts.format, "format", "html", "Format for the output report. Format can be one of 'html' or 'json'.")
 }
 
 func addReportDiffFlags(cmd *cobra.Command, opts *diffOptions) {
@@ -292,20 +293,37 @@ func generateCmd(args []string, rootOpts reportOptions, opts generateOptions, lo
 		writer = file
 	}
 
-	htlmRenderer, err := report.NewHTMLRenderer()
-	if err != nil {
-		return fmt.Errorf("failed to initialize renderer: %w", err)
-	}
+	var outputReport any
+	outputReport = reports[0]
 
 	if len(opts.distinctBy) > 0 {
 		mergedReport, err := report.MergeReport(reports, opts.distinctBy)
 		if err != nil {
 			return err
 		}
-		return htlmRenderer.Render(writer, mergedReport)
+
+		outputReport = mergedReport
 	}
 
-	return htlmRenderer.Render(writer, reports[0])
+	switch opts.format {
+	case "html":
+		htlmRenderer, err := report.NewHTMLRenderer()
+		if err != nil {
+			return fmt.Errorf("failed to initialize renderer: %w", err)
+		}
+
+		return htlmRenderer.Render(writer, outputReport)
+	case "json":
+		data, err := json.Marshal(outputReport)
+		if err != nil {
+			return err
+		}
+
+		_, err = writer.Write(data)
+		return err
+	default:
+		return fmt.Errorf("not supported output format %s. Choose one of 'html' or 'json'", opts.format)
+	}
 }
 
 func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.ProviderFromConfigFunc, opts runOptions) error {
@@ -436,6 +454,7 @@ type runOptions struct {
 
 type generateOptions struct {
 	distinctBy map[string]string
+	format     string
 }
 
 type generateDiffOptions struct {
