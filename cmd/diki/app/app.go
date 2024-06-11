@@ -143,6 +143,7 @@ func addRunFlags(cmd *cobra.Command, opts *runOptions) {
 
 func addReportGenerateFlags(cmd *cobra.Command, opts *generateOptions) {
 	cmd.PersistentFlags().Var(cliflag.NewMapStringString(&opts.distinctBy), "distinct-by", "If set generates a merged report. The keys are the IDs for the providers which the merged report will include and the values are distinct metadata attributes to be used as IDs for the different reports.")
+	cmd.PersistentFlags().StringVar(&opts.format, "format", "html", "Format for the merged report, dependent on 'distinct-by' flag to be set to take effect. Format can be 'html' or 'json'. Defaults to 'html'.")
 }
 
 func addReportDiffFlags(cmd *cobra.Command, opts *diffOptions) {
@@ -302,7 +303,20 @@ func generateCmd(args []string, rootOpts reportOptions, opts generateOptions, lo
 		if err != nil {
 			return err
 		}
-		return htlmRenderer.Render(writer, mergedReport)
+
+		switch opts.format {
+		case "html":
+			return htlmRenderer.Render(writer, mergedReport)
+		case "json":
+			data, err := json.Marshal(mergedReport)
+			if err != nil {
+				return err
+			}
+			_, err = writer.Write(data)
+			return err
+		default:
+			return fmt.Errorf("not supported output format %s. Choose one of 'html' or 'json'", opts.format)
+		}
 	}
 
 	return htlmRenderer.Render(writer, reports[0])
@@ -436,6 +450,7 @@ type runOptions struct {
 
 type generateOptions struct {
 	distinctBy map[string]string
+	format     string
 }
 
 type generateDiffOptions struct {
