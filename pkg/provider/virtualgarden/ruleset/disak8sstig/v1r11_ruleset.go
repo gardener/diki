@@ -66,7 +66,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		},
 		rule.NewSkipRule(
 			sharedv1r11.ID242377,
-			"The Kubernetes Scheduler must use TLS 1.2, at a minimum, to protect the confidentiality of sensitive data during electronic dissemination (MEDIUM 242376)",
+			"The Kubernetes Scheduler must use TLS 1.2, at a minimum, to protect the confidentiality of sensitive data during electronic dissemination (MEDIUM 242377)",
 			"The Virtual Garden cluster does not make use of a Kubernetes Scheduler.",
 			rule.Skipped,
 		),

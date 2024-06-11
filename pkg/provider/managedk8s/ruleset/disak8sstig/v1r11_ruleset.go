@@ -173,7 +173,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		),
 		rule.NewSkipRule(
 			sharedv1r11.ID242382,
-			"The Kubernetes API Server must enable Node,RBAC as the authorization mode (MEDIUM242382)",
+			"The Kubernetes API Server must enable Node,RBAC as the authorization mode (MEDIUM 242382)",
 			noControlPlaneMsg,
 			rule.Skipped,
 		),
