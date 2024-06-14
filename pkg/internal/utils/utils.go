@@ -98,7 +98,7 @@ func GetFileStatsByDir(
 		return fileStats, err
 	}
 	if len(statsRaw) == 0 {
-		fileNum, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`ls %s | wc -l`, dirPath))
+		fileNum, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`find %s -type f | wc -l`, dirPath))
 		if err != nil {
 			return fileStats, err
 		}
