@@ -96,7 +96,7 @@ func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if len(pods) == 0 {
-		return rule.SingleCheckResult(r, rule.FailedCheckResult("Kube-proxy pods not found!", target.With("selector", kubeProxySelector.String()))), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult("kube-proxy pods not found", target.With("selector", kubeProxySelector.String()))), nil
 	}
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)

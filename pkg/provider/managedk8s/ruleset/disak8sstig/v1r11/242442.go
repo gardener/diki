@@ -63,7 +63,7 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if len(kubeProxyPods) == 0 {
-		return rule.SingleCheckResult(r, rule.FailedCheckResult("Kube-proxy pods not found!", rule.NewTarget("selector", kubeProxySelector.String()))), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget("selector", kubeProxySelector.String()))), nil
 	}
 
 	for _, pod := range kubeProxyPods {
