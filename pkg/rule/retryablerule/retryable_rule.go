@@ -12,6 +12,8 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
+var _ rule.Rule = &RetryableRule{}
+
 // RetryableRule wraps Rules, it allows rule runs to be retried when the RetryCondition is met
 type RetryableRule struct {
 	BaseRule       rule.Rule
