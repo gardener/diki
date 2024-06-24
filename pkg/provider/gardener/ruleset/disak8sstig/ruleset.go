@@ -6,6 +6,7 @@ package disak8sstig
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 
@@ -32,16 +33,21 @@ type Ruleset struct {
 	AdditionalOpsPodLabels  map[string]string
 	ShootConfig, SeedConfig *rest.Config
 	shootNamespace          string
-	numWorkers              int
+	args                    Args
 	instanceID              string
 	logger                  *slog.Logger
+}
+
+// Args are Ruleset specific arguments.
+type Args struct {
+	MaxRetries int `json:"maxRetries" yaml:"maxRetries"`
+	NumWorkers int `json:"numWorkers" yaml:"numWorkers"`
 }
 
 // New creates a new Ruleset.
 func New(options ...CreateOption) (*Ruleset, error) {
 	r := &Ruleset{
 		rules:      map[string]rule.Rule{},
-		numWorkers: 5,
 		instanceID: uuid.New().String(),
 	}
 
@@ -70,6 +76,16 @@ func (r *Ruleset) Version() string {
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
 func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabels map[string]string, shootConfig, seedConfig *rest.Config, shootNamespace string) (*Ruleset, error) {
+	rulesetArgsByte, err := json.Marshal(rulesetConfig.Args)
+	if err != nil {
+		return nil, err
+	}
+
+	var rulesetArgs Args
+	if err := json.Unmarshal(rulesetArgsByte, &rulesetArgs); err != nil {
+		return nil, err
+	}
+
 	// TODO: add all known rules and validate
 	ruleset, err := New(
 		WithVersion(rulesetConfig.Version),
@@ -77,6 +93,7 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabel
 		WithShootConfig(shootConfig),
 		WithSeedConfig(seedConfig),
 		WithShootNamespace(shootNamespace),
+		WithArgs(rulesetArgs),
 	)
 	if err != nil {
 		return nil, err
@@ -115,7 +132,7 @@ func (r *Ruleset) RunRule(ctx context.Context, id string) (rule.RuleResult, erro
 
 // Run executes all known Rules of the Ruleset.
 func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
-	return sharedruleset.Run(ctx, r, r.rules, r.numWorkers, r.Logger())
+	return sharedruleset.Run(ctx, r, r.rules, r.args.NumWorkers, r.Logger())
 }
 
 // AddRules adds Rules to the Ruleset.

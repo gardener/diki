@@ -49,13 +49,26 @@ func WithShootNamespace(shootNamespace string) CreateOption {
 	}
 }
 
-// WithNumberOfWorkers sets the max number of Workers of a Ruleset.
-func WithNumberOfWorkers(numWorkers int) CreateOption {
+// WithArgs sets the args of a Ruleset.
+func WithArgs(args Args) CreateOption {
 	return func(r *Ruleset) {
-		if numWorkers <= 0 {
-			panic("number of workers should be a possitive number")
+		switch {
+		case args.NumWorkers < 0:
+			panic("number of workers should not be a negative number")
+		case args.NumWorkers > 0:
+			r.args.NumWorkers = args.NumWorkers
+		default:
+			r.args.NumWorkers = 5
 		}
-		r.numWorkers = numWorkers
+
+		switch {
+		case args.MaxRetries < 0:
+			panic("max retries should not be a negative number")
+		case args.MaxRetries > 0:
+			r.args.MaxRetries = args.MaxRetries
+		default:
+			r.args.MaxRetries = 1
+		}
 	}
 }
 
