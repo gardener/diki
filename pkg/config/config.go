@@ -38,6 +38,8 @@ type RulesetConfig struct {
 	Version string `yaml:"version"`
 	// RuleOptions is used to provide per rule configurations.
 	RuleOptions []RuleOptionsConfig `yaml:"ruleOptions"`
+	// Args are ruleset specific arguments that each ruleset should be able to parse.
+	Args any `yaml:"args"`
 }
 
 // RuleOptionsConfig represents per rule options.
