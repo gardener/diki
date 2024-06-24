@@ -54,7 +54,7 @@ var _ = Describe("#242377", func() {
 	})
 
 	It("should error when kube-scheduler is not found", func() {
-		r := &v1r11.Rule242377{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+		r := &v1r11.Rule242377{Client: fakeClient, Namespace: namespace}
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
@@ -74,7 +74,7 @@ var _ = Describe("#242377", func() {
 			ksDeployment.Spec.Template.Spec.Containers = []corev1.Container{container}
 			Expect(fakeClient.Create(ctx, ksDeployment)).To(Succeed())
 
-			r := &v1r11.Rule242377{Logger: testLogger, Client: fakeClient, Namespace: namespace}
+			r := &v1r11.Rule242377{Client: fakeClient, Namespace: namespace}
 			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 

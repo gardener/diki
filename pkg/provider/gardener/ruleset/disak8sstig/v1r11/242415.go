@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -27,7 +26,6 @@ type Rule242415 struct {
 	ControlPlaneClient    client.Client
 	ControlPlaneNamespace string
 	Options               *option.Options242415
-	Logger                *slog.Logger
 }
 
 func (r *Rule242415) ID() string {

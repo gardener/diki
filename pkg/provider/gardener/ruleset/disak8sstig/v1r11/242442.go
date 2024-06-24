@@ -6,7 +6,6 @@ package v1r11
 
 import (
 	"context"
-	"log/slog"
 	"slices"
 	"strings"
 
@@ -27,7 +26,6 @@ type Rule242442 struct {
 	ClusterClient         client.Client
 	ControlPlaneClient    client.Client
 	ControlPlaneNamespace string
-	Logger                *slog.Logger
 }
 
 func (r *Rule242442) ID() string {

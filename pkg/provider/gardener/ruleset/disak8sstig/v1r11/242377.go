@@ -7,7 +7,6 @@ package v1r11
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"slices"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -22,7 +21,6 @@ var _ rule.Rule = &Rule242377{}
 type Rule242377 struct {
 	Client    client.Client
 	Namespace string
-	Logger    *slog.Logger
 }
 
 func (r *Rule242377) ID() string {
