@@ -148,7 +148,7 @@ var _ = Describe("#242448", func() {
 		dikiPod.Labels = map[string]string{}
 	})
 
-	It("should fail when kube-proxy pods cannot be found", func() {
+	It("should return errored result when kube-proxy pods cannot be found", func() {
 		Expect(fakeClient.Create(ctx, Node)).To(Succeed())
 		Expect(fakeClient.Create(ctx, fooPod)).To(Succeed())
 		kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
@@ -163,7 +163,7 @@ var _ = Describe("#242448", func() {
 		ruleResult, err := r.Run(ctx)
 		Expect(err).To(BeNil())
 		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
-			rule.FailedCheckResult("Kube-proxy pods not found!", rule.NewTarget("selector", kubeProxySelector.String())),
+			rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget("selector", kubeProxySelector.String())),
 		}))
 	})
 

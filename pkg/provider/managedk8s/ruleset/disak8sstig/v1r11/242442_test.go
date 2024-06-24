@@ -188,7 +188,7 @@ var _ = Describe("#242442", func() {
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
-	It("should faild when pods cannot be found", func() {
+	It("should return errored result when kube-proxy pods cannot be found", func() {
 		kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
 		r := &v1r11.Rule242442{Client: client}
 
@@ -196,7 +196,7 @@ var _ = Describe("#242442", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Kube-proxy pods not found!", rule.NewTarget("selector", kubeProxySelector.String())),
+			rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget("selector", kubeProxySelector.String())),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
