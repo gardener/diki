@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package retryablerule_test
+package retry_test
 
 import (
 	"log/slog"
@@ -20,5 +20,5 @@ func TestRule(t *testing.T) {
 	logger := slog.New(handler)
 	testLogger = logger
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Retryable Rule Test Suite")
+	RunSpecs(t, "Retry Test Suite")
 }

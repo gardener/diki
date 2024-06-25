@@ -18,7 +18,7 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/rule/retryablerule"
+	"github.com/gardener/diki/pkg/rule/retry"
 	option "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
@@ -115,13 +115,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return fmt.Errorf("rule option 254800 error: %s", err.Error())
 	}
 
-	rcDikiPod := retryablerule.RetryConditionFromRegex(
-		*retryablerule.DikiDISAPodNotFoundRegexp,
+	rcDikiPod := retry.RetryConditionFromRegex(
+		*retry.DikiDISAPodNotFoundRegexp,
 	)
-	rcFileChecks := retryablerule.RetryConditionFromRegex(
-		*retryablerule.ContainerNotFoundOnNodeRegexp,
-		*retryablerule.ContainerNotReadyRegexp,
-		*retryablerule.DikiDISAPodNotFoundRegexp,
+	rcFileChecks := retry.RetryConditionFromRegex(
+		*retry.ContainerNotFoundOnNodeRegexp,
+		*retry.ContainerNotReadyRegexp,
+		*retry.DikiDISAPodNotFoundRegexp,
 	)
 
 	// Gardener images use distroless nonroot user with ID 65532
@@ -173,7 +173,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Client:       shootClient,
 			V1RESTClient: shootClientSet.CoreV1().RESTClient(),
 		},
-		&retryablerule.RetryableRule{
+		&retry.RetryableRule{
 			Logger: r.Logger().With("rule", sharedv1r11.ID242393),
 			BaseRule: &sharedv1r11.Rule242393{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242393),
@@ -187,7 +187,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			RetryCondition: rcDikiPod,
 			MaxRetries:     r.args.MaxRetries,
 		},
-		&retryablerule.RetryableRule{
+		&retry.RetryableRule{
 			Logger: r.Logger().With("rule", sharedv1r11.ID242394),
 			BaseRule: &sharedv1r11.Rule242394{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242394),
@@ -224,7 +224,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			KubernetesVersion: semverShootKubernetesVersion,
 			V1RESTClient:      shootClientSet.CoreV1().RESTClient(),
 		},
-		&retryablerule.RetryableRule{
+		&retry.RetryableRule{
 			Logger: r.Logger().With("rule", sharedv1r11.ID242400),
 			BaseRule: &v1r11.Rule242400{
 				Logger:                r.Logger().With("rule", sharedv1r11.ID242400),
@@ -240,7 +240,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		},
 		&sharedv1r11.Rule242402{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242403{Client: seedClient, Namespace: r.shootNamespace},
-		&retryablerule.RetryableRule{
+		&retry.RetryableRule{
 			Logger: r.Logger().With("rule", sharedv1r11.ID242404),
 			BaseRule: &sharedv1r11.Rule242404{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242404),
@@ -260,7 +260,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"Gardener does not deploy any control plane component as systemd processes or static pod.",
 			rule.Skipped,
 		),
-		&retryablerule.RetryableRule{
+		&retry.RetryableRule{
 			Logger: r.Logger().With("rule", sharedv1r11.ID242406),
 			BaseRule: &sharedv1r11.Rule242406{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242406),
@@ -275,7 +275,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			RetryCondition: rcFileChecks,
 			MaxRetries:     r.args.MaxRetries,
 		},
-		&retryablerule.RetryableRule{
+		&retry.RetryableRule{
 			Logger: r.Logger().With("rule", sharedv1r11.ID242407),
 			BaseRule: &sharedv1r11.Rule242407{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242407),
@@ -397,7 +397,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			`Rule is duplicate of "242405"`,
 			rule.Skipped,
 		),
-		&retryablerule.RetryableRule{
+		&retry.RetryableRule{
 			Logger: r.Logger().With("rule", sharedv1r11.ID242445),
 			BaseRule: &sharedv1r11.Rule242445{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242445),
@@ -410,7 +410,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			RetryCondition: rcFileChecks,
 			MaxRetries:     r.args.MaxRetries,
 		},
-		&retryablerule.RetryableRule{
+		&retry.RetryableRule{
 			Logger: r.Logger().With("rule", sharedv1r11.ID242446),
 			BaseRule: &sharedv1r11.Rule242446{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242446),
@@ -423,7 +423,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			RetryCondition: rcFileChecks,
 			MaxRetries:     r.args.MaxRetries,
 		},
-		&retryablerule.RetryableRule{
+		&retry.RetryableRule{
 			Logger: r.Logger().With("rule", sharedv1r11.ID242447),
 			BaseRule: &sharedv1r11.Rule242447{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242447),
@@ -434,7 +434,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			RetryCondition: rcFileChecks,
 			MaxRetries:     r.args.MaxRetries,
 		},
-		&retryablerule.RetryableRule{
+		&retry.RetryableRule{
 			Logger: r.Logger().With("rule", sharedv1r11.ID242448),
 			BaseRule: &sharedv1r11.Rule242448{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242448),
@@ -448,7 +448,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			RetryCondition: rcFileChecks,
 			MaxRetries:     r.args.MaxRetries,
 		},
-		&retryablerule.RetryableRule{
+		&retry.RetryableRule{
 			Logger: r.Logger().With("rule", sharedv1r11.ID242449),
 			BaseRule: &sharedv1r11.Rule242449{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242449),
@@ -462,7 +462,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			RetryCondition: rcFileChecks,
 			MaxRetries:     r.args.MaxRetries,
 		},
-		&retryablerule.RetryableRule{
+		&retry.RetryableRule{
 			Logger: r.Logger().With("rule", sharedv1r11.ID242450),
 			BaseRule: &sharedv1r11.Rule242450{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242450),
@@ -477,7 +477,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			RetryCondition: rcFileChecks,
 			MaxRetries:     r.args.MaxRetries,
 		},
-		&retryablerule.RetryableRule{
+		&retry.RetryableRule{
 			Logger: r.Logger().With("rule", sharedv1r11.ID242451),
 			BaseRule: &v1r11.Rule242451{
 				Logger:                 r.Logger().With("rule", sharedv1r11.ID242451),
@@ -492,7 +492,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			RetryCondition: rcFileChecks,
 			MaxRetries:     r.args.MaxRetries,
 		},
-		&retryablerule.RetryableRule{
+		&retry.RetryableRule{
 			Logger: r.Logger().With("rule", sharedv1r11.ID242452),
 			BaseRule: &sharedv1r11.Rule242452{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242452),
@@ -506,7 +506,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			RetryCondition: rcFileChecks,
 			MaxRetries:     r.args.MaxRetries,
 		},
-		&retryablerule.RetryableRule{
+		&retry.RetryableRule{
 			Logger: r.Logger().With("rule", sharedv1r11.ID242453),
 			BaseRule: &sharedv1r11.Rule242453{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242453),
@@ -545,7 +545,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			`Rule is duplicate of "242453".`,
 			rule.Skipped,
 		),
-		&retryablerule.RetryableRule{
+		&retry.RetryableRule{
 			Logger: r.Logger().With("rule", sharedv1r11.ID242459),
 			BaseRule: &sharedv1r11.Rule242459{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242459),
@@ -557,7 +557,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			RetryCondition: rcFileChecks,
 			MaxRetries:     r.args.MaxRetries,
 		},
-		&retryablerule.RetryableRule{
+		&retry.RetryableRule{
 			Logger: r.Logger().With("rule", sharedv1r11.ID242460),
 			BaseRule: &sharedv1r11.Rule242460{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242460),
@@ -579,7 +579,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			`Rule is duplicate of "242402"`,
 			rule.Skipped,
 		),
-		&retryablerule.RetryableRule{
+		&retry.RetryableRule{
 			Logger: r.Logger().With("rule", sharedv1r11.ID242466),
 			BaseRule: &v1r11.Rule242466{
 				Logger:                 r.Logger().With("rule", sharedv1r11.ID242466),
@@ -593,7 +593,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			RetryCondition: rcFileChecks,
 			MaxRetries:     r.args.MaxRetries,
 		},
-		&retryablerule.RetryableRule{
+		&retry.RetryableRule{
 			Logger: r.Logger().With("rule", sharedv1r11.ID242467),
 			BaseRule: &v1r11.Rule242467{
 				Logger:                 r.Logger().With("rule", sharedv1r11.ID242467),

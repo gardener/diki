@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package retryablerule_test
+package retry_test
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/rule/retryablerule"
+	"github.com/gardener/diki/pkg/rule/retry"
 )
 
 var _ = Describe("retryable_rule", func() {
@@ -42,7 +42,7 @@ var _ = Describe("retryable_rule", func() {
 
 		DescribeTable("Run cases", func(retryCondition func(ruleResult rule.RuleResult) bool, maxRetries, expectedCounter int) {
 			sr := &simpleRule{}
-			rr := retryablerule.RetryableRule{
+			rr := retry.RetryableRule{
 				BaseRule:       sr,
 				MaxRetries:     maxRetries,
 				RetryCondition: retryCondition,
@@ -83,7 +83,7 @@ var _ = Describe("retryable_rule", func() {
 		})
 
 		It("should create retry condition from a single regex", func() {
-			rc := retryablerule.RetryConditionFromRegex(*fooRegex)
+			rc := retry.RetryConditionFromRegex(*fooRegex)
 
 			result := rc(rule.SingleCheckResult(&simpleRule, fooCheckResult))
 			Expect(result).To(Equal(true))
@@ -96,7 +96,7 @@ var _ = Describe("retryable_rule", func() {
 			Expect(result).To(Equal(false))
 		})
 		It("should create retry condition from multiple regexes", func() {
-			rc := retryablerule.RetryConditionFromRegex(*fooRegex, *barRegex)
+			rc := retry.RetryConditionFromRegex(*fooRegex, *barRegex)
 
 			result := rc(rule.SingleCheckResult(&simpleRule, fooCheckResult))
 			Expect(result).To(Equal(true))
