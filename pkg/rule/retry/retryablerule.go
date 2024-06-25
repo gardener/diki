@@ -14,7 +14,7 @@ import (
 
 var _ rule.Rule = &RetryableRule{}
 
-// RetryableRule wraps Rules, it allows rule runs to be retried when the RetryCondition is met
+// RetryableRule wraps [rule.Rule] and allows a rule to be retried when the retry condition is met.
 type RetryableRule struct {
 	BaseRule       rule.Rule
 	MaxRetries     int
@@ -22,17 +22,17 @@ type RetryableRule struct {
 	Logger         *slog.Logger
 }
 
-// ID is a getter for rule id
+// ID returns the id of the rule.
 func (rr *RetryableRule) ID() string {
 	return rr.BaseRule.ID()
 }
 
-// Name is a getter for rule name
+// Name returns the name of the rule.
 func (rr *RetryableRule) Name() string {
 	return rr.BaseRule.Name()
 }
 
-// Run executes the baseRule and retries when RetryCondition is met
+// Run executes the base rule and retries when the retry condition is met and max retries are not reached yet.
 func (rr *RetryableRule) Run(ctx context.Context) (rule.RuleResult, error) {
 	var res rule.RuleResult
 	var err error
@@ -48,7 +48,7 @@ func (rr *RetryableRule) Run(ctx context.Context) (rule.RuleResult, error) {
 	return res, err
 }
 
-// RetryConditionFromRegex generates RetryCondition func from regexes
+// RetryConditionFromRegex generates a retry condition func that matches messages from [rule.Errored] statuses.
 func RetryConditionFromRegex(regexes ...regexp.Regexp) func(ruleResult rule.RuleResult) bool {
 	return func(ruleResult rule.RuleResult) bool {
 		for _, checkResult := range ruleResult.CheckResults {

@@ -15,7 +15,7 @@ import (
 	"github.com/gardener/diki/pkg/rule/retry"
 )
 
-var _ = Describe("retryable_rule", func() {
+var _ = Describe("retryablerule", func() {
 	Describe("#RetryableRule", func() {
 		var (
 			trueRetryCondition = func(_ rule.RuleResult) bool {

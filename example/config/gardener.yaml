@@ -17,7 +17,7 @@ providers:             # contains information about known providers
     name: DISA Kubernetes Security Technical Implementation Guide
     version: v1r11
     # args:
-    #   maxRetries: 1 # number of max rule run retries. A rule is retries if a Errored check's message matches know retriable messages. Defaults to 1 
+    #   maxRetries: 1 # number of maximum rule run retries. Defaults to 1 
     ruleOptions:
     # - ruleID: "242376"
     #   skip:
