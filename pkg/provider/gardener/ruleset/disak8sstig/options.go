@@ -53,12 +53,12 @@ func WithShootNamespace(shootNamespace string) CreateOption {
 func WithArgs(args Args) CreateOption {
 	return func(r *Ruleset) {
 		switch {
-		case args.MaxRetries < 0:
+		case args.MaxRetries == nil:
+			return
+		case *args.MaxRetries < 0:
 			panic("max retries should not be a negative number")
-		case args.MaxRetries > 0:
-			r.args.MaxRetries = args.MaxRetries
 		default:
-			r.args.MaxRetries = 1
+			r.args.MaxRetries = args.MaxRetries
 		}
 	}
 }

@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/uuid"
 	"k8s.io/client-go/rest"
+	"k8s.io/utils/ptr"
 
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/rule"
@@ -41,7 +42,7 @@ type Ruleset struct {
 
 // Args are Ruleset specific arguments.
 type Args struct {
-	MaxRetries int `json:"maxRetries" yaml:"maxRetries"`
+	MaxRetries *int `json:"maxRetries" yaml:"maxRetries"`
 }
 
 // New creates a new Ruleset.
@@ -49,6 +50,9 @@ func New(options ...CreateOption) (*Ruleset, error) {
 	r := &Ruleset{
 		rules:      map[string]rule.Rule{},
 		numWorkers: 5,
+		args: Args{
+			MaxRetries: ptr.To(1),
+		},
 		instanceID: uuid.New().String(),
 	}
 
