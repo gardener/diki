@@ -50,7 +50,7 @@ func (rr *RetryableRule) Run(ctx context.Context) (rule.RuleResult, error) {
 			break
 		}
 		if i < rr.MaxRetries {
-			waitDuration := math.Pow(2, float64(i))
+			waitDuration := min(math.Pow(2, max(float64(i), 2)), 32)
 
 			rr.Logger.Info("waiting to retry run", "wait_duration_seconds", waitDuration)
 			sleepDuration := time.Duration(waitDuration * float64(time.Second))

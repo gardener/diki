@@ -30,7 +30,7 @@ func (r *simpleRule) Name() string {
 
 func (r *simpleRule) Run(_ context.Context) (rule.RuleResult, error) {
 	counter++
-	if counter > 2 {
+	if counter >= 2 {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult("bar", rule.NewTarget())), nil
 	}
 	return rule.SingleCheckResult(r, rule.ErroredCheckResult("foo", rule.NewTarget())), nil
@@ -75,9 +75,9 @@ var _ = Describe("retryablerule", func() {
 			Expect(err).To(BeNil())
 			Expect(counter).To(Equal(expectedCounter))
 		},
-			Entry("should hit maxRetry when retry condition is always met", trueRetryCondition, 3, 4),
+			Entry("should hit maxRetry when retry condition is always met", trueRetryCondition, 2, 3),
 			Entry("should not retry when retry condition is not met", falseRetryCondition, 7, 1),
-			Entry("should retry until retry condition is not met", simpleRetryCondition, 7, 3),
+			Entry("should retry until retry condition is not met", simpleRetryCondition, 7, 2),
 		)
 	})
 
