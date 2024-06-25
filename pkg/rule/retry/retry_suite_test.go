@@ -15,7 +15,7 @@ import (
 
 var testLogger *slog.Logger
 
-func TestRule(t *testing.T) {
+func TestRetry(t *testing.T) {
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
 	logger := slog.New(handler)
 	testLogger = logger
