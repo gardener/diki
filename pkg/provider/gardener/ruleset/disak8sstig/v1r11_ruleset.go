@@ -20,6 +20,7 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/rule/retry"
 	option "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/retryerrors"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
@@ -116,12 +117,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	}
 
 	rcDikiPod := retry.RetryConditionFromRegex(
-		*retry.DikiDISAPodNotFoundRegexp,
+		*retryerrors.OpsPodNotFoundRegexp,
 	)
 	rcFileChecks := retry.RetryConditionFromRegex(
-		*retry.ContainerNotFoundOnNodeRegexp,
-		*retry.ContainerNotReadyRegexp,
-		*retry.DikiDISAPodNotFoundRegexp,
+		*retryerrors.ContainerNotFoundOnNodeRegexp,
+		*retryerrors.ContainerNotReadyRegexp,
+		*retryerrors.OpsPodNotFoundRegexp,
 	)
 
 	// Gardener images use distroless nonroot user with ID 65532

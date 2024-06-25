@@ -2,19 +2,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package retry_test
+package retryerrors_test
 
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/gardener/diki/pkg/rule/retry"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/retryerrors"
 )
 
-var _ = Describe("retry_errors", func() {
+var _ = Describe("retryerrors", func() {
 	DescribeTable("#ContainerNotFoundOnNodeRegexp",
 		func(s string, expectedResult bool) {
-			Expect(retry.ContainerNotFoundOnNodeRegexp.MatchString(s)).To(Equal(expectedResult))
+			Expect(retryerrors.ContainerNotFoundOnNodeRegexp.MatchString(s)).To(Equal(expectedResult))
 		},
 		Entry("Should match container not found", "command /bin/sh find /var/lib/kubelet/pods/container-id -type f No such file or directory", true),
 		Entry("Should not match when it is not found", "command /bin/sh find /var/lib/kubelet/pods/container-id -type f found", false),
@@ -23,7 +23,7 @@ var _ = Describe("retry_errors", func() {
 
 	DescribeTable("#ContainerNotReadyRegexp",
 		func(s string, expectedResult bool) {
-			Expect(retry.ContainerNotReadyRegexp.MatchString(s)).To(Equal(expectedResult))
+			Expect(retryerrors.ContainerNotReadyRegexp.MatchString(s)).To(Equal(expectedResult))
 		},
 		Entry("Should match container not in status", "container with name foo not (yet) in status", true),
 		Entry("Should match container not running", "container with name foo not (yet) running", true),
@@ -33,7 +33,7 @@ var _ = Describe("retry_errors", func() {
 
 	DescribeTable("#DikiDISAPodNotFoundRegexp",
 		func(s string, expectedResult bool) {
-			Expect(retry.DikiDISAPodNotFoundRegexp.MatchString(s)).To(Equal(expectedResult))
+			Expect(retryerrors.OpsPodNotFoundRegexp.MatchString(s)).To(Equal(expectedResult))
 		},
 		Entry("Should match diki pod not found", `pods "diki-111111-asdasdasda" not found`, true),
 		Entry("Should not match when pod is not diki", `pods "foo" not found`, false),
