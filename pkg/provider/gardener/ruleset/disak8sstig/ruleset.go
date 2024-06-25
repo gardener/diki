@@ -33,6 +33,7 @@ type Ruleset struct {
 	AdditionalOpsPodLabels  map[string]string
 	ShootConfig, SeedConfig *rest.Config
 	shootNamespace          string
+	numWorkers              int
 	args                    Args
 	instanceID              string
 	logger                  *slog.Logger
@@ -41,13 +42,13 @@ type Ruleset struct {
 // Args are Ruleset specific arguments.
 type Args struct {
 	MaxRetries int `json:"maxRetries" yaml:"maxRetries"`
-	NumWorkers int `json:"numWorkers" yaml:"numWorkers"`
 }
 
 // New creates a new Ruleset.
 func New(options ...CreateOption) (*Ruleset, error) {
 	r := &Ruleset{
 		rules:      map[string]rule.Rule{},
+		numWorkers: 5,
 		instanceID: uuid.New().String(),
 	}
 
@@ -132,7 +133,7 @@ func (r *Ruleset) RunRule(ctx context.Context, id string) (rule.RuleResult, erro
 
 // Run executes all known Rules of the Ruleset.
 func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
-	return sharedruleset.Run(ctx, r, r.rules, r.args.NumWorkers, r.Logger())
+	return sharedruleset.Run(ctx, r, r.rules, r.numWorkers, r.Logger())
 }
 
 // AddRules adds Rules to the Ruleset.

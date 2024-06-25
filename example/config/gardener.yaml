@@ -18,7 +18,6 @@ providers:             # contains information about known providers
     version: v1r11
     # args:
     #   maxRetries: 1 # number of max rule run retries. A rule is retries if a Errored check's message matches know retriable messages. Defaults to 1 
-    #   numWorkers: 5 # number of worker threads used to run ruleset. Defaults to 5
     ruleOptions:
     # - ruleID: "242376"
     #   skip:
