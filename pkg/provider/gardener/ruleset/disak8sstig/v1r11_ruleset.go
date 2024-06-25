@@ -174,9 +174,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			Client:       shootClient,
 			V1RESTClient: shootClientSet.CoreV1().RESTClient(),
 		},
-		&retry.RetryableRule{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242393),
-			BaseRule: &sharedv1r11.Rule242393{
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242393)),
+			retry.WithBaseRule(&sharedv1r11.Rule242393{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242393),
 				InstanceID: r.instanceID,
 				Client:     shootClient,
@@ -184,13 +184,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 				Options: &sharedv1r11.Options242393{
 					NodeGroupByLabels: workerPoolGroupByLabels,
 				},
-			},
-			RetryCondition: rcDikiPod,
-			MaxRetries:     r.args.MaxRetries,
-		},
-		&retry.RetryableRule{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242394),
-			BaseRule: &sharedv1r11.Rule242394{
+			}),
+			retry.WithRetryCondition(rcDikiPod),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242394)),
+			retry.WithBaseRule(&sharedv1r11.Rule242394{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242394),
 				InstanceID: r.instanceID,
 				Client:     shootClient,
@@ -198,10 +198,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 				Options: &sharedv1r11.Options242394{
 					NodeGroupByLabels: workerPoolGroupByLabels,
 				},
-			},
-			RetryCondition: rcDikiPod,
-			MaxRetries:     r.args.MaxRetries,
-		},
+			}),
+			retry.WithRetryCondition(rcDikiPod),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
 		&sharedv1r11.Rule242395{Client: shootClient},
 		rule.NewSkipRule(
 			sharedv1r11.ID242396,
@@ -225,9 +225,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			KubernetesVersion: semverShootKubernetesVersion,
 			V1RESTClient:      shootClientSet.CoreV1().RESTClient(),
 		},
-		&retry.RetryableRule{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242400),
-			BaseRule: &v1r11.Rule242400{
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242400)),
+			retry.WithBaseRule(&v1r11.Rule242400{
 				Logger:                r.Logger().With("rule", sharedv1r11.ID242400),
 				InstanceID:            r.instanceID,
 				ControlPlaneClient:    seedClient,
@@ -235,15 +235,15 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 				ClusterPodContext:     shootPodContext,
 				ClusterV1RESTClient:   shootClientSet.CoreV1().RESTClient(),
 				ControlPlaneNamespace: r.shootNamespace,
-			},
-			RetryCondition: rcFileChecks,
-			MaxRetries:     r.args.MaxRetries,
-		},
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
 		&sharedv1r11.Rule242402{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242403{Client: seedClient, Namespace: r.shootNamespace},
-		&retry.RetryableRule{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242404),
-			BaseRule: &sharedv1r11.Rule242404{
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242404)),
+			retry.WithBaseRule(&sharedv1r11.Rule242404{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242404),
 				InstanceID: r.instanceID,
 				Client:     shootClient,
@@ -251,19 +251,19 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 				Options: &sharedv1r11.Options242404{
 					NodeGroupByLabels: workerPoolGroupByLabels,
 				},
-			},
-			RetryCondition: rcDikiPod,
-			MaxRetries:     r.args.MaxRetries,
-		},
+			}),
+			retry.WithRetryCondition(rcDikiPod),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
 		rule.NewSkipRule(
 			sharedv1r11.ID242405,
 			"Kubernetes manifests must be owned by root (MEDIUM 242405)",
 			"Gardener does not deploy any control plane component as systemd processes or static pod.",
 			rule.Skipped,
 		),
-		&retry.RetryableRule{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242406),
-			BaseRule: &sharedv1r11.Rule242406{
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242406)),
+			retry.WithBaseRule(&sharedv1r11.Rule242406{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242406),
 				InstanceID: r.instanceID,
 				Client:     shootClient,
@@ -272,13 +272,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 					NodeGroupByLabels: workerPoolGroupByLabels,
 					FileOwnerOptions:  gardenerFileOwnerOptions,
 				},
-			},
-			RetryCondition: rcFileChecks,
-			MaxRetries:     r.args.MaxRetries,
-		},
-		&retry.RetryableRule{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242407),
-			BaseRule: &sharedv1r11.Rule242407{
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242407)),
+			retry.WithBaseRule(&sharedv1r11.Rule242407{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242407),
 				InstanceID: r.instanceID,
 				Client:     shootClient,
@@ -286,10 +286,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 				Options: &sharedv1r11.Options242407{
 					NodeGroupByLabels: workerPoolGroupByLabels,
 				},
-			},
-			RetryCondition: rcFileChecks,
-			MaxRetries:     r.args.MaxRetries,
-		},
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
 		rule.NewSkipRule(
 			sharedv1r11.ID242408,
 			"The Kubernetes manifest files must have least privileges  (MEDIUM 242408)",
@@ -398,46 +398,46 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			`Rule is duplicate of "242405"`,
 			rule.Skipped,
 		),
-		&retry.RetryableRule{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242445),
-			BaseRule: &sharedv1r11.Rule242445{
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242445)),
+			retry.WithBaseRule(&sharedv1r11.Rule242445{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242445),
 				InstanceID: r.instanceID,
 				Client:     seedClient,
 				PodContext: seedPodContext,
 				Namespace:  r.shootNamespace,
 				Options:    opts242445,
-			},
-			RetryCondition: rcFileChecks,
-			MaxRetries:     r.args.MaxRetries,
-		},
-		&retry.RetryableRule{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242446),
-			BaseRule: &sharedv1r11.Rule242446{
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242446)),
+			retry.WithBaseRule(&sharedv1r11.Rule242446{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242446),
 				InstanceID: r.instanceID,
 				Client:     seedClient,
 				PodContext: seedPodContext,
 				Namespace:  r.shootNamespace,
 				Options:    opts242446,
-			},
-			RetryCondition: rcFileChecks,
-			MaxRetries:     r.args.MaxRetries,
-		},
-		&retry.RetryableRule{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242447),
-			BaseRule: &sharedv1r11.Rule242447{
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242447)),
+			retry.WithBaseRule(&sharedv1r11.Rule242447{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242447),
 				InstanceID: r.instanceID,
 				Client:     shootClient,
 				PodContext: shootPodContext,
-			},
-			RetryCondition: rcFileChecks,
-			MaxRetries:     r.args.MaxRetries,
-		},
-		&retry.RetryableRule{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242448),
-			BaseRule: &sharedv1r11.Rule242448{
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242448)),
+			retry.WithBaseRule(&sharedv1r11.Rule242448{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242448),
 				InstanceID: r.instanceID,
 				Client:     shootClient,
@@ -445,13 +445,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 				Options: &sharedv1r11.Options242448{
 					FileOwnerOptions: gardenerFileOwnerOptions,
 				},
-			},
-			RetryCondition: rcFileChecks,
-			MaxRetries:     r.args.MaxRetries,
-		},
-		&retry.RetryableRule{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242449),
-			BaseRule: &sharedv1r11.Rule242449{
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242449)),
+			retry.WithBaseRule(&sharedv1r11.Rule242449{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242449),
 				InstanceID: r.instanceID,
 				Client:     shootClient,
@@ -459,13 +459,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 				Options: &sharedv1r11.Options242449{
 					NodeGroupByLabels: workerPoolGroupByLabels,
 				},
-			},
-			RetryCondition: rcFileChecks,
-			MaxRetries:     r.args.MaxRetries,
-		},
-		&retry.RetryableRule{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242450),
-			BaseRule: &sharedv1r11.Rule242450{
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242450)),
+			retry.WithBaseRule(&sharedv1r11.Rule242450{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242450),
 				InstanceID: r.instanceID,
 				Client:     shootClient,
@@ -474,13 +474,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 					NodeGroupByLabels: workerPoolGroupByLabels,
 					FileOwnerOptions:  gardenerFileOwnerOptions,
 				},
-			},
-			RetryCondition: rcFileChecks,
-			MaxRetries:     r.args.MaxRetries,
-		},
-		&retry.RetryableRule{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242451),
-			BaseRule: &v1r11.Rule242451{
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242451)),
+			retry.WithBaseRule(&v1r11.Rule242451{
 				Logger:                 r.Logger().With("rule", sharedv1r11.ID242451),
 				InstanceID:             r.instanceID,
 				ControlPlaneClient:     seedClient,
@@ -489,13 +489,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 				ClusterPodContext:      shootPodContext,
 				ControlPlaneNamespace:  r.shootNamespace,
 				Options:                opts242451,
-			},
-			RetryCondition: rcFileChecks,
-			MaxRetries:     r.args.MaxRetries,
-		},
-		&retry.RetryableRule{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242452),
-			BaseRule: &sharedv1r11.Rule242452{
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242452)),
+			retry.WithBaseRule(&sharedv1r11.Rule242452{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242452),
 				InstanceID: r.instanceID,
 				Client:     shootClient,
@@ -503,13 +503,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 				Options: &sharedv1r11.Options242452{
 					NodeGroupByLabels: workerPoolGroupByLabels,
 				},
-			},
-			RetryCondition: rcFileChecks,
-			MaxRetries:     r.args.MaxRetries,
-		},
-		&retry.RetryableRule{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242453),
-			BaseRule: &sharedv1r11.Rule242453{
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242453)),
+			retry.WithBaseRule(&sharedv1r11.Rule242453{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242453),
 				InstanceID: r.instanceID,
 				Client:     shootClient,
@@ -518,10 +518,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 					NodeGroupByLabels: workerPoolGroupByLabels,
 					FileOwnerOptions:  gardenerFileOwnerOptions,
 				},
-			},
-			RetryCondition: rcFileChecks,
-			MaxRetries:     r.args.MaxRetries,
-		},
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
 		rule.NewSkipRule(
 			sharedv1r11.ID242454,
 			"Kubernetes kubeadm.conf must be owned by root(MEDIUM 242454)",
@@ -546,30 +546,30 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			`Rule is duplicate of "242453".`,
 			rule.Skipped,
 		),
-		&retry.RetryableRule{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242459),
-			BaseRule: &sharedv1r11.Rule242459{
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242459)),
+			retry.WithBaseRule(&sharedv1r11.Rule242459{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242459),
 				InstanceID: r.instanceID,
 				Client:     seedClient,
 				PodContext: seedPodContext,
 				Namespace:  r.shootNamespace,
-			},
-			RetryCondition: rcFileChecks,
-			MaxRetries:     r.args.MaxRetries,
-		},
-		&retry.RetryableRule{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242460),
-			BaseRule: &sharedv1r11.Rule242460{
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242460)),
+			retry.WithBaseRule(&sharedv1r11.Rule242460{
 				Logger:     r.Logger().With("rule", sharedv1r11.ID242460),
 				InstanceID: r.instanceID,
 				Client:     seedClient,
 				PodContext: seedPodContext,
 				Namespace:  r.shootNamespace,
-			},
-			RetryCondition: rcFileChecks,
-			MaxRetries:     r.args.MaxRetries,
-		},
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
 		&sharedv1r11.Rule242461{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242462{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedv1r11.Rule242463{Client: seedClient, Namespace: r.shootNamespace},
@@ -580,9 +580,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			`Rule is duplicate of "242402"`,
 			rule.Skipped,
 		),
-		&retry.RetryableRule{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242466),
-			BaseRule: &v1r11.Rule242466{
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242466)),
+			retry.WithBaseRule(&v1r11.Rule242466{
 				Logger:                 r.Logger().With("rule", sharedv1r11.ID242466),
 				InstanceID:             r.instanceID,
 				ControlPlaneClient:     seedClient,
@@ -590,13 +590,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 				ControlPlanePodContext: seedPodContext,
 				ClusterPodContext:      shootPodContext,
 				ControlPlaneNamespace:  r.shootNamespace,
-			},
-			RetryCondition: rcFileChecks,
-			MaxRetries:     r.args.MaxRetries,
-		},
-		&retry.RetryableRule{
-			Logger: r.Logger().With("rule", sharedv1r11.ID242467),
-			BaseRule: &v1r11.Rule242467{
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242467)),
+			retry.WithBaseRule(&v1r11.Rule242467{
 				Logger:                 r.Logger().With("rule", sharedv1r11.ID242467),
 				InstanceID:             r.instanceID,
 				ControlPlaneClient:     seedClient,
@@ -604,10 +604,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 				ControlPlanePodContext: seedPodContext,
 				ClusterPodContext:      shootPodContext,
 				ControlPlaneNamespace:  r.shootNamespace,
-			},
-			RetryCondition: rcFileChecks,
-			MaxRetries:     r.args.MaxRetries,
-		},
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
 		&sharedv1r11.Rule245541{
 			Client:       shootClient,
 			V1RESTClient: shootClientSet.CoreV1().RESTClient(),

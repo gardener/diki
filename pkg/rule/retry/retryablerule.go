@@ -6,7 +6,9 @@ package retry
 
 import (
 	"context"
+	"log/slog"
 	"math"
+	"os"
 	"regexp"
 	"time"
 
@@ -25,6 +27,23 @@ type RetryableRule struct {
 	MaxRetries     int
 	RetryCondition func(ruleResult rule.RuleResult) bool
 	Logger         logger
+}
+
+// New creates a new RetryableRule.
+func New(options ...CreateOption) *RetryableRule {
+	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
+	rr := &RetryableRule{
+		MaxRetries:     1,
+		RetryCondition: func(_ rule.RuleResult) bool { return false },
+		Logger:         slog.New(handler),
+	}
+
+	for _, o := range options {
+		o(rr)
+	}
+
+	// TODO: add validation
+	return rr
 }
 
 // ID returns the id of the rule.

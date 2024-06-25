@@ -63,12 +63,12 @@ var _ = Describe("retryablerule", func() {
 
 		DescribeTable("Run cases", func(retryCondition func(ruleResult rule.RuleResult) bool, maxRetries, expectedCounter int) {
 			sr := &simpleRule{}
-			rr := retry.RetryableRule{
-				BaseRule:       sr,
-				MaxRetries:     maxRetries,
-				RetryCondition: retryCondition,
-				Logger:         testLogger,
-			}
+			rr := retry.New(
+				retry.WithBaseRule(sr),
+				retry.WithMaxRetries(maxRetries),
+				retry.WithRetryCondition(retryCondition),
+				retry.WithLogger(testLogger),
+			)
 
 			_, err := rr.Run(ctx)
 
