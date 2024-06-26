@@ -170,17 +170,17 @@ func GetContainerID(pod corev1.Pod, containerName string) (string, error) {
 	})
 
 	if containerStatusIdx < 0 {
-		return "", fmt.Errorf("container with Name %s not (yet) in status", containerName)
+		return "", fmt.Errorf("container with name %s not (yet) in status", containerName)
 	}
 
 	containerID := pod.Status.ContainerStatuses[containerStatusIdx].ContainerID
 	switch {
 	case len(containerID) == 0:
-		return "", fmt.Errorf("container with Name %s not (yet) running", containerName)
+		return "", fmt.Errorf("container with name %s not (yet) running", containerName)
 	case strings.HasPrefix(containerID, "containerd://"):
 		return strings.Split(containerID, "//")[1], nil
 	default:
-		return "", fmt.Errorf("cannot handle container with Name %s", containerName)
+		return "", fmt.Errorf("cannot handle container with name %s", containerName)
 	}
 }
 

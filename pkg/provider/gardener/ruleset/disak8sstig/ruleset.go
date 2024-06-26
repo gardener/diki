@@ -6,11 +6,13 @@ package disak8sstig
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 
 	"github.com/google/uuid"
 	"k8s.io/client-go/rest"
+	"k8s.io/utils/ptr"
 
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/rule"
@@ -33,8 +35,14 @@ type Ruleset struct {
 	ShootConfig, SeedConfig *rest.Config
 	shootNamespace          string
 	numWorkers              int
+	args                    Args
 	instanceID              string
 	logger                  *slog.Logger
+}
+
+// Args are Ruleset specific arguments.
+type Args struct {
+	MaxRetries *int `json:"maxRetries" yaml:"maxRetries"`
 }
 
 // New creates a new Ruleset.
@@ -42,6 +50,9 @@ func New(options ...CreateOption) (*Ruleset, error) {
 	r := &Ruleset{
 		rules:      map[string]rule.Rule{},
 		numWorkers: 5,
+		args: Args{
+			MaxRetries: ptr.To(1),
+		},
 		instanceID: uuid.New().String(),
 	}
 
@@ -70,6 +81,16 @@ func (r *Ruleset) Version() string {
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
 func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabels map[string]string, shootConfig, seedConfig *rest.Config, shootNamespace string) (*Ruleset, error) {
+	rulesetArgsByte, err := json.Marshal(rulesetConfig.Args)
+	if err != nil {
+		return nil, err
+	}
+
+	var rulesetArgs Args
+	if err := json.Unmarshal(rulesetArgsByte, &rulesetArgs); err != nil {
+		return nil, err
+	}
+
 	// TODO: add all known rules and validate
 	ruleset, err := New(
 		WithVersion(rulesetConfig.Version),
@@ -77,6 +98,7 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabel
 		WithShootConfig(shootConfig),
 		WithSeedConfig(seedConfig),
 		WithShootNamespace(shootNamespace),
+		WithArgs(rulesetArgs),
 	)
 	if err != nil {
 		return nil, err

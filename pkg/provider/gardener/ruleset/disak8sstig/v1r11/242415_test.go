@@ -93,7 +93,7 @@ var _ = Describe("#242415", func() {
 	})
 
 	It("should return correct results when all pods pass", func() {
-		r := &v1r11.Rule242415{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: options}
+		r := &v1r11.Rule242415{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: options}
 		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
 		Expect(fakeShootClient.Create(ctx, shootPod)).To(Succeed())
 
@@ -116,7 +116,7 @@ var _ = Describe("#242415", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 	It("should return correct results when a pod fails", func() {
-		r := &v1r11.Rule242415{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: options}
+		r := &v1r11.Rule242415{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: options}
 		shootPod.Spec.Containers[0].Env = []corev1.EnvVar{
 			{
 				Name: "SECRET_TEST",
@@ -158,7 +158,7 @@ var _ = Describe("#242415", func() {
 				},
 			},
 		}
-		r := &v1r11.Rule242415{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: options}
+		r := &v1r11.Rule242415{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: options}
 		shootPod.Spec.Containers[0].Env = []corev1.EnvVar{
 			{
 				Name: "SECRET_TEST",

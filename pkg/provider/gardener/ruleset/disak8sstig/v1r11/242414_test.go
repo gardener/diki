@@ -100,7 +100,7 @@ var _ = Describe("#242414", func() {
 	})
 
 	It("should return correct results when all pods pass", func() {
-		r := &v1r11.Rule242414{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: &options}
+		r := &v1r11.Rule242414{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: &options}
 		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
 		Expect(fakeShootClient.Create(ctx, shootPod)).To(Succeed())
 
@@ -124,7 +124,7 @@ var _ = Describe("#242414", func() {
 	})
 
 	It("should return correct results when a pod fails", func() {
-		r := &v1r11.Rule242414{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: &options}
+		r := &v1r11.Rule242414{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: &options}
 		shootPod.Spec.Containers[0].Ports[0].HostPort = 1011
 		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
 		Expect(fakeShootClient.Create(ctx, shootPod)).To(Succeed())
@@ -165,7 +165,7 @@ var _ = Describe("#242414", func() {
 			},
 		}
 
-		r := &v1r11.Rule242414{Logger: testLogger, ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: &options}
+		r := &v1r11.Rule242414{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: &options}
 
 		acceptedShootPod := shootPod.DeepCopy()
 		acceptedShootPod.Name = "accepted-shoot-pod"
