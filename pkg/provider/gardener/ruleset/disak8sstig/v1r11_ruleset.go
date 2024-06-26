@@ -116,11 +116,12 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return fmt.Errorf("rule option 254800 error: %s", err.Error())
 	}
 
-	rcDikiPod := retry.RetryConditionFromRegex(
+	rcOpsPod := retry.RetryConditionFromRegex(
 		*retryerrors.OpsPodNotFoundRegexp,
 	)
 	rcFileChecks := retry.RetryConditionFromRegex(
 		*retryerrors.ContainerNotFoundOnNodeRegexp,
+		*retryerrors.ContainerFileNotFoundOnNodeRegexp,
 		*retryerrors.ContainerNotReadyRegexp,
 		*retryerrors.OpsPodNotFoundRegexp,
 	)
@@ -185,7 +186,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 					NodeGroupByLabels: workerPoolGroupByLabels,
 				},
 			}),
-			retry.WithRetryCondition(rcDikiPod),
+			retry.WithRetryCondition(rcOpsPod),
 			retry.WithMaxRetries(*r.args.MaxRetries),
 		),
 		retry.New(
@@ -199,7 +200,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 					NodeGroupByLabels: workerPoolGroupByLabels,
 				},
 			}),
-			retry.WithRetryCondition(rcDikiPod),
+			retry.WithRetryCondition(rcOpsPod),
 			retry.WithMaxRetries(*r.args.MaxRetries),
 		),
 		&sharedv1r11.Rule242395{Client: shootClient},
@@ -252,7 +253,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 					NodeGroupByLabels: workerPoolGroupByLabels,
 				},
 			}),
-			retry.WithRetryCondition(rcDikiPod),
+			retry.WithRetryCondition(rcOpsPod),
 			retry.WithMaxRetries(*r.args.MaxRetries),
 		),
 		rule.NewSkipRule(
