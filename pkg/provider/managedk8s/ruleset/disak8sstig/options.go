@@ -35,6 +35,20 @@ func WithConfig(config *rest.Config) CreateOption {
 	}
 }
 
+// WithArgs sets the args of a [Ruleset].
+func WithArgs(args Args) CreateOption {
+	return func(r *Ruleset) {
+		switch {
+		case args.MaxRetries == nil:
+			return
+		case *args.MaxRetries < 0:
+			panic("max retries should not be a negative number")
+		default:
+			r.args.MaxRetries = args.MaxRetries
+		}
+	}
+}
+
 // WithNumberOfWorkers sets the max number of Workers of a [Ruleset].
 func WithNumberOfWorkers(numWorkers int) CreateOption {
 	return func(r *Ruleset) {
