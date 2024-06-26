@@ -15,6 +15,7 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
+// Logger is a minimalistic logger interface.
 type Logger interface {
 	Info(string, ...any)
 }
