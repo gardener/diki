@@ -6,16 +6,16 @@ package retry
 
 import (
 	"context"
+	"io"
 	"log/slog"
 	"math"
-	"os"
 	"regexp"
 	"time"
 
 	"github.com/gardener/diki/pkg/rule"
 )
 
-type logger interface {
+type Logger interface {
 	Info(string, ...any)
 }
 
@@ -26,12 +26,12 @@ type RetryableRule struct {
 	BaseRule       rule.Rule
 	MaxRetries     int
 	RetryCondition func(ruleResult rule.RuleResult) bool
-	Logger         logger
+	Logger         Logger
 }
 
 // New creates a new RetryableRule.
 func New(options ...CreateOption) *RetryableRule {
-	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
+	handler := slog.NewJSONHandler(io.Discard, nil)
 	rr := &RetryableRule{
 		MaxRetries:     1,
 		RetryCondition: func(_ rule.RuleResult) bool { return false },

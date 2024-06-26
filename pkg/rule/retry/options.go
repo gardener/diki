@@ -6,7 +6,7 @@ package retry
 
 import "github.com/gardener/diki/pkg/rule"
 
-// CreateOption is a function that acts on a RetryableRule
+// CreateOption is a function that acts on a [RetryableRule]
 // and is used to construct such objects.
 type CreateOption func(*RetryableRule)
 
@@ -35,7 +35,7 @@ func WithRetryCondition(retryCondition func(ruleResult rule.RuleResult) bool) Cr
 }
 
 // WithLogger the logger of a [RetryableRule].
-func WithLogger(logger logger) CreateOption {
+func WithLogger(logger Logger) CreateOption {
 	return func(rr *RetryableRule) {
 		rr.Logger = logger
 	}
