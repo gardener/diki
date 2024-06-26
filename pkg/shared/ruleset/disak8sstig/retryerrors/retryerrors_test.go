@@ -16,10 +16,18 @@ var _ = Describe("retryerrors", func() {
 		func(s string, expectedResult bool) {
 			Expect(retryerrors.ContainerNotFoundOnNodeRegexp.MatchString(s)).To(Equal(expectedResult))
 		},
-		Entry("Should match container not found", "command /bin/sh find /var/lib/kubelet/pods/container-id -type f not found", true),
+		Entry("Should match container not found", "command /bin/sh /run/containerd/io.containerd.runtime.v2.task/k8s.io/id foo not found", true),
+		Entry("Should not match when it is found", "command /bin/sh /run/containerd/io.containerd.runtime.v2.task/k8s.io/id foo found", false),
+		Entry("Should not match when it is not container path", "command /bin/sh find /var/foo -type f not found", false),
+	)
+
+	DescribeTable("#ContainerFileNotFoundOnNodeRegexp",
+		func(s string, expectedResult bool) {
+			Expect(retryerrors.ContainerFileNotFoundOnNodeRegexp.MatchString(s)).To(Equal(expectedResult))
+		},
 		Entry("Should match container file not found", "command /bin/sh find /var/lib/kubelet/pods/container-id -type f No such file or directory", true),
-		Entry("Should not match when it is not found", "command /bin/sh find /var/lib/kubelet/pods/container-id -type f found", false),
-		Entry("Should not match when it is not container path", "command /bin/sh find /var/foo -type f No such file or directory", false),
+		Entry("Should not match when it is found", "command /bin/sh find /var/lib/kubelet/pods/container-id -type f found", false),
+		Entry("Should not match when it is not container file path", "command /bin/sh /run/containerd/io.containerd.runtime.v2.task/k8s.io/id foo No such file or directory", false),
 	)
 
 	DescribeTable("#ContainerNotReadyRegexp",

@@ -10,11 +10,11 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// CreateOption is a function that acts on a Ruleset
+// CreateOption is a function that acts on a [Ruleset]
 // and is used to construct such objects.
 type CreateOption func(*Ruleset)
 
-// WithVersion sets the version of a Ruleset.
+// WithVersion sets the version of a [Ruleset].
 func WithVersion(version string) CreateOption {
 	return func(r *Ruleset) {
 		r.version = version
@@ -28,28 +28,28 @@ func WithAdditionalOpsPodLabels(labels map[string]string) CreateOption {
 	}
 }
 
-// WithShootConfig sets the ShootConfig of a Ruleset.
+// WithShootConfig sets the ShootConfig of a [Ruleset].
 func WithShootConfig(config *rest.Config) CreateOption {
 	return func(r *Ruleset) {
 		r.ShootConfig = config
 	}
 }
 
-// WithSeedConfig sets the SeedConfig of a Ruleset.
+// WithSeedConfig sets the SeedConfig of a [Ruleset].
 func WithSeedConfig(config *rest.Config) CreateOption {
 	return func(r *Ruleset) {
 		r.SeedConfig = config
 	}
 }
 
-// WithShootNamespace sets the shootNamespace of a Ruleset.
+// WithShootNamespace sets the shootNamespace of a [Ruleset].
 func WithShootNamespace(shootNamespace string) CreateOption {
 	return func(r *Ruleset) {
 		r.shootNamespace = shootNamespace
 	}
 }
 
-// WithArgs sets the args of a Ruleset.
+// WithArgs sets the args of a [Ruleset].
 func WithArgs(args Args) CreateOption {
 	return func(r *Ruleset) {
 		switch {
@@ -63,7 +63,7 @@ func WithArgs(args Args) CreateOption {
 	}
 }
 
-// WithNumberOfWorkers sets the max number of Workers of a Ruleset.
+// WithNumberOfWorkers sets the max number of Workers of a [Ruleset].
 func WithNumberOfWorkers(numWorkers int) CreateOption {
 	return func(r *Ruleset) {
 		if numWorkers <= 0 {
@@ -73,7 +73,7 @@ func WithNumberOfWorkers(numWorkers int) CreateOption {
 	}
 }
 
-// WithLogger the logger of a Ruleset.
+// WithLogger the logger of a [Ruleset].
 func WithLogger(logger *slog.Logger) CreateOption {
 	return func(r *Ruleset) {
 		r.logger = logger

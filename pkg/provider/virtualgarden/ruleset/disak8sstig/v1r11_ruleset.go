@@ -15,7 +15,9 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	"github.com/gardener/diki/pkg/provider/virtualgarden/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/rule/retry"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/retryerrors"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
@@ -45,6 +47,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return fmt.Errorf("rule option 245543 error: %s", err.Error())
 	}
+
+	rcFileChecks := retry.RetryConditionFromRegex(
+		*retryerrors.ContainerNotFoundOnNodeRegexp,
+		*retryerrors.ContainerFileNotFoundOnNodeRegexp,
+		*retryerrors.ContainerNotReadyRegexp,
+		*retryerrors.OpsPodNotFoundRegexp,
+	)
 
 	const (
 		ns                      = "garden"
@@ -433,25 +442,35 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"Rule is duplicate of 242405. Gardener does not deploy any control plane component as systemd processes or static pod.",
 			rule.Skipped,
 		),
-		&sharedv1r11.Rule242445{
-			Logger:             r.Logger().With("rule", sharedv1r11.ID242445),
-			InstanceID:         r.instanceID,
-			Client:             runtimeClient,
-			Namespace:          ns,
-			PodContext:         runtimePodContext,
-			ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"instance": etcdMain}),
-			ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"instance": etcdEvents}),
-			Options:            opts242445,
-		},
-		&sharedv1r11.Rule242446{
-			Logger:          r.Logger().With("rule", sharedv1r11.ID242446),
-			InstanceID:      r.instanceID,
-			Client:          runtimeClient,
-			Namespace:       ns,
-			PodContext:      runtimePodContext,
-			DeploymentNames: []string{apiserverDeploymentName, kcmDeploymentName},
-			Options:         opts242446,
-		},
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242445)),
+			retry.WithBaseRule(&sharedv1r11.Rule242445{
+				Logger:             r.Logger().With("rule", sharedv1r11.ID242445),
+				InstanceID:         r.instanceID,
+				Client:             runtimeClient,
+				Namespace:          ns,
+				PodContext:         runtimePodContext,
+				ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"instance": etcdMain}),
+				ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"instance": etcdEvents}),
+				Options:            opts242445,
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242446)),
+			retry.WithBaseRule(&sharedv1r11.Rule242446{
+				Logger:          r.Logger().With("rule", sharedv1r11.ID242446),
+				InstanceID:      r.instanceID,
+				Client:          runtimeClient,
+				Namespace:       ns,
+				PodContext:      runtimePodContext,
+				DeploymentNames: []string{apiserverDeploymentName, kcmDeploymentName},
+				Options:         opts242446,
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
 		rule.NewSkipRule(
 			sharedv1r11.ID242447,
 			"The Kubernetes Kube Proxy kubeconfig must have file permissions set to 644 or more restrictive (MEDIUM 242447)",
@@ -476,14 +495,19 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			noKubeletsMsg,
 			rule.Skipped,
 		),
-		&v1r11.Rule242451{
-			Logger:     r.Logger().With("rule", sharedv1r11.ID242451),
-			InstanceID: r.instanceID,
-			Client:     runtimeClient,
-			Namespace:  ns,
-			PodContext: runtimePodContext,
-			Options:    opts242451,
-		},
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242451)),
+			retry.WithBaseRule(&v1r11.Rule242451{
+				Logger:     r.Logger().With("rule", sharedv1r11.ID242451),
+				InstanceID: r.instanceID,
+				Client:     runtimeClient,
+				Namespace:  ns,
+				PodContext: runtimePodContext,
+				Options:    opts242451,
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
 		rule.NewSkipRule(
 			sharedv1r11.ID242452,
 			"The Kubernetes kubelet KubeConfig must have file permissions set to 644 or more restrictive (MEDIUM 242452)",
@@ -520,23 +544,33 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"Duplicate of 242453. "+noKubeletsMsg,
 			rule.Skipped,
 		),
-		&sharedv1r11.Rule242459{
-			Logger:             r.Logger().With("rule", sharedv1r11.ID242459),
-			InstanceID:         r.instanceID,
-			Client:             runtimeClient,
-			Namespace:          ns,
-			PodContext:         runtimePodContext,
-			ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"instance": etcdMain}),
-			ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"instance": etcdEvents}),
-		},
-		&sharedv1r11.Rule242460{
-			Logger:          r.Logger().With("rule", sharedv1r11.ID242460),
-			InstanceID:      r.instanceID,
-			Client:          runtimeClient,
-			Namespace:       ns,
-			PodContext:      runtimePodContext,
-			DeploymentNames: []string{apiserverDeploymentName, kcmDeploymentName},
-		},
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242459)),
+			retry.WithBaseRule(&sharedv1r11.Rule242459{
+				Logger:             r.Logger().With("rule", sharedv1r11.ID242459),
+				InstanceID:         r.instanceID,
+				Client:             runtimeClient,
+				Namespace:          ns,
+				PodContext:         runtimePodContext,
+				ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"instance": etcdMain}),
+				ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"instance": etcdEvents}),
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242460)),
+			retry.WithBaseRule(&sharedv1r11.Rule242460{
+				Logger:          r.Logger().With("rule", sharedv1r11.ID242460),
+				InstanceID:      r.instanceID,
+				Client:          runtimeClient,
+				Namespace:       ns,
+				PodContext:      runtimePodContext,
+				DeploymentNames: []string{apiserverDeploymentName, kcmDeploymentName},
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
 		&sharedv1r11.Rule242461{
 			Client:         runtimeClient,
 			Namespace:      ns,
@@ -567,20 +601,30 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			"Rule is duplicate of 242402.",
 			rule.Skipped,
 		),
-		&v1r11.Rule242466{
-			Logger:     r.Logger().With("rule", sharedv1r11.ID242466),
-			InstanceID: r.instanceID,
-			Client:     runtimeClient,
-			Namespace:  ns,
-			PodContext: runtimePodContext,
-		},
-		&v1r11.Rule242467{
-			Logger:     r.Logger().With("rule", sharedv1r11.ID242467),
-			InstanceID: r.instanceID,
-			Client:     runtimeClient,
-			Namespace:  ns,
-			PodContext: runtimePodContext,
-		},
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242466)),
+			retry.WithBaseRule(&v1r11.Rule242466{
+				Logger:     r.Logger().With("rule", sharedv1r11.ID242466),
+				InstanceID: r.instanceID,
+				Client:     runtimeClient,
+				Namespace:  ns,
+				PodContext: runtimePodContext,
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
+		retry.New(
+			retry.WithLogger(r.Logger().With("rule", sharedv1r11.ID242467)),
+			retry.WithBaseRule(&v1r11.Rule242467{
+				Logger:     r.Logger().With("rule", sharedv1r11.ID242467),
+				InstanceID: r.instanceID,
+				Client:     runtimeClient,
+				Namespace:  ns,
+				PodContext: runtimePodContext,
+			}),
+			retry.WithRetryCondition(rcFileChecks),
+			retry.WithMaxRetries(*r.args.MaxRetries),
+		),
 		rule.NewSkipRule(
 			sharedv1r11.ID245541,
 			"Kubernetes Kubelet must not disable timeouts (MEDIUM 245541)",
