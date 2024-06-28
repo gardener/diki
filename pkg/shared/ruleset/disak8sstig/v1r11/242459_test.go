@@ -170,8 +170,8 @@ var _ = Describe("#242459", func() {
 		target := rule.NewTarget("namespace", r.Namespace)
 		Expect(err).To(BeNil())
 		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
-			rule.FailedCheckResult("Pods not found!", target.With("selector", mainSelector.String())),
-			rule.FailedCheckResult("Pods not found!", target.With("selector", eventsSelector.String())),
+			rule.ErroredCheckResult("pods not found", target.With("selector", mainSelector.String())),
+			rule.ErroredCheckResult("pods not found", target.With("selector", eventsSelector.String())),
 		}))
 	})
 

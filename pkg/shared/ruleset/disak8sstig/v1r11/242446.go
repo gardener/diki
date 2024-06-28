@@ -80,7 +80,7 @@ func (r *Rule242446) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		if len(pods) == 0 {
-			checkResults = append(checkResults, rule.FailedCheckResult("Pods not found for deployment!", target.With("name", deploymentName, "kind", "Deployment", "namespace", r.Namespace)))
+			checkResults = append(checkResults, rule.ErroredCheckResult("pods not found for deployment", target.With("name", deploymentName, "kind", "Deployment", "namespace", r.Namespace)))
 			continue
 		}
 

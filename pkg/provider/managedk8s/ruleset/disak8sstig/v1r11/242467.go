@@ -102,7 +102,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	image.WithOptionalTag(version.Get().GitVersion)
 
 	if len(pods) == 0 {
-		checkResults = append(checkResults, rule.FailedCheckResult("Pods not found!", rule.NewTarget("selector", kubeProxySelector.String())))
+		checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", rule.NewTarget("selector", kubeProxySelector.String())))
 	} else {
 		groupedShootPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.NewTarget())
 		checkResults = append(checkResults, checks...)

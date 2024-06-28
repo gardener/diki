@@ -95,7 +95,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 			}
 
 			if len(pods) == 0 {
-				checkResults = append(checkResults, rule.FailedCheckResult("Pods not found!", seedTarget.With("namespace", r.ControlPlaneNamespace, "selector", podSelector.String())))
+				checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", seedTarget.With("namespace", r.ControlPlaneNamespace, "selector", podSelector.String())))
 				continue
 			}
 
@@ -110,7 +110,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 			}
 
 			if len(pods) == 0 {
-				checkResults = append(checkResults, rule.FailedCheckResult("Pods not found for deployment!", seedTarget.With("name", deploymentName, "kind", "Deployment", "namespace", r.ControlPlaneNamespace)))
+				checkResults = append(checkResults, rule.ErroredCheckResult("pods not found for deployment", seedTarget.With("name", deploymentName, "kind", "Deployment", "namespace", r.ControlPlaneNamespace)))
 				continue
 			}
 
@@ -164,7 +164,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 	shootNodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allShootPods, shootNodes)
 
 	if len(pods) == 0 {
-		checkResults = append(checkResults, rule.FailedCheckResult("Pods not found!", shootTarget.With("selector", kubeProxySelector.String())))
+		checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", shootTarget.With("selector", kubeProxySelector.String())))
 	} else {
 		groupedShootPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, shootNodesAllocatablePods, shootTarget)
 		checkResults = append(checkResults, checks...)
