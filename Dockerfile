@@ -17,7 +17,7 @@ COPY --from=go-builder /workspace/diki .
 
 ENTRYPOINT ["/diki"]
 
-FROM alpine:3.20.1 AS diki-ops-builder
+FROM alpine:3.16.9 AS diki-ops-builder
 
 ARG TARGETARCH
 
