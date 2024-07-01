@@ -87,6 +87,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
+	opts242400, err := getV1R11OptionOrNil[v1r11.Options242400](ruleOptions[sharedv1r11.ID242400].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 242400 error: %s", err.Error())
+	}
 	opts242414, err := getV1R11OptionOrNil[option.Options242414](ruleOptions[sharedv1r11.ID242414].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242414 error: %s", err.Error())
@@ -236,6 +240,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 				ClusterPodContext:     shootPodContext,
 				ClusterV1RESTClient:   shootClientSet.CoreV1().RESTClient(),
 				ControlPlaneNamespace: r.shootNamespace,
+				Options:               opts242400,
 			}),
 			retry.WithRetryCondition(rcFileChecks),
 			retry.WithMaxRetries(*r.args.MaxRetries),
