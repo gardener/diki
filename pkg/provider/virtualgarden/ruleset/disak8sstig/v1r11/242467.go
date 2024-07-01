@@ -73,7 +73,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		if len(pods) == 0 {
-			checkResults = append(checkResults, rule.FailedCheckResult("Pods not found!", rule.NewTarget("namespace", r.Namespace, "selector", podSelector.String())))
+			checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", rule.NewTarget("namespace", r.Namespace, "selector", podSelector.String())))
 			continue
 		}
 
@@ -88,7 +88,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		if len(pods) == 0 {
-			checkResults = append(checkResults, rule.FailedCheckResult("Pods not found for deployment!", rule.NewTarget("name", deploymentName, "kind", "Deployment", "namespace", r.Namespace)))
+			checkResults = append(checkResults, rule.ErroredCheckResult("pods not found for deployment", rule.NewTarget("name", deploymentName, "kind", "Deployment", "namespace", r.Namespace)))
 			continue
 		}
 

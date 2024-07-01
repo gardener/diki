@@ -87,7 +87,7 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		if len(pods) == 0 {
-			checkResults = append(checkResults, rule.FailedCheckResult("Pods not found!", target.With("namespace", r.Namespace, "selector", podSelector.String())))
+			checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", target.With("namespace", r.Namespace, "selector", podSelector.String())))
 			continue
 		}
 

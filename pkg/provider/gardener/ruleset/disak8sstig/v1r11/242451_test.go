@@ -318,12 +318,12 @@ tlsCertFile: /var/lib/certs/tls.crt`
 		target := rule.NewTarget("cluster", "seed", "namespace", r.ControlPlaneNamespace)
 		Expect(err).To(BeNil())
 		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
-			rule.FailedCheckResult("Pods not found!", target.With("selector", mainSelector.String())),
-			rule.FailedCheckResult("Pods not found!", target.With("selector", eventsSelector.String())),
-			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "kube-apiserver", "kind", "Deployment")),
-			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "kube-controller-manager", "kind", "Deployment")),
-			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "kube-scheduler", "kind", "Deployment")),
-			rule.FailedCheckResult("Pods not found!", rule.NewTarget("cluster", "shoot", "selector", kubeProxySelector.String())),
+			rule.ErroredCheckResult("pods not found", target.With("selector", mainSelector.String())),
+			rule.ErroredCheckResult("pods not found", target.With("selector", eventsSelector.String())),
+			rule.ErroredCheckResult("pods not found for deployment", target.With("name", "kube-apiserver", "kind", "Deployment")),
+			rule.ErroredCheckResult("pods not found for deployment", target.With("name", "kube-controller-manager", "kind", "Deployment")),
+			rule.ErroredCheckResult("pods not found for deployment", target.With("name", "kube-scheduler", "kind", "Deployment")),
+			rule.ErroredCheckResult("pods not found", rule.NewTarget("cluster", "shoot", "selector", kubeProxySelector.String())),
 			rule.ErroredCheckResult("no allocatable nodes could be selected", rule.NewTarget("cluster", "shoot")),
 		}))
 	})

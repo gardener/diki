@@ -170,7 +170,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 		ruleResult, err := r.Run(ctx)
 		Expect(err).To(BeNil())
 		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
-			rule.FailedCheckResult("Pods not found!", rule.NewTarget("selector", kubeProxySelector.String())),
+			rule.ErroredCheckResult("pods not found", rule.NewTarget("selector", kubeProxySelector.String())),
 			rule.ErroredCheckResult("no allocatable nodes could be selected", rule.NewTarget()),
 		}))
 	})

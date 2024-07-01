@@ -253,9 +253,9 @@ var _ = Describe("#242446", func() {
 		target := rule.NewTarget("namespace", r.Namespace)
 		Expect(err).To(BeNil())
 		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
-			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "kube-apiserver", "kind", "Deployment", "namespace", r.Namespace)),
-			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "kube-controller-manager", "kind", "Deployment", "namespace", r.Namespace)),
-			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "kube-scheduler", "kind", "Deployment", "namespace", r.Namespace)),
+			rule.ErroredCheckResult("pods not found for deployment", target.With("name", "kube-apiserver", "kind", "Deployment", "namespace", r.Namespace)),
+			rule.ErroredCheckResult("pods not found for deployment", target.With("name", "kube-controller-manager", "kind", "Deployment", "namespace", r.Namespace)),
+			rule.ErroredCheckResult("pods not found for deployment", target.With("name", "kube-scheduler", "kind", "Deployment", "namespace", r.Namespace)),
 		}))
 	})
 
@@ -274,8 +274,8 @@ var _ = Describe("#242446", func() {
 		target := rule.NewTarget("namespace", r.Namespace)
 		Expect(err).To(BeNil())
 		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
-			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "kube-controller-manager", "kind", "Deployment", "namespace", r.Namespace)),
-			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "kube-scheduler", "kind", "Deployment", "namespace", r.Namespace)),
+			rule.ErroredCheckResult("pods not found for deployment", target.With("name", "kube-controller-manager", "kind", "Deployment", "namespace", r.Namespace)),
+			rule.ErroredCheckResult("pods not found for deployment", target.With("name", "kube-scheduler", "kind", "Deployment", "namespace", r.Namespace)),
 		}))
 	})
 

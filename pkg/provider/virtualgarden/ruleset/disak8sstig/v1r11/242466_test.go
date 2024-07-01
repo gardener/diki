@@ -251,10 +251,10 @@ var _ = Describe("#242466", func() {
 		target := rule.NewTarget("namespace", r.Namespace)
 		Expect(err).To(BeNil())
 		Expect(ruleResult.CheckResults).To(ConsistOf([]rule.CheckResult{
-			rule.FailedCheckResult("Pods not found!", target.With("selector", mainSelector.String())),
-			rule.FailedCheckResult("Pods not found!", target.With("selector", eventsSelector.String())),
-			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "virtual-garden-kube-apiserver", "kind", "Deployment", "namespace", r.Namespace)),
-			rule.FailedCheckResult("Pods not found for deployment!", target.With("name", "virtual-garden-kube-controller-manager", "kind", "Deployment", "namespace", r.Namespace)),
+			rule.ErroredCheckResult("pods not found", target.With("selector", mainSelector.String())),
+			rule.ErroredCheckResult("pods not found", target.With("selector", eventsSelector.String())),
+			rule.ErroredCheckResult("pods not found for deployment", target.With("name", "virtual-garden-kube-apiserver", "kind", "Deployment", "namespace", r.Namespace)),
+			rule.ErroredCheckResult("pods not found for deployment", target.With("name", "virtual-garden-kube-controller-manager", "kind", "Deployment", "namespace", r.Namespace)),
 		}))
 	})
 
