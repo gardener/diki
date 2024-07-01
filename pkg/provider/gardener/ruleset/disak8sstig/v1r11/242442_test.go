@@ -106,10 +106,19 @@ var _ = Describe("#242442", func() {
 		seedPod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:foo"
 		seedPod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:bar"
 		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
-		shootPod.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:foo"
-		shootPod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:bar"
-		shootPod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:foobar"
-		Expect(fakeShootClient.Create(ctx, shootPod)).To(Succeed())
+		shootPod1 := shootPod.DeepCopy()
+		shootPod1.Name = "shoot-pod1"
+		shootPod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:foobar"
+		shootPod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:foo"
+		shootPod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:bar"
+		Expect(fakeShootClient.Create(ctx, shootPod1)).To(Succeed())
+		shootPod2 := shootPod.DeepCopy()
+		shootPod2.Name = "shoot-pod2"
+		shootPod2.Namespace = "bar"
+		shootPod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:bar"
+		shootPod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:foo"
+		shootPod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:foobar"
+		Expect(fakeShootClient.Create(ctx, shootPod2)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
@@ -122,21 +131,38 @@ var _ = Describe("#242442", func() {
 	})
 	It("should return correct results when a image uses more than 1 version", func() {
 		r := &v1r11.Rule242442{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace}
-		seedPod.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:foobar"
-		seedPod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:foo"
-		seedPod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:bar"
-		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
-		shootPod.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:bar"
-		shootPod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:foo"
-		shootPod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:foobar"
-		Expect(fakeShootClient.Create(ctx, shootPod)).To(Succeed())
+		shootPod1 := shootPod.DeepCopy()
+		shootPod1.Name = "shoot-pod1"
+		shootPod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:foobar"
+		shootPod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:foo"
+		shootPod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:bar"
+		Expect(fakeShootClient.Create(ctx, shootPod1)).To(Succeed())
+		shootPod2 := shootPod.DeepCopy()
+		shootPod2.Name = "shoot-pod2"
+		shootPod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:bar"
+		shootPod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:foo"
+		shootPod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:foobar"
+		Expect(fakeShootClient.Create(ctx, shootPod2)).To(Succeed())
+		seedPod1 := seedPod.DeepCopy()
+		seedPod1.Name = "seed-pod1"
+		seedPod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:foo"
+		seedPod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:bar"
+		seedPod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:foobar"
+		Expect(fakeSeedClient.Create(ctx, seedPod1)).To(Succeed())
+		seedPod2 := seedPod.DeepCopy()
+		seedPod2.Name = "seed-pod2"
+		seedPod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:bar"
+		seedPod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:foo"
+		seedPod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:foobar"
+		Expect(fakeSeedClient.Create(ctx, seedPod2)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("image", "eu.gcr.io/image2")),
-			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("image", "eu.gcr.io/image3")),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "seed", "image", "eu.gcr.io/image3", "namespace", "foo")),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "shoot", "image", "eu.gcr.io/image2", "namespace", "foo")),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "shoot", "image", "eu.gcr.io/image3", "namespace", "foo")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
