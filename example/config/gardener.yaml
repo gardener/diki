@@ -23,6 +23,9 @@ providers:             # contains information about known providers
     #   skip:
     #     enabled: true
     #     justification: "the whole rule is accepted for ... reasons"
+    # - ruleID: "242400"
+    #   args:
+    #     kubeProxyDisabled: true # skip kube-proxy check
     - ruleID: "242414"
       args:
         acceptedPods:
