@@ -394,7 +394,7 @@ var _ = Describe("#242400", func() {
 			rule.ErroredCheckResult("deployments.apps \"kube-apiserver\" not found", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-apiserver", "namespace", "foo")),
 			rule.ErroredCheckResult("deployments.apps \"kube-controller-manager\" not found", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-controller-manager", "namespace", "foo")),
 			rule.ErroredCheckResult("deployments.apps \"kube-scheduler\" not found", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-scheduler", "namespace", "foo")),
-			rule.SkippedCheckResult("Kube-proxy is disabled for cluster.", rule.NewTarget()),
+			rule.AcceptedCheckResult("Kube-proxy is disabled for cluster.", rule.NewTarget()),
 			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
 		}
 
