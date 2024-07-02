@@ -285,14 +285,14 @@ func matchHostPathSources(sources sets.Set[string], destination, containerName s
 //
 // Examples where filePermissions do not exceed filePermissionsMax:
 //
-//	filePermissions = "0003" filePermissionsMax = "0644"
+//	filePermissions = "0004" filePermissionsMax = "0644"
 //	filePermissions = "0444" filePermissionsMax = "0644"
 //	filePermissions = "0600" filePermissionsMax = "0644"
 //	filePermissions = "0644" filePermissionsMax = "0644"
 //
 // Examples where filePermissions exceed filePermissionsMax:
 //
-//	filePermissions = "0005" filePermissionsMax = "0644"
+//	filePermissions = "0003" filePermissionsMax = "0644"
 //	filePermissions = "0050" filePermissionsMax = "0644"
 //	filePermissions = "0700" filePermissionsMax = "0644"
 //	filePermissions = "0755" filePermissionsMax = "0644"

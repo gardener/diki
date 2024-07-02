@@ -373,7 +373,7 @@ var _ = Describe("utils", func() {
 			Entry("should return true when filePermissions exceed filePermissionsMax by group permissions",
 				"0460", "0644", true, BeNil()),
 			Entry("should return true when filePermissions exceed filePermissionsMax by other permissions",
-				"0406", "0644", true, BeNil()),
+				"0402", "0644", true, BeNil()),
 		)
 	})
 
