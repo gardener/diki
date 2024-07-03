@@ -107,6 +107,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return fmt.Errorf("rule option 242446 error: %s", err.Error())
 	}
+	opts242451, err := getV1R11OptionOrNil[v1r11.Options242451](ruleOptions[sharedv1r11.ID242451].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 242451 error: %s", err.Error())
+	}
 	opts242466, err := getV1R11OptionOrNil[option.KubeProxyOptions](ruleOptions[sharedv1r11.ID242466].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242466 error: %s", err.Error())
@@ -114,10 +118,6 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	opts242467, err := getV1R11OptionOrNil[option.KubeProxyOptions](ruleOptions[sharedv1r11.ID242467].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242467 error: %s", err.Error())
-	}
-	opts242451, err := getV1R11OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedv1r11.ID242451].Args)
-	if err != nil {
-		return fmt.Errorf("rule option 242451 error: %s", err.Error())
 	}
 	opts245543, err := getV1R11OptionOrNil[sharedv1r11.Options245543](ruleOptions[sharedv1r11.ID245543].Args)
 	if err != nil {

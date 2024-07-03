@@ -284,7 +284,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 		controlPlaneDikiPod.Labels = map[string]string{}
 
 		clusterDikiPod = plainPod.DeepCopy()
-		clusterDikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedv1r11.ID242451, "bbbbbbbbbb")
+		clusterDikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedv1r11.ID242451, "cccccccccc")
 		clusterDikiPod.Namespace = "kube-system"
 		clusterDikiPod.Labels = map[string]string{}
 
@@ -317,7 +317,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 		ruleResult, err := r.Run(ctx)
 		target := rule.NewTarget("cluster", "seed", "namespace", r.ControlPlaneNamespace)
 		Expect(err).To(BeNil())
-		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
+		Expect(ruleResult.CheckResults).To(ConsistOf([]rule.CheckResult{
 			rule.ErroredCheckResult("pods not found", target.With("selector", mainSelector.String())),
 			rule.ErroredCheckResult("pods not found", target.With("selector", eventsSelector.String())),
 			rule.ErroredCheckResult("pods not found for deployment", target.With("name", "kube-apiserver", "kind", "Deployment")),
@@ -329,7 +329,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 	})
 
 	DescribeTable("Run cases",
-		func(options option.FileOwnerOptions, seedExecuteReturnString, shootExecuteReturnString [][]string, seedExecuteReturnError, shootExecuteReturnError [][]error, expectedCheckResults []rule.CheckResult) {
+		func(options v1r11.Options242451, seedExecuteReturnString, shootExecuteReturnString [][]string, seedExecuteReturnError, shootExecuteReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			Expect(fakeControlPlaneClient.Create(ctx, etcdMainPod)).To(Succeed())
 			Expect(fakeControlPlaneClient.Create(ctx, etcdEventsPod)).To(Succeed())
 			Expect(fakeControlPlaneClient.Create(ctx, kubeAPIServerPod)).To(Succeed())
@@ -361,9 +361,9 @@ tlsCertFile: /var/lib/certs/tls.crt`
 		},
 		Entry("should return passed checkResults when files have expected owners", nil,
 			[][]string{{mounts, compliantStats, compliantDirStats, mounts, compliantStats2, compliantDirStats, emptyMounts, emptyMounts, emptyMounts}},
-			[][]string{{mounts, compliantStats, compliantDirStats}, {kubeletPID, kubeletCommand, tlsKubeletConfig, compliantKeyStats, compliantCertStats, compliantKeyDirStats, compliantCertDirStats}},
+			[][]string{{kubeletPID, kubeletCommand, tlsKubeletConfig, compliantKeyStats, compliantCertStats, compliantKeyDirStats, compliantCertDirStats}, {mounts, compliantStats, compliantDirStats}},
 			[][]error{{nil, nil, nil, nil, nil, nil, nil, nil, nil}},
-			[][]error{{nil, nil, nil}, {nil, nil, nil, nil, nil, nil, nil}},
+			[][]error{{nil, nil, nil, nil, nil, nil, nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
@@ -380,9 +380,9 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			}),
 		Entry("should return failed checkResults when files do not have expected owners", nil,
 			[][]string{{mounts, nonCompliantStats, nonCompliantDirStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
-			[][]string{{mounts, nonCompliantStats, nonCompliantDirStats}, {kubeletPID, kubeletCommand, "", nonCompliantStats, nonCompliantDirStats}},
+			[][]string{{kubeletPID, kubeletCommand, "", nonCompliantStats, nonCompliantDirStats}, {mounts, nonCompliantStats, nonCompliantDirStats}},
 			[][]error{{nil, nil, nil, nil, nil, nil, nil}},
-			[][]error{{nil, nil, nil}, {nil, nil, nil, nil, nil}},
+			[][]error{{nil, nil, nil, nil, nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 1000, expectedOwnerUsers: [0]")),
 				rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerGroup: 2000, expectedOwnerGroups: [0]")),
@@ -395,16 +395,18 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /destination, ownerUser: 65532, expectedOwnerUsers: [0]")),
 			}),
 		Entry("should return correct checkResults when file owner options are used",
-			option.FileOwnerOptions{
-				ExpectedFileOwner: option.ExpectedOwner{
-					Users:  []string{"0", "1000"},
-					Groups: []string{"0", "2000"},
+			v1r11.Options242451{
+				FileOwnerOptions: &option.FileOwnerOptions{
+					ExpectedFileOwner: option.ExpectedOwner{
+						Users:  []string{"0", "1000"},
+						Groups: []string{"0", "2000"},
+					},
 				},
 			},
 			[][]string{{mounts, nonCompliantStats, nonCompliantDirStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
-			[][]string{{mounts, nonCompliantStats, nonCompliantDirStats}, {kubeletPID, kubeletCommand, "", nonCompliantStats, nonCompliantDirStats}},
+			[][]string{{kubeletPID, kubeletCommand, "", nonCompliantStats, nonCompliantDirStats}, {mounts, nonCompliantStats, nonCompliantDirStats}},
 			[][]error{{nil, nil, nil, nil, nil, nil, nil}},
-			[][]error{{nil, nil, nil}, {nil, nil, nil, nil, nil}},
+			[][]error{{nil, nil, nil, nil, nil}, {nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 1000, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 2000")),
@@ -416,49 +418,71 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 2000")),
 				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /destination, ownerUser: 65532, expectedOwnerUsers: [0 1000]")),
 			}),
+		Entry("should return skipped check result when kubeProxyDiabled option is set to true",
+			v1r11.Options242451{
+				KubeProxyOptions: option.KubeProxyOptions{
+					KubeProxyDisabled: true,
+				},
+			},
+			[][]string{{mounts, compliantStats, compliantDirStats, mounts, compliantStats2, compliantDirStats, emptyMounts, emptyMounts, emptyMounts}},
+			[][]string{{kubeletPID, kubeletCommand, tlsKubeletConfig, compliantKeyStats, compliantCertStats, compliantKeyDirStats, compliantCertDirStats}},
+			[][]error{{nil, nil, nil, nil, nil, nil, nil, nil, nil}},
+			[][]error{{nil, nil, nil, nil, nil, nil, nil}},
+			[]rule.CheckResult{
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.crt, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /var/lib/keys/tls.key, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /var/lib/certs/tls.crt, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /var/lib/keys, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /var/lib/certs, ownerUser: 0, ownerGroup: 0")),
+				rule.AcceptedCheckResult("Kube-proxy is disabled for cluster", rule.NewTarget("cluster", "shoot")),
+			}),
 		Entry("should return failed checkResults when cert nor key files can be found in PKI dir", nil,
 			[][]string{{emptyMounts, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
-			[][]string{{emptyMounts}, {kubeletPID, kubeletCommand, "", noCrtKeyStats}},
+			[][]string{{kubeletPID, kubeletCommand, "", noCrtKeyStats}, {emptyMounts}},
 			[][]error{{nil, nil, nil, nil, nil}},
-			[][]error{{nil, nil}, {nil, nil, nil, nil}},
+			[][]error{{nil, nil, nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("no cert nor key files found in PKI directory", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "directory", "/var/lib/kubelet/pki")),
 			}),
 		Entry("should correctly return errored checkResults when commands error", nil,
 			[][]string{{mounts, mounts, compliantStats2, mounts, compliantStats, "", emptyMounts, emptyMounts}},
-			[][]string{{emptyMounts}, {kubeletPID}},
+			[][]string{{kubeletPID}, {emptyMounts}},
 			[][]error{{errors.New("foo"), nil, errors.New("bar"), nil, nil, errors.New("foo-bar"), nil, nil}},
-			[][]error{{nil}, {errors.New("foo-bar")}},
+			[][]error{{errors.New("foo-bar")}, {nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("foo", rule.NewTarget("cluster", "seed", "name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
 				rule.ErroredCheckResult("bar", rule.NewTarget("cluster", "seed", "name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
 				rule.ErroredCheckResult("foo-bar", rule.NewTarget("cluster", "seed", "name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.ErroredCheckResult("foo-bar", rule.NewTarget("cluster", "shoot", "name", "diki-242451-cccccccccc", "namespace", "kube-system", "kind", "pod")),
+				rule.ErroredCheckResult("foo-bar", rule.NewTarget("cluster", "shoot", "name", "diki-242451-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
 			}),
 		Entry("should check files when GetMountedFilesStats errors", nil,
 			[][]string{{mountsMulty, compliantStats, "", compliantDirStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
-			[][]string{{emptyMounts}, {kubeletPID, kubeletCommandCert, ""}},
+			[][]string{{kubeletPID, kubeletCommandCert, ""}, {emptyMounts}},
 			[][]error{{nil, nil, errors.New("bar"), nil, nil, nil, nil, nil}},
-			[][]error{{nil}, {nil, nil, nil}},
+			[][]error{{nil, nil, nil}, {nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("bar", rule.NewTarget("cluster", "seed", "name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
-				rule.ErroredCheckResult("kubelet cert-dir flag set to empty", rule.NewTarget("cluster", "shoot", "name", "diki-242451-cccccccccc", "namespace", "kube-system", "kind", "pod")),
+				rule.ErroredCheckResult("kubelet cert-dir flag set to empty", rule.NewTarget("cluster", "shoot", "name", "diki-242451-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
 			}),
 		Entry("should correctly return all checkResults when commands error", nil,
 			[][]string{{mounts, mounts, compliantStats2, compliantDirStats, emptyMounts, emptyMounts, emptyMounts}},
-			[][]string{{emptyMounts}, {kubeletPID, kubeletCommand, tlsKubeletConfig}},
+			[][]string{{kubeletPID, kubeletCommand, tlsKubeletConfig}, {emptyMounts}},
 			[][]error{{errors.New("foo"), nil, nil, nil, nil, nil, nil}},
-			[][]error{{nil, nil}, {nil, nil, errors.New("bar")}},
+			[][]error{{nil, nil, errors.New("bar")}, {nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("foo", rule.NewTarget("cluster", "seed", "name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.crt, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
-				rule.ErroredCheckResult("could not retrieve kubelet config: bar", rule.NewTarget("cluster", "shoot", "name", "diki-242451-cccccccccc", "namespace", "kube-system", "kind", "pod")),
+				rule.ErroredCheckResult("could not retrieve kubelet config: bar", rule.NewTarget("cluster", "shoot", "name", "diki-242451-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
 			}),
 	)
 })

@@ -14,6 +14,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/component-base/version"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -37,8 +38,22 @@ type Rule242451 struct {
 	ControlPlaneNamespace  string
 	ControlPlanePodContext pod.PodContext
 	ClusterPodContext      pod.PodContext
-	Options                *option.FileOwnerOptions
+	Options                *Options242451
 	Logger                 provider.Logger
+}
+
+type Options242451 struct {
+	option.KubeProxyOptions
+	*option.FileOwnerOptions
+}
+
+var _ option.Option = (*Options242451)(nil)
+
+func (o Options242451) Validate() field.ErrorList {
+	if o.FileOwnerOptions != nil {
+		return o.FileOwnerOptions.Validate()
+	}
+	return nil
 }
 
 func (r *Rule242451) ID() string {
@@ -52,7 +67,7 @@ func (r *Rule242451) Name() string {
 func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
 		checkResults       []rule.CheckResult
-		options            option.FileOwnerOptions
+		fileOwnerOptions   option.FileOwnerOptions
 		etcdMainSelector   = labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
 		etcdEventsSelector = labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
 		kubeProxySelector  = labels.SelectorFromSet(labels.Set{"role": "proxy"})
@@ -60,14 +75,14 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 		nodeLabels         = []string{"worker.gardener.cloud/pool"}
 	)
 
-	if r.Options != nil {
-		options = *r.Options
+	if r.Options != nil && r.Options.FileOwnerOptions != nil {
+		fileOwnerOptions = *r.Options.FileOwnerOptions
 	}
-	if len(options.ExpectedFileOwner.Users) == 0 {
-		options.ExpectedFileOwner.Users = []string{"0"}
+	if len(fileOwnerOptions.ExpectedFileOwner.Users) == 0 {
+		fileOwnerOptions.ExpectedFileOwner.Users = []string{"0"}
 	}
-	if len(options.ExpectedFileOwner.Groups) == 0 {
-		options.ExpectedFileOwner.Groups = []string{"0"}
+	if len(fileOwnerOptions.ExpectedFileOwner.Groups) == 0 {
+		fileOwnerOptions.ExpectedFileOwner.Groups = []string{"0"}
 	}
 
 	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
@@ -76,6 +91,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 	image.WithOptionalTag(version.Get().GitVersion)
 
+	// control plane check
 	seedTarget := rule.NewTarget("cluster", "seed")
 	allSeedPods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, "", labels.NewSelector(), 300)
 	if err != nil {
@@ -128,7 +144,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 
 				for nodeName, pods := range groupedPods {
 					checkResults = append(checkResults,
-						r.checkPods(ctx, r.ControlPlaneClient, r.ControlPlanePodContext, pods, nodeName, image.String(), options, seedTarget)...)
+						r.checkPods(ctx, r.ControlPlaneClient, r.ControlPlanePodContext, pods, nodeName, image.String(), fileOwnerOptions, seedTarget)...)
 				}
 			}
 		}
@@ -145,13 +161,6 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 		}, nil
 	}
 
-	var pods []corev1.Pod
-	for _, p := range allShootPods {
-		if kubeProxySelector.Matches(labels.Set(p.Labels)) {
-			pods = append(pods, p)
-		}
-	}
-
 	shootNodes, err := kubeutils.GetNodes(ctx, r.ClusterClient, 300)
 	if err != nil {
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "nodeList")))
@@ -163,18 +172,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 	shootNodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allShootPods, shootNodes)
 
-	if len(pods) == 0 {
-		checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", shootTarget.With("selector", kubeProxySelector.String())))
-	} else {
-		groupedShootPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, shootNodesAllocatablePods, shootTarget)
-		checkResults = append(checkResults, checks...)
-
-		for nodeName, pods := range groupedShootPods {
-			checkResults = append(checkResults,
-				r.checkPods(ctx, r.ClusterClient, r.ClusterPodContext, pods, nodeName, image.String(), options, shootTarget)...)
-		}
-	}
-
+	// kubelet check
 	selectedShootNodes, checks := kubeutils.SelectNodes(shootNodes, shootNodesAllocatablePods, nodeLabels)
 	checkResults = append(checkResults, checks...)
 
@@ -184,7 +182,36 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	for _, node := range selectedShootNodes {
 		checkResults = append(checkResults,
-			r.checkKubelet(ctx, node.Name, image.String(), options, shootTarget)...)
+			r.checkKubelet(ctx, node.Name, image.String(), fileOwnerOptions, shootTarget)...)
+	}
+
+	// kube-proxy check
+	if r.Options != nil && r.Options.KubeProxyDisabled {
+		checkResults = append(checkResults, rule.AcceptedCheckResult("Kube-proxy is disabled for cluster", shootTarget))
+		return rule.RuleResult{
+			RuleID:       r.ID(),
+			RuleName:     r.Name(),
+			CheckResults: checkResults,
+		}, nil
+	}
+
+	var pods []corev1.Pod
+	for _, p := range allShootPods {
+		if kubeProxySelector.Matches(labels.Set(p.Labels)) {
+			pods = append(pods, p)
+		}
+	}
+
+	if len(pods) == 0 {
+		checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", shootTarget.With("selector", kubeProxySelector.String())))
+	} else {
+		groupedShootPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, shootNodesAllocatablePods, shootTarget)
+		checkResults = append(checkResults, checks...)
+
+		for nodeName, pods := range groupedShootPods {
+			checkResults = append(checkResults,
+				r.checkPods(ctx, r.ClusterClient, r.ClusterPodContext, pods, nodeName, image.String(), fileOwnerOptions, shootTarget)...)
+		}
 	}
 
 	return rule.RuleResult{
