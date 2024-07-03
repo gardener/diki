@@ -137,6 +137,7 @@ providers:                   # contains information about known providers
     #       groups: ["0"]
     # - ruleID: "242451"
     #   args:
+    #     kubeProxyDisabled: true
     #     kubeProxyMatchLabels:
     #       foo: bar
     #     nodeGroupByLabels:
@@ -157,12 +158,14 @@ providers:                   # contains information about known providers
     #       groups: ["0"]
     # - ruleID: "242466"
     #   args:
+    #     kubeProxyDisabled: true # skip kube-proxy check
     #     kubeProxyMatchLabels:
     #       foo: bar
     #     nodeGroupByLabels:
     #     - foo
     # - ruleID: "242467"
     #   args:
+    #     kubeProxyDisabled: true # skip kube-proxy check
     #     kubeProxyMatchLabels:
     #       foo: bar
     #     nodeGroupByLabels:
