@@ -111,6 +111,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return fmt.Errorf("rule option 242466 error: %s", err.Error())
 	}
+	opts242467, err := getV1R11OptionOrNil[option.KubeProxyOptions](ruleOptions[sharedv1r11.ID242467].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 242467 error: %s", err.Error())
+	}
 	opts242451, err := getV1R11OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedv1r11.ID242451].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242451 error: %s", err.Error())
@@ -615,6 +619,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 				ControlPlanePodContext: seedPodContext,
 				ClusterPodContext:      shootPodContext,
 				ControlPlaneNamespace:  r.shootNamespace,
+				Options:                opts242467,
 			}),
 			retry.WithRetryCondition(rcFileChecks),
 			retry.WithMaxRetries(*r.args.MaxRetries),
