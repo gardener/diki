@@ -418,7 +418,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 2000")),
 				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /destination, ownerUser: 65532, expectedOwnerUsers: [0 1000]")),
 			}),
-		Entry("should return skipped check result when kubeProxyDiabled option is set to true",
+		Entry("should return accepted check result when kubeProxyDiabled option is set to true",
 			v1r11.Options242451{
 				KubeProxyOptions: option.KubeProxyOptions{
 					KubeProxyDisabled: true,

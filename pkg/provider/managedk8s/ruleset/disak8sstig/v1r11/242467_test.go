@@ -241,7 +241,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-proxy", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "node01", "kind", "node", "details", "fileName: /var/lib/keys/tls.key, permissions: 640")),
 			}),
-		Entry("should return skipped check result when kubeProxyDiabled option is set to true",
+		Entry("should return accepted check result when kubeProxyDiabled option is set to true",
 			v1r11.Options242467{
 				KubeProxyOptions: option.KubeProxyOptions{
 					KubeProxyDisabled: true,

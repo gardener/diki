@@ -367,7 +367,7 @@ var _ = Describe("#242400", func() {
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
 	})
 
-	It("should return skipped check result when kubeProxyDiabled option is set to true", func() {
+	It("should return accepted check result when kubeProxyDiabled option is set to true", func() {
 		node1 := plainNode.DeepCopy()
 		node1.ObjectMeta.Name = "node1"
 

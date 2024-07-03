@@ -253,7 +253,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.WarningCheckResult("Node is missing a label", rule.NewTarget("name", "node01", "kind", "node", "label", "foo")),
 				rule.ErroredCheckResult("no allocatable nodes could be selected", rule.NewTarget()),
 			}),
-		Entry("should return skipped check result when kubeProxyDiabled option is set to true",
+		Entry("should return accepted check result when kubeProxyDiabled option is set to true",
 			v1r11.Options242466{
 				KubeProxyOptions: option.KubeProxyOptions{
 					KubeProxyDisabled: true,

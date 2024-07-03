@@ -388,7 +388,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("no '.key' files found in PKI directory", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "directory", "/var/lib/kubelet/pki")),
 			}),
-		Entry("should return skipped check result when kubeProxyDiabled option is set to true",
+		Entry("should return accepted check result when kubeProxyDiabled option is set to true",
 			[][]string{{mounts, nonCompliantStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
 			[][]string{{kubeletPID, kubeletCommand, "", nonCompliantStats}},
 			[][]error{{nil, nil, nil, nil, nil, nil}},
