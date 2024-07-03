@@ -42,6 +42,10 @@ type SimplePodExecutor struct {
 	namespace string
 	client    client.Client
 	config    *rest.Config
+	// WaitInterval is the time between retries of command runs.
+	WaitInterval time.Duration
+	// WaitTimeout is the max duration that a command can be retried before.
+	WaitTimeout time.Duration
 }
 
 // SimplePodContext can create and delete pods.
@@ -50,10 +54,10 @@ type SimplePodContext struct {
 	config *rest.Config
 	// AdditionalPodLabels are labels to be added to the created pods. If the a label key is already set by the pod constructor function it is not overwritten.
 	AdditionalPodLabels map[string]string
-	// IntervalWait is the time between wait API calls.
-	IntervalWait time.Duration
-	// TimeoutWait is the time waited for a pod to reach Running state or be deleted.
-	TimeoutWait time.Duration
+	// WaitInterval is the time between wait API calls.
+	WaitInterval time.Duration
+	// WaitTimeout is the time waited for a pod to reach Running state or be deleted.
+	WaitTimeout time.Duration
 }
 
 // NewSimplePodContext creates a new SimplePodContext.
@@ -62,8 +66,8 @@ func NewSimplePodContext(client client.Client, config *rest.Config, additionalPo
 		client:              client,
 		config:              config,
 		AdditionalPodLabels: additionalPodLabels,
-		IntervalWait:        2 * time.Second,
-		TimeoutWait:         time.Minute,
+		WaitInterval:        2 * time.Second,
+		WaitTimeout:         time.Minute,
 	}, nil
 }
 
@@ -116,10 +120,12 @@ func (spc *SimplePodContext) Delete(ctx context.Context, name, namespace string)
 // NewPodExecutor creates a new SimplePodExecutor.
 func NewPodExecutor(client client.Client, config *rest.Config, name, namespace string) (*SimplePodExecutor, error) {
 	return &SimplePodExecutor{
-		name:      name,
-		namespace: namespace,
-		client:    client,
-		config:    config,
+		name:         name,
+		namespace:    namespace,
+		client:       client,
+		config:       config,
+		WaitInterval: 3 * time.Second,
+		WaitTimeout:  15 * time.Second,
 	}, nil
 }
 
@@ -149,27 +155,49 @@ func (spe *SimplePodExecutor) Execute(ctx context.Context, command string, comma
 		return "", fmt.Errorf("failed to initialized the command exector: %w", err)
 	}
 
-	err = executor.StreamWithContext(ctx, remotecommand.StreamOptions{
-		Stdin:  strings.NewReader(commandArg),
-		Stdout: &stdout,
-		Stderr: &stderr,
-		Tty:    false,
+	timeoutCtx, cancel := context.WithTimeout(ctx, spe.WaitTimeout)
+	defer cancel()
+
+	err = retry.Until(timeoutCtx, spe.WaitInterval, func(ctx context.Context) (done bool, err error) {
+		err = executor.StreamWithContext(ctx, remotecommand.StreamOptions{
+			Stdin:  strings.NewReader(commandArg),
+			Stdout: &stdout,
+			Stderr: &stderr,
+			Tty:    false,
+		})
+
+		stderrByte, otherErr := io.ReadAll(&stderr)
+		if err != nil && otherErr != nil {
+			return retry.SevereError(errors.Join(err, otherErr))
+		} else if otherErr != nil {
+			return retry.SevereError(otherErr)
+		}
+
+		if err != nil && len(stderrByte) > 0 {
+			return retry.SevereError(fmt.Errorf("err: %w, command %s %s stderr output: %s", err, command, commandArg, string(stderrByte)))
+		} else if len(stderrByte) > 0 {
+			return retry.SevereError(fmt.Errorf("command %s %s stderr output: %s", command, commandArg, string(stderrByte)))
+		}
+
+		if err != nil {
+			var (
+				errMessage               = strings.TrimSpace(strings.ToLower(err.Error()))
+				retryableErrorSubstrings = []string{"timeout occurred", "operation timed out", "connection reset by peer", "context deadline exceeded"}
+			)
+
+			for _, retryableErrorSubstring := range retryableErrorSubstrings {
+				if strings.Contains(errMessage, retryableErrorSubstring) {
+					return retry.MinorError(fmt.Errorf("err: %w, command %s %s", err, command, commandArg))
+				}
+			}
+
+			return retry.SevereError(fmt.Errorf("err: %w, command %s %s", err, command, commandArg))
+		}
+
+		return retry.Ok()
 	})
-	stderrByte, otherErr := io.ReadAll(&stderr)
-	if err != nil && otherErr != nil {
-		return "", errors.Join(err, otherErr)
-	} else if otherErr != nil {
-		return "", otherErr
-	}
-
-	if err != nil && len(stderrByte) > 0 {
-		return "", fmt.Errorf("err: %w, command %s %s stderr output: %s", err, command, commandArg, string(stderrByte))
-	} else if len(stderrByte) > 0 {
-		return "", fmt.Errorf("command %s %s stderr output: %s", command, commandArg, string(stderrByte))
-	}
-
 	if err != nil {
-		return "", fmt.Errorf("err: %w, command %s %s", err, command, commandArg)
+		return "", err
 	}
 
 	result, err := io.ReadAll(&stdout)
@@ -181,7 +209,7 @@ func (spe *SimplePodExecutor) Execute(ctx context.Context, command string, comma
 }
 
 func (spc *SimplePodContext) waitPodHealthy(ctx context.Context, name, namespace string) error {
-	timeoutCtx, cancel := context.WithTimeout(ctx, spc.TimeoutWait)
+	timeoutCtx, cancel := context.WithTimeout(ctx, spc.WaitTimeout)
 	defer cancel()
 
 	pod := &corev1.Pod{
@@ -191,7 +219,7 @@ func (spc *SimplePodContext) waitPodHealthy(ctx context.Context, name, namespace
 		},
 	}
 
-	return retry.Until(timeoutCtx, spc.IntervalWait, func(ctx context.Context) (done bool, err error) {
+	return retry.Until(timeoutCtx, spc.WaitInterval, func(ctx context.Context) (done bool, err error) {
 		if err := spc.client.Get(ctx, client.ObjectKeyFromObject(pod), pod); err != nil {
 			return retry.SevereError(err)
 		}
@@ -209,7 +237,7 @@ func (spc *SimplePodContext) waitPodHealthy(ctx context.Context, name, namespace
 }
 
 func (spc *SimplePodContext) waitPodDeleted(ctx context.Context, name, namespace string) error {
-	timeoutCtx, cancel := context.WithTimeout(ctx, spc.TimeoutWait)
+	timeoutCtx, cancel := context.WithTimeout(ctx, spc.WaitTimeout)
 	defer cancel()
 
 	pod := &corev1.Pod{
@@ -219,7 +247,7 @@ func (spc *SimplePodContext) waitPodDeleted(ctx context.Context, name, namespace
 		},
 	}
 
-	return retry.Until(timeoutCtx, spc.IntervalWait, func(ctx context.Context) (done bool, err error) {
+	return retry.Until(timeoutCtx, spc.WaitInterval, func(ctx context.Context) (done bool, err error) {
 		if err := spc.client.Get(ctx, client.ObjectKeyFromObject(pod), pod); err != nil {
 			if apierrors.IsNotFound(err) {
 				return retry.Ok()
