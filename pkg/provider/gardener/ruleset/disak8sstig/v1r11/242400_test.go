@@ -29,6 +29,7 @@ import (
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
@@ -384,7 +385,7 @@ var _ = Describe("#242400", func() {
 			ControlPlaneClient:    fakeControlPlaneClient,
 			ControlPlaneNamespace: controlPlaneNamespace,
 			ClusterV1RESTClient:   fakeRESTClient,
-			Options: &v1r11.Options242400{
+			Options: &option.KubeProxyOptions{
 				KubeProxyDisabled: true,
 			},
 		}

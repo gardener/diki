@@ -87,7 +87,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
-	opts242400, err := getV1R11OptionOrNil[v1r11.Options242400](ruleOptions[sharedv1r11.ID242400].Args)
+	opts242400, err := getV1R11OptionOrNil[option.KubeProxyOptions](ruleOptions[sharedv1r11.ID242400].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242400 error: %s", err.Error())
 	}

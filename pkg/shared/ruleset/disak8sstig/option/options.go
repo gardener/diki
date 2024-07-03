@@ -141,3 +141,8 @@ func ValidateLabelNames(labelNames []string, fldPath *field.Path) field.ErrorLis
 	}
 	return allErrs
 }
+
+// KubeProxyOptions contains options for kube-proxy rules
+type KubeProxyOptions struct {
+	KubeProxyDisabled bool `json:"kubeProxyDisabled" yaml:"kubeProxyDisabled"`
+}

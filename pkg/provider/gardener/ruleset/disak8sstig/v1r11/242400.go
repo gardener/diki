@@ -26,6 +26,7 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/images"
 	"github.com/gardener/diki/pkg/shared/provider"
+	option "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
@@ -38,12 +39,8 @@ type Rule242400 struct {
 	ClusterV1RESTClient   rest.Interface
 	ClusterPodContext     pod.PodContext
 	ControlPlaneNamespace string
-	Options               *Options242400
+	Options               *option.KubeProxyOptions
 	Logger                provider.Logger
-}
-
-type Options242400 struct {
-	KubeProxyDisabled bool `json:"kubeProxyDisabled" yaml:"kubeProxyDisabled"`
 }
 
 func (r *Rule242400) ID() string {
