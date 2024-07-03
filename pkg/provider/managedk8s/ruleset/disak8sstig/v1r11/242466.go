@@ -41,6 +41,7 @@ type Rule242466 struct {
 }
 
 type Options242466 struct {
+	option.KubeProxyOptions
 	KubeProxyMatchLabels map[string]string `json:"kubeProxyMatchLabels" yaml:"kubeProxyMatchLabels"`
 	NodeGroupByLabels    []string          `json:"nodeGroupByLabels" yaml:"nodeGroupByLabels"`
 }
@@ -83,12 +84,6 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
 	}
 
-	for _, p := range allPods {
-		if kubeProxySelector.Matches(labels.Set(p.Labels)) {
-			pods = append(pods, p)
-		}
-	}
-
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "nodeList"))), nil
@@ -101,18 +96,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 	image.WithOptionalTag(version.Get().GitVersion)
 
-	if len(pods) == 0 {
-		checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", rule.NewTarget("selector", kubeProxySelector.String())))
-	} else {
-		groupedShootPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.NewTarget())
-		checkResults = append(checkResults, checks...)
-
-		for nodeName, pods := range groupedShootPods {
-			checkResults = append(checkResults,
-				r.checkPods(ctx, pods, nodeName, image.String(), expectedFilePermissionsMax)...)
-		}
-	}
-
+	// kubelet check
 	selectedShootNodes, checks := kubeutils.SelectNodes(nodes, nodesAllocatablePods, nodeLabels)
 	checkResults = append(checkResults, checks...)
 
@@ -123,6 +107,34 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	for _, node := range selectedShootNodes {
 		checkResults = append(checkResults,
 			r.checkKubelet(ctx, node.Name, image.String(), expectedFilePermissionsMax)...)
+	}
+
+	// kube-proxy check
+	if r.Options != nil && r.Options.KubeProxyDisabled {
+		checkResults = append(checkResults, rule.AcceptedCheckResult("Kube-proxy is disabled for cluster", rule.NewTarget()))
+		return rule.RuleResult{
+			RuleID:       r.ID(),
+			RuleName:     r.Name(),
+			CheckResults: checkResults,
+		}, nil
+	}
+
+	for _, p := range allPods {
+		if kubeProxySelector.Matches(labels.Set(p.Labels)) {
+			pods = append(pods, p)
+		}
+	}
+
+	if len(pods) == 0 {
+		checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", rule.NewTarget("selector", kubeProxySelector.String())))
+	} else {
+		groupedShootPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.NewTarget())
+		checkResults = append(checkResults, checks...)
+
+		for nodeName, pods := range groupedShootPods {
+			checkResults = append(checkResults,
+				r.checkPods(ctx, pods, nodeName, image.String(), expectedFilePermissionsMax)...)
+		}
 	}
 
 	return rule.RuleResult{
