@@ -121,3 +121,25 @@ func GetStatusIcon(status Status) rune {
 		return '⚪'
 	}
 }
+
+// GetStatusMeaning returns the meaning of a given Status string
+func GetStatusMeaning(status Status) string {
+	switch status {
+	case Passed:
+		return "Ran rule check has been Fulfilled."
+	case Failed:
+		return "Ran rule check has been Unfulfilled, can be considered a Finding."
+	case Errored:
+		return "Ran rule check has errored during execution. It cannot be determined if the check is Fulfilled or not."
+	case Warning:
+		return "Ran rule check has encountered a condition where it cannot be determined if the check is Fulfilled or not."
+	case Skipped:
+		return "Rule check has been considered irrelevant for the specific scenario and will not be run."
+	case Accepted:
+		return "Rule check may or may not have been run, but it was decided by the user that the check is not a Finding."
+	case NotImplemented:
+		return "Rule check has not been implemented yet."
+	default:
+		return "Unknown"
+	}
+}
