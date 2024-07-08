@@ -62,7 +62,7 @@
             <ul class="tw-hidden">
                 {{- $statuses := getStatuses }}
                 {{- range $key, $value := $statuses }}
-                <li>&#{{ statusIcon $value }} {{ $value }}: {{ statusMeaning $value }}</li>
+                <li>&#{{ statusIcon $value }} {{ $value }}: {{ statusDescription $value }}</li>
                 {{- end }}
             </ul></span><br>
             {{- $IDAttr := .IdentityAttributes }}

@@ -122,8 +122,8 @@ func GetStatusIcon(status Status) rune {
 	}
 }
 
-// GetStatusMeaning returns the meaning of a given Status string
-func GetStatusMeaning(status Status) string {
+// StatusDescription returns the description of a given [Status] string.
+func StatusDescription(status Status) string {
 	switch status {
 	case Passed:
 		return "Ran rule check has been Fulfilled."
