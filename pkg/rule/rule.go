@@ -106,8 +106,8 @@ func (a Status) Less(b Status) bool {
 	return i < x
 }
 
-// GetStatusIcon returns the icon of a given Status string
-func GetStatusIcon(status Status) rune {
+// StatusIcon returns the icon of a given [Status] string.
+func StatusIcon(status Status) rune {
 	switch status {
 	case Passed:
 		return '🟢'

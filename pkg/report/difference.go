@@ -322,7 +322,7 @@ func rulesetDiffSummaryText(statusesCount map[rule.Status]int) string {
 			if summaryBuilder.Len() > 0 {
 				summaryBuilder.WriteString(", ")
 			}
-			summaryBuilder.WriteString(fmt.Sprintf("%dx %s %c", val, status, rule.GetStatusIcon(status)))
+			summaryBuilder.WriteString(fmt.Sprintf("%dx %s %c", val, status, rule.StatusIcon(status)))
 		}
 	}
 	if summaryBuilder.Len() == 0 {

@@ -254,7 +254,7 @@ func mergedRulesetSummaryText(ruleset *MergedRuleset) string {
 			if len(summaryText) > 0 {
 				summaryText = fmt.Sprintf("%s, ", summaryText)
 			}
-			summaryText = fmt.Sprintf("%s%dx %s %c", summaryText, num, status, rule.GetStatusIcon(status))
+			summaryText = fmt.Sprintf("%s%dx %s %c", summaryText, num, status, rule.StatusIcon(status))
 		}
 	}
 	return summaryText

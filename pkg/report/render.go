@@ -59,7 +59,7 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 
 	parsedReport, err := template.New(tmplReportName+".html").Funcs(template.FuncMap{
 		"getStatuses":        rule.Statuses,
-		"statusIcon":         rule.GetStatusIcon,
+		"statusIcon":         rule.StatusIcon,
 		"statusDescription":  rule.StatusDescription,
 		"time":               convTimeFunc,
 		"yamlFormat":         yamlFormat,
@@ -74,7 +74,7 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 
 	parsedMergedReport, err := template.New(tmplMergedReportName+".html").Funcs(template.FuncMap{
 		"getStatuses":              rule.Statuses,
-		"statusIcon":               rule.GetStatusIcon,
+		"statusIcon":               rule.StatusIcon,
 		"statusDescription":        rule.StatusDescription,
 		"time":                     convTimeFunc,
 		"yamlFormat":               yamlFormat,
@@ -91,7 +91,7 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 	parsedDifferenceReport, err := template.New(tmplDifferenceReportName+".html").Funcs(template.FuncMap{
 		"add":                           add,
 		"getStatuses":                   rule.Statuses,
-		"statusIcon":                    rule.GetStatusIcon,
+		"statusIcon":                    rule.StatusIcon,
 		"statusDescription":             rule.StatusDescription,
 		"rulesetDiffAddedSummaryText":   rulesetDiffAddedSummaryText,
 		"rulesetDiffRemovedSummaryText": rulesetDiffRemovedSummaryText,
