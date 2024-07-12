@@ -58,4 +58,40 @@ var _ = Describe("rule", func() {
 			Expect(len(tt)).To(Equal(2))
 		})
 	})
+
+	Describe("StatusIcon", func() {
+		It("should not return white circle for supported statuses", func() {
+			statuses := rule.Statuses()
+
+			for _, status := range statuses {
+				statusIcon := rule.StatusIcon(status)
+				Expect(statusIcon).To(Not(Equal('⚪')))
+			}
+		})
+
+		It("should return white circle for unsupported statuses", func() {
+			var status rule.Status = "unsupportedStatus"
+
+			statusIcon := rule.StatusIcon(status)
+			Expect(statusIcon).To((Equal('⚪')))
+		})
+	})
+
+	Describe("StatusDescription", func() {
+		It("should not return Unknown description for supported statuses", func() {
+			statuses := rule.Statuses()
+
+			for _, status := range statuses {
+				statusDescription := rule.StatusDescription(status)
+				Expect(statusDescription).To(Not(Equal("Unknown")))
+			}
+		})
+
+		It("should return Unknown description for unsupported statuses", func() {
+			var status rule.Status = "unsupportedStatus"
+
+			statusDescription := rule.StatusDescription(status)
+			Expect(statusDescription).To((Equal("Unknown")))
+		})
+	})
 })
