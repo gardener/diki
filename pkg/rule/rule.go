@@ -106,8 +106,8 @@ func (a Status) Less(b Status) bool {
 	return i < x
 }
 
-// GetStatusIcon returns the icon of a given Status string
-func GetStatusIcon(status Status) rune {
+// StatusIcon returns the icon of a given [Status] string.
+func StatusIcon(status Status) rune {
 	switch status {
 	case Passed:
 		return '🟢'
@@ -119,5 +119,27 @@ func GetStatusIcon(status Status) rune {
 		return '🟠'
 	default:
 		return '⚪'
+	}
+}
+
+// StatusDescription returns the description of a given [Status] string.
+func StatusDescription(status Status) string {
+	switch status {
+	case Passed:
+		return "Rule check has been fulfilled."
+	case Failed:
+		return "Rule check has been unfulfilled, can be considered a finding."
+	case Errored:
+		return "Rule check has errored during runtime. It cannot be determined whether the check is fulfilled or not."
+	case Warning:
+		return "Rule check has encountered an ambiguous condition or configuration preventing the ability to determine if the check is fulfilled or not."
+	case Skipped:
+		return "Rule check has been considered irrelevant for the specific scenario and will not be run."
+	case Accepted:
+		return "Rule check may or may not have been run, but it was decided by the user that the check is not a finding."
+	case NotImplemented:
+		return "Rule check has not been implemented yet."
+	default:
+		return "Unknown"
 	}
 }

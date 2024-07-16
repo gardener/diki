@@ -56,6 +56,15 @@
     <div class="tw-flex-col">
         <h1 class="tw-text-3xl tw-font-bold tw-pb-5 tw-pt-2 tw-flex tw-justify-center">Difference report</h1>
         <div class="tw-content tw-px-6">
+            <span><span class="tw-text-xl tw-font-bold">Glossary</span>
+            <button onclick="collapse(event)" class="tw-text-lg tw-pr-2"><i
+                    class="arrow right"></i></button>
+            <ul class="tw-hidden">
+                {{- $statuses := getStatuses }}
+                {{- range $key, $value := $statuses }}
+                <li>&#{{ statusIcon $value }} {{ $value }}: {{ statusDescription $value }}</li>
+                {{- end }}
+            </ul></span><br>
             {{- $IDAttr := .IdentityAttributes }}
             {{- range $index, $element := .DifferenceReports }}
             <label class="tw-font-bold tw-text-2xl">{{ add $index 1 }}. {{ .Title }}</label>
@@ -103,7 +112,7 @@
                                         <ul class="tw-list-inside tw-pl-5 tw-hidden">
                                             {{- range .Added }}
                                             <li>
-                                                <span class="tw-font-medium">{{ .Status }} &#{{ icon .Status }} {{ .Message }}</span>
+                                                <span class="tw-font-medium">{{ .Status }} &#{{ statusIcon .Status }} {{ .Message }}</span>
                                             </li>
                                             {{- end }}
                                         </ul>
@@ -117,7 +126,7 @@
                                         <ul class="tw-list-inside tw-pl-5 tw-hidden">
                                             {{- range .Removed }}
                                             <li>
-                                                <span class="tw-font-medium">{{ .Status }} &#{{ icon .Status }} {{ .Message }}</span>
+                                                <span class="tw-font-medium">{{ .Status }} &#{{ statusIcon .Status }} {{ .Message }}</span>
                                             </li>
                                             {{- end }}
                                         </ul>
