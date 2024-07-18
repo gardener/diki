@@ -73,7 +73,7 @@ providers:             # contains information about known providers
           groups: ["0", "65532"]
     - ruleID: "242451"
       args:
-      # kubeProxyDisabled: true
+        # kubeProxyDisabled: true
         expectedFileOwner:
           # users and groups default to ["0"]
           #

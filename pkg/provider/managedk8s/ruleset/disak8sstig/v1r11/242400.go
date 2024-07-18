@@ -110,7 +110,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	// kube-proxy check
 	if r.Options != nil && r.Options.KubeProxyDisabled {
-		checkResults = append(checkResults, rule.AcceptedCheckResult("Kube-proxy is disabled for cluster.", rule.NewTarget()))
+		checkResults = append(checkResults, rule.AcceptedCheckResult("kube-proxy check is skipped.", rule.NewTarget()))
 		return rule.RuleResult{
 			RuleID:       r.ID(),
 			RuleName:     r.Name(),

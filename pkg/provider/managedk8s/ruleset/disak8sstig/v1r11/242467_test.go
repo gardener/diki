@@ -250,7 +250,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			[][]string{{kubeletPID, kubeletCommand, tlsKubeletConfig, compliantKeyStats}},
 			[][]error{{nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.AcceptedCheckResult("Kube-proxy is disabled for cluster", rule.NewTarget()),
+				rule.AcceptedCheckResult("kube-proxy check is skipped.", rule.NewTarget()),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "node01", "kind", "node", "details", "fileName: /var/lib/keys/tls.key, permissions: 640")),
 			}),
 		Entry("should check only nodes wtih labels",

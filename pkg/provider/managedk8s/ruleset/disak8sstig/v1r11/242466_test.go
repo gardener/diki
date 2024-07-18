@@ -263,7 +263,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			[][]error{{nil, nil, nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "node01", "kind", "node", "details", "fileName: /var/lib/certs/tls.crt, permissions: 644")),
-				rule.AcceptedCheckResult("Kube-proxy is disabled for cluster", rule.NewTarget()),
+				rule.AcceptedCheckResult("kube-proxy check is skipped.", rule.NewTarget()),
 			}),
 		Entry("should correctly return errored checkResults when commands error", nil,
 			[][]string{{kubeletPID}, {mounts, mounts, compliantStats2}},

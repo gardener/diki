@@ -347,7 +347,7 @@ var _ = Describe("#242400", func() {
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.AcceptedCheckResult("Kube-proxy is disabled for cluster.", rule.NewTarget()),
+			rule.AcceptedCheckResult("kube-proxy check is skipped.", rule.NewTarget()),
 			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("kind", "node", "name", "node1")),
 		}
 

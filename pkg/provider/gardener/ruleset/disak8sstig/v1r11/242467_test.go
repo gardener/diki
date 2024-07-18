@@ -401,7 +401,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 700, expectedPermissionsMax: 640")),
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /destination/file1.key, permissions: 644, expectedPermissionsMax: 640")),
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /destination/bar/file2.pem, permissions: 700, expectedPermissionsMax: 640")),
-				rule.AcceptedCheckResult("Kube-proxy is disabled for cluster", rule.NewTarget("cluster", "shoot")),
+				rule.AcceptedCheckResult("kube-proxy check is skipped.", rule.NewTarget("cluster", "shoot")),
 			}),
 		Entry("should correctly return errored checkResults when commands error",
 			[][]string{{mounts, mounts, compliantStats2, emptyMounts, emptyMounts, emptyMounts}},

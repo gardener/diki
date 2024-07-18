@@ -302,7 +302,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "node01", "kind", "node", "details", "fileName: /var/lib/certs/tls.crt, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "node01", "kind", "node", "details", "fileName: /var/lib/keys, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "node01", "kind", "node", "details", "fileName: /var/lib/certs, ownerUser: 0, ownerGroup: 0")),
-				rule.AcceptedCheckResult("Kube-proxy is disabled for cluster", rule.NewTarget()),
+				rule.AcceptedCheckResult("kube-proxy check is skipped.", rule.NewTarget()),
 			}),
 		Entry("should correctly return errored checkResults when commands error", nil,
 			[][]string{{kubeletPID}, {mounts, mounts, compliantStats2}},
