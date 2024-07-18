@@ -24,6 +24,7 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/images"
 	"github.com/gardener/diki/pkg/shared/provider"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
@@ -36,6 +37,7 @@ type Rule242467 struct {
 	ControlPlaneNamespace  string
 	ControlPlanePodContext pod.PodContext
 	ClusterPodContext      pod.PodContext
+	Options                *option.KubeProxyOptions
 	Logger                 provider.Logger
 }
 
@@ -64,6 +66,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 	image.WithOptionalTag(version.Get().GitVersion)
 
+	// control plane check
 	seedTarget := rule.NewTarget("cluster", "seed")
 	allSeedPods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, "", labels.NewSelector(), 300)
 	if err != nil {
@@ -133,13 +136,6 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 		}, nil
 	}
 
-	var pods []corev1.Pod
-	for _, p := range allShootPods {
-		if kubeProxySelector.Matches(labels.Set(p.Labels)) {
-			pods = append(pods, p)
-		}
-	}
-
 	shootNodes, err := kubeutils.GetNodes(ctx, r.ClusterClient, 300)
 	if err != nil {
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "nodeList")))
@@ -151,18 +147,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 	shootNodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allShootPods, shootNodes)
 
-	if len(pods) == 0 {
-		checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", shootTarget.With("selector", kubeProxySelector.String())))
-	} else {
-		groupedShootPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, shootNodesAllocatablePods, shootTarget)
-		checkResults = append(checkResults, checks...)
-
-		for nodeName, pods := range groupedShootPods {
-			checkResults = append(checkResults,
-				r.checkPods(ctx, r.ClusterClient, r.ClusterPodContext, pods, nodeName, image.String(), expectedFilePermissionsMax, shootTarget)...)
-		}
-	}
-
+	// kubelet check
 	selectedShootNodes, checks := kubeutils.SelectNodes(shootNodes, shootNodesAllocatablePods, nodeLabels)
 	checkResults = append(checkResults, checks...)
 
@@ -173,6 +158,35 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	for _, node := range selectedShootNodes {
 		checkResults = append(checkResults,
 			r.checkKubelet(ctx, node.Name, image.String(), expectedFilePermissionsMax, shootTarget)...)
+	}
+
+	// kube-proxy check
+	if r.Options != nil && r.Options.KubeProxyDisabled {
+		checkResults = append(checkResults, rule.AcceptedCheckResult("kube-proxy check is skipped.", shootTarget))
+		return rule.RuleResult{
+			RuleID:       r.ID(),
+			RuleName:     r.Name(),
+			CheckResults: checkResults,
+		}, nil
+	}
+
+	var pods []corev1.Pod
+	for _, p := range allShootPods {
+		if kubeProxySelector.Matches(labels.Set(p.Labels)) {
+			pods = append(pods, p)
+		}
+	}
+
+	if len(pods) == 0 {
+		checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", shootTarget.With("selector", kubeProxySelector.String())))
+	} else {
+		groupedShootPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, shootNodesAllocatablePods, shootTarget)
+		checkResults = append(checkResults, checks...)
+
+		for nodeName, pods := range groupedShootPods {
+			checkResults = append(checkResults,
+				r.checkPods(ctx, r.ClusterClient, r.ClusterPodContext, pods, nodeName, image.String(), expectedFilePermissionsMax, shootTarget)...)
+		}
 	}
 
 	return rule.RuleResult{

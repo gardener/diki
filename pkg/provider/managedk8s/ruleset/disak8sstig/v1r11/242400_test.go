@@ -28,6 +28,7 @@ import (
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
@@ -313,6 +314,40 @@ var _ = Describe("#242400", func() {
 
 		expectedCheckResults := []rule.CheckResult{
 			rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget("selector", "role=proxy")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("kind", "node", "name", "node1")),
+		}
+
+		Expect(err).To(BeNil())
+		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
+	})
+
+	It("should return accepted check result when kubeProxyDiabled option is set to true", func() {
+		node1 := plainNode.DeepCopy()
+		node1.ObjectMeta.Name = "node1"
+		Expect(fakeClient.Create(ctx, node1)).To(Succeed())
+
+		fakeRESTClient = &manualfake.RESTClient{
+			GroupVersion:         schema.GroupVersion{Group: "", Version: "v1"},
+			NegotiatedSerializer: scheme.Codecs,
+			Client: manualfake.CreateHTTPClient(func(_ *http.Request) (*http.Response, error) {
+				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(podSecurityNotSetNodeConfig)))}, nil
+			}),
+		}
+		r := &v1r11.Rule242400{
+			InstanceID:   instanceID,
+			Client:       fakeClient,
+			PodContext:   fakePodContext,
+			V1RESTClient: fakeRESTClient,
+			Options: &v1r11.Options242400{
+				KubeProxyOptions: option.KubeProxyOptions{
+					KubeProxyDisabled: true,
+				},
+			},
+		}
+		ruleResult, err := r.Run(ctx)
+
+		expectedCheckResults := []rule.CheckResult{
+			rule.AcceptedCheckResult("kube-proxy check is skipped.", rule.NewTarget()),
 			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("kind", "node", "name", "node1")),
 		}
 

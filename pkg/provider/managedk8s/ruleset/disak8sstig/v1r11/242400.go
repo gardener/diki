@@ -44,6 +44,7 @@ type Rule242400 struct {
 }
 
 type Options242400 struct {
+	option.KubeProxyOptions
 	KubeProxyMatchLabels map[string]string `json:"kubeProxyMatchLabels" yaml:"kubeProxyMatchLabels"`
 }
 
@@ -81,7 +82,42 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.WarningCheckResult("No nodes found.", rule.NewTarget())), nil
 	}
 
+	// kubelet check
+	for _, node := range nodes {
+		target := rule.NewTarget("kind", "node", "name", node.Name)
+		if !kubeutils.NodeReadyStatus(node) {
+			checkResults = append(checkResults, rule.WarningCheckResult("Node is not in Ready state.", target))
+			continue
+		}
+
+		kubeletConfig, err := kubeutils.GetNodeConfigz(ctx, r.V1RESTClient, node.Name)
+		if err != nil {
+			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target))
+			continue
+		}
+
+		// featureGates.AllAlpha defaults to false. ref https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/
+		allAlpha, ok := kubeletConfig.FeatureGates["AllAlpha"]
+		switch {
+		case !ok:
+			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", option), target))
+		case allAlpha:
+			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", option), target))
+		default:
+			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", option), target))
+		}
+	}
+
 	// kube-proxy check
+	if r.Options != nil && r.Options.KubeProxyDisabled {
+		checkResults = append(checkResults, rule.AcceptedCheckResult("kube-proxy check is skipped.", rule.NewTarget()))
+		return rule.RuleResult{
+			RuleID:       r.ID(),
+			RuleName:     r.Name(),
+			CheckResults: checkResults,
+		}, nil
+	}
+
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList")))
@@ -108,32 +144,6 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 			for nodeName, pods := range groupedPods {
 				checkResults = append(checkResults, r.checkKubeProxy(ctx, pods, nodeName, image.String())...)
 			}
-		}
-	}
-
-	// kubelet check
-	for _, node := range nodes {
-		target := rule.NewTarget("kind", "node", "name", node.Name)
-		if !kubeutils.NodeReadyStatus(node) {
-			checkResults = append(checkResults, rule.WarningCheckResult("Node is not in Ready state.", target))
-			continue
-		}
-
-		kubeletConfig, err := kubeutils.GetNodeConfigz(ctx, r.V1RESTClient, node.Name)
-		if err != nil {
-			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target))
-			continue
-		}
-
-		// featureGates.AllAlpha defaults to false. ref https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/
-		allAlpha, ok := kubeletConfig.FeatureGates["AllAlpha"]
-		switch {
-		case !ok:
-			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", option), target))
-		case allAlpha:
-			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", option), target))
-		default:
-			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", option), target))
 		}
 	}
 

@@ -29,6 +29,7 @@ import (
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
 )
 
@@ -359,6 +360,42 @@ var _ = Describe("#242400", func() {
 			rule.ErroredCheckResult("deployments.apps \"kube-controller-manager\" not found", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-controller-manager", "namespace", "foo")),
 			rule.ErroredCheckResult("deployments.apps \"kube-scheduler\" not found", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-scheduler", "namespace", "foo")),
 			rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget("cluster", "shoot", "selector", "role=proxy")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
+		}
+
+		Expect(err).To(BeNil())
+		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
+	})
+
+	It("should return accepted check result when kubeProxyDiabled option is set to true", func() {
+		node1 := plainNode.DeepCopy()
+		node1.ObjectMeta.Name = "node1"
+
+		Expect(fakeClusterClient.Create(ctx, node1)).To(Succeed())
+
+		fakeRESTClient = &manualfake.RESTClient{
+			GroupVersion:         schema.GroupVersion{Group: "", Version: "v1"},
+			NegotiatedSerializer: scheme.Codecs,
+			Client: manualfake.CreateHTTPClient(func(_ *http.Request) (*http.Response, error) {
+				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(podSecurityNotSetNodeConfig)))}, nil
+			}),
+		}
+		r := &v1r11.Rule242400{
+			ClusterClient:         fakeClusterClient,
+			ControlPlaneClient:    fakeControlPlaneClient,
+			ControlPlaneNamespace: controlPlaneNamespace,
+			ClusterV1RESTClient:   fakeRESTClient,
+			Options: &option.KubeProxyOptions{
+				KubeProxyDisabled: true,
+			},
+		}
+		ruleResult, err := r.Run(ctx)
+
+		expectedCheckResults := []rule.CheckResult{
+			rule.ErroredCheckResult("deployments.apps \"kube-apiserver\" not found", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-apiserver", "namespace", "foo")),
+			rule.ErroredCheckResult("deployments.apps \"kube-controller-manager\" not found", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-controller-manager", "namespace", "foo")),
+			rule.ErroredCheckResult("deployments.apps \"kube-scheduler\" not found", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-scheduler", "namespace", "foo")),
+			rule.AcceptedCheckResult("kube-proxy check is skipped.", rule.NewTarget()),
 			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
 		}
 

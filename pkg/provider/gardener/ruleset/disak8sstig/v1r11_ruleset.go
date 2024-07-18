@@ -87,6 +87,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
+	opts242400, err := getV1R11OptionOrNil[option.KubeProxyOptions](ruleOptions[sharedv1r11.ID242400].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 242400 error: %s", err.Error())
+	}
 	opts242414, err := getV1R11OptionOrNil[option.Options242414](ruleOptions[sharedv1r11.ID242414].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242414 error: %s", err.Error())
@@ -103,9 +107,17 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	if err != nil {
 		return fmt.Errorf("rule option 242446 error: %s", err.Error())
 	}
-	opts242451, err := getV1R11OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedv1r11.ID242451].Args)
+	opts242451, err := getV1R11OptionOrNil[v1r11.Options242451](ruleOptions[sharedv1r11.ID242451].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242451 error: %s", err.Error())
+	}
+	opts242466, err := getV1R11OptionOrNil[option.KubeProxyOptions](ruleOptions[sharedv1r11.ID242466].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 242466 error: %s", err.Error())
+	}
+	opts242467, err := getV1R11OptionOrNil[option.KubeProxyOptions](ruleOptions[sharedv1r11.ID242467].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 242467 error: %s", err.Error())
 	}
 	opts245543, err := getV1R11OptionOrNil[sharedv1r11.Options245543](ruleOptions[sharedv1r11.ID245543].Args)
 	if err != nil {
@@ -236,6 +248,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 				ClusterPodContext:     shootPodContext,
 				ClusterV1RESTClient:   shootClientSet.CoreV1().RESTClient(),
 				ControlPlaneNamespace: r.shootNamespace,
+				Options:               opts242400,
 			}),
 			retry.WithRetryCondition(rcFileChecks),
 			retry.WithMaxRetries(*r.args.MaxRetries),
@@ -591,6 +604,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 				ControlPlanePodContext: seedPodContext,
 				ClusterPodContext:      shootPodContext,
 				ControlPlaneNamespace:  r.shootNamespace,
+				Options:                opts242466,
 			}),
 			retry.WithRetryCondition(rcFileChecks),
 			retry.WithMaxRetries(*r.args.MaxRetries),
@@ -605,6 +619,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 				ControlPlanePodContext: seedPodContext,
 				ClusterPodContext:      shootPodContext,
 				ControlPlaneNamespace:  r.shootNamespace,
+				Options:                opts242467,
 			}),
 			retry.WithRetryCondition(rcFileChecks),
 			retry.WithMaxRetries(*r.args.MaxRetries),
