@@ -1,3 +1,7 @@
+---
+description: How can I check whether my shoot cluster fulfills the DISA STIGs security requirements?
+---
+
 ## Run Partial DISA K8s STIGs Ruleset Against a Gardener Shoot Cluster
 
 ### Introduction
