@@ -6,7 +6,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/gardener/gardener v1.99.2
 	github.com/google/uuid v1.6.0
-	github.com/onsi/ginkgo/v2 v2.19.0
+	github.com/onsi/ginkgo/v2 v2.19.1
 	github.com/onsi/gomega v1.34.1
 	github.com/spf13/cobra v1.8.1
 	gopkg.in/yaml.v3 v3.0.1
@@ -45,7 +45,7 @@ require (
 	github.com/gardener/hvpa-controller/api v0.15.0 // indirect
 	github.com/gardener/machine-controller-manager v0.53.0 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
-	github.com/go-logr/logr v1.4.1 // indirect
+	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/zapr v1.3.0 // indirect
 	github.com/go-openapi/errors v0.20.4 // indirect
 	github.com/go-openapi/jsonpointer v0.20.0 // indirect
