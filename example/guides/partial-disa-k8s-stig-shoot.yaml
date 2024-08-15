@@ -61,8 +61,7 @@ providers:
           - kube-system
           - kube-public
           - kube-node-lease
-          justification: "justification"
-          status: Passed
+          justification: "Pods managed by Gardener are not considered as user pods"
     - ruleID: "242449"
       args:
         nodeGroupByLabels:
