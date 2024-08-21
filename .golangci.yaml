@@ -17,19 +17,19 @@ issues:
   - indent-error-flow # if block ends with a return statement, so drop this else and outdent its block
   - package-comments
   exclude-rules:
-    - path: 'pkg/provider/gardener/ruleset/disak8sstig/v1r11/'
+    - path: 'pkg/provider/gardener/ruleset/disak8sstig/rules/'
       linters:
         - revive
       text: "exported: exported"
-    - path: 'pkg/provider/managedk8s/ruleset/disak8sstig/v1r11/'
+    - path: 'pkg/provider/managedk8s/ruleset/disak8sstig/rules/'
       linters:
         - revive
       text: "exported: exported"
-    - path: 'pkg/provider/virtualgarden/ruleset/disak8sstig/v1r11/'
+    - path: 'pkg/provider/virtualgarden/ruleset/disak8sstig/rules/'
       linters:
         - revive
       text: "exported: exported"
-    - path: 'pkg/shared/ruleset/disak8sstig/v1r11/'
+    - path: 'pkg/shared/ruleset/disak8sstig/rules/'
       linters:
         - revive
       text: "exported: exported"
