@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v1r11_test
+package rules_test
 
 import (
 	"context"
@@ -22,10 +22,10 @@ import (
 	fakestrgen "github.com/gardener/diki/pkg/internal/stringgen/fake"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
-	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
+	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
 	option "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
-	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
+	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
 var _ = Describe("#242451", func() {
@@ -98,7 +98,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 	)
 
 	BeforeEach(func() {
-		sharedv1r11.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
+		sharedrules.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
 		fakeControlPlaneClient = fakeclient.NewClientBuilder().Build()
 		fakeClusterClient = fakeclient.NewClientBuilder().Build()
 
@@ -279,12 +279,12 @@ tlsCertFile: /var/lib/certs/tls.crt`
 		fooPod.Name = "foo"
 
 		controlPlaneDikiPod = plainPod.DeepCopy()
-		controlPlaneDikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedv1r11.ID242451, "aaaaaaaaaa")
+		controlPlaneDikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedrules.ID242451, "aaaaaaaaaa")
 		controlPlaneDikiPod.Namespace = "kube-system"
 		controlPlaneDikiPod.Labels = map[string]string{}
 
 		clusterDikiPod = plainPod.DeepCopy()
-		clusterDikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedv1r11.ID242451, "cccccccccc")
+		clusterDikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedrules.ID242451, "cccccccccc")
 		clusterDikiPod.Namespace = "kube-system"
 		clusterDikiPod.Labels = map[string]string{}
 
@@ -304,7 +304,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 		kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
 		fakeControlPlanePodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
 		fakeClusterPodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
-		r := &v1r11.Rule242451{
+		r := &rules.Rule242451{
 			Logger:                 testLogger,
 			InstanceID:             instanceID,
 			ControlPlaneClient:     fakeControlPlaneClient,
@@ -329,7 +329,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 	})
 
 	DescribeTable("Run cases",
-		func(options v1r11.Options242451, seedExecuteReturnString, shootExecuteReturnString [][]string, seedExecuteReturnError, shootExecuteReturnError [][]error, expectedCheckResults []rule.CheckResult) {
+		func(options rules.Options242451, seedExecuteReturnString, shootExecuteReturnString [][]string, seedExecuteReturnError, shootExecuteReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			Expect(fakeControlPlaneClient.Create(ctx, etcdMainPod)).To(Succeed())
 			Expect(fakeControlPlaneClient.Create(ctx, etcdEventsPod)).To(Succeed())
 			Expect(fakeControlPlaneClient.Create(ctx, kubeAPIServerPod)).To(Succeed())
@@ -343,7 +343,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 
 			fakeControlPlanePodContext = fakepod.NewFakeSimplePodContext(seedExecuteReturnString, seedExecuteReturnError)
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(shootExecuteReturnString, shootExecuteReturnError)
-			r := &v1r11.Rule242451{
+			r := &rules.Rule242451{
 				Logger:                 testLogger,
 				InstanceID:             instanceID,
 				ControlPlaneClient:     fakeControlPlaneClient,
@@ -395,7 +395,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /destination, ownerUser: 65532, expectedOwnerUsers: [0]")),
 			}),
 		Entry("should return correct checkResults when file owner options are used",
-			v1r11.Options242451{
+			rules.Options242451{
 				FileOwnerOptions: &option.FileOwnerOptions{
 					ExpectedFileOwner: option.ExpectedOwner{
 						Users:  []string{"0", "1000"},
@@ -419,7 +419,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /destination, ownerUser: 65532, expectedOwnerUsers: [0 1000]")),
 			}),
 		Entry("should return accepted check result when kubeProxyDiabled option is set to true",
-			v1r11.Options242451{
+			rules.Options242451{
 				KubeProxyOptions: option.KubeProxyOptions{
 					KubeProxyDisabled: true,
 				},

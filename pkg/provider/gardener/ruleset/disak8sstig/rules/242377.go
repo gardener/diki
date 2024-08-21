@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v1r11
+package rules
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
-	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
+	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
 var _ rule.Rule = &Rule242377{}
@@ -24,7 +24,7 @@ type Rule242377 struct {
 }
 
 func (r *Rule242377) ID() string {
-	return sharedv1r11.ID242377
+	return sharedrules.ID242377
 }
 
 func (r *Rule242377) Name() string {

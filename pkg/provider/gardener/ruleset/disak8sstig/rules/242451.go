@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v1r11
+package rules
 
 import (
 	"cmp"
@@ -26,7 +26,7 @@ import (
 	"github.com/gardener/diki/pkg/shared/images"
 	"github.com/gardener/diki/pkg/shared/provider"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
-	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
+	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
 var _ rule.Rule = &Rule242451{}
@@ -57,7 +57,7 @@ func (o Options242451) Validate() field.ErrorList {
 }
 
 func (r *Rule242451) ID() string {
-	return sharedv1r11.ID242451
+	return sharedrules.ID242451
 }
 
 func (r *Rule242451) Name() string {
@@ -231,7 +231,7 @@ func (r *Rule242451) checkPods(
 	target rule.Target) []rule.CheckResult {
 	var (
 		checkResults     []rule.CheckResult
-		podName          = fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
+		podName          = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
 		execPodTarget    = target.With("name", podName, "namespace", "kube-system", "kind", "pod")
 		additionalLabels = map[string]string{pod.LabelInstanceID: r.InstanceID}
 	)
@@ -329,7 +329,7 @@ func (r *Rule242451) checkKubelet(
 		checkResults      []rule.CheckResult
 		selectedFileStats []intutils.FileStats
 		pkiDirs           = map[string]struct{}{}
-		podName           = fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
+		podName           = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
 		nodeTarget        = target.With("name", nodeName, "kind", "node")
 		execPodTarget     = target.With("name", podName, "namespace", "kube-system", "kind", "pod")
 		additionalLabels  = map[string]string{pod.LabelInstanceID: r.InstanceID}

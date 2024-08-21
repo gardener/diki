@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v1r11_test
+package rules_test
 
 import (
 	"bytes"
@@ -27,10 +27,10 @@ import (
 	fakestrgen "github.com/gardener/diki/pkg/internal/stringgen/fake"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
-	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
+	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
-	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
+	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
 var _ = Describe("#242400", func() {
@@ -70,7 +70,7 @@ var _ = Describe("#242400", func() {
 	)
 
 	BeforeEach(func() {
-		sharedv1r11.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
+		sharedrules.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
 		fakeClusterClient = fakeclient.NewClientBuilder().Build()
 		fakeControlPlaneClient = fakeclient.NewClientBuilder().Build()
 
@@ -148,7 +148,7 @@ var _ = Describe("#242400", func() {
 		}
 
 		dikiPod = plainPod.DeepCopy()
-		dikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedv1r11.ID242400, "aaaaaaaaaa")
+		dikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedrules.ID242400, "aaaaaaaaaa")
 		dikiPod.Labels = map[string]string{}
 		Expect(fakeClusterClient.Create(ctx, dikiPod)).To(Succeed())
 	})
@@ -239,7 +239,7 @@ var _ = Describe("#242400", func() {
 		executeReturnStrings := [][]string{{mounts, allowedKubeProxyConfig, mounts, notAllowedKubeProxyConfig, mounts, ""}}
 		executeReturnErrors := [][]error{{nil, nil, nil, nil, nil, nil}}
 		fakePodContext = fakepod.NewFakeSimplePodContext(executeReturnStrings, executeReturnErrors)
-		r := &v1r11.Rule242400{
+		r := &rules.Rule242400{
 			InstanceID:            instanceID,
 			ClusterClient:         fakeClusterClient,
 			ControlPlaneClient:    fakeControlPlaneClient,
@@ -312,7 +312,7 @@ var _ = Describe("#242400", func() {
 			}),
 		}
 		fakePodContext = fakepod.NewFakeSimplePodContext([][]string{{}}, [][]error{{}})
-		r := &v1r11.Rule242400{
+		r := &rules.Rule242400{
 			ClusterClient:         fakeClusterClient,
 			ControlPlaneClient:    fakeControlPlaneClient,
 			ControlPlaneNamespace: controlPlaneNamespace,
@@ -347,7 +347,7 @@ var _ = Describe("#242400", func() {
 				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(podSecurityNotSetNodeConfig)))}, nil
 			}),
 		}
-		r := &v1r11.Rule242400{
+		r := &rules.Rule242400{
 			ClusterClient:         fakeClusterClient,
 			ControlPlaneClient:    fakeControlPlaneClient,
 			ControlPlaneNamespace: controlPlaneNamespace,
@@ -380,7 +380,7 @@ var _ = Describe("#242400", func() {
 				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(podSecurityNotSetNodeConfig)))}, nil
 			}),
 		}
-		r := &v1r11.Rule242400{
+		r := &rules.Rule242400{
 			ClusterClient:         fakeClusterClient,
 			ControlPlaneClient:    fakeControlPlaneClient,
 			ControlPlaneNamespace: controlPlaneNamespace,
@@ -405,7 +405,7 @@ var _ = Describe("#242400", func() {
 
 	It("should return warning when nodes are not found", func() {
 		fakeRESTClient = &manualfake.RESTClient{}
-		r := &v1r11.Rule242400{
+		r := &rules.Rule242400{
 			ClusterClient:         fakeClusterClient,
 			ControlPlaneClient:    fakeControlPlaneClient,
 			ControlPlaneNamespace: controlPlaneNamespace,

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v1r11_test
+package rules_test
 
 import (
 	"context"
@@ -22,13 +22,13 @@ import (
 	fakestrgen "github.com/gardener/diki/pkg/internal/stringgen/fake"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
-	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
+	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
-	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
+	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
-var _ = Describe("#242467", func() {
+var _ = Describe("#242466", func() {
 	const (
 		mounts = `[
   {
@@ -61,11 +61,11 @@ tlsCertFile: /var/lib/certs/tls.crt`
 		kubeletCommand     = "--config=var/lib/kubelet/config"
 		kubeletCommandCert = "--config=var/lib/kubelet/config --cert-dir"
 		emptyMounts        = `[]`
-		compliantStats     = "640\t0\t0\tregular file\t/destination/file1.key\n400\t0\t65532\tregular file\t/destination/bar/file2.pem"
-		compliantKeyStats  = "640\t0\t0\tregular file\t/var/lib/keys/tls.key\n"
-		compliantStats2    = "600\t0\t0\tregular file\t/destination/file3.key\n600\t1000\t0\tregular file\t/destination/bar/file4.txt\n"
-		noKeyStats         = "600\t0\t0\tregular file\t/destination/file3.txt\n600\t1000\t0\tregular file\t/destination/bar/file4.txt\n"
-		nonCompliantStats  = "644\t0\t0\tregular file\t/destination/file1.key\n700\t0\t0\tregular file\t/destination/bar/file2.pem\n"
+		compliantStats     = "644\t0\t0\tregular file\t/destination/file1.crt\n400\t0\t65532\tregular file\t/destination/bar/file2.pem"
+		compliantCertStats = "644\t0\t0\tregular file\t/var/lib/certs/tls.crt\n"
+		compliantStats2    = "600\t0\t0\tregular file\t/destination/file3.crt\n600\t1000\t0\tregular file\t/destination/bar/file4.txt\n"
+		noCrtStats         = "600\t0\t0\tregular file\t/destination/file3.txt\n600\t1000\t0\tregular file\t/destination/bar/file4.txt\n"
+		nonCompliantStats  = "664\t0\t0\tregular file\t/destination/file1.crt\n700\t0\t0\tregular file\t/destination/bar/file2.pem\n"
 	)
 	var (
 		instanceID                 = "1"
@@ -93,7 +93,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 	)
 
 	BeforeEach(func() {
-		sharedv1r11.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
+		sharedrules.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
 		fakeControlPlaneClient = fakeclient.NewClientBuilder().Build()
 		fakeClusterClient = fakeclient.NewClientBuilder().Build()
 
@@ -274,12 +274,12 @@ tlsCertFile: /var/lib/certs/tls.crt`
 		fooPod.Name = "foo"
 
 		controlPlaneDikiPod = plainPod.DeepCopy()
-		controlPlaneDikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedv1r11.ID242467, "aaaaaaaaaa")
+		controlPlaneDikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedrules.ID242466, "aaaaaaaaaa")
 		controlPlaneDikiPod.Namespace = "kube-system"
 		controlPlaneDikiPod.Labels = map[string]string{}
 
 		clusterDikiPod = plainPod.DeepCopy()
-		clusterDikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedv1r11.ID242467, "cccccccccc")
+		clusterDikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedrules.ID242466, "cccccccccc")
 		clusterDikiPod.Namespace = "kube-system"
 		clusterDikiPod.Labels = map[string]string{}
 
@@ -299,7 +299,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 		kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
 		fakeControlPlanePodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
 		fakeClusterPodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
-		r := &v1r11.Rule242467{
+		r := &rules.Rule242466{
 			Logger:                 testLogger,
 			InstanceID:             instanceID,
 			ControlPlaneClient:     fakeControlPlaneClient,
@@ -318,8 +318,8 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			rule.ErroredCheckResult("pods not found for deployment", target.With("name", "kube-apiserver", "kind", "Deployment")),
 			rule.ErroredCheckResult("pods not found for deployment", target.With("name", "kube-controller-manager", "kind", "Deployment")),
 			rule.ErroredCheckResult("pods not found for deployment", target.With("name", "kube-scheduler", "kind", "Deployment")),
-			rule.ErroredCheckResult("pods not found", rule.NewTarget("cluster", "shoot", "selector", kubeProxySelector.String())),
 			rule.ErroredCheckResult("no allocatable nodes could be selected", rule.NewTarget("cluster", "shoot")),
+			rule.ErroredCheckResult("pods not found", rule.NewTarget("cluster", "shoot", "selector", kubeProxySelector.String())),
 		}))
 	})
 
@@ -338,7 +338,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 
 			fakeControlPlanePodContext = fakepod.NewFakeSimplePodContext(seedExecuteReturnString, seedExecuteReturnError)
 			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(shootExecuteReturnString, shootExecuteReturnError)
-			r := &v1r11.Rule242467{
+			r := &rules.Rule242466{
 				Logger:                 testLogger,
 				InstanceID:             instanceID,
 				ControlPlaneClient:     fakeControlPlaneClient,
@@ -356,16 +356,16 @@ tlsCertFile: /var/lib/certs/tls.crt`
 		},
 		Entry("should return passed checkResults when files have expected permissions",
 			[][]string{{mounts, compliantStats, mounts, compliantStats2, emptyMounts, emptyMounts, emptyMounts}},
-			[][]string{{kubeletPID, kubeletCommand, tlsKubeletConfig, compliantKeyStats}, {mounts, compliantStats}},
+			[][]string{{kubeletPID, kubeletCommand, tlsKubeletConfig, compliantCertStats}, {mounts, compliantStats}},
 			[][]error{{nil, nil, nil, nil, nil, nil, nil}},
 			[][]error{{nil, nil, nil, nil}, {nil, nil}}, nil,
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 640")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.crt, permissions: 644")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "seed", "name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.key, permissions: 600")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "shoot", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 640")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "seed", "name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.crt, permissions: 600")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "shoot", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.crt, permissions: 644")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "shoot", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /var/lib/keys/tls.key, permissions: 640")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /var/lib/certs/tls.crt, permissions: 644")),
 			}),
 		Entry("should return failed checkResults when files have too wide permissions",
 			[][]string{{mounts, nonCompliantStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
@@ -373,20 +373,20 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			[][]error{{nil, nil, nil, nil, nil, nil}},
 			[][]error{{nil, nil, nil, nil}, {nil, nil}}, nil,
 			[]rule.CheckResult{
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 644, expectedPermissionsMax: 640")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 700, expectedPermissionsMax: 640")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 644, expectedPermissionsMax: 640")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 700, expectedPermissionsMax: 640")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /destination/file1.key, permissions: 644, expectedPermissionsMax: 640")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /destination/bar/file2.pem, permissions: 700, expectedPermissionsMax: 640")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.crt, permissions: 664, expectedPermissionsMax: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 700, expectedPermissionsMax: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.crt, permissions: 664, expectedPermissionsMax: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 700, expectedPermissionsMax: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /destination/file1.crt, permissions: 664, expectedPermissionsMax: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /destination/bar/file2.pem, permissions: 700, expectedPermissionsMax: 644")),
 			}),
-		Entry("should return failed checkResults when key files cannot be found in PKI dir",
+		Entry("should return failed checkResults when crt files cannot be found in PKI dir",
 			[][]string{{emptyMounts, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
-			[][]string{{kubeletPID, kubeletCommand, "", noKeyStats}, {emptyMounts}},
+			[][]string{{kubeletPID, kubeletCommand, "", noCrtStats}, {emptyMounts}},
 			[][]error{{nil, nil, nil, nil, nil}},
-			[][]error{{nil, nil, nil, nil}, {nil}}, nil,
+			[][]error{{nil, nil, nil, nil}, {nil, nil}}, nil,
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("no '.key' files found in PKI directory", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "directory", "/var/lib/kubelet/pki")),
+				rule.ErroredCheckResult("no '.crt' files found in PKI directory", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "directory", "/var/lib/kubelet/pki")),
 			}),
 		Entry("should return accepted check result when kubeProxyDiabled option is set to true",
 			[][]string{{mounts, nonCompliantStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
@@ -397,10 +397,10 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				KubeProxyDisabled: true,
 			},
 			[]rule.CheckResult{
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 644, expectedPermissionsMax: 640")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 700, expectedPermissionsMax: 640")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /destination/file1.key, permissions: 644, expectedPermissionsMax: 640")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /destination/bar/file2.pem, permissions: 700, expectedPermissionsMax: 640")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.crt, permissions: 664, expectedPermissionsMax: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 700, expectedPermissionsMax: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /destination/file1.crt, permissions: 664, expectedPermissionsMax: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /destination/bar/file2.pem, permissions: 700, expectedPermissionsMax: 644")),
 				rule.AcceptedCheckResult("kube-proxy check is skipped.", rule.NewTarget("cluster", "shoot")),
 			}),
 		Entry("should correctly return errored checkResults when commands error",
@@ -409,30 +409,30 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			[][]error{{errors.New("foo"), nil, errors.New("bar"), nil, nil, nil}},
 			[][]error{{errors.New("foo-bar")}, {nil}}, nil,
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("foo", rule.NewTarget("cluster", "seed", "name", "diki-242467-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.ErroredCheckResult("bar", rule.NewTarget("cluster", "seed", "name", "diki-242467-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.ErroredCheckResult("foo-bar", rule.NewTarget("cluster", "shoot", "name", "diki-242467-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
+				rule.ErroredCheckResult("foo", rule.NewTarget("cluster", "seed", "name", "diki-242466-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
+				rule.ErroredCheckResult("bar", rule.NewTarget("cluster", "seed", "name", "diki-242466-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
+				rule.ErroredCheckResult("foo-bar", rule.NewTarget("cluster", "shoot", "name", "diki-242466-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
 			}),
 		Entry("should check files when GetMountedFilesStats errors",
 			[][]string{{mountsMulty, compliantStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
-			[][]string{{kubeletPID, kubeletCommandCert, "", compliantKeyStats}, {emptyMounts}},
+			[][]string{{kubeletPID, kubeletCommandCert, "", compliantCertStats}, {emptyMounts}},
 			[][]error{{nil, nil, errors.New("bar"), nil, nil, nil, nil}},
-			[][]error{{nil, nil, nil, nil}, {nil}}, nil,
+			[][]error{{nil, nil, nil, nil}, {nil, nil}}, nil,
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("bar", rule.NewTarget("cluster", "seed", "name", "diki-242467-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 640")),
+				rule.ErroredCheckResult("bar", rule.NewTarget("cluster", "seed", "name", "diki-242466-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.crt, permissions: 644")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
-				rule.ErroredCheckResult("kubelet cert-dir flag set to empty", rule.NewTarget("cluster", "shoot", "name", "diki-242467-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
+				rule.ErroredCheckResult("kubelet cert-dir flag set to empty", rule.NewTarget("cluster", "shoot", "name", "diki-242466-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
 			}),
 		Entry("should correctly return all checkResults when commands error",
 			[][]string{{mounts, mounts, compliantStats2, emptyMounts, emptyMounts, emptyMounts}},
 			[][]string{{kubeletPID, kubeletCommand, tlsKubeletConfig}, {emptyMounts}},
 			[][]error{{errors.New("foo"), nil, nil, nil, nil, nil}},
-			[][]error{{nil, nil, errors.New("bar")}, {nil}}, nil,
+			[][]error{{nil, nil, errors.New("bar")}, {nil, nil}}, nil,
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("foo", rule.NewTarget("cluster", "seed", "name", "diki-242467-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "seed", "name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.key, permissions: 600")),
-				rule.ErroredCheckResult("could not retrieve kubelet config: bar", rule.NewTarget("cluster", "shoot", "name", "diki-242467-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
+				rule.ErroredCheckResult("foo", rule.NewTarget("cluster", "seed", "name", "diki-242466-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "seed", "name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.crt, permissions: 600")),
+				rule.ErroredCheckResult("could not retrieve kubelet config: bar", rule.NewTarget("cluster", "shoot", "name", "diki-242466-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
 			}),
 	)
 })

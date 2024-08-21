@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v1r11_test
+package rules_test
 
 import (
 	"context"
@@ -14,16 +14,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/v1r11"
+	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
-var _ = Describe("#242415", func() {
+var _ = Describe("#242414", func() {
 	var (
 		fakeSeedClient     client.Client
 		fakeShootClient    client.Client
-		options            *option.Options242415
+		options            option.Options242414
 		seedPod            *corev1.Pod
 		shootPod           *corev1.Pod
 		ctx                = context.TODO()
@@ -67,7 +67,11 @@ var _ = Describe("#242415", func() {
 				Containers: []corev1.Container{
 					{
 						Name: "test",
-						Env:  []corev1.EnvVar{},
+						Ports: []corev1.ContainerPort{
+							{
+								HostPort: 8888,
+							},
+						},
 					},
 				},
 			},
@@ -84,16 +88,19 @@ var _ = Describe("#242415", func() {
 				Containers: []corev1.Container{
 					{
 						Name: "test",
-						Env:  []corev1.EnvVar{},
+						Ports: []corev1.ContainerPort{
+							{
+								HostPort: 8888,
+							},
+						},
 					},
 				},
 			},
 		}
-		options = &option.Options242415{}
 	})
 
 	It("should return correct results when all pods pass", func() {
-		r := &v1r11.Rule242415{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: options}
+		r := &rules.Rule242414{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: &options}
 		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
 		Expect(fakeShootClient.Create(ctx, shootPod)).To(Succeed())
 
@@ -103,30 +110,22 @@ var _ = Describe("#242415", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Passed,
-				Message: "Pod does not use environment to inject secret.",
+				Message: "Container does not use hostPort < 1024.",
 				Target:  rule.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
 			},
 			{
 				Status:  rule.Passed,
-				Message: "Pod does not use environment to inject secret.",
+				Message: "Container does not use hostPort < 1024.",
 				Target:  rule.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "shoot", "kind", "pod"),
 			},
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
+
 	It("should return correct results when a pod fails", func() {
-		r := &v1r11.Rule242415{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: options}
-		shootPod.Spec.Containers[0].Env = []corev1.EnvVar{
-			{
-				Name: "SECRET_TEST",
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						Key: "secret_test",
-					},
-				},
-			},
-		}
+		r := &rules.Rule242414{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: &options}
+		shootPod.Spec.Containers[0].Ports[0].HostPort = 1011
 		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
 		Expect(fakeShootClient.Create(ctx, shootPod)).To(Succeed())
 
@@ -136,44 +135,51 @@ var _ = Describe("#242415", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Passed,
-				Message: "Pod does not use environment to inject secret.",
+				Message: "Container does not use hostPort < 1024.",
 				Target:  rule.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
 			},
 			{
 				Status:  rule.Failed,
-				Message: "Pod uses environment to inject secret.",
-				Target:  rule.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "shoot", "kind", "pod", "details", "containerName: test, variableName: SECRET_TEST, keyRef: secret_test"),
+				Message: "Container may not use hostPort < 1024.",
+				Target:  rule.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "shoot", "kind", "pod", "details", "containerName: test, port: 1011"),
 			},
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
-	It("should return correct results when a pod has accepted environment variables", func() {
-		options = &option.Options242415{
-			AcceptedPods: []option.AcceptedPods242415{
+
+	It("should return correct results when options are present", func() {
+		options = option.Options242414{
+			AcceptedPods: []option.AcceptedPods242414{
+				{
+					PodMatchLabels:       map[string]string{"foo": "bar"},
+					NamespaceMatchLabels: map[string]string{"foo": "not-bar"},
+					Ports:                []int32{58},
+				},
 				{
 					PodMatchLabels:       map[string]string{"foo": "bar"},
 					NamespaceMatchLabels: map[string]string{"foo": "bar"},
-					EnvironmentVariables: []string{"SECRET_TEST"},
-				},
-			},
-		}
-		r := &v1r11.Rule242415{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: options}
-		shootPod.Spec.Containers[0].Env = []corev1.EnvVar{
-			{
-				Name: "SECRET_TEST",
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						Key: "secret_test",
-					},
+					Justification:        "foo justify",
+					Ports:                []int32{53},
 				},
 			},
 		}
 
+		r := &rules.Rule242414{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: seedNamespaceName, Options: &options}
+
+		acceptedShootPod := shootPod.DeepCopy()
+		acceptedShootPod.Name = "accepted-shoot-pod"
+		acceptedShootPod.Spec.Containers[0].Ports[0].HostPort = 53
+
+		notAcceptedShootPod := shootPod.DeepCopy()
+		notAcceptedShootPod.Name = "not-accepted-shoot-pod"
+		notAcceptedShootPod.Spec.Containers[0].Ports[0].HostPort = 58
+
 		Expect(fakeSeedClient.Create(ctx, seedNamespace)).To(Succeed())
 		Expect(fakeShootClient.Create(ctx, shootNamespace)).To(Succeed())
 		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
-		Expect(fakeShootClient.Create(ctx, shootPod)).To(Succeed())
+		Expect(fakeShootClient.Create(ctx, acceptedShootPod)).To(Succeed())
+		Expect(fakeShootClient.Create(ctx, notAcceptedShootPod)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
@@ -181,16 +187,21 @@ var _ = Describe("#242415", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Passed,
-				Message: "Pod does not use environment to inject secret.",
+				Message: "Container does not use hostPort < 1024.",
 				Target:  rule.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
 			},
 			{
 				Status:  rule.Accepted,
-				Message: "Pod accepted to use environment to inject secret.",
-				Target:  rule.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "shoot", "kind", "pod", "details", "containerName: test, variableName: SECRET_TEST, keyRef: secret_test"),
+				Message: "foo justify",
+				Target:  rule.NewTarget("cluster", "shoot", "name", "accepted-shoot-pod", "namespace", "shoot", "kind", "pod", "details", "containerName: test, port: 53"),
+			},
+			{
+				Status:  rule.Failed,
+				Message: "Container may not use hostPort < 1024.",
+				Target:  rule.NewTarget("cluster", "shoot", "name", "not-accepted-shoot-pod", "namespace", "shoot", "kind", "pod", "details", "containerName: test, port: 58"),
 			},
 		}
 
-		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
 	})
 })
