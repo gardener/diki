@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v1r11_test
+package rules_test
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig/v1r11"
+	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -65,7 +65,7 @@ var _ = Describe("#242442", func() {
 	})
 
 	It("should return correct results when all images use only 1 version", func() {
-		r := &v1r11.Rule242442{Client: client}
+		r := &rules.Rule242442{Client: client}
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
 		pod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:foobar"
@@ -89,7 +89,7 @@ var _ = Describe("#242442", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 	It("should return correct results when a image uses more than 1 version", func() {
-		r := &v1r11.Rule242442{Client: client}
+		r := &rules.Rule242442{Client: client}
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
 		pod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:foobar"
@@ -114,7 +114,7 @@ var _ = Describe("#242442", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 	It("should return passed results when pods are on different nodes", func() {
-		r := &v1r11.Rule242442{Client: client}
+		r := &rules.Rule242442{Client: client}
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
 		pod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:foobar"
@@ -139,9 +139,9 @@ var _ = Describe("#242442", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 	It("should return correct results when options are used", func() {
-		r := &v1r11.Rule242442{
+		r := &rules.Rule242442{
 			Client: client,
-			Options: &v1r11.Options242442{
+			Options: &rules.Options242442{
 				KubeProxyMatchLabels: map[string]string{
 					"foo": "bar",
 				},
@@ -171,7 +171,7 @@ var _ = Describe("#242442", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 	It("should return errored results when containerStatus cannot be found for a given container", func() {
-		r := &v1r11.Rule242442{Client: client}
+		r := &rules.Rule242442{Client: client}
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
 		pod1.Status.ContainerStatuses[0].Name = "not-found"
@@ -190,7 +190,7 @@ var _ = Describe("#242442", func() {
 	})
 	It("should return errored result when kube-proxy pods cannot be found", func() {
 		kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
-		r := &v1r11.Rule242442{Client: client}
+		r := &rules.Rule242442{Client: client}
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())

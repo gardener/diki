@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v1r11_test
+package rules_test
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig/v1r11"
+	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
@@ -64,7 +64,7 @@ var _ = Describe("#242414", func() {
 	})
 
 	It("should return correct results when all pods pass", func() {
-		r := &v1r11.Rule242414{Client: client, Options: &options}
+		r := &rules.Rule242414{Client: client, Options: &options}
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
 		Expect(client.Create(ctx, pod1)).To(Succeed())
@@ -92,7 +92,7 @@ var _ = Describe("#242414", func() {
 	})
 
 	It("should return correct results when a pod fails", func() {
-		r := &v1r11.Rule242414{Client: client, Options: &options}
+		r := &rules.Rule242414{Client: client, Options: &options}
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
 		Expect(client.Create(ctx, pod1)).To(Succeed())
@@ -137,7 +137,7 @@ var _ = Describe("#242414", func() {
 			},
 		}
 
-		r := &v1r11.Rule242414{Client: client, Options: &options}
+		r := &rules.Rule242414{Client: client, Options: &options}
 
 		acceptedShootPod := plainPod.DeepCopy()
 		acceptedShootPod.Name = "accepted-shoot-pod"

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v1r11_test
+package rules_test
 
 import (
 	"context"
@@ -21,10 +21,10 @@ import (
 	fakestrgen "github.com/gardener/diki/pkg/internal/stringgen/fake"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
-	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig/v1r11"
+	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
-	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
+	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
 var _ = Describe("#242467", func() {
@@ -82,7 +82,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 	)
 
 	BeforeEach(func() {
-		sharedv1r11.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
+		sharedrules.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
 		fakeClient = fakeclient.NewClientBuilder().Build()
 
 		Node = &corev1.Node{
@@ -154,11 +154,11 @@ tlsCertFile: /var/lib/certs/tls.crt`
 		fooPod.Name = "foo"
 
 		dikiPod1 = plainPod.DeepCopy()
-		dikiPod1.Name = fmt.Sprintf("diki-%s-%s", sharedv1r11.ID242467, "aaaaaaaaaa")
+		dikiPod1.Name = fmt.Sprintf("diki-%s-%s", sharedrules.ID242467, "aaaaaaaaaa")
 		dikiPod1.Namespace = "kube-system"
 		dikiPod1.Labels = map[string]string{}
 		dikiPod2 = plainPod.DeepCopy()
-		dikiPod2.Name = fmt.Sprintf("diki-%s-%s", sharedv1r11.ID242467, "bbbbbbbbbb")
+		dikiPod2.Name = fmt.Sprintf("diki-%s-%s", sharedrules.ID242467, "bbbbbbbbbb")
 		dikiPod2.Namespace = "kube-system"
 		dikiPod2.Labels = map[string]string{}
 	})
@@ -166,7 +166,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 	It("should fail when etcd pods cannot be found", func() {
 		kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
 		fakePodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
-		r := &v1r11.Rule242467{
+		r := &rules.Rule242467{
 			Logger:     testLogger,
 			InstanceID: instanceID,
 			Client:     fakeClient,
@@ -182,7 +182,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 	})
 
 	DescribeTable("Run cases",
-		func(options v1r11.Options242467, executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
+		func(options rules.Options242467, executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			Expect(fakeClient.Create(ctx, Node)).To(Succeed())
 			Expect(fakeClient.Create(ctx, kubeProxyPod1)).To(Succeed())
 			Expect(fakeClient.Create(ctx, kubeProxyPod2)).To(Succeed())
@@ -191,7 +191,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			Expect(fakeClient.Create(ctx, dikiPod2)).To(Succeed())
 
 			fakePodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
-			r := &v1r11.Rule242467{
+			r := &rules.Rule242467{
 				Logger:     testLogger,
 				InstanceID: instanceID,
 				Client:     fakeClient,
@@ -229,7 +229,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.ErroredCheckResult("no '.key' files found in PKI directory", rule.NewTarget("name", "node01", "kind", "node", "directory", "/var/lib/kubelet/pki")),
 			}),
 		Entry("should check only pod with matched labels",
-			v1r11.Options242467{
+			rules.Options242467{
 				KubeProxyMatchLabels: map[string]string{
 					"component": "kube-proxy",
 				},
@@ -242,7 +242,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "node01", "kind", "node", "details", "fileName: /var/lib/keys/tls.key, permissions: 640")),
 			}),
 		Entry("should return accepted check result when kubeProxyDiabled option is set to true",
-			v1r11.Options242467{
+			rules.Options242467{
 				KubeProxyOptions: option.KubeProxyOptions{
 					KubeProxyDisabled: true,
 				},
@@ -254,7 +254,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "node01", "kind", "node", "details", "fileName: /var/lib/keys/tls.key, permissions: 640")),
 			}),
 		Entry("should check only nodes wtih labels",
-			v1r11.Options242467{
+			rules.Options242467{
 				NodeGroupByLabels: []string{"foo"},
 			},
 			[][]string{{mounts, compliantStats, emptyMounts}},

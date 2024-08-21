@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v1r11
+package rules
 
 import (
 	"cmp"
@@ -27,46 +27,46 @@ import (
 	"github.com/gardener/diki/pkg/shared/images"
 	"github.com/gardener/diki/pkg/shared/provider"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
-	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
+	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
-var _ rule.Rule = &Rule242467{}
+var _ rule.Rule = &Rule242466{}
 
-type Rule242467 struct {
+type Rule242466 struct {
 	InstanceID string
 	Client     client.Client
 	PodContext pod.PodContext
-	Options    *Options242467
+	Options    *Options242466
 	Logger     provider.Logger
 }
 
-type Options242467 struct {
+type Options242466 struct {
 	option.KubeProxyOptions
 	KubeProxyMatchLabels map[string]string `json:"kubeProxyMatchLabels" yaml:"kubeProxyMatchLabels"`
 	NodeGroupByLabels    []string          `json:"nodeGroupByLabels" yaml:"nodeGroupByLabels"`
 }
 
-var _ option.Option = (*Options242467)(nil)
+var _ option.Option = (*Options242466)(nil)
 
-func (o Options242467) Validate() field.ErrorList {
+func (o Options242466) Validate() field.ErrorList {
 	allErrs := validation.ValidateLabels(o.KubeProxyMatchLabels, field.NewPath("kubeProxyMatchLabels"))
 	return append(allErrs, option.ValidateLabelNames(o.NodeGroupByLabels, field.NewPath("nodeGroupByLabels"))...)
 }
 
-func (r *Rule242467) ID() string {
-	return sharedv1r11.ID242467
+func (r *Rule242466) ID() string {
+	return sharedrules.ID242466
 }
 
-func (r *Rule242467) Name() string {
-	return "The Kubernetes PKI keys must have file permissions set to 600 or more restrictive (MEDIUM 242467)"
+func (r *Rule242466) Name() string {
+	return "The Kubernetes PKI CRT must have file permissions set to 644 or more restrictive (MEDIUM 242466)"
 }
 
-func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
 		checkResults               []rule.CheckResult
 		nodeLabels                 []string
 		pods                       []corev1.Pod
-		expectedFilePermissionsMax = "640"
+		expectedFilePermissionsMax = "644"
 		kubeProxySelector          = labels.SelectorFromSet(labels.Set{"role": "proxy"})
 	)
 
@@ -144,7 +144,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (r *Rule242467) checkPods(
+func (r *Rule242466) checkPods(
 	ctx context.Context,
 	pods []corev1.Pod,
 	nodeName, imageName string,
@@ -152,7 +152,7 @@ func (r *Rule242467) checkPods(
 ) []rule.CheckResult {
 	var (
 		checkResults     []rule.CheckResult
-		podName          = fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
+		podName          = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
 		execPodTarget    = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
 		additionalLabels = map[string]string{pod.LabelInstanceID: r.InstanceID}
 	)
@@ -198,7 +198,7 @@ func (r *Rule242467) checkPods(
 
 		for containerName, fileStats := range mappedFileStats {
 			for _, fileStat := range fileStats {
-				if !strings.HasSuffix(fileStat.Path, ".key") && !strings.HasSuffix(fileStat.Path, ".pem") {
+				if !strings.HasSuffix(fileStat.Path, ".crt") && !strings.HasSuffix(fileStat.Path, ".pem") {
 					continue
 				}
 
@@ -223,14 +223,14 @@ func (r *Rule242467) checkPods(
 	return checkResults
 }
 
-func (r *Rule242467) checkKubelet(
+func (r *Rule242466) checkKubelet(
 	ctx context.Context,
 	nodeName, imageName string,
 	expectedFilePermissionsMax string) []rule.CheckResult {
 	var (
 		checkResults      []rule.CheckResult
 		selectedFileStats []intutils.FileStats
-		podName           = fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
+		podName           = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
 		nodeTarget        = rule.NewTarget("name", nodeName, "kind", "node")
 		execPodTarget     = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
 		additionalLabels  = map[string]string{pod.LabelInstanceID: r.InstanceID}
@@ -261,14 +261,14 @@ func (r *Rule242467) checkKubelet(
 	}
 
 	if kubeletConfig.TLSPrivateKeyFile != nil && kubeletConfig.TLSCertFile != nil {
-		if len(*kubeletConfig.TLSPrivateKeyFile) == 0 {
-			return []rule.CheckResult{rule.FailedCheckResult("could not find key file, option tlsPrivateKeyFile is empty.", nodeTarget)}
+		if len(*kubeletConfig.TLSCertFile) == 0 {
+			return []rule.CheckResult{rule.FailedCheckResult("could not find cert file, option tlsCertFile is empty.", nodeTarget)}
 		} else {
-			keyFileStats, err := intutils.GetSingleFileStats(ctx, podExecutor, *kubeletConfig.TLSPrivateKeyFile)
+			certFileStats, err := intutils.GetSingleFileStats(ctx, podExecutor, *kubeletConfig.TLSCertFile)
 			if err != nil {
 				return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
 			}
-			selectedFileStats = append(selectedFileStats, keyFileStats)
+			selectedFileStats = append(selectedFileStats, certFileStats)
 		}
 	} else {
 		kubeletPKIDir := "/var/lib/kubelet/pki"
@@ -287,18 +287,18 @@ func (r *Rule242467) checkKubelet(
 			return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
 		}
 
-		var keyFilesStats []intutils.FileStats
+		var certFilesStats []intutils.FileStats
 		for _, pkiFileStat := range pkiFilesStats {
-			if strings.HasSuffix(pkiFileStat.Path, ".key") || strings.HasSuffix(pkiFileStat.Path, ".pem") {
-				keyFilesStats = append(keyFilesStats, pkiFileStat)
+			if strings.HasSuffix(pkiFileStat.Path, ".crt") || strings.HasSuffix(pkiFileStat.Path, ".pem") {
+				certFilesStats = append(certFilesStats, pkiFileStat)
 			}
 		}
 
-		if len(keyFilesStats) == 0 {
-			return []rule.CheckResult{rule.ErroredCheckResult("no '.key' files found in PKI directory", nodeTarget.With("directory", kubeletPKIDir))}
+		if len(certFilesStats) == 0 {
+			return []rule.CheckResult{rule.ErroredCheckResult("no '.crt' files found in PKI directory", nodeTarget.With("directory", kubeletPKIDir))}
 		}
 
-		selectedFileStats = append(selectedFileStats, keyFilesStats...)
+		selectedFileStats = append(selectedFileStats, certFilesStats...)
 	}
 
 	for _, fileStats := range selectedFileStats {

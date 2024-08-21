@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v1r11
+package rules
 
 import (
 	"cmp"
@@ -27,70 +27,56 @@ import (
 	"github.com/gardener/diki/pkg/shared/images"
 	"github.com/gardener/diki/pkg/shared/provider"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
-	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
+	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
-var _ rule.Rule = &Rule242451{}
+var _ rule.Rule = &Rule242467{}
 
-type Rule242451 struct {
+type Rule242467 struct {
 	InstanceID string
 	Client     client.Client
 	PodContext pod.PodContext
-	Options    *Options242451
+	Options    *Options242467
 	Logger     provider.Logger
 }
 
-type Options242451 struct {
+type Options242467 struct {
 	option.KubeProxyOptions
 	KubeProxyMatchLabels map[string]string `json:"kubeProxyMatchLabels" yaml:"kubeProxyMatchLabels"`
 	NodeGroupByLabels    []string          `json:"nodeGroupByLabels" yaml:"nodeGroupByLabels"`
-	*option.FileOwnerOptions
 }
 
-var _ option.Option = (*Options242451)(nil)
+var _ option.Option = (*Options242467)(nil)
 
-func (o Options242451) Validate() field.ErrorList {
+func (o Options242467) Validate() field.ErrorList {
 	allErrs := validation.ValidateLabels(o.KubeProxyMatchLabels, field.NewPath("kubeProxyMatchLabels"))
-	allErrs = append(allErrs, option.ValidateLabelNames(o.NodeGroupByLabels, field.NewPath("nodeGroupByLabels"))...)
-	if o.FileOwnerOptions != nil {
-		return append(allErrs, o.FileOwnerOptions.Validate()...)
-	}
-	return allErrs
+	return append(allErrs, option.ValidateLabelNames(o.NodeGroupByLabels, field.NewPath("nodeGroupByLabels"))...)
 }
 
-func (r *Rule242451) ID() string {
-	return sharedv1r11.ID242451
+func (r *Rule242467) ID() string {
+	return sharedrules.ID242467
 }
 
-func (r *Rule242451) Name() string {
-	return "The Kubernetes component PKI must be owned by root (MEDIUM 242451)"
+func (r *Rule242467) Name() string {
+	return "The Kubernetes PKI keys must have file permissions set to 600 or more restrictive (MEDIUM 242467)"
 }
 
-func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
-		checkResults      []rule.CheckResult
-		nodeLabels        []string
-		pods              []corev1.Pod
-		options           option.FileOwnerOptions
-		kubeProxySelector = labels.SelectorFromSet(labels.Set{"role": "proxy"})
+		checkResults               []rule.CheckResult
+		nodeLabels                 []string
+		pods                       []corev1.Pod
+		expectedFilePermissionsMax = "640"
+		kubeProxySelector          = labels.SelectorFromSet(labels.Set{"role": "proxy"})
 	)
 
 	if r.Options != nil {
-		if r.Options.FileOwnerOptions != nil {
-			options = *r.Options.FileOwnerOptions
-		}
 		if len(r.Options.KubeProxyMatchLabels) > 0 {
 			kubeProxySelector = labels.SelectorFromSet(labels.Set(r.Options.KubeProxyMatchLabels))
 		}
 		if r.Options.NodeGroupByLabels != nil {
 			nodeLabels = slices.Clone(r.Options.NodeGroupByLabels)
 		}
-	}
-	if len(options.ExpectedFileOwner.Users) == 0 {
-		options.ExpectedFileOwner.Users = []string{"0"}
-	}
-	if len(options.ExpectedFileOwner.Groups) == 0 {
-		options.ExpectedFileOwner.Groups = []string{"0"}
 	}
 
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
@@ -120,7 +106,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	for _, node := range selectedShootNodes {
 		checkResults = append(checkResults,
-			r.checkKubelet(ctx, node.Name, image.String(), options)...)
+			r.checkKubelet(ctx, node.Name, image.String(), expectedFilePermissionsMax)...)
 	}
 
 	// kube-proxy check
@@ -147,7 +133,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 
 		for nodeName, pods := range groupedShootPods {
 			checkResults = append(checkResults,
-				r.checkPods(ctx, pods, nodeName, image.String(), options)...)
+				r.checkPods(ctx, pods, nodeName, image.String(), expectedFilePermissionsMax)...)
 		}
 	}
 
@@ -158,15 +144,15 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 	}, nil
 }
 
-func (r *Rule242451) checkPods(
+func (r *Rule242467) checkPods(
 	ctx context.Context,
 	pods []corev1.Pod,
 	nodeName, imageName string,
-	options option.FileOwnerOptions,
+	expectedFilePermissionsMax string,
 ) []rule.CheckResult {
 	var (
 		checkResults     []rule.CheckResult
-		podName          = fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
+		podName          = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
 		execPodTarget    = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
 		additionalLabels = map[string]string{pod.LabelInstanceID: r.InstanceID}
 	)
@@ -211,60 +197,40 @@ func (r *Rule242451) checkPods(
 		}
 
 		for containerName, fileStats := range mappedFileStats {
-			var (
-				delimiter       = "\t"
-				pkiDirs         = map[string]struct{}{}
-				containerTarget = rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)
-			)
-
-			// We iterate through a files matching certain suffixes and we check their permissions
-			// Directories that contain such files are saved so that they can be checked in the following for cycle
 			for _, fileStat := range fileStats {
-				if !strings.HasSuffix(fileStat.Path, ".key") && !strings.HasSuffix(fileStat.Path, ".pem") && !strings.HasSuffix(fileStat.Path, ".crt") {
+				if !strings.HasSuffix(fileStat.Path, ".key") && !strings.HasSuffix(fileStat.Path, ".pem") {
 					continue
 				}
 
-				pkiDirs[fileStat.Dir()] = struct{}{}
-
-				checkResults = append(checkResults, intutils.MatchFileOwnersCases(fileStat, options.ExpectedFileOwner.Users, options.ExpectedFileOwner.Groups, containerTarget)...)
-			}
-
-			for dir := range pkiDirs {
-				dirStats, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`stat -Lc "%%a%[1]s%%u%[1]s%%g%[1]s%%F%[1]s%%n" %s`, delimiter, dir))
+				containerTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)
+				exceedFilePermissions, err := intutils.ExceedFilePermissions(fileStat.Permissions, expectedFilePermissionsMax)
 				if err != nil {
-					checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
+					checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), containerTarget))
 					continue
 				}
 
-				if len(dirStats) == 0 {
-					checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find file %s", dir), execPodTarget))
+				if exceedFilePermissions {
+					detailedTarget := containerTarget.With("details", fmt.Sprintf("fileName: %s, permissions: %s, expectedPermissionsMax: %s", fileStat.Path, fileStat.Permissions, expectedFilePermissionsMax))
+					checkResults = append(checkResults, rule.FailedCheckResult("File has too wide permissions", detailedTarget))
 					continue
 				}
 
-				dirFilesStats := strings.Split(strings.TrimSpace(dirStats), "\n")
-				dirFileStats, err := intutils.NewFileStats(dirFilesStats[0], delimiter)
-				if err != nil {
-					checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
-					continue
-				}
-
-				checkResults = append(checkResults, intutils.MatchFileOwnersCases(dirFileStats, options.ExpectedFileOwner.Users, options.ExpectedFileOwner.Groups, containerTarget)...)
+				detailedTarget := containerTarget.With("details", fmt.Sprintf("fileName: %s, permissions: %s", fileStat.Path, fileStat.Permissions))
+				checkResults = append(checkResults, rule.PassedCheckResult("File has expected permissions", detailedTarget))
 			}
 		}
 	}
 	return checkResults
 }
 
-func (r *Rule242451) checkKubelet(
+func (r *Rule242467) checkKubelet(
 	ctx context.Context,
 	nodeName, imageName string,
-	options option.FileOwnerOptions) []rule.CheckResult {
+	expectedFilePermissionsMax string) []rule.CheckResult {
 	var (
-		delimiter         = "\t"
 		checkResults      []rule.CheckResult
 		selectedFileStats []intutils.FileStats
-		pkiDirs           = map[string]struct{}{}
-		podName           = fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
+		podName           = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
 		nodeTarget        = rule.NewTarget("name", nodeName, "kind", "node")
 		execPodTarget     = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
 		additionalLabels  = map[string]string{pod.LabelInstanceID: r.InstanceID}
@@ -296,22 +262,13 @@ func (r *Rule242451) checkKubelet(
 
 	if kubeletConfig.TLSPrivateKeyFile != nil && kubeletConfig.TLSCertFile != nil {
 		if len(*kubeletConfig.TLSPrivateKeyFile) == 0 {
-			checkResults = append(checkResults, rule.FailedCheckResult("could not find key file, option tlsPrivateKeyFile is empty.", nodeTarget))
+			return []rule.CheckResult{rule.FailedCheckResult("could not find key file, option tlsPrivateKeyFile is empty.", nodeTarget)}
 		} else {
 			keyFileStats, err := intutils.GetSingleFileStats(ctx, podExecutor, *kubeletConfig.TLSPrivateKeyFile)
 			if err != nil {
-				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
+				return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
 			}
 			selectedFileStats = append(selectedFileStats, keyFileStats)
-		}
-		if len(*kubeletConfig.TLSCertFile) == 0 {
-			checkResults = append(checkResults, rule.FailedCheckResult("could not find cert file, option tlsCertFile is empty.", nodeTarget))
-		} else {
-			certFileStats, err := intutils.GetSingleFileStats(ctx, podExecutor, *kubeletConfig.TLSCertFile)
-			if err != nil {
-				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
-			}
-			selectedFileStats = append(selectedFileStats, certFileStats)
 		}
 	} else {
 		kubeletPKIDir := "/var/lib/kubelet/pki"
@@ -330,47 +287,35 @@ func (r *Rule242451) checkKubelet(
 			return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
 		}
 
-		var selectedFilesStats []intutils.FileStats
+		var keyFilesStats []intutils.FileStats
 		for _, pkiFileStat := range pkiFilesStats {
-			if strings.HasSuffix(pkiFileStat.Path, ".crt") || strings.HasSuffix(pkiFileStat.Path, ".pem") || strings.HasSuffix(pkiFileStat.Path, ".key") {
-				selectedFilesStats = append(selectedFilesStats, pkiFileStat)
+			if strings.HasSuffix(pkiFileStat.Path, ".key") || strings.HasSuffix(pkiFileStat.Path, ".pem") {
+				keyFilesStats = append(keyFilesStats, pkiFileStat)
 			}
 		}
 
-		if len(selectedFilesStats) == 0 {
-			return []rule.CheckResult{rule.ErroredCheckResult("no cert nor key files found in PKI directory", nodeTarget.With("directory", kubeletPKIDir))}
+		if len(keyFilesStats) == 0 {
+			return []rule.CheckResult{rule.ErroredCheckResult("no '.key' files found in PKI directory", nodeTarget.With("directory", kubeletPKIDir))}
 		}
 
-		selectedFileStats = append(selectedFileStats, selectedFilesStats...)
+		selectedFileStats = append(selectedFileStats, keyFilesStats...)
 	}
 
 	for _, fileStats := range selectedFileStats {
-		pkiDirs[fileStats.Dir()] = struct{}{}
-
-		checkResults = append(checkResults, intutils.MatchFileOwnersCases(fileStats, options.ExpectedFileOwner.Users, options.ExpectedFileOwner.Groups, nodeTarget)...)
-	}
-
-	for dir := range pkiDirs {
-		dirStats, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`stat -Lc "%%a%[1]s%%u%[1]s%%g%[1]s%%F%[1]s%%n" %s`, delimiter, dir))
-
+		exceedFilePermissions, err := intutils.ExceedFilePermissions(fileStats.Permissions, expectedFilePermissionsMax)
 		if err != nil {
-			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
+			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), nodeTarget))
 			continue
 		}
 
-		if len(dirStats) == 0 {
-			checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find file %s", dir), execPodTarget))
+		if exceedFilePermissions {
+			detailedTarget := nodeTarget.With("details", fmt.Sprintf("fileName: %s, permissions: %s, expectedPermissionsMax: %s", fileStats.Path, fileStats.Permissions, expectedFilePermissionsMax))
+			checkResults = append(checkResults, rule.FailedCheckResult("File has too wide permissions", detailedTarget))
 			continue
 		}
 
-		dirFilesStats := strings.Split(strings.TrimSpace(dirStats), "\n")
-		dirFileStats, err := intutils.NewFileStats(dirFilesStats[0], delimiter)
-		if err != nil {
-			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
-			continue
-		}
-
-		checkResults = append(checkResults, intutils.MatchFileOwnersCases(dirFileStats, options.ExpectedFileOwner.Users, options.ExpectedFileOwner.Groups, nodeTarget)...)
+		detailedTarget := nodeTarget.With("details", fmt.Sprintf("fileName: %s, permissions: %s", fileStats.Path, fileStats.Permissions))
+		checkResults = append(checkResults, rule.PassedCheckResult("File has expected permissions", detailedTarget))
 	}
 	return checkResults
 }

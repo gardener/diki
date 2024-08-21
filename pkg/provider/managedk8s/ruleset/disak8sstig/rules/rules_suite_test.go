@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v1r11_test
+package rules_test
 
 import (
 	"log/slog"
@@ -17,10 +17,10 @@ import (
 
 var testLogger provider.Logger
 
-func TestV1R11(t *testing.T) {
+func TestRules(t *testing.T) {
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
 	logger := slog.New(handler)
 	testLogger = logger
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "DISA Kubernetes STIG V1R11 Test Suite")
+	RunSpecs(t, "DISA Kubernetes STIG rules Test Suite")
 }
