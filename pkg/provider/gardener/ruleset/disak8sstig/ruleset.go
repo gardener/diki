@@ -118,6 +118,10 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabel
 		if err := ruleset.registerV1R11Rules(ruleOptions); err != nil {
 			return nil, err
 		}
+	case "v2r1":
+		if err := ruleset.registerV2R1Rules(ruleOptions); err != nil {
+			return nil, err
+		}
 	default:
 		return nil, fmt.Errorf("unknown ruleset %s version: %s", rulesetConfig.ID, rulesetConfig.Version)
 	}
