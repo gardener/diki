@@ -31,7 +31,7 @@ diki run \
     --config=./example/guides/partial-disa-k8s-stig-shoot.yaml \
     --provider=managedk8s \
     --ruleset-id=disa-kubernetes-stig \
-    --ruleset-version=v1r11 \
+    --ruleset-version=v2r1 \
     --output=disa-k8s-stigs-report.json
 ```
 
