@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v1r11
+package rules
 
 import (
 	"cmp"
@@ -24,7 +24,7 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/images"
 	"github.com/gardener/diki/pkg/shared/provider"
-	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
+	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
 var _ rule.Rule = &Rule242466{}
@@ -38,7 +38,7 @@ type Rule242466 struct {
 }
 
 func (r *Rule242466) ID() string {
-	return sharedv1r11.ID242466
+	return sharedrules.ID242466
 }
 
 func (r *Rule242466) Name() string {
@@ -136,7 +136,7 @@ func (r *Rule242466) checkPods(
 ) []rule.CheckResult {
 	var (
 		checkResults     []rule.CheckResult
-		podName          = fmt.Sprintf("diki-%s-%s", r.ID(), sharedv1r11.Generator.Generate(10))
+		podName          = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
 		execPodTarget    = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
 		additionalLabels = map[string]string{pod.LabelInstanceID: r.InstanceID}
 	)

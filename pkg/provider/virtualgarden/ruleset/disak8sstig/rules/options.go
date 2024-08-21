@@ -2,13 +2,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v1r11
+package rules
 
 import (
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
-	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
+	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
 type RuleOption interface {
-	sharedv1r11.Options245543 | sharedv1r11.Options254800 | option.FileOwnerOptions
+	sharedrules.Options245543 | sharedrules.Options254800 | option.FileOwnerOptions
 }

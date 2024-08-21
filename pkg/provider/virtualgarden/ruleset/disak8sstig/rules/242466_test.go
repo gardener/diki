@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v1r11_test
+package rules_test
 
 import (
 	"context"
@@ -22,9 +22,9 @@ import (
 	fakestrgen "github.com/gardener/diki/pkg/internal/stringgen/fake"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
-	"github.com/gardener/diki/pkg/provider/virtualgarden/ruleset/disak8sstig/v1r11"
+	"github.com/gardener/diki/pkg/provider/virtualgarden/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
-	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
+	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
 var _ = Describe("#242466", func() {
@@ -78,7 +78,7 @@ var _ = Describe("#242466", func() {
 	)
 
 	BeforeEach(func() {
-		sharedv1r11.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
+		sharedrules.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
 		fakeClient = fakeclient.NewClientBuilder().Build()
 
 		Node = &corev1.Node{
@@ -223,7 +223,7 @@ var _ = Describe("#242466", func() {
 		fooPod.Name = "foo"
 
 		dikiPod = plainPod.DeepCopy()
-		dikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedv1r11.ID242466, "aaaaaaaaaa")
+		dikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedrules.ID242466, "aaaaaaaaaa")
 		dikiPod.Namespace = "kube-system"
 		dikiPod.Labels = map[string]string{}
 
@@ -239,7 +239,7 @@ var _ = Describe("#242466", func() {
 		mainSelector := labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-main"})
 		eventsSelector := labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-events"})
 		fakePodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
-		r := &v1r11.Rule242466{
+		r := &rules.Rule242466{
 			Logger:     testLogger,
 			InstanceID: instanceID,
 			Client:     fakeClient,
@@ -267,7 +267,7 @@ var _ = Describe("#242466", func() {
 			Expect(fakeClient.Create(ctx, dikiPod)).To(Succeed())
 
 			fakePodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
-			r := &v1r11.Rule242466{
+			r := &rules.Rule242466{
 				Logger:     testLogger,
 				InstanceID: instanceID,
 				Client:     fakeClient,

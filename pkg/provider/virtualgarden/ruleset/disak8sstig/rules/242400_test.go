@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v1r11_test
+package rules_test
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/virtualgarden/ruleset/disak8sstig/v1r11"
+	"github.com/gardener/diki/pkg/provider/virtualgarden/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -53,7 +53,7 @@ var _ = Describe("#242400", func() {
 	})
 
 	It("should error when deployment are not found", func() {
-		r := &v1r11.Rule242400{Client: fakeClient, Namespace: namespace}
+		r := &rules.Rule242400{Client: fakeClient, Namespace: namespace}
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
@@ -87,7 +87,7 @@ var _ = Describe("#242400", func() {
 		Expect(fakeClient.Create(ctx, kapiDeployment)).To(Succeed())
 		Expect(fakeClient.Create(ctx, kcmDeployment)).To(Succeed())
 
-		r := &v1r11.Rule242400{Client: fakeClient, Namespace: namespace}
+		r := &rules.Rule242400{Client: fakeClient, Namespace: namespace}
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
@@ -113,7 +113,7 @@ var _ = Describe("#242400", func() {
 		Expect(fakeClient.Create(ctx, kapiDeployment)).To(Succeed())
 		Expect(fakeClient.Create(ctx, kcmDeployment)).To(Succeed())
 
-		r := &v1r11.Rule242400{Client: fakeClient, Namespace: namespace}
+		r := &rules.Rule242400{Client: fakeClient, Namespace: namespace}
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
@@ -139,7 +139,7 @@ var _ = Describe("#242400", func() {
 		Expect(fakeClient.Create(ctx, kapiDeployment)).To(Succeed())
 		Expect(fakeClient.Create(ctx, kcmDeployment)).To(Succeed())
 
-		r := &v1r11.Rule242400{
+		r := &rules.Rule242400{
 			Client:    fakeClient,
 			Namespace: namespace,
 		}

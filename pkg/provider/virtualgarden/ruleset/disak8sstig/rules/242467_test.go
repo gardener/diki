@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v1r11_test
+package rules_test
 
 import (
 	"context"
@@ -22,13 +22,12 @@ import (
 	fakestrgen "github.com/gardener/diki/pkg/internal/stringgen/fake"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
-	"github.com/gardener/diki/pkg/provider/virtualgarden/ruleset/disak8sstig/v1r11"
+	"github.com/gardener/diki/pkg/provider/virtualgarden/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
-	sharedv1r11 "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/v1r11"
+	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
-var _ = Describe("#242451", func() {
+var _ = Describe("#242467", func() {
 	const (
 		mounts = `[
   {
@@ -54,12 +53,10 @@ var _ = Describe("#242451", func() {
     "source": "/destination"
   }
 ]`
-		emptyMounts           = `[]`
-		compliantFileStats    = "600\t0\t0\tregular file\t/destination/file1.key\n400\t0\t0\tregular file\t/destination/file2.pem"
-		compliantDirStats     = "600\t0\t0\tdirectory\t/destination\n"
-		compliantFileStats2   = "600\t0\t0\tregular file\t/destination/file3.crt\n600\t1000\t0\tregular file\t/destination/file4.txt\n"
-		nonCompliantFileStats = "644\t0\t1000\tregular file\t/destination/file1.key\n700\t2000\t0\tregular file\t/destination/file2.pem\n"
-		nonCompliantDirStats  = "600\t65532\t0\tdirectory\t/destination\n"
+		emptyMounts       = `[]`
+		compliantStats    = "640\t0\t0\tregular file\t/destination/file1.key\n400\t0\t65532\tregular file\t/destination/bar/file2.pem"
+		compliantStats2   = "600\t0\t0\tregular file\t/destination/file3.key\n600\t1000\t0\tregular file\t/destination/bar/file4.txt\n"
+		nonCompliantStats = "644\t0\t0\tregular file\t/destination/file1.key\n700\t0\t0\tregular file\t/destination/bar/file2.pem\n"
 	)
 	var (
 		instanceID               = "1"
@@ -81,7 +78,7 @@ var _ = Describe("#242451", func() {
 	)
 
 	BeforeEach(func() {
-		sharedv1r11.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
+		sharedrules.Generator = &fakestrgen.FakeRandString{Rune: 'a'}
 		fakeClient = fakeclient.NewClientBuilder().Build()
 
 		Node = &corev1.Node{
@@ -226,7 +223,7 @@ var _ = Describe("#242451", func() {
 		fooPod.Name = "foo"
 
 		dikiPod = plainPod.DeepCopy()
-		dikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedv1r11.ID242451, "aaaaaaaaaa")
+		dikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedrules.ID242467, "aaaaaaaaaa")
 		dikiPod.Namespace = "kube-system"
 		dikiPod.Labels = map[string]string{}
 
@@ -242,7 +239,7 @@ var _ = Describe("#242451", func() {
 		mainSelector := labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-main"})
 		eventsSelector := labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-events"})
 		fakePodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
-		r := &v1r11.Rule242451{
+		r := &rules.Rule242467{
 			Logger:     testLogger,
 			InstanceID: instanceID,
 			Client:     fakeClient,
@@ -262,7 +259,7 @@ var _ = Describe("#242451", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(options *option.FileOwnerOptions, executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
+		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			Expect(fakeClient.Create(ctx, etcdMainPod)).To(Succeed())
 			Expect(fakeClient.Create(ctx, etcdEventsPod)).To(Succeed())
 			Expect(fakeClient.Create(ctx, kubeAPIServerPod)).To(Succeed())
@@ -270,77 +267,55 @@ var _ = Describe("#242451", func() {
 			Expect(fakeClient.Create(ctx, dikiPod)).To(Succeed())
 
 			fakePodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
-			r := &v1r11.Rule242451{
+			r := &rules.Rule242467{
 				Logger:     testLogger,
 				InstanceID: instanceID,
 				Client:     fakeClient,
 				Namespace:  Namespace,
 				PodContext: fakePodContext,
-				Options:    options,
 			}
 
 			ruleResult, err := r.Run(ctx)
 
 			Expect(err).To(BeNil())
-			Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
+			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 		},
-		Entry("should return passed checkResults when files have expected owners", nil,
-			[][]string{{mounts, compliantFileStats, compliantDirStats, mounts, compliantFileStats2, compliantDirStats, emptyMounts, emptyMounts}},
-			[][]error{{nil, nil, nil, nil, nil, nil, nil, nil}},
+		Entry("should return passed checkResults when files have expected permissions",
+			[][]string{{mounts, compliantStats, mounts, compliantStats2, emptyMounts, emptyMounts, emptyMounts}},
+			[][]error{{nil, nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.crt, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 640")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.key, permissions: 600")),
 			}),
-		Entry("should return failed checkResults when files do not have expected owners", nil,
-			[][]string{{mounts, nonCompliantFileStats, nonCompliantDirStats, emptyMounts, emptyMounts, emptyMounts}},
+		Entry("should return failed checkResults when files have too wide permissions",
+			[][]string{{mounts, nonCompliantStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerGroup: 1000, expectedOwnerGroups: [0]")),
-				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 2000, expectedOwnerUsers: [0]")),
-				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 65532, expectedOwnerUsers: [0]")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 644, expectedPermissionsMax: 640")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 700, expectedPermissionsMax: 640")),
 			}),
-		Entry("should return correct checkResults when options are used", &option.FileOwnerOptions{
-			ExpectedFileOwner: option.ExpectedOwner{
-				Users:  []string{"0", "2000"},
-				Groups: []string{"0", "1000"},
-			},
-		},
-			[][]string{{mounts, nonCompliantFileStats, nonCompliantDirStats, emptyMounts, emptyMounts, emptyMounts}},
-			[][]error{{nil, nil, nil, nil, nil, nil}},
+		Entry("should correctly return errored checkResults when commands error",
+			[][]string{{mounts, mounts, compliantStats2, emptyMounts, emptyMounts, emptyMounts}},
+			[][]error{{errors.New("foo"), nil, errors.New("bar"), nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 1000")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 2000, ownerGroup: 0")),
-				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 65532, expectedOwnerUsers: [0 2000]")),
+				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242467-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
+				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242467-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
 			}),
-		Entry("should correctly return errored checkResults when commands error", nil,
-			[][]string{{mounts, mounts, compliantFileStats2, mounts, compliantFileStats, "", emptyMounts}},
-			[][]error{{errors.New("foo"), nil, errors.New("bar"), nil, nil, errors.New("foo-bar"), nil}},
-			[]rule.CheckResult{
-				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "virtual-garden-kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "virtual-garden-kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
-				rule.ErroredCheckResult("foo-bar", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-			}),
-		Entry("should check files when GetMountedFilesStats errors", nil,
-			[][]string{{mountsMulty, compliantFileStats, emptyMounts, compliantDirStats, emptyMounts, emptyMounts, emptyMounts}},
+		Entry("should check files when GetMountedFilesStats errors",
+			[][]string{{mountsMulty, compliantStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, errors.New("bar"), nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
+				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242467-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 640")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
 			}),
-		Entry("should correctly return all checkResults when commands error", nil,
-			[][]string{{mounts, mounts, compliantFileStats2, compliantDirStats, emptyMounts, emptyMounts}},
+		Entry("should correctly return all checkResults when commands error",
+			[][]string{{mounts, mounts, compliantStats2, emptyMounts, emptyMounts, emptyMounts}},
 			[][]error{{errors.New("foo"), nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.crt, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
+				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242467-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.key, permissions: 600")),
 			}),
 	)
 })

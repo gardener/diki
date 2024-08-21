@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v1r11_test
+package rules_test
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/provider/virtualgarden/ruleset/disak8sstig/v1r11"
+	"github.com/gardener/diki/pkg/provider/virtualgarden/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -63,7 +63,7 @@ var _ = Describe("#242442", func() {
 	})
 
 	It("should return correct results when all images use only 1 version", func() {
-		r := &v1r11.Rule242442{Client: fakeClient, Namespace: namespace}
+		r := &rules.Rule242442{Client: fakeClient, Namespace: namespace}
 		pod.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:foobar"
 		pod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:foo"
 		pod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:bar"
@@ -79,7 +79,7 @@ var _ = Describe("#242442", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 	It("should return correct results when a image uses more than 1 version", func() {
-		r := &v1r11.Rule242442{Client: fakeClient, Namespace: namespace}
+		r := &rules.Rule242442{Client: fakeClient, Namespace: namespace}
 		pod.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:foobar"
 		pod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:foo"
 		pod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image2@sha256:bar"
@@ -95,7 +95,7 @@ var _ = Describe("#242442", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 	It("should return errored results when containerStatus cannot be found for a given container", func() {
-		r := &v1r11.Rule242442{Client: fakeClient, Namespace: namespace}
+		r := &rules.Rule242442{Client: fakeClient, Namespace: namespace}
 		pod.Status.ContainerStatuses[0].Name = "not-foo"
 		pod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:foo"
 		pod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:bar"
