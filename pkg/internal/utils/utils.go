@@ -297,17 +297,17 @@ func matchHostPathSources(sources sets.Set[string], destination, containerName s
 //	filePermissions = "0700" filePermissionsMax = "0644"
 //	filePermissions = "0755" filePermissionsMax = "0644"
 func ExceedFilePermissions(filePermissions, filePermissionsMax string) (bool, error) {
-	filePermissionsInt, err := strconv.ParseInt(filePermissions, 8, 32)
+	filePermissionsInt, err := strconv.ParseUint(filePermissions, 8, 32)
 	if err != nil {
 		return false, err
 	}
-	filePermissionsMaxInt, err := strconv.ParseInt(filePermissionsMax, 8, 32)
+	filePermissionsMaxInt, err := strconv.ParseUint(filePermissionsMax, 8, 32)
 	if err != nil {
 		return false, err
 	}
 
-	fileModePermission := os.FileMode(filePermissionsInt)
-	fileModePermissionsMax := os.FileMode(filePermissionsMaxInt)
+	fileModePermission := os.FileMode(filePermissionsInt)        // #nosec G115
+	fileModePermissionsMax := os.FileMode(filePermissionsMaxInt) // #nosec G115
 	return fileModePermission&^fileModePermissionsMax != 0, nil
 }
 
