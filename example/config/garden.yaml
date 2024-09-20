@@ -1,0 +1,28 @@
+providers:       # contains information about known providers
+- id: garden     # unique provider identifier
+  name: "Garden" # user friendly name of the provider
+  metadata:
+    foo: bar
+  args:
+    # additionalOpsPodLabels: # pod labels that will be added to diki ops pods
+    #   foo: bar
+    kubeconfigPath: /tmp/garden.config  # path to garden cluster kubeconfig
+  rulesets:
+  - id: hardened-gardener-shoot
+    name: Hardened Gardener Shoot Guide
+    version: v0r0
+    args:
+      projectNamespace: garden-project-name # name of project namespace containing the shoot resource to be tested
+      shootName: foo                        # name of shoot resource to be tested
+    ruleOptions:
+    # - ruleID: "0"
+    #   skip:
+    #     enabled: true
+    #     justification: "the whole rule is accepted for ... reasons"
+# metadata: # optional, additional metadata to be added to summary json report
+#   foo: bar
+#   bar:
+#     foo: bar
+output:
+  path: /tmp/test-output.json # optional, path to summary json report. If --output flag is set this configuration is ignored
+  minStatus: Passed
