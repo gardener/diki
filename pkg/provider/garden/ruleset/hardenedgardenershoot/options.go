@@ -48,15 +48,13 @@ func WithArgs(args Args) CreateOption {
 
 		if len(args.ProjectNamespace) == 0 {
 			panic("project namespace should not be empty")
-		} else {
-			r.args.ProjectNamespace = args.ProjectNamespace
 		}
-
 		if len(args.ShootName) == 0 {
 			panic("shoot name should not be empty")
-		} else {
-			r.args.ShootName = args.ShootName
 		}
+
+		r.args.ProjectNamespace = args.ProjectNamespace
+		r.args.ShootName = args.ShootName
 	}
 }
 

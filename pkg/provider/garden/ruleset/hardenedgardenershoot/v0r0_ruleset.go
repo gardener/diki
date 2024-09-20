@@ -19,7 +19,11 @@ import (
 
 func (r *Ruleset) registerV0R0Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
 	configScheme := runtime.NewScheme()
-	gardencorev1beta1.AddToScheme(configScheme)
+	err := gardencorev1beta1.AddToScheme(configScheme)
+	if err != nil {
+		return err
+	}
+
 	c, err := client.New(r.Config, client.Options{
 		Scheme: configScheme,
 	})
