@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package hardenedgardenershoot
+package securityhardenedshootcluster
 
 import (
 	"log/slog"
@@ -38,14 +38,6 @@ func WithConfig(config *rest.Config) CreateOption {
 // WithArgs sets the args of a [Ruleset].
 func WithArgs(args Args) CreateOption {
 	return func(r *Ruleset) {
-		switch {
-		case args.MaxRetries == nil:
-		case *args.MaxRetries < 0:
-			panic("max retries should not be a negative number")
-		default:
-			r.args.MaxRetries = args.MaxRetries
-		}
-
 		if len(args.ProjectNamespace) == 0 {
 			panic("project namespace should not be empty")
 		}

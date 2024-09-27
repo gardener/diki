@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package hardenedgardenershoot
+package securityhardenedshootcluster
 
 import (
 	"context"
@@ -12,7 +12,6 @@ import (
 
 	"github.com/google/uuid"
 	"k8s.io/client-go/rest"
-	"k8s.io/utils/ptr"
 
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/rule"
@@ -21,13 +20,13 @@ import (
 )
 
 const (
-	// RulesetID is a constant containing the id of a Hardened Gardener Shoot Ruleset
-	RulesetID = "hardened-gardener-shoot"
+	// RulesetID is a constant containing the id of a Security Hardened Shoot Cluster Ruleset
+	RulesetID = "security-hardened-shoot-cluster"
 )
 
 var _ ruleset.Ruleset = &Ruleset{}
 
-// Ruleset implements Hardened Gardener Shoot.
+// Ruleset implements Security Hardened Shoot Cluster.
 type Ruleset struct {
 	version                string
 	rules                  map[string]rule.Rule
@@ -43,7 +42,6 @@ type Ruleset struct {
 type Args struct {
 	ShootName        string `json:"shootName" yaml:"shootName"`
 	ProjectNamespace string `json:"projectNamespace" yaml:"projectNamespace"`
-	MaxRetries       *int   `json:"maxRetries" yaml:"maxRetries"`
 }
 
 // New creates a new Ruleset.
@@ -51,9 +49,6 @@ func New(options ...CreateOption) (*Ruleset, error) {
 	r := &Ruleset{
 		rules:      map[string]rule.Rule{},
 		numWorkers: 5,
-		args: Args{
-			MaxRetries: ptr.To(1),
-		},
 		instanceID: uuid.New().String(),
 	}
 
@@ -71,7 +66,7 @@ func (r *Ruleset) ID() string {
 
 // Name returns the name of the Ruleset.
 func (r *Ruleset) Name() string {
-	return "Hardened Gardener Shoot Guide"
+	return "Security Hardened Shoot Cluster"
 }
 
 // Version returns the version of the Ruleset.
@@ -111,8 +106,8 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabel
 	}
 
 	switch rulesetConfig.Version {
-	case "v0r0":
-		if err := ruleset.registerV0R0Rules(ruleOptions); err != nil {
+	case "v0.0.0":
+		if err := ruleset.registerV00Rules(ruleOptions); err != nil {
 			return nil, err
 		}
 	default:

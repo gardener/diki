@@ -2,50 +2,29 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package hardenedgardenershoot
+package securityhardenedshootcluster
 
 import (
-	"context"
 	"fmt"
 
-	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	gardenerk8s "github.com/gardener/gardener/pkg/client/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/rule"
 )
 
-func (r *Ruleset) registerV0R0Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
-	configScheme := runtime.NewScheme()
-	err := gardencorev1beta1.AddToScheme(configScheme)
-	if err != nil {
-		return err
-	}
-
-	c, err := client.New(r.Config, client.Options{
-		Scheme: configScheme,
+func (r *Ruleset) registerV00Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
+	_, err := client.New(r.Config, client.Options{
+		Scheme: gardenerk8s.GardenScheme,
 	})
-	if err != nil {
-		return err
-	}
-
-	shoot := &gardencorev1beta1.Shoot{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      r.args.ShootName,
-			Namespace: r.args.ProjectNamespace,
-		},
-	}
-
-	err = c.Get(context.TODO(), client.ObjectKeyFromObject(shoot), shoot)
 	if err != nil {
 		return err
 	}
 
 	rules := []rule.Rule{
 		rule.NewSkipRule(
-			"0",
+			"1000",
 			"Rule Name",
 			"Not implemented.",
 			rule.NotImplemented,

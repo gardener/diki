@@ -8,14 +8,14 @@ providers:       # contains information about known providers
     #   foo: bar
     kubeconfigPath: /tmp/garden.config  # path to garden cluster kubeconfig
   rulesets:
-  - id: hardened-gardener-shoot
-    name: Hardened Gardener Shoot Guide
-    version: v0r0
+  - id: security-hardened-shoot-cluster
+    name: Security Hardened Shoot Cluster
+    version: v0.0.0
     args:
       projectNamespace: garden-project-name # name of project namespace containing the shoot resource to be tested
       shootName: foo                        # name of shoot resource to be tested
     ruleOptions:
-    # - ruleID: "0"
+    # - ruleID: "1000"
     #   skip:
     #     enabled: true
     #     justification: "the whole rule is accepted for ... reasons"
