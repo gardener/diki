@@ -15,6 +15,7 @@ import (
 
 func main() {
 	cmd := app.NewDikiCommand(context.Background(), map[string]provider.ProviderFromConfigFunc{
+		"garden":        builder.GardenProviderFromConfig,
 		"gardener":      builder.GardenerProviderFromConfig,
 		"managedk8s":    builder.ManagedK8SProviderFromConfig,
 		"virtualgarden": builder.VirtualGardenProviderFromConfig,
