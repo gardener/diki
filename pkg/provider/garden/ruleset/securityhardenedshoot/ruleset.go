@@ -101,8 +101,8 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.C
 	}
 
 	switch rulesetConfig.Version {
-	case "v0.0.0":
-		if err := ruleset.registerV00Rules(ruleOptions); err != nil {
+	case "v0.1.0":
+		if err := ruleset.registerV01Rules(ruleOptions); err != nil {
 			return nil, err
 		}
 	default:

@@ -8,7 +8,7 @@ The `Garden` provider is capable of accessing a Garden cluster environment and r
 
 The `Garden` provider implements the following `rulesets`:
 - Security Hardened Shoot Cluster
-    - v0.0.0
+    - v0.1.0
 
 ### Configuration
 
