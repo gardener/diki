@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package securityhardenedshootcluster
+package securityhardenedshoot
 
 import (
 	"context"
@@ -28,14 +28,13 @@ var _ ruleset.Ruleset = &Ruleset{}
 
 // Ruleset implements Security Hardened Shoot Cluster.
 type Ruleset struct {
-	version                string
-	rules                  map[string]rule.Rule
-	AdditionalOpsPodLabels map[string]string
-	Config                 *rest.Config
-	numWorkers             int
-	args                   Args
-	instanceID             string
-	logger                 *slog.Logger
+	version    string
+	rules      map[string]rule.Rule
+	Config     *rest.Config
+	numWorkers int
+	args       Args
+	instanceID string
+	logger     *slog.Logger
 }
 
 // Args are Ruleset specific arguments.
@@ -75,7 +74,7 @@ func (r *Ruleset) Version() string {
 }
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
-func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabels map[string]string, managedConfig *rest.Config) (*Ruleset, error) {
+func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.Config) (*Ruleset, error) {
 	rulesetArgsByte, err := json.Marshal(rulesetConfig.Args)
 	if err != nil {
 		return nil, err
@@ -88,7 +87,6 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabel
 
 	ruleset, err := New(
 		WithVersion(rulesetConfig.Version),
-		WithAdditionalOpsPodLabels(additionalOpsPodLabels),
 		WithConfig(managedConfig),
 		WithArgs(rulesetArgs),
 	)

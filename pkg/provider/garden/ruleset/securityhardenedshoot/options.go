@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package securityhardenedshootcluster
+package securityhardenedshoot
 
 import (
 	"log/slog"
@@ -18,13 +18,6 @@ type CreateOption func(*Ruleset)
 func WithVersion(version string) CreateOption {
 	return func(r *Ruleset) {
 		r.version = version
-	}
-}
-
-// WithAdditionalOpsPodLabels sets the AdditionalOpsPodLabels of a [Ruleset].
-func WithAdditionalOpsPodLabels(labels map[string]string) CreateOption {
-	return func(r *Ruleset) {
-		r.AdditionalOpsPodLabels = labels
 	}
 }
 

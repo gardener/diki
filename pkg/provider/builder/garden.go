@@ -11,7 +11,7 @@ import (
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/provider"
 	"github.com/gardener/diki/pkg/provider/garden"
-	"github.com/gardener/diki/pkg/provider/garden/ruleset/securityhardenedshootcluster"
+	"github.com/gardener/diki/pkg/provider/garden/ruleset/securityhardenedshoot"
 	"github.com/gardener/diki/pkg/ruleset"
 )
 
@@ -29,12 +29,12 @@ func GardenProviderFromConfig(conf config.ProviderConfig) (provider.Provider, er
 	rulesets := make([]ruleset.Ruleset, 0, len(conf.Rulesets))
 	for _, rulesetConfig := range conf.Rulesets {
 		switch rulesetConfig.ID {
-		case securityhardenedshootcluster.RulesetID:
-			ruleset, err := securityhardenedshootcluster.FromGenericConfig(rulesetConfig, p.AdditionalOpsPodLabels, p.Config)
+		case securityhardenedshoot.RulesetID:
+			ruleset, err := securityhardenedshoot.FromGenericConfig(rulesetConfig, p.Config)
 			if err != nil {
 				return nil, err
 			}
-			setLoggerHardened := securityhardenedshootcluster.WithLogger(providerLogger.With("ruleset", ruleset.ID(), "version", ruleset.Version()))
+			setLoggerHardened := securityhardenedshoot.WithLogger(providerLogger.With("ruleset", ruleset.ID(), "version", ruleset.Version()))
 			setLoggerHardened(ruleset)
 			rulesets = append(rulesets, ruleset)
 		default:

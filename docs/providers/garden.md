@@ -2,12 +2,12 @@
 
 ## Provider
 
-The `Garden` provider is capable of accessing a `garden` environment and running `rulesets` against it.
+The `Garden` provider is capable of accessing a Garden cluster environment and running `rulesets` against it.
 
 ## Rulesets
 
-The `Gardener` provider implements the following `rulesets`:
-- Hardened Gardener Shoot Guide
+The `Garden` provider implements the following `rulesets`:
+- Security Hardened Shoot Cluster
     - v0.0.0
 
 ### Configuration
