@@ -443,9 +443,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242445)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242445)),
 			retry.WithBaseRule(&sharedrules.Rule242445{
-				Logger:             r.Logger().With("rule", sharedrules.ID242445),
+				Logger:             r.Logger().With("rule_id", sharedrules.ID242445),
 				InstanceID:         r.instanceID,
 				Client:             runtimeClient,
 				Namespace:          ns,
@@ -458,9 +458,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			retry.WithMaxRetries(*r.args.MaxRetries),
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242446)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242446)),
 			retry.WithBaseRule(&sharedrules.Rule242446{
-				Logger:          r.Logger().With("rule", sharedrules.ID242446),
+				Logger:          r.Logger().With("rule_id", sharedrules.ID242446),
 				InstanceID:      r.instanceID,
 				Client:          runtimeClient,
 				Namespace:       ns,
@@ -496,9 +496,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242451)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242451)),
 			retry.WithBaseRule(&rules.Rule242451{
-				Logger:     r.Logger().With("rule", sharedrules.ID242451),
+				Logger:     r.Logger().With("rule_id", sharedrules.ID242451),
 				InstanceID: r.instanceID,
 				Client:     runtimeClient,
 				Namespace:  ns,
@@ -545,9 +545,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242459)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242459)),
 			retry.WithBaseRule(&sharedrules.Rule242459{
-				Logger:             r.Logger().With("rule", sharedrules.ID242459),
+				Logger:             r.Logger().With("rule_id", sharedrules.ID242459),
 				InstanceID:         r.instanceID,
 				Client:             runtimeClient,
 				Namespace:          ns,
@@ -559,9 +559,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			retry.WithMaxRetries(*r.args.MaxRetries),
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242460)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242460)),
 			retry.WithBaseRule(&sharedrules.Rule242460{
-				Logger:          r.Logger().With("rule", sharedrules.ID242460),
+				Logger:          r.Logger().With("rule_id", sharedrules.ID242460),
 				InstanceID:      r.instanceID,
 				Client:          runtimeClient,
 				Namespace:       ns,
@@ -602,9 +602,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242466)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242466)),
 			retry.WithBaseRule(&rules.Rule242466{
-				Logger:     r.Logger().With("rule", sharedrules.ID242466),
+				Logger:     r.Logger().With("rule_id", sharedrules.ID242466),
 				InstanceID: r.instanceID,
 				Client:     runtimeClient,
 				Namespace:  ns,
@@ -614,9 +614,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			retry.WithMaxRetries(*r.args.MaxRetries),
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242467)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242467)),
 			retry.WithBaseRule(&rules.Rule242467{
-				Logger:     r.Logger().With("rule", sharedrules.ID242467),
+				Logger:     r.Logger().With("rule_id", sharedrules.ID242467),
 				InstanceID: r.instanceID,
 				Client:     runtimeClient,
 				Namespace:  ns,

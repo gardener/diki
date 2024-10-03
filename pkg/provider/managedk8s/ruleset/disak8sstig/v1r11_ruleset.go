@@ -242,9 +242,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			V1RESTClient: clientSet.CoreV1().RESTClient(),
 		},
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242393)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242393)),
 			retry.WithBaseRule(&sharedrules.Rule242393{
-				Logger:     r.Logger().With("rule", sharedrules.ID242393),
+				Logger:     r.Logger().With("rule_id", sharedrules.ID242393),
 				InstanceID: r.instanceID,
 				Client:     client,
 				PodContext: podContext,
@@ -254,9 +254,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			retry.WithMaxRetries(*r.args.MaxRetries),
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242394)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242394)),
 			retry.WithBaseRule(&sharedrules.Rule242394{
-				Logger:     r.Logger().With("rule", sharedrules.ID242394),
+				Logger:     r.Logger().With("rule_id", sharedrules.ID242394),
 				InstanceID: r.instanceID,
 				Client:     client,
 				PodContext: podContext,
@@ -267,9 +267,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		),
 		&sharedrules.Rule242395{Client: client},
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242396)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242396)),
 			retry.WithBaseRule(&sharedrules.Rule242396{
-				Logger:     r.Logger().With("rule", sharedrules.ID242396),
+				Logger:     r.Logger().With("rule_id", sharedrules.ID242396),
 				InstanceID: r.instanceID,
 				Client:     client,
 				PodContext: podContext,
@@ -295,9 +295,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			V1RESTClient:      clientSet.CoreV1().RESTClient(),
 		},
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242400)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242400)),
 			retry.WithBaseRule(&rules.Rule242400{
-				Logger:       r.Logger().With("rule", sharedrules.ID242400),
+				Logger:       r.Logger().With("rule_id", sharedrules.ID242400),
 				InstanceID:   r.instanceID,
 				Client:       client,
 				PodContext:   podContext,
@@ -321,9 +321,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242404)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242404)),
 			retry.WithBaseRule(&sharedrules.Rule242404{
-				Logger:     r.Logger().With("rule", sharedrules.ID242404),
+				Logger:     r.Logger().With("rule_id", sharedrules.ID242404),
 				InstanceID: r.instanceID,
 				Client:     client,
 				PodContext: podContext,
@@ -339,9 +339,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242406)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242406)),
 			retry.WithBaseRule(&sharedrules.Rule242406{
-				Logger:     r.Logger().With("rule", sharedrules.ID242406),
+				Logger:     r.Logger().With("rule_id", sharedrules.ID242406),
 				InstanceID: r.instanceID,
 				Client:     client,
 				PodContext: podContext,
@@ -351,9 +351,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			retry.WithMaxRetries(*r.args.MaxRetries),
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242407)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242407)),
 			retry.WithBaseRule(&sharedrules.Rule242407{
-				Logger:     r.Logger().With("rule", sharedrules.ID242407),
+				Logger:     r.Logger().With("rule_id", sharedrules.ID242407),
 				InstanceID: r.instanceID,
 				Client:     client,
 				PodContext: podContext,
@@ -552,9 +552,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242447)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242447)),
 			retry.WithBaseRule(&sharedrules.Rule242447{
-				Logger:     r.Logger().With("rule", sharedrules.ID242447),
+				Logger:     r.Logger().With("rule_id", sharedrules.ID242447),
 				InstanceID: r.instanceID,
 				Client:     client,
 				PodContext: podContext,
@@ -564,9 +564,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			retry.WithMaxRetries(*r.args.MaxRetries),
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242448)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242448)),
 			retry.WithBaseRule(&sharedrules.Rule242448{
-				Logger:     r.Logger().With("rule", sharedrules.ID242448),
+				Logger:     r.Logger().With("rule_id", sharedrules.ID242448),
 				InstanceID: r.instanceID,
 				Client:     client,
 				PodContext: podContext,
@@ -576,9 +576,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			retry.WithMaxRetries(*r.args.MaxRetries),
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242449)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242449)),
 			retry.WithBaseRule(&sharedrules.Rule242449{
-				Logger:     r.Logger().With("rule", sharedrules.ID242449),
+				Logger:     r.Logger().With("rule_id", sharedrules.ID242449),
 				InstanceID: r.instanceID,
 				Client:     client,
 				PodContext: podContext,
@@ -588,9 +588,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			retry.WithMaxRetries(*r.args.MaxRetries),
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242450)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242450)),
 			retry.WithBaseRule(&sharedrules.Rule242450{
-				Logger:     r.Logger().With("rule", sharedrules.ID242450),
+				Logger:     r.Logger().With("rule_id", sharedrules.ID242450),
 				InstanceID: r.instanceID,
 				Client:     client,
 				PodContext: podContext,
@@ -600,9 +600,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			retry.WithMaxRetries(*r.args.MaxRetries),
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242451)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242451)),
 			retry.WithBaseRule(&rules.Rule242451{
-				Logger:     r.Logger().With("rule", sharedrules.ID242451),
+				Logger:     r.Logger().With("rule_id", sharedrules.ID242451),
 				InstanceID: r.instanceID,
 				Client:     client,
 				PodContext: podContext,
@@ -612,9 +612,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			retry.WithMaxRetries(*r.args.MaxRetries),
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242452)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242452)),
 			retry.WithBaseRule(&sharedrules.Rule242452{
-				Logger:     r.Logger().With("rule", sharedrules.ID242452),
+				Logger:     r.Logger().With("rule_id", sharedrules.ID242452),
 				InstanceID: r.instanceID,
 				Client:     client,
 				PodContext: podContext,
@@ -624,9 +624,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			retry.WithMaxRetries(*r.args.MaxRetries),
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242453)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242453)),
 			retry.WithBaseRule(&sharedrules.Rule242453{
-				Logger:     r.Logger().With("rule", sharedrules.ID242453),
+				Logger:     r.Logger().With("rule_id", sharedrules.ID242453),
 				InstanceID: r.instanceID,
 				Client:     client,
 				PodContext: podContext,
@@ -702,9 +702,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242466)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242466)),
 			retry.WithBaseRule(&rules.Rule242466{
-				Logger:     r.Logger().With("rule", sharedrules.ID242466),
+				Logger:     r.Logger().With("rule_id", sharedrules.ID242466),
 				InstanceID: r.instanceID,
 				Client:     client,
 				PodContext: podContext,
@@ -714,9 +714,9 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			retry.WithMaxRetries(*r.args.MaxRetries),
 		),
 		retry.New(
-			retry.WithLogger(r.Logger().With("rule", sharedrules.ID242467)),
+			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242467)),
 			retry.WithBaseRule(&rules.Rule242467{
-				Logger:     r.Logger().With("rule", sharedrules.ID242467),
+				Logger:     r.Logger().With("rule_id", sharedrules.ID242467),
 				InstanceID: r.instanceID,
 				Client:     client,
 				PodContext: podContext,
