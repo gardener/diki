@@ -10,14 +10,14 @@ rules:
   name: "Shoot clusters must have anonymous authentication disabled for the Kubernetes API server."
   description: "Shoot clusters must have anonymous authentication disabled for the Kubernetes API server. This rule follows the requirements from DISA K8s STIG rule [242390](https://www.stigviewer.com/stig/kubernetes/2024-06-10/finding/V-242390)."
 - id: 2001
-  name: "Kubernetes Worker Nodes must have ssh access disabled."
+  name: "Shoot clusters must disable ssh access to worker nodes."
   description: "Shoot clusters must disable worker nodes ssh access in order to lower possible attack vectors. This rule follows the requirements from DISA K8s STIG rules [242393](https://www.stigviewer.com/stig/kubernetes/2024-06-10/finding/V-242393) and [242394](https://www.stigviewer.com/stig/kubernetes/2024-06-10/finding/V-242394)."
 - id: 2002
   name: "Shoot clusters must not have Alpha APIs enabled for any Kubernetes component."
   description: "Shoot clusters must not have the allAlpha feature gate enabled for any of their components. This rule follows the requirements from DISA K8s STIG rule [242400](https://www.stigviewer.com/stig/kubernetes/2024-06-10/finding/V-242400)."
 - id: 2003
-  name: "Shoot clusters must enable kernel protection for Kubelets."
-  description: "Shoot clusters must enable kernel protection for Kubelets. This rule follows the requirements from DISA K8s STIG rule [242434](https://www.stigviewer.com/stig/kubernetes/2024-06-10/finding/V-242434)."
+  name: "Shoot clusters must enable kernel protection for Kubelet."
+  description: "Shoot clusters must enable kernel protection for Kubelet. This rule follows the requirements from DISA K8s STIG rule [242434](https://www.stigviewer.com/stig/kubernetes/2024-06-10/finding/V-242434)."
 - id: 2004
   name: "Shoot clusters must have ValidatingAdmissionWebhook admission plugin enabled."
   description: "Shoot clusters must have ValidatingAdmissionWebhook admission plugin enabled. This rule follows the requirements from DISA K8s STIG rule [242436](https://www.stigviewer.com/stig/kubernetes/2024-06-10/finding/V-242436)."
@@ -29,4 +29,4 @@ rules:
   description: "Shoot clusters must have static token kubeconfig disabled. This rule follows the requirements from DISA K8s STIG rule [245543](https://www.stigviewer.com/stig/kubernetes/2024-06-10/finding/V-245543)."
 - id: 2007
   name: "Shoot clusters must have a PodSecurity admission plugin configured."
-  description: "Shoot clusters must have a PodSecurity admission plugin configured. It is recommended to set default pod security standards to baseline. This rule follows the requirements from DISA K8s STIG rule [254800](https://www.stigviewer.com/stig/kubernetes/2024-06-10/finding/V-254800)."
+  description: "Shoot clusters must have a PodSecurity admission plugin configured. It is recommended to set default pod security standards to `baseline` or `restricted` level. This rule follows the requirements from DISA K8s STIG rule [254800](https://www.stigviewer.com/stig/kubernetes/2024-06-10/finding/V-254800)."

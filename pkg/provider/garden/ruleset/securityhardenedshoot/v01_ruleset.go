@@ -37,7 +37,7 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 		),
 		rule.NewSkipRule(
 			"2001",
-			"Kubernetes Worker Nodes must have ssh access disabled.",
+			"Shoot clusters must disable ssh access to worker nodes.",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
@@ -49,7 +49,7 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 		),
 		rule.NewSkipRule(
 			"2003",
-			"Shoot clusters must enable kernel protection for Kubelets.",
+			"Shoot clusters must enable kernel protection for Kubelet.",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
