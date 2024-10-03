@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The Security Hardened Shoot Cluster Guide is created by the Gardener team. It contains rules that check `Shoot` resources. The ruleset is inspired and follows some of the requirements from the [DISA Kubernetes Security Technical Implementation Guide](../disa-k8s-stig/report.md).
+The Security Hardened Shoot Cluster Guide is created by the Gardener team. It contains rules that check `Shoot` resources. The ruleset is inspired and follows some of the requirements from the [DISA Kubernetes Security Technical Implementation Guide](../disa-k8s-stig/ruleset.md).
 
 ## Rules
 
