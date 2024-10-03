@@ -8,7 +8,7 @@ providers:       # contains information about known providers
   rulesets:
   - id: security-hardened-shoot-cluster
     name: Security Hardened Shoot Cluster
-    version: v0.0.0
+    version: v0.1.0
     args:
       projectNamespace: garden-project-name # name of project namespace containing the shoot resource to be tested
       shootName: foo                        # name of shoot resource to be tested

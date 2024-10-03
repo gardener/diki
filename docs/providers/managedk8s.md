@@ -7,7 +7,7 @@ The `Managed Kubernetes` provider is capable of accessing a managed Kubernetes e
 ## Rulesets
 
 The `Managed Kubernetes` provider implements the following `rulesets`:
-- [DISA Kubernetes Security Technical Implementation Guide](../rulesets/disa-k8s-stig.md)
+- [DISA Kubernetes Security Technical Implementation Guide](../rulesets/disa-k8s-stig/ruleset.md)
     - v2r1
     - v1r11
 

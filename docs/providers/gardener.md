@@ -7,7 +7,7 @@ The `Gardener` provider is capable of accessing a `seed/shoot` environment and r
 ## Rulesets
 
 The `Gardener` provider implements the following `rulesets`:
-- [DISA Kubernetes Security Technical Implementation Guide](../rulesets/disa-k8s-stig.md)
+- [DISA Kubernetes Security Technical Implementation Guide](../rulesets/disa-k8s-stig/ruleset.md)
     - v2r1
     - v1r11
 
