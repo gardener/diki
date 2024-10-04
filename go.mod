@@ -6,7 +6,7 @@ toolchain go1.23.2
 
 require (
 	github.com/Masterminds/semver/v3 v3.3.0
-	github.com/gardener/gardener v1.104.1
+	github.com/gardener/gardener v1.105.0
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo/v2 v2.20.2
 	github.com/onsi/gomega v1.34.2
@@ -44,7 +44,7 @@ require (
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/fluent/fluent-operator/v2 v2.9.0 // indirect
 	github.com/gardener/cert-management v0.15.0 // indirect
-	github.com/gardener/etcd-druid v0.22.5 // indirect
+	github.com/gardener/etcd-druid v0.22.7 // indirect
 	github.com/gardener/hvpa-controller/api v0.17.0 // indirect
 	github.com/gardener/machine-controller-manager v0.53.1 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
@@ -127,7 +127,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	helm.sh/helm/v3 v3.14.4 // indirect
-	istio.io/api v1.22.4 // indirect
+	istio.io/api v1.22.5 // indirect
 	istio.io/client-go v1.22.0 // indirect
 	k8s.io/apiextensions-apiserver v0.29.9 // indirect
 	k8s.io/autoscaler/vertical-pod-autoscaler v1.2.1 // indirect
