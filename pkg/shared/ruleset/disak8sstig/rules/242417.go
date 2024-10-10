@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
-	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -38,10 +37,9 @@ type Options242417 struct {
 var _ option.Option = (*Options242417)(nil)
 
 type AcceptedPods242417 struct {
-	PodMatchLabels map[string]string `json:"podMatchLabels" yaml:"podMatchLabels"`
-	NamespaceNames []string          `json:"namespaceNames" yaml:"namespaceNames"`
-	Justification  string            `json:"justification" yaml:"justification"`
-	Status         string            `json:"status" yaml:"status"`
+	option.PodAttributesLabels
+	Justification string `json:"justification" yaml:"justification"`
+	Status        string `json:"status" yaml:"status"`
 }
 
 func (o Options242417) Validate() field.ErrorList {
@@ -49,17 +47,14 @@ func (o Options242417) Validate() field.ErrorList {
 		allErrs  field.ErrorList
 		rootPath = field.NewPath("acceptedPods")
 	)
+
 	for _, p := range o.AcceptedPods {
-		allErrs = append(allErrs, metav1validation.ValidateLabels(p.PodMatchLabels, rootPath.Child("podMatchLabels"))...)
-		for _, namespaceName := range p.NamespaceNames {
-			if !slices.Contains([]string{"kube-system", "kube-public", "kube-node-lease"}, namespaceName) {
-				allErrs = append(allErrs, field.Invalid(rootPath.Child("namespaceNames"), namespaceName, "must be one of 'kube-system', 'kube-public' or 'kube-node-lease'"))
-			}
-		}
+		allErrs = append(allErrs, p.Validate()...)
 		if !slices.Contains([]string{"Passed", "Accepted"}, p.Status) && len(p.Status) > 0 {
 			allErrs = append(allErrs, field.Invalid(rootPath.Child("status"), p.Status, "must be one of 'Passed' or 'Accepted'"))
 		}
 	}
+
 	return allErrs
 }
 
@@ -81,13 +76,23 @@ func (r *Rule242417) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	notDikiPodReq, err := labels.NewRequirement(pod.LabelComplianceRoleKey, selection.NotEquals, []string{pod.LabelComplianceRolePrivPod})
+
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+		return rule.SingleCheckResult(r, rule.CheckResult{Status: rule.Errored, Message: err.Error(), Target: rule.NewTarget()}), nil
 	}
+
 	selector := labels.NewSelector().Add(*notDikiPodReq)
 
+	namespacesPartialMetadata, err := kubeutils.GetNamespaces(ctx, r.Client)
+
+	if err != nil {
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("", ""))), nil
+	}
+
 	for _, namespace := range systemNamespaces {
+
 		podsPartialMetadata, err := kubeutils.GetObjectsMetadata(ctx, r.Client, corev1.SchemeGroupVersion.WithKind("PodList"), namespace, selector, 300)
+
 		if err != nil {
 			return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", namespace, "kind", "podList"))), nil
 		}
@@ -96,8 +101,7 @@ func (r *Rule242417) Run(ctx context.Context) (rule.RuleResult, error) {
 			target := rule.NewTarget("name", podPartialMetadata.Name, "namespace", podPartialMetadata.Namespace, "kind", "pod")
 
 			acceptedPodIdx := slices.IndexFunc(acceptedPods, func(acceptedPod AcceptedPods242417) bool {
-				return slices.Contains(acceptedPod.NamespaceNames, namespace) &&
-					utils.MatchLabels(podPartialMetadata.Labels, acceptedPod.PodMatchLabels)
+				return utils.MatchLabels(podPartialMetadata.Labels, acceptedPod.PodMatchLabels) && utils.MatchLabels(namespacesPartialMetadata[namespace].Labels, acceptedPod.NamespaceMatchLabels)
 			})
 
 			if acceptedPodIdx < 0 {
