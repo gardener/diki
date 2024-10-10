@@ -22,12 +22,14 @@ import (
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
+// TODO: add checks for validate
 var _ = Describe("#242383", func() {
 	var (
-		fakeClient client.Client
-		plainPod   *corev1.Pod
-		options    *rules.Options242383
-		ctx        = context.TODO()
+		fakeClient     client.Client
+		plainPod       *corev1.Pod
+		options        *rules.Options242383
+		ctx            = context.TODO()
+		plainNamespace *corev1.Namespace
 	)
 
 	BeforeEach(func() {
@@ -42,21 +44,51 @@ var _ = Describe("#242383", func() {
 				Labels:    map[string]string{},
 			},
 		}
+		plainNamespace = &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:   "",
+				Labels: map[string]string{"functionality": "system"},
+			},
+		}
 		options = &rules.Options242383{
 			AcceptedResources: []rules.AcceptedResources242383{
 				{
 					SelectResource: rules.SelectResource{
-						APIVersion:     "v1",
-						Kind:           "Pod",
-						MatchLabels:    map[string]string{},
-						NamespaceNames: []string{"default", "kube-public", "kube-node-lease"},
+						APIVersion:           "v1",
+						Kind:                 "Pod",
+						MatchLabels:          map[string]string{},
+						NamespaceMatchLabels: map[string]string{"random_1": "value_1"},
+					},
+				},
+				{
+					SelectResource: rules.SelectResource{
+						APIVersion:           "v1",
+						Kind:                 "Pod",
+						MatchLabels:          map[string]string{},
+						NamespaceMatchLabels: map[string]string{"random_2": "value_2"},
 					},
 				},
 			},
 		}
+		kubeNodeLeaseNamespace := plainNamespace.DeepCopy()
+		kubeNodeLeaseNamespace.Name = "default"
+		kubeNodeLeaseNamespace.Labels["random_1"] = "value_1"
+
+		kubeSystemNamespace := plainNamespace.DeepCopy()
+		kubeSystemNamespace.Name = "kube-system"
+		kubeSystemNamespace.Labels["random_2"] = "value_2"
+
+		kubePublicNamespace := plainNamespace.DeepCopy()
+		kubePublicNamespace.Name = "kube-public"
+		kubePublicNamespace.Labels["random_2"] = "value_2"
+
+		Expect(fakeClient.Create(ctx, kubeNodeLeaseNamespace)).To(Succeed())
+		Expect(fakeClient.Create(ctx, kubePublicNamespace)).To(Succeed())
+		Expect(fakeClient.Create(ctx, kubeSystemNamespace)).To(Succeed())
 	})
 
 	It("should return passed checkResult when no user resources are present in system namespaces", func() {
+
 		kubernetesService := &corev1.Service{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: "v1",
@@ -71,6 +103,7 @@ var _ = Describe("#242383", func() {
 				},
 			},
 		}
+
 		Expect(fakeClient.Create(ctx, kubernetesService)).To(Succeed())
 
 		pod1 := plainPod.DeepCopy()
@@ -78,25 +111,27 @@ var _ = Describe("#242383", func() {
 		Expect(fakeClient.Create(ctx, pod1)).To(Succeed())
 
 		pod2 := plainPod.DeepCopy()
-		pod2.Name = "bar"
+		pod2.Name = "pod2"
 		pod2.Namespace = "default"
 		pod2.Labels["label"] = "value"
 		Expect(fakeClient.Create(ctx, pod2)).To(Succeed())
 
 		pod3 := plainPod.DeepCopy()
-		pod3.Name = "bar"
+		pod3.Name = "pod3"
 		pod3.Namespace = "kube-public"
 		pod3.Labels["label"] = "value"
 		Expect(fakeClient.Create(ctx, pod3)).To(Succeed())
 
 		pod4 := plainPod.DeepCopy()
-		pod4.Name = "bar"
+		pod4.Name = "pod4"
 		pod4.Namespace = "kube-node-lease"
 		pod4.Labels["compliance.gardener.cloud/role"] = "diki-privileged-pod"
 		Expect(fakeClient.Create(ctx, pod4)).To(Succeed())
 
 		options.AcceptedResources[0].SelectResource.MatchLabels["label"] = "value"
 		options.AcceptedResources[0].Status = "Passed"
+		options.AcceptedResources[1].SelectResource.MatchLabels["label"] = "value"
+		options.AcceptedResources[1].Status = "Passed"
 		r := &rules.Rule242383{
 			Client:  fakeClient,
 			Options: options,
@@ -107,8 +142,8 @@ var _ = Describe("#242383", func() {
 
 		expectedCheckResults := []rule.CheckResult{
 			rule.PassedCheckResult("System resource in system namespaces.", rule.NewTarget("name", "kubernetes", "namespace", "default", "kind", "Service")),
-			rule.PassedCheckResult("System resource in system namespaces.", rule.NewTarget("name", "bar", "namespace", "default", "kind", "Pod")),
-			rule.PassedCheckResult("System resource in system namespaces.", rule.NewTarget("name", "bar", "namespace", "kube-public", "kind", "Pod")),
+			rule.PassedCheckResult("System resource in system namespaces.", rule.NewTarget("name", "pod2", "namespace", "default", "kind", "Pod")),
+			rule.PassedCheckResult("System resource in system namespaces.", rule.NewTarget("name", "pod3", "namespace", "kube-public", "kind", "Pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
@@ -116,17 +151,17 @@ var _ = Describe("#242383", func() {
 
 	It("should return failed checkResult when user resources are present in system namespaces", func() {
 		pod1 := plainPod.DeepCopy()
-		pod1.Name = "foo"
+		pod1.Name = "pod1"
 		pod1.Namespace = "default"
 		Expect(fakeClient.Create(ctx, pod1)).To(Succeed())
 
 		pod2 := plainPod.DeepCopy()
-		pod2.Name = "bar"
+		pod2.Name = "pod2"
 		pod2.Namespace = "kube-public"
 		Expect(fakeClient.Create(ctx, pod2)).To(Succeed())
 
 		pod3 := plainPod.DeepCopy()
-		pod3.Name = "foobar"
+		pod3.Name = "pod3"
 		pod3.Namespace = "kube-node-lease"
 		pod3.Labels["label"] = "gardener"
 		Expect(fakeClient.Create(ctx, pod3)).To(Succeed())
@@ -146,6 +181,7 @@ var _ = Describe("#242383", func() {
 	})
 
 	It("should return correct checkResult when different resources are present", func() {
+
 		pod := plainPod.DeepCopy()
 		pod.Name = "foo"
 		pod.Namespace = "default"
@@ -197,6 +233,7 @@ var _ = Describe("#242383", func() {
 		}
 
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
+
 	})
 
 	It("should return correct checkResult when different statuses are used", func() {
@@ -207,20 +244,20 @@ var _ = Describe("#242383", func() {
 		Expect(fakeClient.Create(ctx, pod1)).To(Succeed())
 
 		pod2 := plainPod.DeepCopy()
-		pod2.Name = "bar"
+		pod2.Name = "pod2"
 		pod2.Namespace = "default"
 		pod2.Labels["foo"] = "bar"
 		pod2.Labels["bar"] = "foo"
 		Expect(fakeClient.Create(ctx, pod2)).To(Succeed())
 
 		pod3 := plainPod.DeepCopy()
-		pod3.Name = "bar"
+		pod3.Name = "pod3"
 		pod3.Namespace = "kube-public"
 		pod3.Labels["foo"] = "bar"
 		Expect(fakeClient.Create(ctx, pod3)).To(Succeed())
 
 		pod4 := plainPod.DeepCopy()
-		pod4.Name = "bar"
+		pod4.Name = "pod4"
 		pod4.Namespace = "kube-node-lease"
 		pod4.Labels["compliance.gardener.cloud/role"] = "diki-privileged-pod"
 		Expect(fakeClient.Create(ctx, pod4)).To(Succeed())
@@ -229,28 +266,30 @@ var _ = Describe("#242383", func() {
 		options.AcceptedResources[0].SelectResource.MatchLabels["bar"] = "foo"
 		options.AcceptedResources[0].Status = "Accepted"
 		options.AcceptedResources[0].Justification = "Accept pod."
-		options.AcceptedResources[0].SelectResource.NamespaceNames = []string{"default"}
+
+		options.AcceptedResources[1].SelectResource.MatchLabels["foo"] = "bar"
+		options.AcceptedResources[1].SelectResource.MatchLabels["bar"] = "foo"
+		options.AcceptedResources[1].Status = "Accepted"
+		options.AcceptedResources[1].Justification = "Accept pod."
+
 		options.AcceptedResources = append(options.AcceptedResources, rules.AcceptedResources242383{
 			SelectResource: rules.SelectResource{
-				APIVersion: "v1",
-				Kind:       "*",
-				MatchLabels: map[string]string{
-					"foo": "bar",
-				},
-				NamespaceNames: []string{"default", "kube-public", "kube-node-lease"},
+				APIVersion:           "v1",
+				Kind:                 "*",
+				MatchLabels:          map[string]string{"foo": "bar"},
+				NamespaceMatchLabels: map[string]string{"random_2": "value_2"},
 			},
 		})
 		options.AcceptedResources = append(options.AcceptedResources, rules.AcceptedResources242383{
 			SelectResource: rules.SelectResource{
-				APIVersion: "v1",
-				Kind:       "*",
-				MatchLabels: map[string]string{
-					"foo-bar": "bar",
-				},
-				NamespaceNames: []string{"default", "kube-public", "kube-node-lease"},
+				APIVersion:           "v1",
+				Kind:                 "*",
+				MatchLabels:          map[string]string{"foo-bar": "bar"},
+				NamespaceMatchLabels: map[string]string{"random_1": "value_1"},
 			},
 			Status: "fake",
 		})
+
 		r := &rules.Rule242383{
 			Client:  fakeClient,
 			Options: options,
@@ -261,8 +300,8 @@ var _ = Describe("#242383", func() {
 
 		expectedCheckResults := []rule.CheckResult{
 			rule.WarningCheckResult("unrecognized status: fake", rule.NewTarget("name", "pod1", "namespace", "default", "kind", "Pod")),
-			rule.AcceptedCheckResult("Accept pod.", rule.NewTarget("name", "bar", "namespace", "default", "kind", "Pod")),
-			rule.AcceptedCheckResult("Accepted user resource in system namespaces.", rule.NewTarget("name", "bar", "namespace", "kube-public", "kind", "Pod")),
+			rule.AcceptedCheckResult("Accept pod.", rule.NewTarget("name", "pod2", "namespace", "default", "kind", "Pod")),
+			rule.AcceptedCheckResult("Accepted user resource in system namespaces.", rule.NewTarget("name", "pod3", "namespace", "kube-public", "kind", "Pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
@@ -274,32 +313,46 @@ var _ = Describe("#242383", func() {
 				AcceptedResources: []rules.AcceptedResources242383{
 					{
 						SelectResource: rules.SelectResource{
-							APIVersion:     "v1",
-							Kind:           "Pod",
-							MatchLabels:    map[string]string{},
-							NamespaceNames: []string{"kube-system", "kube-public", "kube-node-lease"},
+							APIVersion:           "v1",
+							Kind:                 "Pod",
+							MatchLabels:          map[string]string{"bar": "foo"},
+							NamespaceMatchLabels: map[string]string{"foo": "bar"},
 						},
 						Status: "Passed",
 					},
 					{
 						SelectResource: rules.SelectResource{
-							APIVersion: "v1",
-							Kind:       "Deployment",
-							MatchLabels: map[string]string{
-								"-foo": "bar",
-							},
-							NamespaceNames: []string{"default"},
+							APIVersion:           "apps/v1",
+							Kind:                 "Service",
+							MatchLabels:          map[string]string{"bar": "foo"},
+							NamespaceMatchLabels: map[string]string{"foo": "bar"},
+						},
+						Status: "Passed",
+					},
+					{
+						SelectResource: rules.SelectResource{
+							APIVersion:           "v1",
+							Kind:                 "Deployment",
+							MatchLabels:          map[string]string{"-foo": "bar"},
+							NamespaceMatchLabels: map[string]string{},
 						},
 						Status: "Accepted",
 					},
 					{
 						SelectResource: rules.SelectResource{
-							APIVersion: "fake",
-							Kind:       "Deployment",
-							MatchLabels: map[string]string{
-								"foo": "?bar",
-							},
-							NamespaceNames: []string{},
+							APIVersion:           "v1",
+							Kind:                 "Service",
+							MatchLabels:          map[string]string{},
+							NamespaceMatchLabels: map[string]string{"foo": "bar"},
+						},
+						Status: "Accepted",
+					},
+					{
+						SelectResource: rules.SelectResource{
+							APIVersion:           "fake",
+							Kind:                 "Service",
+							MatchLabels:          map[string]string{"foo": "?bar"},
+							NamespaceMatchLabels: map[string]string{"ba$r": "_foo"},
 						},
 						Status: "asd",
 					},
@@ -308,17 +361,28 @@ var _ = Describe("#242383", func() {
 
 			result := options.Validate()
 
-			Expect(result).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
-				"Type":     Equal(field.ErrorTypeInvalid),
-				"Field":    Equal("acceptedResources.namespaceNames"),
-				"BadValue": Equal("kube-system"),
-				"Detail":   Equal("must be one of 'default', 'kube-public' or 'kube-node-lease'"),
-			})),
+			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("acceptedResources.kind"),
 					"BadValue": Equal("Deployment"),
 					"Detail":   Equal("not checked kind for apiVerion v1"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("acceptedResources.kind"),
+					"BadValue": Equal("Service"),
+					"Detail":   Equal("not checked kind for apiVerion apps/v1"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("acceptedResources.namespaceMatchLabels"),
+					"Detail": Equal("must not be empty"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("acceptedResources.matchLabels"),
+					"Detail": Equal("must not be empty"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
@@ -335,6 +399,16 @@ var _ = Describe("#242383", func() {
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("acceptedResources.matchLabels"),
 					"BadValue": Equal("?bar"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("acceptedResources.namespaceMatchLabels"),
+					"BadValue": Equal("ba$r"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("acceptedResources.namespaceMatchLabels"),
+					"BadValue": Equal("_foo"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),

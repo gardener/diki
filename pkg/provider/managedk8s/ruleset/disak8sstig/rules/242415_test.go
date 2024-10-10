@@ -109,8 +109,10 @@ var _ = Describe("#242415", func() {
 		options = &option.Options242415{
 			AcceptedPods: []option.AcceptedPods242415{
 				{
-					PodMatchLabels:       map[string]string{"foo": "bar"},
-					NamespaceMatchLabels: map[string]string{"foo": "bar"},
+					PodAttributesLabels: option.PodAttributesLabels{
+						PodMatchLabels:       map[string]string{"foo": "bar"},
+						NamespaceMatchLabels: map[string]string{"foo": "bar"},
+					},
 					EnvironmentVariables: []string{"SECRET_TEST"},
 				},
 			},

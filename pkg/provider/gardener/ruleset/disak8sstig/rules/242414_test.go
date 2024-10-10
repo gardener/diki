@@ -152,15 +152,19 @@ var _ = Describe("#242414", func() {
 		options = option.Options242414{
 			AcceptedPods: []option.AcceptedPods242414{
 				{
-					PodMatchLabels:       map[string]string{"foo": "bar"},
-					NamespaceMatchLabels: map[string]string{"foo": "not-bar"},
-					Ports:                []int32{58},
+					PodAttributesLabels: option.PodAttributesLabels{
+						PodMatchLabels:       map[string]string{"foo": "bar"},
+						NamespaceMatchLabels: map[string]string{"foo": "not-bar"},
+					},
+					Ports: []int32{58},
 				},
 				{
-					PodMatchLabels:       map[string]string{"foo": "bar"},
-					NamespaceMatchLabels: map[string]string{"foo": "bar"},
-					Justification:        "foo justify",
-					Ports:                []int32{53},
+					PodAttributesLabels: option.PodAttributesLabels{
+						PodMatchLabels:       map[string]string{"foo": "bar"},
+						NamespaceMatchLabels: map[string]string{"foo": "bar"},
+					},
+					Justification: "foo justify",
+					Ports:         []int32{53},
 				},
 			},
 		}
