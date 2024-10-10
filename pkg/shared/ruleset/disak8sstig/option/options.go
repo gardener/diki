@@ -18,6 +18,34 @@ type Option interface {
 	Validate() field.ErrorList
 }
 
+// PodAttributesLabels contains generalized options for matching entities by their attribute labels
+type PodAttributesLabels struct {
+	PodMatchLabels       map[string]string `json:"podMatchLabels" yaml:"podMatchLabels"`
+	NamespaceMatchLabels map[string]string `json:"namespaceMatchLabels" yaml:"namespaceMatchLabels"`
+}
+
+var _ Option = (*PodAttributesLabels)(nil)
+
+func (e PodAttributesLabels) Validate() field.ErrorList {
+	var (
+		allErrs  field.ErrorList
+		rootPath = field.NewPath("acceptedPods")
+	)
+
+	if len(e.NamespaceMatchLabels) == 0 {
+		allErrs = append(allErrs, field.Required(rootPath.Child("namespaceMatchLabels"), "must not be empty"))
+	}
+
+	if len(e.PodMatchLabels) == 0 {
+		allErrs = append(allErrs, field.Required(rootPath.Child("podMatchLabels"), "must not be empty"))
+	}
+
+	allErrs = append(allErrs, metav1validation.ValidateLabels(e.NamespaceMatchLabels, rootPath.Child("namespaceMatchLabels"))...)
+	allErrs = append(allErrs, metav1validation.ValidateLabels(e.PodMatchLabels, rootPath.Child("podMatchLabels"))...)
+
+	return allErrs
+}
+
 // FileOwnerOptions contains expected user and group owners for files
 type FileOwnerOptions struct {
 	ExpectedFileOwner ExpectedOwner `json:"expectedFileOwner" yaml:"expectedFileOwner"`
@@ -70,10 +98,9 @@ var _ Option = (*Options242414)(nil)
 
 // AcceptedPods242414 contains option specifications for appected pods
 type AcceptedPods242414 struct {
-	PodMatchLabels       map[string]string `json:"podMatchLabels" yaml:"podMatchLabels"`
-	NamespaceMatchLabels map[string]string `json:"namespaceMatchLabels" yaml:"namespaceMatchLabels"`
-	Justification        string            `json:"justification" yaml:"justification"`
-	Ports                []int32           `json:"ports" yaml:"ports"`
+	PodAttributesLabels
+	Justification string  `json:"justification" yaml:"justification"`
+	Ports         []int32 `json:"ports" yaml:"ports"`
 }
 
 // Validate validates that option configurations are correctly defined
@@ -83,8 +110,9 @@ func (o Options242414) Validate() field.ErrorList {
 		rootPath = field.NewPath("acceptedPods")
 	)
 	for _, p := range o.AcceptedPods {
-		allErrs = append(allErrs, metav1validation.ValidateLabels(p.PodMatchLabels, rootPath.Child("podMatchLabels"))...)
-		allErrs = append(allErrs, metav1validation.ValidateLabels(p.NamespaceMatchLabels, rootPath.Child("namespaceMatchLabels"))...)
+
+		allErrs = append(allErrs, p.Validate()...)
+
 		if len(p.Ports) == 0 {
 			allErrs = append(allErrs, field.Required(rootPath.Child("ports"), "must not be empty"))
 		}
@@ -106,10 +134,9 @@ var _ Option = (*Options242415)(nil)
 
 // AcceptedPods242415 contains option specifications for appected pods
 type AcceptedPods242415 struct {
-	PodMatchLabels       map[string]string `json:"podMatchLabels" yaml:"podMatchLabels"`
-	NamespaceMatchLabels map[string]string `json:"namespaceMatchLabels" yaml:"namespaceMatchLabels"`
-	Justification        string            `json:"justification" yaml:"justification"`
-	EnvironmentVariables []string          `json:"environmentVariables" yaml:"environmentVariables"`
+	PodAttributesLabels
+	Justification        string   `json:"justification" yaml:"justification"`
+	EnvironmentVariables []string `json:"environmentVariables" yaml:"environmentVariables"`
 }
 
 // Validate validates that option configurations are correctly defined
@@ -119,8 +146,9 @@ func (o Options242415) Validate() field.ErrorList {
 		rootPath = field.NewPath("acceptedPods")
 	)
 	for _, p := range o.AcceptedPods {
-		allErrs = append(allErrs, metav1validation.ValidateLabels(p.PodMatchLabels, rootPath.Child("podMatchLabels"))...)
-		allErrs = append(allErrs, metav1validation.ValidateLabels(p.NamespaceMatchLabels, rootPath.Child("namespaceMatchLabels"))...)
+
+		allErrs = append(allErrs, p.Validate()...)
+
 		if len(p.EnvironmentVariables) == 0 {
 			allErrs = append(allErrs, field.Required(rootPath.Child("environmentVariables"), "must not be empty"))
 		}

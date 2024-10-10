@@ -44,31 +44,127 @@ var _ = Describe("options", func() {
 			))
 		})
 	})
+	Describe("#ValidatePodAttributeOptions", func() {
+		It("should correctly validate labels", func() {
+
+			podAttributes := []option.PodAttributesLabels{
+				{
+					NamespaceMatchLabels: map[string]string{"_foo": "bar"},
+					PodMatchLabels:       map[string]string{"foo": "bar."},
+				},
+				{
+					NamespaceMatchLabels: map[string]string{"fo?o": "bar"},
+					PodMatchLabels:       map[string]string{"foo": "bar"},
+				},
+				{
+					NamespaceMatchLabels: map[string]string{"foo": "bar"},
+					PodMatchLabels:       map[string]string{"at_ta": "bar"},
+				},
+				{
+					NamespaceMatchLabels: map[string]string{"this": "is_a"},
+					PodMatchLabels:       map[string]string{"Valid": "label-pair"},
+				},
+				{
+					NamespaceMatchLabels: map[string]string{"foo": "ba/r"},
+					PodMatchLabels:       map[string]string{"at$a": "bar"},
+				},
+				{
+					NamespaceMatchLabels: map[string]string{"label": "value"},
+				},
+				{
+					PodMatchLabels: map[string]string{"label": "value"},
+				},
+				{
+					NamespaceMatchLabels: map[string]string{},
+					PodMatchLabels:       map[string]string{"at_ta": "bar"},
+				},
+				{
+					NamespaceMatchLabels: map[string]string{"foo": "bar"},
+					PodMatchLabels:       map[string]string{},
+				},
+			}
+
+			var result field.ErrorList
+
+			for _, p := range podAttributes {
+				result = append(result, p.Validate()...)
+			}
+
+			Expect(result).To(ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("acceptedPods.namespaceMatchLabels"),
+					"BadValue": Equal("_foo"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("acceptedPods.podMatchLabels"),
+					"BadValue": Equal("bar."),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("acceptedPods.namespaceMatchLabels"),
+					"BadValue": Equal("fo?o"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("acceptedPods.namespaceMatchLabels"),
+					"BadValue": Equal("ba/r"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("acceptedPods.podMatchLabels"),
+					"BadValue": Equal("at$a"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("acceptedPods.namespaceMatchLabels"),
+					"Detail": Equal("must not be empty"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("acceptedPods.namespaceMatchLabels"),
+					"Detail": Equal("must not be empty"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("acceptedPods.podMatchLabels"),
+					"Detail": Equal("must not be empty"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("acceptedPods.podMatchLabels"),
+					"Detail": Equal("must not be empty"),
+				}))))
+
+		})
+	})
 	Describe("#ValidateOptions242414", func() {
 		It("should correctly validate options", func() {
 			options := option.Options242414{
 				AcceptedPods: []option.AcceptedPods242414{
 					{
-						PodMatchLabels: map[string]string{},
-						NamespaceMatchLabels: map[string]string{
-							"foo": "bar",
+						PodAttributesLabels: option.PodAttributesLabels{
+							PodMatchLabels: map[string]string{
+								"foo": "bar",
+							},
+							NamespaceMatchLabels: map[string]string{
+								"foo": "bar",
+							},
 						},
 					},
 					{
-						PodMatchLabels: map[string]string{
-							"-foo": "bar",
-						},
-						NamespaceMatchLabels: map[string]string{
-							"foo": "!bar",
+						PodAttributesLabels: option.PodAttributesLabels{
+							PodMatchLabels: map[string]string{
+								"foo": "bar",
+							},
+							NamespaceMatchLabels: map[string]string{
+								"foo": "bar",
+							},
 						},
 						Ports: []int32{0, 100},
 					},
 					{
-						PodMatchLabels: map[string]string{
-							"foo": "?bar",
-						},
-						NamespaceMatchLabels: map[string]string{
-							".foo": "bar",
+						PodAttributesLabels: option.PodAttributesLabels{
+							PodMatchLabels: map[string]string{
+								"foo": "bar",
+							},
+							NamespaceMatchLabels: map[string]string{
+								"foo": "bar",
+							},
 						},
 						Ports: []int32{-1},
 					},
@@ -77,26 +173,7 @@ var _ = Describe("options", func() {
 
 			result := options.Validate()
 
-			Expect(result).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
-				"Type":     Equal(field.ErrorTypeInvalid),
-				"Field":    Equal("acceptedPods.podMatchLabels"),
-				"BadValue": Equal("-foo"),
-			})),
-				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedPods.namespaceMatchLabels"),
-					"BadValue": Equal("!bar"),
-				})),
-				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedPods.podMatchLabels"),
-					"BadValue": Equal("?bar"),
-				})),
-				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedPods.namespaceMatchLabels"),
-					"BadValue": Equal(".foo"),
-				})),
+			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
 					"Field":  Equal("acceptedPods.ports"),
@@ -116,54 +193,32 @@ var _ = Describe("options", func() {
 			options := option.Options242415{
 				AcceptedPods: []option.AcceptedPods242415{
 					{
-						PodMatchLabels: map[string]string{},
-						NamespaceMatchLabels: map[string]string{
-							"foo": "bar",
-						},
-						EnvironmentVariables: []string{"asd"},
-					},
-					{
-						PodMatchLabels: map[string]string{
-							"-foo": "bar",
-						},
-						NamespaceMatchLabels: map[string]string{
-							"foo": "!bar",
-						},
-					},
-					{
-						PodMatchLabels: map[string]string{
-							"foo": "?bar",
-						},
-						NamespaceMatchLabels: map[string]string{
-							".foo": "bar",
+						PodAttributesLabels: option.PodAttributesLabels{
+							PodMatchLabels: map[string]string{
+								"foo": "bar",
+							},
+							NamespaceMatchLabels: map[string]string{
+								"foo": "bar",
+							},
 						},
 						EnvironmentVariables: []string{"asd=dsa"},
+					},
+					{
+						PodAttributesLabels: option.PodAttributesLabels{
+							PodMatchLabels: map[string]string{
+								"foo": "bar",
+							},
+							NamespaceMatchLabels: map[string]string{
+								"foo": "bar",
+							},
+						},
 					},
 				},
 			}
 
 			result := options.Validate()
 
-			Expect(result).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
-				"Type":     Equal(field.ErrorTypeInvalid),
-				"Field":    Equal("acceptedPods.podMatchLabels"),
-				"BadValue": Equal("-foo"),
-			})),
-				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedPods.namespaceMatchLabels"),
-					"BadValue": Equal("!bar"),
-				})),
-				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedPods.podMatchLabels"),
-					"BadValue": Equal("?bar"),
-				})),
-				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedPods.namespaceMatchLabels"),
-					"BadValue": Equal(".foo"),
-				})),
+			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
 					"Field":  Equal("acceptedPods.environmentVariables"),
