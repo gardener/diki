@@ -31,7 +31,6 @@ var _ = Describe("#242414", func() {
 
 	BeforeEach(func() {
 		client = fakeclient.NewClientBuilder().Build()
-
 		namespace = &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: namespaceName,
@@ -40,7 +39,6 @@ var _ = Describe("#242414", func() {
 				},
 			},
 		}
-
 		plainPod = &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: namespaceName,
@@ -68,6 +66,7 @@ var _ = Describe("#242414", func() {
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
 		Expect(client.Create(ctx, pod1)).To(Succeed())
+
 		pod2 := plainPod.DeepCopy()
 		pod2.Name = "pod2"
 		Expect(client.Create(ctx, pod2)).To(Succeed())
@@ -96,6 +95,7 @@ var _ = Describe("#242414", func() {
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
 		Expect(client.Create(ctx, pod1)).To(Succeed())
+
 		pod2 := plainPod.DeepCopy()
 		pod2.Name = "pod2"
 		pod2.Spec.Containers[0].Ports[0].HostPort = 1011
@@ -124,14 +124,14 @@ var _ = Describe("#242414", func() {
 		options = option.Options242414{
 			AcceptedPods: []option.AcceptedPods242414{
 				{
-					PodAttributesLabels: option.PodAttributesLabels{
+					PodSelector: option.PodSelector{
 						PodMatchLabels:       map[string]string{"foo": "bar"},
 						NamespaceMatchLabels: map[string]string{"foo": "not-bar"},
 					},
 					Ports: []int32{58},
 				},
 				{
-					PodAttributesLabels: option.PodAttributesLabels{
+					PodSelector: option.PodSelector{
 						PodMatchLabels:       map[string]string{"foo": "bar"},
 						NamespaceMatchLabels: map[string]string{"foo": "bar"},
 					},

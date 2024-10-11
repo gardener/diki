@@ -350,29 +350,7 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 			Options: &sharedrules.Options242417{
 				AcceptedPods: []sharedrules.AcceptedPods242417{
 					{
-						PodAttributesLabels: option.PodAttributesLabels{PodMatchLabels: map[string]string{
-							resourcesv1alpha1.ManagedBy: "gardener",
-						},
-							NamespaceMatchLabels: map[string]string{
-								"kubernetes.io/metadata.name": "kube-public",
-							},
-						},
-						Justification: "Gardener managed pods are not user pods",
-						Status:        "Passed",
-					},
-					{
-						PodAttributesLabels: option.PodAttributesLabels{PodMatchLabels: map[string]string{
-							resourcesv1alpha1.ManagedBy: "gardener",
-						},
-							NamespaceMatchLabels: map[string]string{
-								"kubernetes.io/metadata.name": "kube-node-lease",
-							},
-						},
-						Justification: "Gardener managed pods are not user pods",
-						Status:        "Passed",
-					},
-					{
-						PodAttributesLabels: option.PodAttributesLabels{PodMatchLabels: map[string]string{
+						PodSelector: option.PodSelector{PodMatchLabels: map[string]string{
 							resourcesv1alpha1.ManagedBy: "gardener",
 						},
 							NamespaceMatchLabels: map[string]string{

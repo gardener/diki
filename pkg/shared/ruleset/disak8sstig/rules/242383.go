@@ -30,16 +30,42 @@ type Rule242383 struct {
 	Options *Options242383
 }
 
-type SelectResource struct {
+type Options242383 struct {
+	AcceptedResources []AcceptedResources242383 `json:"acceptedResources" yaml:"acceptedResources"`
+}
+
+var _ option.Option = (*Options242383)(nil)
+
+type AcceptedResources242383 struct {
+	ResourceSelector
+	Justification string `json:"justification" yaml:"justification"`
+	Status        string `json:"status" yaml:"status"`
+}
+
+func (o Options242383) Validate() field.ErrorList {
+	var (
+		allErrs  field.ErrorList
+		rootPath = field.NewPath("acceptedResources")
+	)
+	for _, p := range o.AcceptedResources {
+		allErrs = append(allErrs, p.Validate()...)
+		if !slices.Contains([]string{"Passed", "Accepted"}, p.Status) && len(p.Status) > 0 {
+			allErrs = append(allErrs, field.Invalid(rootPath.Child("status"), p.Status, "must be one of 'Passed' or 'Accepted'"))
+		}
+	}
+	return allErrs
+}
+
+type ResourceSelector struct {
 	APIVersion           string            `json:"apiVersion" yaml:"apiVersion"`
 	Kind                 string            `json:"kind" yaml:"kind"`
 	MatchLabels          map[string]string `json:"matchLabels" yaml:"matchLabels"`
 	NamespaceMatchLabels map[string]string `json:"namespaceMatchLabels" yaml:"namespaceMatchLabels"`
 }
 
-var _ option.Option = (*SelectResource)(nil)
+var _ option.Option = (*ResourceSelector)(nil)
 
-func (s SelectResource) Validate() field.ErrorList {
+func (s ResourceSelector) Validate() field.ErrorList {
 	var (
 		allErrs          field.ErrorList
 		rootPath         = field.NewPath("acceptedResources")
@@ -69,37 +95,6 @@ func (s SelectResource) Validate() field.ErrorList {
 	allErrs = append(allErrs, metav1validation.ValidateLabels(s.NamespaceMatchLabels, rootPath.Child("namespaceMatchLabels"))...)
 
 	return allErrs
-
-}
-
-type Options242383 struct {
-	AcceptedResources []AcceptedResources242383 `json:"acceptedResources" yaml:"acceptedResources"`
-}
-
-var _ option.Option = (*Options242383)(nil)
-
-type AcceptedResources242383 struct {
-	SelectResource
-	Justification string `json:"justification" yaml:"justification"`
-	Status        string `json:"status" yaml:"status"`
-}
-
-func (o Options242383) Validate() field.ErrorList {
-	var (
-		allErrs  field.ErrorList
-		rootPath = field.NewPath("acceptedResources")
-	)
-
-	for _, p := range o.AcceptedResources {
-
-		allErrs = append(allErrs, p.Validate()...)
-
-		if !slices.Contains([]string{"Passed", "Accepted"}, p.Status) && len(p.Status) > 0 {
-			allErrs = append(allErrs, field.Invalid(rootPath.Child("status"), p.Status, "must be one of 'Passed' or 'Accepted'"))
-		}
-
-	}
-	return allErrs
 }
 
 func (r *Rule242383) ID() string {
@@ -111,26 +106,23 @@ func (r *Rule242383) Name() string {
 }
 
 func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
-
-	namespacesPartialMetadata, err := kubeutils.GetNamespaces(ctx, r.Client)
-
+	allNamespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("", ""))), nil
 	}
-
 	checkResults := []rule.CheckResult{}
 	systemNamespaces := []string{"default", "kube-public", "kube-node-lease"}
 	acceptedResources := []AcceptedResources242383{
 		{
 			// The 'kubernetes' Service is a required system resource exposing the kubernetes API server
-			SelectResource: SelectResource{
+			ResourceSelector: ResourceSelector{
 				APIVersion: "v1",
 				Kind:       "Service",
 				MatchLabels: map[string]string{
 					"component": "apiserver",
 					"provider":  "kubernetes",
 				},
-				NamespaceMatchLabels: namespacesPartialMetadata["default"].Labels,
+				NamespaceMatchLabels: allNamespaces["default"].Labels,
 			},
 			Status: "Passed",
 		},
@@ -141,7 +133,6 @@ func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	notDikiPodReq, err := labels.NewRequirement(pod.LabelComplianceRoleKey, selection.NotEquals, []string{pod.LabelComplianceRolePrivPod})
-
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 	}
@@ -149,22 +140,17 @@ func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
 	selector := labels.NewSelector().Add(*notDikiPodReq)
 
 	for _, namespace := range systemNamespaces {
-
 		partialMetadata, err := kubeutils.GetAllObjectsMetadata(ctx, r.Client, namespace, selector, 300)
-
 		if err != nil {
 			return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", namespace, "kind", "allList"))), nil
 		}
-
 		for _, p := range partialMetadata {
-
 			target := rule.NewTarget("name", p.Name, "namespace", p.Namespace, "kind", p.Kind)
-
 			acceptedIdx := slices.IndexFunc(acceptedResources, func(acceptedResource AcceptedResources242383) bool {
-				return (p.APIVersion == acceptedResource.SelectResource.APIVersion) &&
-					(acceptedResource.SelectResource.Kind == "*" || p.Kind == acceptedResource.SelectResource.Kind) &&
-					utils.MatchLabels(namespacesPartialMetadata[namespace].Labels, acceptedResource.NamespaceMatchLabels) &&
-					utils.MatchLabels(p.Labels, acceptedResource.SelectResource.MatchLabels)
+				return (p.APIVersion == acceptedResource.ResourceSelector.APIVersion) &&
+					(acceptedResource.ResourceSelector.Kind == "*" || p.Kind == acceptedResource.ResourceSelector.Kind) &&
+					utils.MatchLabels(allNamespaces[namespace].Labels, acceptedResource.NamespaceMatchLabels) &&
+					utils.MatchLabels(p.Labels, acceptedResource.ResourceSelector.MatchLabels)
 			})
 
 			if acceptedIdx < 0 {

@@ -47,13 +47,13 @@ var _ = Describe("#242417", func() {
 		options = &rules.Options242417{
 			AcceptedPods: []rules.AcceptedPods242417{
 				{
-					PodAttributesLabels: option.PodAttributesLabels{
+					PodSelector: option.PodSelector{
 						PodMatchLabels:       map[string]string{},
 						NamespaceMatchLabels: map[string]string{"random1": "value1"},
 					},
 				},
 				{
-					PodAttributesLabels: option.PodAttributesLabels{
+					PodSelector: option.PodSelector{
 						PodMatchLabels:       map[string]string{},
 						NamespaceMatchLabels: map[string]string{"random2": "value2"},
 					},
@@ -190,14 +190,14 @@ var _ = Describe("#242417", func() {
 		options.AcceptedPods[0].Justification = "Accept pod."
 
 		options.AcceptedPods = append(options.AcceptedPods, rules.AcceptedPods242417{
-			PodAttributesLabels: option.PodAttributesLabels{
+			PodSelector: option.PodSelector{
 				PodMatchLabels:       map[string]string{"foo": "bar"},
 				NamespaceMatchLabels: map[string]string{"functionality": "system"},
 			},
 		})
 
 		options.AcceptedPods = append(options.AcceptedPods, rules.AcceptedPods242417{
-			PodAttributesLabels: option.PodAttributesLabels{
+			PodSelector: option.PodSelector{
 				PodMatchLabels:       map[string]string{"foo-bar": "bar"},
 				NamespaceMatchLabels: map[string]string{"functionality": "system"},
 			},
@@ -226,28 +226,28 @@ var _ = Describe("#242417", func() {
 			options = &rules.Options242417{
 				AcceptedPods: []rules.AcceptedPods242417{
 					{
-						PodAttributesLabels: option.PodAttributesLabels{
+						PodSelector: option.PodSelector{
 							PodMatchLabels:       map[string]string{"typeOfPod": "veryImportant"},
 							NamespaceMatchLabels: map[string]string{"namespaceType": "system"},
 						},
 						Status: "Passed",
 					},
 					{
-						PodAttributesLabels: option.PodAttributesLabels{
+						PodSelector: option.PodSelector{
 							PodMatchLabels:       map[string]string{"typeOfPod": "veryImportant"},
 							NamespaceMatchLabels: map[string]string{"namespaceType": "system"},
 						},
 						Status: "Accepted",
 					},
 					{
-						PodAttributesLabels: option.PodAttributesLabels{
+						PodSelector: option.PodSelector{
 							PodMatchLabels:       map[string]string{"typeOfPod": "veryImportant"},
 							NamespaceMatchLabels: map[string]string{"namespaceType": "system"},
 						},
 						Status: "fake",
 					},
 					{
-						PodAttributesLabels: option.PodAttributesLabels{
+						PodSelector: option.PodSelector{
 							PodMatchLabels:       map[string]string{"typeOfPod": "veryImportant"},
 							NamespaceMatchLabels: map[string]string{"namespaceType": "system"},
 						},

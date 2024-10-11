@@ -22,9 +22,7 @@ var _ = Describe("options", func() {
 					Groups: []string{"", "asd", "111"},
 				},
 			}
-
 			result := options.Validate()
-
 			Expect(result).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 				"Type":     Equal(field.ErrorTypeInvalid),
 				"Field":    Equal("expectedFileOwner.users"),
@@ -44,10 +42,9 @@ var _ = Describe("options", func() {
 			))
 		})
 	})
-	Describe("#ValidatePodAttributeOptions", func() {
+	Describe("#ValidatePodSelector", func() {
 		It("should correctly validate labels", func() {
-
-			podAttributes := []option.PodAttributesLabels{
+			podAttributes := []option.PodSelector{
 				{
 					NamespaceMatchLabels: map[string]string{"_foo": "bar"},
 					PodMatchLabels:       map[string]string{"foo": "bar."},
@@ -85,7 +82,6 @@ var _ = Describe("options", func() {
 			}
 
 			var result field.ErrorList
-
 			for _, p := range podAttributes {
 				result = append(result, p.Validate()...)
 			}
@@ -129,7 +125,6 @@ var _ = Describe("options", func() {
 					"Field":  Equal("acceptedPods.podMatchLabels"),
 					"Detail": Equal("must not be empty"),
 				}))))
-
 		})
 	})
 	Describe("#ValidateOptions242414", func() {
@@ -137,7 +132,7 @@ var _ = Describe("options", func() {
 			options := option.Options242414{
 				AcceptedPods: []option.AcceptedPods242414{
 					{
-						PodAttributesLabels: option.PodAttributesLabels{
+						PodSelector: option.PodSelector{
 							PodMatchLabels: map[string]string{
 								"foo": "bar",
 							},
@@ -147,7 +142,7 @@ var _ = Describe("options", func() {
 						},
 					},
 					{
-						PodAttributesLabels: option.PodAttributesLabels{
+						PodSelector: option.PodSelector{
 							PodMatchLabels: map[string]string{
 								"foo": "bar",
 							},
@@ -158,7 +153,7 @@ var _ = Describe("options", func() {
 						Ports: []int32{0, 100},
 					},
 					{
-						PodAttributesLabels: option.PodAttributesLabels{
+						PodSelector: option.PodSelector{
 							PodMatchLabels: map[string]string{
 								"foo": "bar",
 							},
@@ -193,7 +188,7 @@ var _ = Describe("options", func() {
 			options := option.Options242415{
 				AcceptedPods: []option.AcceptedPods242415{
 					{
-						PodAttributesLabels: option.PodAttributesLabels{
+						PodSelector: option.PodSelector{
 							PodMatchLabels: map[string]string{
 								"foo": "bar",
 							},
@@ -204,7 +199,7 @@ var _ = Describe("options", func() {
 						EnvironmentVariables: []string{"asd=dsa"},
 					},
 					{
-						PodAttributesLabels: option.PodAttributesLabels{
+						PodSelector: option.PodSelector{
 							PodMatchLabels: map[string]string{
 								"foo": "bar",
 							},

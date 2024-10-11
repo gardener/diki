@@ -22,7 +22,6 @@ import (
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
-// TODO: add checks for validate
 var _ = Describe("#242383", func() {
 	var (
 		fakeClient     client.Client
@@ -53,7 +52,7 @@ var _ = Describe("#242383", func() {
 		options = &rules.Options242383{
 			AcceptedResources: []rules.AcceptedResources242383{
 				{
-					SelectResource: rules.SelectResource{
+					ResourceSelector: rules.ResourceSelector{
 						APIVersion:           "v1",
 						Kind:                 "Pod",
 						MatchLabels:          map[string]string{},
@@ -61,7 +60,7 @@ var _ = Describe("#242383", func() {
 					},
 				},
 				{
-					SelectResource: rules.SelectResource{
+					ResourceSelector: rules.ResourceSelector{
 						APIVersion:           "v1",
 						Kind:                 "Pod",
 						MatchLabels:          map[string]string{},
@@ -88,7 +87,6 @@ var _ = Describe("#242383", func() {
 	})
 
 	It("should return passed checkResult when no user resources are present in system namespaces", func() {
-
 		kubernetesService := &corev1.Service{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: "v1",
@@ -128,9 +126,9 @@ var _ = Describe("#242383", func() {
 		pod4.Labels["compliance.gardener.cloud/role"] = "diki-privileged-pod"
 		Expect(fakeClient.Create(ctx, pod4)).To(Succeed())
 
-		options.AcceptedResources[0].SelectResource.MatchLabels["label"] = "value"
+		options.AcceptedResources[0].ResourceSelector.MatchLabels["label"] = "value"
 		options.AcceptedResources[0].Status = "Passed"
-		options.AcceptedResources[1].SelectResource.MatchLabels["label"] = "value"
+		options.AcceptedResources[1].ResourceSelector.MatchLabels["label"] = "value"
 		options.AcceptedResources[1].Status = "Passed"
 		r := &rules.Rule242383{
 			Client:  fakeClient,
@@ -181,7 +179,6 @@ var _ = Describe("#242383", func() {
 	})
 
 	It("should return correct checkResult when different resources are present", func() {
-
 		pod := plainPod.DeepCopy()
 		pod.Name = "foo"
 		pod.Namespace = "default"
@@ -233,7 +230,6 @@ var _ = Describe("#242383", func() {
 		}
 
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
-
 	})
 
 	It("should return correct checkResult when different statuses are used", func() {
@@ -262,18 +258,18 @@ var _ = Describe("#242383", func() {
 		pod4.Labels["compliance.gardener.cloud/role"] = "diki-privileged-pod"
 		Expect(fakeClient.Create(ctx, pod4)).To(Succeed())
 
-		options.AcceptedResources[0].SelectResource.MatchLabels["foo"] = "bar"
-		options.AcceptedResources[0].SelectResource.MatchLabels["bar"] = "foo"
+		options.AcceptedResources[0].ResourceSelector.MatchLabels["foo"] = "bar"
+		options.AcceptedResources[0].ResourceSelector.MatchLabels["bar"] = "foo"
 		options.AcceptedResources[0].Status = "Accepted"
 		options.AcceptedResources[0].Justification = "Accept pod."
 
-		options.AcceptedResources[1].SelectResource.MatchLabels["foo"] = "bar"
-		options.AcceptedResources[1].SelectResource.MatchLabels["bar"] = "foo"
+		options.AcceptedResources[1].ResourceSelector.MatchLabels["foo"] = "bar"
+		options.AcceptedResources[1].ResourceSelector.MatchLabels["bar"] = "foo"
 		options.AcceptedResources[1].Status = "Accepted"
 		options.AcceptedResources[1].Justification = "Accept pod."
 
 		options.AcceptedResources = append(options.AcceptedResources, rules.AcceptedResources242383{
-			SelectResource: rules.SelectResource{
+			ResourceSelector: rules.ResourceSelector{
 				APIVersion:           "v1",
 				Kind:                 "*",
 				MatchLabels:          map[string]string{"foo": "bar"},
@@ -281,7 +277,7 @@ var _ = Describe("#242383", func() {
 			},
 		})
 		options.AcceptedResources = append(options.AcceptedResources, rules.AcceptedResources242383{
-			SelectResource: rules.SelectResource{
+			ResourceSelector: rules.ResourceSelector{
 				APIVersion:           "v1",
 				Kind:                 "*",
 				MatchLabels:          map[string]string{"foo-bar": "bar"},
@@ -312,7 +308,7 @@ var _ = Describe("#242383", func() {
 			options = &rules.Options242383{
 				AcceptedResources: []rules.AcceptedResources242383{
 					{
-						SelectResource: rules.SelectResource{
+						ResourceSelector: rules.ResourceSelector{
 							APIVersion:           "v1",
 							Kind:                 "Pod",
 							MatchLabels:          map[string]string{"bar": "foo"},
@@ -321,7 +317,7 @@ var _ = Describe("#242383", func() {
 						Status: "Passed",
 					},
 					{
-						SelectResource: rules.SelectResource{
+						ResourceSelector: rules.ResourceSelector{
 							APIVersion:           "apps/v1",
 							Kind:                 "Service",
 							MatchLabels:          map[string]string{"bar": "foo"},
@@ -330,7 +326,7 @@ var _ = Describe("#242383", func() {
 						Status: "Passed",
 					},
 					{
-						SelectResource: rules.SelectResource{
+						ResourceSelector: rules.ResourceSelector{
 							APIVersion:           "v1",
 							Kind:                 "Deployment",
 							MatchLabels:          map[string]string{"-foo": "bar"},
@@ -339,7 +335,7 @@ var _ = Describe("#242383", func() {
 						Status: "Accepted",
 					},
 					{
-						SelectResource: rules.SelectResource{
+						ResourceSelector: rules.ResourceSelector{
 							APIVersion:           "v1",
 							Kind:                 "Service",
 							MatchLabels:          map[string]string{},
@@ -348,7 +344,7 @@ var _ = Describe("#242383", func() {
 						Status: "Accepted",
 					},
 					{
-						SelectResource: rules.SelectResource{
+						ResourceSelector: rules.ResourceSelector{
 							APIVersion:           "fake",
 							Kind:                 "Service",
 							MatchLabels:          map[string]string{"foo": "?bar"},

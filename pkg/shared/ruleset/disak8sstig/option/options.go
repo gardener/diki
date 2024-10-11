@@ -18,16 +18,16 @@ type Option interface {
 	Validate() field.ErrorList
 }
 
-// PodAttributesLabels contains generalized options for matching entities by their attribute labels
-type PodAttributesLabels struct {
+// PodSelector contains generalized options for matching entities by their attribute labels
+type PodSelector struct {
 	PodMatchLabels       map[string]string `json:"podMatchLabels" yaml:"podMatchLabels"`
 	NamespaceMatchLabels map[string]string `json:"namespaceMatchLabels" yaml:"namespaceMatchLabels"`
 }
 
-var _ Option = (*PodAttributesLabels)(nil)
+var _ Option = (*PodSelector)(nil)
 
-// Validate validates that option label matching configurations are in a correct format
-func (e PodAttributesLabels) Validate() field.ErrorList {
+// Validate validates that option configurations are correctly defined
+func (e PodSelector) Validate() field.ErrorList {
 	var (
 		allErrs  field.ErrorList
 		rootPath = field.NewPath("acceptedPods")
@@ -43,7 +43,6 @@ func (e PodAttributesLabels) Validate() field.ErrorList {
 
 	allErrs = append(allErrs, metav1validation.ValidateLabels(e.NamespaceMatchLabels, rootPath.Child("namespaceMatchLabels"))...)
 	allErrs = append(allErrs, metav1validation.ValidateLabels(e.PodMatchLabels, rootPath.Child("podMatchLabels"))...)
-
 	return allErrs
 }
 
@@ -99,7 +98,7 @@ var _ Option = (*Options242414)(nil)
 
 // AcceptedPods242414 contains option specifications for appected pods
 type AcceptedPods242414 struct {
-	PodAttributesLabels
+	PodSelector
 	Justification string  `json:"justification" yaml:"justification"`
 	Ports         []int32 `json:"ports" yaml:"ports"`
 }
@@ -111,9 +110,7 @@ func (o Options242414) Validate() field.ErrorList {
 		rootPath = field.NewPath("acceptedPods")
 	)
 	for _, p := range o.AcceptedPods {
-
 		allErrs = append(allErrs, p.Validate()...)
-
 		if len(p.Ports) == 0 {
 			allErrs = append(allErrs, field.Required(rootPath.Child("ports"), "must not be empty"))
 		}
@@ -135,7 +132,7 @@ var _ Option = (*Options242415)(nil)
 
 // AcceptedPods242415 contains option specifications for appected pods
 type AcceptedPods242415 struct {
-	PodAttributesLabels
+	PodSelector
 	Justification        string   `json:"justification" yaml:"justification"`
 	EnvironmentVariables []string `json:"environmentVariables" yaml:"environmentVariables"`
 }
@@ -147,9 +144,7 @@ func (o Options242415) Validate() field.ErrorList {
 		rootPath = field.NewPath("acceptedPods")
 	)
 	for _, p := range o.AcceptedPods {
-
 		allErrs = append(allErrs, p.Validate()...)
-
 		if len(p.EnvironmentVariables) == 0 {
 			allErrs = append(allErrs, field.Required(rootPath.Child("environmentVariables"), "must not be empty"))
 		}
