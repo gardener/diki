@@ -8,6 +8,7 @@ import (
 	"cmp"
 	"errors"
 	"fmt"
+	"maps"
 	"reflect"
 	"slices"
 	"strings"
@@ -277,8 +278,7 @@ func metadataTextForMergedProvider(mp MergedProvider) map[string]string {
 	for id, metadata := range mp.Metadata {
 		var sb strings.Builder
 		empty := true
-		keys := sortedKeys(metadata)
-		for _, key := range keys {
+		for _, key := range slices.Sorted(maps.Keys(metadata)) {
 			if key == mp.DistinctBy {
 				continue
 			}

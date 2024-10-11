@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"maps"
+	"slices"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -121,4 +123,8 @@ func (r *HTMLRenderer) Render(w io.Writer, report any) error {
 	default:
 		return fmt.Errorf("unsupported report type: %T", report)
 	}
+}
+
+func sortedKeys[T any](m map[string]T) []string {
+	return slices.Sorted(maps.Keys(m))
 }
