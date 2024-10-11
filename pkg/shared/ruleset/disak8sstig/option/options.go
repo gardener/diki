@@ -26,6 +26,7 @@ type PodAttributesLabels struct {
 
 var _ Option = (*PodAttributesLabels)(nil)
 
+// Validate validates that option label matching configurations are in a correct format
 func (e PodAttributesLabels) Validate() field.ErrorList {
 	var (
 		allErrs  field.ErrorList

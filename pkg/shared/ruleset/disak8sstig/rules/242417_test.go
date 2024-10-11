@@ -23,9 +23,8 @@ import (
 
 var _ = Describe("#242417", func() {
 	var (
-		fakeClient client.Client
-		plainPod   *corev1.Pod
-		//WE ADD A FAKE NAMESPACE IN ORDER TO MIMIC CUSTOM LABELING
+		fakeClient     client.Client
+		plainPod       *corev1.Pod
 		plainNamespace *corev1.Namespace
 		options        *rules.Options242417
 		ctx            = context.TODO()
