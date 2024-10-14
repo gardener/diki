@@ -404,7 +404,7 @@ func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.Provide
 		if err != nil {
 			return err
 		}
-		providerResults := []provider.ProviderResult{{ProviderID: p.ID(), ProviderName: p.Name(), RulesetResults: []ruleset.RulesetResult{res}}}
+		providerResults := []provider.ProviderResult{{ProviderID: p.ID(), ProviderName: p.Name(), Metadata: p.Metadata(), RulesetResults: []ruleset.RulesetResult{res}}}
 
 		if len(outputPath) > 0 {
 			reportOpts := []report.ReportOption{}
