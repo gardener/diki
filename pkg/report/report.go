@@ -231,12 +231,3 @@ func getChecks(checkResults []rule.CheckResult, opts *ReportOptions) []Check {
 	}
 	return checks
 }
-
-func sortedKeys[T any](m map[string]T) []string {
-	res := make([]string, 0, len(m))
-	for k := range m {
-		res = append(res, k)
-	}
-	slices.Sort(res)
-	return res
-}

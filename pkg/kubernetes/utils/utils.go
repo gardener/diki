@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
@@ -654,12 +655,8 @@ func SelectPodOfReferenceGroup(pods []corev1.Pod, nodesAllocatablePods map[strin
 		checkResults = append(checkResults, rule.WarningCheckResult("Pod not (yet) scheduled", podTarget))
 	}
 
-	keys := make([]string, 0, len(groupedPodsByReferences))
-	for key := range groupedPodsByReferences {
-		keys = append(keys, key)
-	}
 	// sort reference keys by number of pods to minimize groups
-	slices.SortFunc(keys, func(i, j string) int {
+	keys := slices.SortedFunc(maps.Keys(groupedPodsByReferences), func(i, j string) int {
 		return cmp.Compare(len(groupedPodsByReferences[i]), len(groupedPodsByReferences[j]))
 	})
 
