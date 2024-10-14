@@ -26,7 +26,7 @@ providers:                   # contains information about known providers
     #       kind: "Pod"
     #       matchLabels:
     #         foo: bar
-    #       # only pods in ["default", "kube-public", "kube-node-lease"] are meaningful to be selected with namespaceMatchLabels
+    #       # only pods in namespaces ["default", "kube-public", "kube-node-lease"] are meaningful to be selected with namespaceMatchLabels
     #       # since the rule does not perform checks on objects in namespaces different from the listed above
     #       namespaceMatchLabels:
     #          kubernetes.io/metadata.name: default
