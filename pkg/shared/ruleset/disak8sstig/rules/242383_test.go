@@ -52,7 +52,7 @@ var _ = Describe("#242383", func() {
 		options = &rules.Options242383{
 			AcceptedResources: []rules.AcceptedResources242383{
 				{
-					ResourceSelector: rules.ResourceSelector{
+					ObjectSelector: rules.ObjectSelector{
 						APIVersion:           "v1",
 						Kind:                 "Pod",
 						MatchLabels:          map[string]string{},
@@ -60,7 +60,7 @@ var _ = Describe("#242383", func() {
 					},
 				},
 				{
-					ResourceSelector: rules.ResourceSelector{
+					ObjectSelector: rules.ObjectSelector{
 						APIVersion:           "v1",
 						Kind:                 "Pod",
 						MatchLabels:          map[string]string{},
@@ -69,21 +69,25 @@ var _ = Describe("#242383", func() {
 				},
 			},
 		}
-		kubeNodeLeaseNamespace := plainNamespace.DeepCopy()
-		kubeNodeLeaseNamespace.Name = "default"
-		kubeNodeLeaseNamespace.Labels["random_1"] = "value_1"
 
-		kubeSystemNamespace := plainNamespace.DeepCopy()
-		kubeSystemNamespace.Name = "kube-system"
-		kubeSystemNamespace.Labels["random_2"] = "value_2"
+		defaultNamespace := plainNamespace.DeepCopy()
+		defaultNamespace.Name = "default"
+		defaultNamespace.Labels["random_1"] = "value_1"
+		defaultNamespace.Labels["kubernetes.io/metadata.name"] = "default"
+
+		kubeNodeLeaseNamespace := plainNamespace.DeepCopy()
+		kubeNodeLeaseNamespace.Name = "kude-node-lease"
+		kubeNodeLeaseNamespace.Labels["random_2"] = "value_2"
+		kubeNodeLeaseNamespace.Labels["kubernetes.io/metadata.name"] = "kube-node-lease"
 
 		kubePublicNamespace := plainNamespace.DeepCopy()
 		kubePublicNamespace.Name = "kube-public"
 		kubePublicNamespace.Labels["random_2"] = "value_2"
+		kubePublicNamespace.Labels["kubernetes.io/metadata.name"] = "kube-public"
 
+		Expect(fakeClient.Create(ctx, defaultNamespace)).To(Succeed())
 		Expect(fakeClient.Create(ctx, kubeNodeLeaseNamespace)).To(Succeed())
 		Expect(fakeClient.Create(ctx, kubePublicNamespace)).To(Succeed())
-		Expect(fakeClient.Create(ctx, kubeSystemNamespace)).To(Succeed())
 	})
 
 	It("should return passed checkResult when no user resources are present in system namespaces", func() {
@@ -126,9 +130,9 @@ var _ = Describe("#242383", func() {
 		pod4.Labels["compliance.gardener.cloud/role"] = "diki-privileged-pod"
 		Expect(fakeClient.Create(ctx, pod4)).To(Succeed())
 
-		options.AcceptedResources[0].ResourceSelector.MatchLabels["label"] = "value"
+		options.AcceptedResources[0].ObjectSelector.MatchLabels["label"] = "value"
 		options.AcceptedResources[0].Status = "Passed"
-		options.AcceptedResources[1].ResourceSelector.MatchLabels["label"] = "value"
+		options.AcceptedResources[1].ObjectSelector.MatchLabels["label"] = "value"
 		options.AcceptedResources[1].Status = "Passed"
 		r := &rules.Rule242383{
 			Client:  fakeClient,
@@ -258,18 +262,18 @@ var _ = Describe("#242383", func() {
 		pod4.Labels["compliance.gardener.cloud/role"] = "diki-privileged-pod"
 		Expect(fakeClient.Create(ctx, pod4)).To(Succeed())
 
-		options.AcceptedResources[0].ResourceSelector.MatchLabels["foo"] = "bar"
-		options.AcceptedResources[0].ResourceSelector.MatchLabels["bar"] = "foo"
+		options.AcceptedResources[0].ObjectSelector.MatchLabels["foo"] = "bar"
+		options.AcceptedResources[0].ObjectSelector.MatchLabels["bar"] = "foo"
 		options.AcceptedResources[0].Status = "Accepted"
 		options.AcceptedResources[0].Justification = "Accept pod."
 
-		options.AcceptedResources[1].ResourceSelector.MatchLabels["foo"] = "bar"
-		options.AcceptedResources[1].ResourceSelector.MatchLabels["bar"] = "foo"
+		options.AcceptedResources[1].ObjectSelector.MatchLabels["foo"] = "bar"
+		options.AcceptedResources[1].ObjectSelector.MatchLabels["bar"] = "foo"
 		options.AcceptedResources[1].Status = "Accepted"
 		options.AcceptedResources[1].Justification = "Accept pod."
 
 		options.AcceptedResources = append(options.AcceptedResources, rules.AcceptedResources242383{
-			ResourceSelector: rules.ResourceSelector{
+			ObjectSelector: rules.ObjectSelector{
 				APIVersion:           "v1",
 				Kind:                 "*",
 				MatchLabels:          map[string]string{"foo": "bar"},
@@ -277,7 +281,7 @@ var _ = Describe("#242383", func() {
 			},
 		})
 		options.AcceptedResources = append(options.AcceptedResources, rules.AcceptedResources242383{
-			ResourceSelector: rules.ResourceSelector{
+			ObjectSelector: rules.ObjectSelector{
 				APIVersion:           "v1",
 				Kind:                 "*",
 				MatchLabels:          map[string]string{"foo-bar": "bar"},
@@ -308,7 +312,7 @@ var _ = Describe("#242383", func() {
 			options = &rules.Options242383{
 				AcceptedResources: []rules.AcceptedResources242383{
 					{
-						ResourceSelector: rules.ResourceSelector{
+						ObjectSelector: rules.ObjectSelector{
 							APIVersion:           "v1",
 							Kind:                 "Pod",
 							MatchLabels:          map[string]string{"bar": "foo"},
@@ -317,7 +321,7 @@ var _ = Describe("#242383", func() {
 						Status: "Passed",
 					},
 					{
-						ResourceSelector: rules.ResourceSelector{
+						ObjectSelector: rules.ObjectSelector{
 							APIVersion:           "apps/v1",
 							Kind:                 "Service",
 							MatchLabels:          map[string]string{"bar": "foo"},
@@ -326,7 +330,7 @@ var _ = Describe("#242383", func() {
 						Status: "Passed",
 					},
 					{
-						ResourceSelector: rules.ResourceSelector{
+						ObjectSelector: rules.ObjectSelector{
 							APIVersion:           "v1",
 							Kind:                 "Deployment",
 							MatchLabels:          map[string]string{"-foo": "bar"},
@@ -335,7 +339,7 @@ var _ = Describe("#242383", func() {
 						Status: "Accepted",
 					},
 					{
-						ResourceSelector: rules.ResourceSelector{
+						ObjectSelector: rules.ObjectSelector{
 							APIVersion:           "v1",
 							Kind:                 "Service",
 							MatchLabels:          map[string]string{},
@@ -344,7 +348,7 @@ var _ = Describe("#242383", func() {
 						Status: "Accepted",
 					},
 					{
-						ResourceSelector: rules.ResourceSelector{
+						ObjectSelector: rules.ObjectSelector{
 							APIVersion:           "fake",
 							Kind:                 "Service",
 							MatchLabels:          map[string]string{"foo": "?bar"},

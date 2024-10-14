@@ -350,9 +350,10 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 			Options: &sharedrules.Options242417{
 				AcceptedPods: []sharedrules.AcceptedPods242417{
 					{
-						PodSelector: option.PodSelector{PodMatchLabels: map[string]string{
-							resourcesv1alpha1.ManagedBy: "gardener",
-						},
+						PodSelector: option.PodSelector{
+							PodMatchLabels: map[string]string{
+								resourcesv1alpha1.ManagedBy: "gardener",
+							},
 							NamespaceMatchLabels: map[string]string{
 								"kubernetes.io/metadata.name": "kube-system",
 							},

@@ -60,7 +60,7 @@ providers:
           namespaceMatchLabels:
             kubernetes.io/metadata.name: kube-system
           justification: "Pods managed by Gardener are not considered as user pods"
-    - ruleID: "242449" 
+    - ruleID: "242449"
       args:
         nodeGroupByLabels:
         - worker.gardener.cloud/pool

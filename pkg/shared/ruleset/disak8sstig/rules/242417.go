@@ -84,7 +84,7 @@ func (r *Rule242417) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	allNamespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("", ""))), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 	}
 
 	for _, namespace := range systemNamespaces {

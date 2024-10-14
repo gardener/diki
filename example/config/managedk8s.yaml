@@ -26,25 +26,9 @@ providers:                   # contains information about known providers
     #       kind: "Pod"
     #       matchLabels:
     #         foo: bar
+    #       # only namespaces in ["default", "kube-public", "kube-node-lease" are meaningful to be selected with namespaceMatchLabels
     #       namespaceMatchLabels:
-    #         kubernetes.io/metadata.name: default
-    #         # only namespaces in ["default", "kube-public", "kube-node-lease" can be selected with namespaceMatchLabels
-    #       justification: "justification"
-    #     - apiVersion: "v1"
-    #       kind: "Pod"
-    #       matchLabels:
     #         foo: bar
-    #       namespaceMatchLabels:
-    #         kubernetes.io/metadata.name: kube-public
-    #         # only namespaces in ["default", "kube-public", "kube-node-lease" can be selected with namespaceMatchLabels
-    #       justification: "justification"
-    #     - apiVersion: "v1"
-    #       kind: "Pod"
-    #       matchLabels:
-    #         foo: bar
-    #       namespaceMatchLabels:
-    #         kubernetes.io/metadata.name: kube-node-lease
-    #         # only namespaces in ["default", "kube-public", "kube-node-lease" can be selected with namespaceMatchLabels
     #       justification: "justification"
     #       # relates to the result status in the report
     #       # can be set to Passed or Accepted. Defaults to Accepted
@@ -116,24 +100,12 @@ providers:                   # contains information about known providers
     #     acceptedPods:
     #     - podMatchLabels:
     #         foo: bar
+    #       # only pods in namespaces ["kube-system", "kube-public", "kube-node-lease"] are meaningful be selected with namespaceMatchLabels
     #       namespaceMatchLabels:
-    #         kubernetes.io/metadata.name: kube-system
-    #       only pods in namespaces ["kube-system", "kube-public", "kube-node-lease"] can be selected with namespaceMatchLabels
+    #         foo: bar
     #       justification: "justification"
     #       # relates to the result status in the report
     #       # can be set to Passed or Accepted. Defaults to Accepted
-    #       status: Passed
-    #     - podMatchLabels:
-    #         foo: bar
-    #       namespaceMatchLabels:
-    #         kubernetes.io/metadata.name: kube-public
-    #       justification: "justification"
-    #       status: Passed    
-    #     - podMatchLabels:
-    #         foo: bar
-    #       namespaceMatchLabels:
-    #         kubernetes.io/metadata.name: kube-node-lease
-    #       justification: "justification"
     #       status: Passed
     # - ruleID: "242442"
     #   args:

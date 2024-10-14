@@ -89,40 +89,40 @@ var _ = Describe("options", func() {
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedPods.namespaceMatchLabels"),
+					"Field":    Equal("[].namespaceMatchLabels"),
 					"BadValue": Equal("_foo"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedPods.podMatchLabels"),
+					"Field":    Equal("[].podMatchLabels"),
 					"BadValue": Equal("bar."),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedPods.namespaceMatchLabels"),
+					"Field":    Equal("[].namespaceMatchLabels"),
 					"BadValue": Equal("fo?o"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedPods.namespaceMatchLabels"),
+					"Field":    Equal("[].namespaceMatchLabels"),
 					"BadValue": Equal("ba/r"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedPods.podMatchLabels"),
+					"Field":    Equal("[].podMatchLabels"),
 					"BadValue": Equal("at$a"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("acceptedPods.namespaceMatchLabels"),
+					"Field":  Equal("[].namespaceMatchLabels"),
 					"Detail": Equal("must not be empty"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("acceptedPods.namespaceMatchLabels"),
+					"Field":  Equal("[].namespaceMatchLabels"),
 					"Detail": Equal("must not be empty"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("acceptedPods.podMatchLabels"),
+					"Field":  Equal("[].podMatchLabels"),
 					"Detail": Equal("must not be empty"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("acceptedPods.podMatchLabels"),
+					"Field":  Equal("[].podMatchLabels"),
 					"Detail": Equal("must not be empty"),
 				}))))
 		})

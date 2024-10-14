@@ -37,7 +37,7 @@ type Options242383 struct {
 var _ option.Option = (*Options242383)(nil)
 
 type AcceptedResources242383 struct {
-	ResourceSelector
+	ObjectSelector
 	Justification string `json:"justification" yaml:"justification"`
 	Status        string `json:"status" yaml:"status"`
 }
@@ -56,16 +56,16 @@ func (o Options242383) Validate() field.ErrorList {
 	return allErrs
 }
 
-type ResourceSelector struct {
+type ObjectSelector struct {
 	APIVersion           string            `json:"apiVersion" yaml:"apiVersion"`
 	Kind                 string            `json:"kind" yaml:"kind"`
 	MatchLabels          map[string]string `json:"matchLabels" yaml:"matchLabels"`
 	NamespaceMatchLabels map[string]string `json:"namespaceMatchLabels" yaml:"namespaceMatchLabels"`
 }
 
-var _ option.Option = (*ResourceSelector)(nil)
+var _ option.Option = (*ObjectSelector)(nil)
 
-func (s ResourceSelector) Validate() field.ErrorList {
+func (s ObjectSelector) Validate() field.ErrorList {
 	var (
 		allErrs          field.ErrorList
 		rootPath         = field.NewPath("acceptedResources")
@@ -108,21 +108,23 @@ func (r *Rule242383) Name() string {
 func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
 	allNamespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("", ""))), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 	}
 	checkResults := []rule.CheckResult{}
 	systemNamespaces := []string{"default", "kube-public", "kube-node-lease"}
 	acceptedResources := []AcceptedResources242383{
 		{
 			// The 'kubernetes' Service is a required system resource exposing the kubernetes API server
-			ResourceSelector: ResourceSelector{
+			ObjectSelector: ObjectSelector{
 				APIVersion: "v1",
 				Kind:       "Service",
 				MatchLabels: map[string]string{
 					"component": "apiserver",
 					"provider":  "kubernetes",
 				},
-				NamespaceMatchLabels: allNamespaces["default"].Labels,
+				NamespaceMatchLabels: map[string]string{
+					"kubernetes.io/metadata.name": "default",
+				},
 			},
 			Status: "Passed",
 		},
@@ -147,10 +149,10 @@ func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
 		for _, p := range partialMetadata {
 			target := rule.NewTarget("name", p.Name, "namespace", p.Namespace, "kind", p.Kind)
 			acceptedIdx := slices.IndexFunc(acceptedResources, func(acceptedResource AcceptedResources242383) bool {
-				return (p.APIVersion == acceptedResource.ResourceSelector.APIVersion) &&
-					(acceptedResource.ResourceSelector.Kind == "*" || p.Kind == acceptedResource.ResourceSelector.Kind) &&
+				return (p.APIVersion == acceptedResource.ObjectSelector.APIVersion) &&
+					(acceptedResource.ObjectSelector.Kind == "*" || p.Kind == acceptedResource.ObjectSelector.Kind) &&
 					utils.MatchLabels(allNamespaces[namespace].Labels, acceptedResource.NamespaceMatchLabels) &&
-					utils.MatchLabels(p.Labels, acceptedResource.ResourceSelector.MatchLabels)
+					utils.MatchLabels(p.Labels, acceptedResource.ObjectSelector.MatchLabels)
 			})
 
 			if acceptedIdx < 0 {

@@ -30,7 +30,7 @@ var _ Option = (*PodSelector)(nil)
 func (e PodSelector) Validate() field.ErrorList {
 	var (
 		allErrs  field.ErrorList
-		rootPath = field.NewPath("acceptedPods")
+		rootPath = field.NewPath("")
 	)
 
 	if len(e.NamespaceMatchLabels) == 0 {
@@ -96,7 +96,7 @@ type Options242414 struct {
 
 var _ Option = (*Options242414)(nil)
 
-// AcceptedPods242414 contains option specifications for appected pods
+// AcceptedPods242414 contains option specifications for accepted pods
 type AcceptedPods242414 struct {
 	PodSelector
 	Justification string  `json:"justification" yaml:"justification"`
@@ -130,7 +130,7 @@ type Options242415 struct {
 
 var _ Option = (*Options242415)(nil)
 
-// AcceptedPods242415 contains option specifications for appected pods
+// AcceptedPods242415 contains option specifications for accepted pods
 type AcceptedPods242415 struct {
 	PodSelector
 	Justification        string   `json:"justification" yaml:"justification"`
