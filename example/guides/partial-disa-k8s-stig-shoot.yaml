@@ -57,10 +57,8 @@ providers:
         acceptedPods:
         - podMatchLabels:
             resources.gardener.cloud/managed-by: gardener
-          namespaceNames:
-          - kube-system
-          - kube-public
-          - kube-node-lease
+          namespaceMatchLabels:
+            kubernetes.io/metadata.name: kube-system
           justification: "Pods managed by Gardener are not considered as user pods"
     - ruleID: "242449"
       args:

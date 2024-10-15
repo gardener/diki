@@ -26,11 +26,10 @@ providers:                   # contains information about known providers
     #       kind: "Pod"
     #       matchLabels:
     #         foo: bar
-    #       # Defaults to ["default", "kube-public", "kube-node-lease"]
-    #       namespaceNames:
-    #       - default
-    #       - kube-public
-    #       - kube-node-lease
+    #       # only pods in namespaces ["default", "kube-public", "kube-node-lease"] are meaningful to be selected with namespaceMatchLabels
+    #       # since the rule does not perform checks on objects in namespaces different from the listed above
+    #       namespaceMatchLabels:
+    #         kubernetes.io/metadata.name: default
     #       justification: "justification"
     #       # relates to the result status in the report
     #       # can be set to Passed or Accepted. Defaults to Accepted
@@ -102,10 +101,10 @@ providers:                   # contains information about known providers
     #     acceptedPods:
     #     - podMatchLabels:
     #         foo: bar
-    #       namespaceNames:
-    #       - kube-system
-    #       - kube-public
-    #       - kube-node-lease
+    #       # only pods in namespaces ["kube-system", "kube-public", "kube-node-lease"] are meaningful to be selected with namespaceMatchLabels
+    #       # since the rule does not perform checks on objects in namespaces different from the listed above
+    #       namespaceMatchLabels:
+    #         kubernetes.io/metadata.name: kube-system
     #       justification: "justification"
     #       # relates to the result status in the report
     #       # can be set to Passed or Accepted. Defaults to Accepted

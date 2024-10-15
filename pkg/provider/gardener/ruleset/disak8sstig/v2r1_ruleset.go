@@ -156,9 +156,7 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 		&sharedrules.Rule242380{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedrules.Rule242381{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedrules.Rule242382{Client: seedClient, Namespace: r.shootNamespace},
-		&sharedrules.Rule242383{
-			Client: shootClient,
-		},
+		&sharedrules.Rule242383{Client: shootClient},
 		rule.NewSkipRule(
 			sharedrules.ID242384,
 			"The Kubernetes Scheduler must have secure binding (MEDIUM 242384)",
@@ -352,12 +350,16 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 			Options: &sharedrules.Options242417{
 				AcceptedPods: []sharedrules.AcceptedPods242417{
 					{
-						PodMatchLabels: map[string]string{
-							resourcesv1alpha1.ManagedBy: "gardener",
+						PodSelector: option.PodSelector{
+							PodMatchLabels: map[string]string{
+								resourcesv1alpha1.ManagedBy: "gardener",
+							},
+							NamespaceMatchLabels: map[string]string{
+								"kubernetes.io/metadata.name": "kube-system",
+							},
 						},
-						NamespaceNames: []string{"kube-system", "kube-public", "kube-node-lease"},
-						Justification:  "Gardener managed pods are not user pods",
-						Status:         "Passed",
+						Justification: "Gardener managed pods are not user pods",
+						Status:        "Passed",
 					},
 				},
 			},

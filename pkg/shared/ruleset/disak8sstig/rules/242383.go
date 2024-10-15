@@ -37,19 +37,35 @@ type Options242383 struct {
 var _ option.Option = (*Options242383)(nil)
 
 type AcceptedResources242383 struct {
-	SelectResource
+	ObjectSelector
 	Justification string `json:"justification" yaml:"justification"`
 	Status        string `json:"status" yaml:"status"`
 }
 
-type SelectResource struct {
-	APIVersion     string            `json:"apiVersion" yaml:"apiVersion"`
-	Kind           string            `json:"kind" yaml:"kind"`
-	MatchLabels    map[string]string `json:"matchLabels" yaml:"matchLabels"`
-	NamespaceNames []string          `json:"namespaceNames" yaml:"namespaceNames"`
+func (o Options242383) Validate() field.ErrorList {
+	var (
+		allErrs  field.ErrorList
+		rootPath = field.NewPath("acceptedResources")
+	)
+	for _, p := range o.AcceptedResources {
+		allErrs = append(allErrs, p.Validate()...)
+		if !slices.Contains([]string{"Passed", "Accepted"}, p.Status) && len(p.Status) > 0 {
+			allErrs = append(allErrs, field.Invalid(rootPath.Child("status"), p.Status, "must be one of 'Passed' or 'Accepted'"))
+		}
+	}
+	return allErrs
 }
 
-func (o Options242383) Validate() field.ErrorList {
+type ObjectSelector struct {
+	APIVersion           string            `json:"apiVersion" yaml:"apiVersion"`
+	Kind                 string            `json:"kind" yaml:"kind"`
+	MatchLabels          map[string]string `json:"matchLabels" yaml:"matchLabels"`
+	NamespaceMatchLabels map[string]string `json:"namespaceMatchLabels" yaml:"namespaceMatchLabels"`
+}
+
+var _ option.Option = (*ObjectSelector)(nil)
+
+func (s ObjectSelector) Validate() field.ErrorList {
 	var (
 		allErrs          field.ErrorList
 		rootPath         = field.NewPath("acceptedResources")
@@ -60,22 +76,24 @@ func (o Options242383) Validate() field.ErrorList {
 			"autoscaling/v1": {"HorizontalPodAutoscaler"},
 		}
 	)
-	for _, p := range o.AcceptedResources {
-		if kinds, ok := checkedResources[p.APIVersion]; !ok {
-			allErrs = append(allErrs, field.Invalid(rootPath.Child("apiVersion"), p.APIVersion, "not checked apiVersion"))
-		} else if !slices.Contains(kinds, p.Kind) && p.Kind != "*" {
-			allErrs = append(allErrs, field.Invalid(rootPath.Child("kind"), p.Kind, fmt.Sprintf("not checked kind for apiVerion %s", p.APIVersion)))
-		}
-		allErrs = append(allErrs, metav1validation.ValidateLabels(p.MatchLabels, rootPath.Child("matchLabels"))...)
-		for _, namespaceName := range p.NamespaceNames {
-			if !slices.Contains([]string{"default", "kube-public", "kube-node-lease"}, namespaceName) {
-				allErrs = append(allErrs, field.Invalid(rootPath.Child("namespaceNames"), namespaceName, "must be one of 'default', 'kube-public' or 'kube-node-lease'"))
-			}
-		}
-		if !slices.Contains([]string{"Passed", "Accepted"}, p.Status) && len(p.Status) > 0 {
-			allErrs = append(allErrs, field.Invalid(rootPath.Child("status"), p.Status, "must be one of 'Passed' or 'Accepted'"))
-		}
+
+	if len(s.NamespaceMatchLabels) == 0 {
+		allErrs = append(allErrs, field.Required(rootPath.Child("namespaceMatchLabels"), "must not be empty"))
 	}
+
+	if len(s.MatchLabels) == 0 {
+		allErrs = append(allErrs, field.Required(rootPath.Child("matchLabels"), "must not be empty"))
+	}
+
+	if kinds, ok := checkedResources[s.APIVersion]; !ok {
+		allErrs = append(allErrs, field.Invalid(rootPath.Child("apiVersion"), s.APIVersion, "not checked apiVersion"))
+	} else if !slices.Contains(kinds, s.Kind) && s.Kind != "*" {
+		allErrs = append(allErrs, field.Invalid(rootPath.Child("kind"), s.Kind, fmt.Sprintf("not checked kind for apiVerion %s", s.APIVersion)))
+	}
+
+	allErrs = append(allErrs, metav1validation.ValidateLabels(s.MatchLabels, rootPath.Child("matchLabels"))...)
+	allErrs = append(allErrs, metav1validation.ValidateLabels(s.NamespaceMatchLabels, rootPath.Child("namespaceMatchLabels"))...)
+
 	return allErrs
 }
 
@@ -88,19 +106,25 @@ func (r *Rule242383) Name() string {
 }
 
 func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
+	allNamespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
+	if err != nil {
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+	}
 	checkResults := []rule.CheckResult{}
 	systemNamespaces := []string{"default", "kube-public", "kube-node-lease"}
 	acceptedResources := []AcceptedResources242383{
 		{
 			// The 'kubernetes' Service is a required system resource exposing the kubernetes API server
-			SelectResource: SelectResource{
+			ObjectSelector: ObjectSelector{
 				APIVersion: "v1",
 				Kind:       "Service",
 				MatchLabels: map[string]string{
 					"component": "apiserver",
 					"provider":  "kubernetes",
 				},
-				NamespaceNames: []string{"default"},
+				NamespaceMatchLabels: map[string]string{
+					"kubernetes.io/metadata.name": "default",
+				},
 			},
 			Status: "Passed",
 		},
@@ -114,6 +138,7 @@ func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 	}
+
 	selector := labels.NewSelector().Add(*notDikiPodReq)
 
 	for _, namespace := range systemNamespaces {
@@ -121,15 +146,13 @@ func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
 		if err != nil {
 			return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", namespace, "kind", "allList"))), nil
 		}
-
 		for _, p := range partialMetadata {
 			target := rule.NewTarget("name", p.Name, "namespace", p.Namespace, "kind", p.Kind)
-
 			acceptedIdx := slices.IndexFunc(acceptedResources, func(acceptedResource AcceptedResources242383) bool {
-				return (p.APIVersion == acceptedResource.SelectResource.APIVersion) &&
-					(acceptedResource.SelectResource.Kind == "*" || p.Kind == acceptedResource.SelectResource.Kind) &&
-					slices.Contains(acceptedResource.SelectResource.NamespaceNames, namespace) &&
-					utils.MatchLabels(p.Labels, acceptedResource.SelectResource.MatchLabels)
+				return (p.APIVersion == acceptedResource.ObjectSelector.APIVersion) &&
+					(acceptedResource.ObjectSelector.Kind == "*" || p.Kind == acceptedResource.ObjectSelector.Kind) &&
+					utils.MatchLabels(allNamespaces[namespace].Labels, acceptedResource.NamespaceMatchLabels) &&
+					utils.MatchLabels(p.Labels, acceptedResource.ObjectSelector.MatchLabels)
 			})
 
 			if acceptedIdx < 0 {
