@@ -6,6 +6,7 @@ toolchain go1.23.2
 
 require (
 	github.com/Masterminds/semver/v3 v3.3.0
+	github.com/distribution/reference v0.6.0
 	github.com/gardener/gardener v1.105.0
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo/v2 v2.20.2
@@ -18,7 +19,6 @@ require (
 	k8s.io/client-go v0.29.9
 	k8s.io/component-base v0.29.9
 	k8s.io/kubectl v0.29.4
-	k8s.io/kubernetes v1.31.1
 	k8s.io/pod-security-admission v0.29.9
 	k8s.io/utils v0.0.0-20240921022957-49e7df575cb6
 	sigs.k8s.io/controller-runtime v0.17.6
@@ -38,7 +38,6 @@ require (
 	github.com/chai2010/gettext-go v1.0.2 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/distribution/reference v0.6.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
 	github.com/evanphx/json-patch v5.7.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.8.0 // indirect
@@ -106,6 +105,7 @@ require (
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.7.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
