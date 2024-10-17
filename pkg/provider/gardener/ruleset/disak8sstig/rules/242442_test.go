@@ -170,28 +170,28 @@ var _ = Describe("#242442", func() {
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
-	It("should return correct results when an image uses more than 1 version #2", func() {
+	It("should return correct results when images are local", func() {
 		r := &rules.Rule242442{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace}
 		pod1 := shootPod.DeepCopy()
 		pod1.Name = "pod1"
-		pod1.Status.ContainerStatuses[0].ImageID = "localhost:7777/image-one@sha256:" + digest1
-		pod1.Status.ContainerStatuses[1].ImageID = "localhost:7777/image-one@sha256:" + digest2
-		pod1.Status.ContainerStatuses[2].ImageID = "localhost:7777/image-two@sha256:" + digest3
+		pod1.Status.ContainerStatuses[0].ImageID = "localhost:7777/image-a@sha256:" + digest1
+		pod1.Status.ContainerStatuses[1].ImageID = "localhost:7777/image-a@sha256:" + digest2
+		pod1.Status.ContainerStatuses[2].ImageID = "localhost:7777/image-b@sha256:" + digest3
 		Expect(fakeShootClient.Create(ctx, pod1)).To(Succeed())
 
 		pod2 := seedPod.DeepCopy()
 		pod2.Name = "pod2"
-		pod2.Status.ContainerStatuses[0].ImageID = "localhost:7777/image-two@sha256:" + digest3
-		pod2.Status.ContainerStatuses[1].ImageID = "localhost:7777/image-three@sha256:" + digest1
-		pod2.Status.ContainerStatuses[2].ImageID = "localhost:7777/image-three@sha256:" + digest3
+		pod2.Status.ContainerStatuses[0].ImageID = "localhost:7777/image-b@sha256:" + digest3
+		pod2.Status.ContainerStatuses[1].ImageID = "localhost:7777/image-c@sha256:" + digest1
+		pod2.Status.ContainerStatuses[2].ImageID = "localhost:7777/image-c@sha256:" + digest3
 		Expect(fakeSeedClient.Create(ctx, pod2)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "seed", "image", "localhost:7777/image-three", "namespace", seedPod.Namespace)),
-			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "shoot", "image", "localhost:7777/image-one", "namespace", shootPod.Namespace)),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "seed", "image", "localhost:7777/image-c", "namespace", seedPod.Namespace)),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "shoot", "image", "localhost:7777/image-a", "namespace", shootPod.Namespace)),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))

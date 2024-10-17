@@ -98,7 +98,7 @@ func (*Rule242442) checkImages(cluster string, pods []corev1.Pod) []rule.CheckRe
 				imageRef := pod.Status.ContainerStatuses[containerStatusIdx].ImageID
 				named, err := dockerref.ParseNormalizedNamed(imageRef)
 				if err != nil {
-					checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", cluster, "pod", pod.Name, "container", container.Name, "imageRef", imageRef)))
+					checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget("imageRef", imageRef)))
 					continue
 				}
 				imageBase := named.Name()

@@ -69,7 +69,7 @@ func (*Rule242442) checkImages(pods []corev1.Pod, images map[string]string, repo
 			imageRef := pod.Status.ContainerStatuses[containerStatusIdx].ImageID
 			named, err := dockerref.ParseNormalizedNamed(imageRef)
 			if err != nil {
-				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget("name", pod.Name, "container", container.Name, "imageRef", imageRef)))
+				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget("imageRef", imageRef)))
 				continue
 			}
 			imageBase := named.Name()
