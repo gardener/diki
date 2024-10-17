@@ -81,7 +81,7 @@ var _ = Describe("#242442", func() {
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
-	It("should return correct results when a image uses more than 1 version", func() {
+	It("should return correct results when an image uses more than 1 version", func() {
 		r := &rules.Rule242442{Client: fakeClient, Namespace: namespace}
 		pod.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image-one@sha256:" + digest1
 		pod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image-two@sha256:" + digest2
@@ -93,6 +93,32 @@ var _ = Describe("#242442", func() {
 
 		expectedCheckResults := []rule.CheckResult{
 			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("image", "eu.gcr.io/image-two")),
+		}
+
+		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+	})
+	It("should return correct results when an image uses more than 1 version #2", func() {
+		r := &rules.Rule242442{Client: fakeClient, Namespace: namespace}
+		pod1 := pod.DeepCopy()
+		pod1.Name = "pod1"
+		pod1.Status.ContainerStatuses[0].ImageID = "localhost:7777/image-one@sha256:" + digest1
+		pod1.Status.ContainerStatuses[1].ImageID = "localhost:7777/image-one@sha256:" + digest2
+		pod1.Status.ContainerStatuses[2].ImageID = "localhost:7777/image-two@sha256:" + digest3
+		Expect(fakeClient.Create(ctx, pod1)).To(Succeed())
+
+		pod2 := pod.DeepCopy()
+		pod2.Name = "pod2"
+		pod2.Status.ContainerStatuses[0].ImageID = "localhost:7777/image-two@sha256:" + digest3
+		pod2.Status.ContainerStatuses[1].ImageID = "localhost:7777/image-three@sha256:" + digest1
+		pod2.Status.ContainerStatuses[2].ImageID = "localhost:7777/image-three@sha256:" + digest3
+		Expect(fakeClient.Create(ctx, pod2)).To(Succeed())
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+
+		expectedCheckResults := []rule.CheckResult{
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("image", "localhost:7777/image-one")),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("image", "localhost:7777/image-three")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
