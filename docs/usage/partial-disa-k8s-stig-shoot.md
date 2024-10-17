@@ -16,7 +16,7 @@ Make sure you have [diki installed](../../README.md#Installation) and have a run
 
 We will be using the sample [Partial DISA K8s STIG for Shoots configuration file](../../example/guides/partial-disa-k8s-stig-shoot.yaml) for this run. You will need to set the `provider.args.kubeconfigPath` field pointing to a shoot admin kubeconfig.
 
-In case you need instructions on how to generate such a kubeconfig, please read [Accessing Shoot Clusters](https://github.com/gardener/gardener/blob/master/docs/usage/shoot_access.md).
+In case you need instructions on how to generate such a kubeconfig, please read [Accessing Shoot Clusters](https://github.com/gardener/gardener/blob/master/docs/usage/shoot/shoot_access.md).
 
 Additional metadata such as the shoot's name can also be included in the `provider.metadata` section. The metadata section can be used to add additional context to different diki runs.
 
