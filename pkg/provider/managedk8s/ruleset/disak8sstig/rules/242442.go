@@ -8,11 +8,11 @@ import (
 	"context"
 	"slices"
 
+	dockerref "github.com/distribution/reference"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	parser "k8s.io/kubernetes/pkg/util/parsers"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
@@ -104,11 +104,12 @@ func (*Rule242442) checkImages(pods []corev1.Pod, target rule.Target) []rule.Che
 			}
 
 			imageRef := pod.Status.ContainerStatuses[containerStatusIdx].ImageID
-			imageBase, _, _, err := parser.ParseImageName(imageRef)
+			named, err := dockerref.ParseNormalizedNamed(imageRef)
 			if err != nil {
-				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target))
+				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target.With("imageRef", imageRef)))
 				continue
 			}
+			imageBase := named.Name()
 
 			if _, ok := images[imageBase]; ok && images[imageBase] != imageRef {
 				if _, reported := reportedImages[imageBase]; !reported {
