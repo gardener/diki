@@ -132,7 +132,7 @@ var _ = Describe("#242442", func() {
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
-	It("should return correct results when a image uses more than 1 version", func() {
+	It("should return correct results when an image uses more than 1 version", func() {
 		r := &rules.Rule242442{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace}
 		shootPod1 := shootPod.DeepCopy()
 		shootPod1.Name = "shoot-pod1"
