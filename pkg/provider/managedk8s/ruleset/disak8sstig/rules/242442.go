@@ -7,7 +7,6 @@ package rules
 import (
 	"context"
 	"slices"
-	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/validation"
@@ -19,6 +18,8 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
+
+	parser "k8s.io/kubernetes/pkg/util/parsers"
 )
 
 var _ rule.Rule = &Rule242442{}
@@ -103,10 +104,13 @@ func (*Rule242442) checkImages(pods []corev1.Pod, target rule.Target) []rule.Che
 				continue
 			}
 
-			var (
-				imageRef  = pod.Status.ContainerStatuses[containerStatusIdx].ImageID
-				imageBase = strings.Split(strings.Split(imageRef, ":")[0], "@")[0]
-			)
+			imageRef := pod.Status.ContainerStatuses[containerStatusIdx].ImageID
+			imageBase, _, _, err := parser.ParseImageName(imageRef)
+			if err != nil {
+				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target))
+				continue
+			}
+
 			if _, ok := images[imageBase]; ok && images[imageBase] != imageRef {
 				if _, reported := reportedImages[imageBase]; !reported {
 					checkResults = append(checkResults, rule.FailedCheckResult("Image is used with more than one versions.", target.With("image", imageBase)))

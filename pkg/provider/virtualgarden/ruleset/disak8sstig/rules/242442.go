@@ -7,7 +7,6 @@ package rules
 import (
 	"context"
 	"slices"
-	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -16,6 +15,8 @@ import (
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
+
+	parser "k8s.io/kubernetes/pkg/util/parsers"
 )
 
 var _ rule.Rule = &Rule242442{}
@@ -67,7 +68,11 @@ func (*Rule242442) checkImages(pods []corev1.Pod, images map[string]string, repo
 			}
 
 			imageRef := pod.Status.ContainerStatuses[containerStatusIdx].ImageID
-			imageBase := strings.Split(strings.Split(imageRef, ":")[0], "@")[0]
+			imageBase, _, _, err := parser.ParseImageName(imageRef)
+			if err != nil {
+				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.Target{}))
+				continue
+			}
 			if _, ok := images[imageBase]; ok {
 				if images[imageBase] != imageRef {
 					if _, reported := reportedImages[imageBase]; !reported {
