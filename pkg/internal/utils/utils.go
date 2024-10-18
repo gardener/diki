@@ -164,24 +164,27 @@ func GetMountedFilesStats(
 }
 
 // GetContainerID returns the container ID specified in the container statust by container name
-func GetContainerID(pod corev1.Pod, containerName string) (string, error) {
-	containerStatusIdx := slices.IndexFunc(pod.Status.ContainerStatuses, func(containerStatus corev1.ContainerStatus) bool {
-		return containerStatus.Name == containerName
-	})
+func GetContainerID(pod corev1.Pod, containerNames ...string) (string, error) {
+	for _, containerName := range containerNames {
+		containerStatusIdx := slices.IndexFunc(pod.Status.ContainerStatuses, func(containerStatus corev1.ContainerStatus) bool {
+			return containerStatus.Name == containerName
+		})
 
-	if containerStatusIdx < 0 {
-		return "", fmt.Errorf("container with name %s not (yet) in status", containerName)
-	}
+		if containerStatusIdx < 0 {
+			continue
+		}
+		containerID := pod.Status.ContainerStatuses[containerStatusIdx].ContainerID
 
-	containerID := pod.Status.ContainerStatuses[containerStatusIdx].ContainerID
-	switch {
-	case len(containerID) == 0:
-		return "", fmt.Errorf("container with name %s not (yet) running", containerName)
-	case strings.HasPrefix(containerID, "containerd://"):
-		return strings.Split(containerID, "//")[1], nil
-	default:
-		return "", fmt.Errorf("cannot handle container with name %s", containerName)
+		switch {
+		case len(containerID) == 0:
+			return "", fmt.Errorf("container with name %s not (yet) running", containerName)
+		case strings.HasPrefix(containerID, "containerd://"):
+			return strings.Split(containerID, "//")[1], nil
+		default:
+			return "", fmt.Errorf("cannot handle container with name %s", containerName)
+		}
 	}
+	return "", fmt.Errorf("container with any of the specified names in the list %s not (yet) in status", containerNames)
 }
 
 // GetContainerMounts returns the container mounts of a container
