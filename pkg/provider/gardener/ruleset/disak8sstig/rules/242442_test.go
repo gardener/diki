@@ -26,6 +26,9 @@ var _ = Describe("#242442", func() {
 		shootPod        *corev1.Pod
 		ctx             = context.TODO()
 		namespace       = "foo"
+		digest1         = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+		digest2         = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b854"
+		digest3         = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b853"
 	)
 
 	BeforeEach(func() {
@@ -102,22 +105,22 @@ var _ = Describe("#242442", func() {
 
 	It("should return correct results when all images use only 1 version", func() {
 		r := &rules.Rule242442{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace}
-		seedPod.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:foobar"
-		seedPod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:foo"
-		seedPod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:bar"
+		seedPod.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:" + digest1
+		seedPod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest2
+		seedPod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest3
 		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
 		shootPod1 := shootPod.DeepCopy()
 		shootPod1.Name = "shoot-pod1"
-		shootPod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:foobar"
-		shootPod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:foo"
-		shootPod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:bar"
+		shootPod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:" + digest1
+		shootPod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest2
+		shootPod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest3
 		Expect(fakeShootClient.Create(ctx, shootPod1)).To(Succeed())
 		shootPod2 := shootPod.DeepCopy()
 		shootPod2.Name = "shoot-pod2"
 		shootPod2.Namespace = "bar"
-		shootPod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:bar"
-		shootPod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:foo"
-		shootPod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:foobar"
+		shootPod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:" + digest3
+		shootPod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:" + digest2
+		shootPod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:" + digest1
 		Expect(fakeShootClient.Create(ctx, shootPod2)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
@@ -129,31 +132,31 @@ var _ = Describe("#242442", func() {
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
-	It("should return correct results when a image uses more than 1 version", func() {
+	It("should return correct results when an image uses more than 1 version", func() {
 		r := &rules.Rule242442{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace}
 		shootPod1 := shootPod.DeepCopy()
 		shootPod1.Name = "shoot-pod1"
-		shootPod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:foobar"
-		shootPod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:foo"
-		shootPod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:bar"
+		shootPod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:" + digest1
+		shootPod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest2
+		shootPod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest3
 		Expect(fakeShootClient.Create(ctx, shootPod1)).To(Succeed())
 		shootPod2 := shootPod.DeepCopy()
 		shootPod2.Name = "shoot-pod2"
-		shootPod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:bar"
-		shootPod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:foo"
-		shootPod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:foobar"
+		shootPod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:" + digest3
+		shootPod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:" + digest2
+		shootPod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:" + digest1
 		Expect(fakeShootClient.Create(ctx, shootPod2)).To(Succeed())
 		seedPod1 := seedPod.DeepCopy()
 		seedPod1.Name = "seed-pod1"
-		seedPod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:foo"
-		seedPod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:bar"
-		seedPod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:foobar"
+		seedPod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:" + digest2
+		seedPod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest3
+		seedPod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest1
 		Expect(fakeSeedClient.Create(ctx, seedPod1)).To(Succeed())
 		seedPod2 := seedPod.DeepCopy()
 		seedPod2.Name = "seed-pod2"
-		seedPod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:bar"
-		seedPod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:foo"
-		seedPod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:foobar"
+		seedPod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:" + digest3
+		seedPod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:" + digest2
+		seedPod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:" + digest1
 		Expect(fakeSeedClient.Create(ctx, seedPod2)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
@@ -167,11 +170,37 @@ var _ = Describe("#242442", func() {
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
+	It("should return correct results when the image repository includes port number", func() {
+		r := &rules.Rule242442{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace}
+		pod1 := shootPod.DeepCopy()
+		pod1.Name = "pod1"
+		pod1.Status.ContainerStatuses[0].ImageID = "localhost:7777/image1@sha256:" + digest1
+		pod1.Status.ContainerStatuses[1].ImageID = "localhost:7777/image1@sha256:" + digest2
+		pod1.Status.ContainerStatuses[2].ImageID = "localhost:7777/image2@sha256:" + digest3
+		Expect(fakeShootClient.Create(ctx, pod1)).To(Succeed())
+
+		pod2 := seedPod.DeepCopy()
+		pod2.Name = "pod2"
+		pod2.Status.ContainerStatuses[0].ImageID = "localhost:7777/image2@sha256:" + digest3
+		pod2.Status.ContainerStatuses[1].ImageID = "localhost:7777/image3@sha256:" + digest1
+		pod2.Status.ContainerStatuses[2].ImageID = "localhost:7777/image3@sha256:" + digest3
+		Expect(fakeSeedClient.Create(ctx, pod2)).To(Succeed())
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+
+		expectedCheckResults := []rule.CheckResult{
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "seed", "image", "localhost:7777/image3", "namespace", seedPod.Namespace)),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "shoot", "image", "localhost:7777/image1", "namespace", shootPod.Namespace)),
+		}
+
+		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+	})
 	It("should return errored results when containerStatus cannot be found for a given container", func() {
 		r := &rules.Rule242442{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace}
 		seedPod.Status.ContainerStatuses[0].Name = "not-foo"
-		seedPod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:foo"
-		seedPod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:bar"
+		seedPod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest2
+		seedPod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest3
 		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)

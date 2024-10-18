@@ -7,8 +7,8 @@ package rules
 import (
 	"context"
 	"slices"
-	"strings"
 
+	imageref "github.com/distribution/reference"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/labels"
@@ -103,10 +103,14 @@ func (*Rule242442) checkImages(pods []corev1.Pod, target rule.Target) []rule.Che
 				continue
 			}
 
-			var (
-				imageRef  = pod.Status.ContainerStatuses[containerStatusIdx].ImageID
-				imageBase = strings.Split(strings.Split(imageRef, ":")[0], "@")[0]
-			)
+			imageRef := pod.Status.ContainerStatuses[containerStatusIdx].ImageID
+			named, err := imageref.ParseNormalizedNamed(imageRef)
+			if err != nil {
+				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target.With("imageRef", imageRef)))
+				continue
+			}
+			imageBase := named.Name()
+
 			if _, ok := images[imageBase]; ok && images[imageBase] != imageRef {
 				if _, reported := reportedImages[imageBase]; !reported {
 					checkResults = append(checkResults, rule.FailedCheckResult("Image is used with more than one versions.", target.With("image", imageBase)))

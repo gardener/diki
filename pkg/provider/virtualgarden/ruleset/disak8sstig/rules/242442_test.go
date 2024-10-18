@@ -24,6 +24,9 @@ var _ = Describe("#242442", func() {
 		pod        *corev1.Pod
 		ctx        = context.TODO()
 		namespace  = "foo"
+		digest1    = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+		digest2    = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b854"
+		digest3    = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b853"
 	)
 
 	BeforeEach(func() {
@@ -64,9 +67,9 @@ var _ = Describe("#242442", func() {
 
 	It("should return correct results when all images use only 1 version", func() {
 		r := &rules.Rule242442{Client: fakeClient, Namespace: namespace}
-		pod.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:foobar"
-		pod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:foo"
-		pod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:bar"
+		pod.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:" + digest1
+		pod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest2
+		pod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest3
 		Expect(fakeClient.Create(ctx, pod)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
@@ -78,11 +81,11 @@ var _ = Describe("#242442", func() {
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
-	It("should return correct results when a image uses more than 1 version", func() {
+	It("should return correct results when an image uses more than 1 version", func() {
 		r := &rules.Rule242442{Client: fakeClient, Namespace: namespace}
-		pod.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:foobar"
-		pod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:foo"
-		pod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image2@sha256:bar"
+		pod.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:" + digest1
+		pod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest2
+		pod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image2@sha256:" + digest3
 		Expect(fakeClient.Create(ctx, pod)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
@@ -94,11 +97,37 @@ var _ = Describe("#242442", func() {
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
+	It("should return correct results when the image repository includes port number", func() {
+		r := &rules.Rule242442{Client: fakeClient, Namespace: namespace}
+		pod1 := pod.DeepCopy()
+		pod1.Name = "pod1"
+		pod1.Status.ContainerStatuses[0].ImageID = "localhost:7777/image1@sha256:" + digest1
+		pod1.Status.ContainerStatuses[1].ImageID = "localhost:7777/image1@sha256:" + digest2
+		pod1.Status.ContainerStatuses[2].ImageID = "localhost:7777/image2@sha256:" + digest3
+		Expect(fakeClient.Create(ctx, pod1)).To(Succeed())
+
+		pod2 := pod.DeepCopy()
+		pod2.Name = "pod2"
+		pod2.Status.ContainerStatuses[0].ImageID = "localhost:7777/image2@sha256:" + digest3
+		pod2.Status.ContainerStatuses[1].ImageID = "localhost:7777/image3@sha256:" + digest1
+		pod2.Status.ContainerStatuses[2].ImageID = "localhost:7777/image3@sha256:" + digest3
+		Expect(fakeClient.Create(ctx, pod2)).To(Succeed())
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+
+		expectedCheckResults := []rule.CheckResult{
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("image", "localhost:7777/image1")),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("image", "localhost:7777/image3")),
+		}
+
+		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+	})
 	It("should return errored results when containerStatus cannot be found for a given container", func() {
 		r := &rules.Rule242442{Client: fakeClient, Namespace: namespace}
 		pod.Status.ContainerStatuses[0].Name = "not-foo"
-		pod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:foo"
-		pod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:bar"
+		pod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest1
+		pod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest2
 		Expect(fakeClient.Create(ctx, pod)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)

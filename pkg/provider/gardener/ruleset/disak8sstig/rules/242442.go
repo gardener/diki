@@ -7,8 +7,8 @@ package rules
 import (
 	"context"
 	"slices"
-	"strings"
 
+	imageref "github.com/distribution/reference"
 	resourcesv1alpha1 "github.com/gardener/gardener/pkg/apis/resources/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -96,7 +96,13 @@ func (*Rule242442) checkImages(cluster string, pods []corev1.Pod) []rule.CheckRe
 				}
 
 				imageRef := pod.Status.ContainerStatuses[containerStatusIdx].ImageID
-				imageBase := strings.Split(strings.Split(imageRef, ":")[0], "@")[0]
+				named, err := imageref.ParseNormalizedNamed(imageRef)
+				if err != nil {
+					checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget("imageRef", imageRef)))
+					continue
+				}
+				imageBase := named.Name()
+
 				if _, ok := images[imageBase]; ok {
 					if images[imageBase] != imageRef {
 						if _, reported := reportedImages[imageBase]; !reported {
