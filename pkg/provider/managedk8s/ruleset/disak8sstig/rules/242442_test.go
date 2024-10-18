@@ -71,15 +71,15 @@ var _ = Describe("#242442", func() {
 		r := &rules.Rule242442{Client: client}
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
-		pod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image-a@sha256:" + digest1
-		pod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image-b@sha256:" + digest2
-		pod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image-c@sha256:" + digest3
+		pod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:" + digest1
+		pod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest2
+		pod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest3
 		Expect(client.Create(ctx, pod1)).To(Succeed())
 		pod2 := plainPod.DeepCopy()
 		pod2.Name = "pod2"
-		pod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image-b@sha256:" + digest2
-		pod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image-c@sha256:" + digest3
-		pod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image-d@sha256:" + digest1
+		pod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:" + digest2
+		pod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:" + digest3
+		pod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:" + digest1
 		Expect(client.Create(ctx, pod2)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
@@ -95,23 +95,23 @@ var _ = Describe("#242442", func() {
 		r := &rules.Rule242442{Client: client}
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
-		pod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image-a@sha256:" + digest1
-		pod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image-b@sha256:" + digest2
-		pod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image-c@sha256:" + digest3
+		pod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:" + digest1
+		pod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest2
+		pod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest3
 		Expect(client.Create(ctx, pod1)).To(Succeed())
 		pod2 := plainPod.DeepCopy()
 		pod2.Name = "pod2"
-		pod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image-b@sha256:" + digest3
-		pod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image-c@sha256:" + digest2
-		pod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image-d@sha256:" + digest1
+		pod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:" + digest3
+		pod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:" + digest2
+		pod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:" + digest1
 		Expect(client.Create(ctx, pod2)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "node", "name", "foo", "image", "eu.gcr.io/image-b")),
-			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "node", "name", "foo", "image", "eu.gcr.io/image-c")),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "node", "name", "foo", "image", "eu.gcr.io/image2")),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "node", "name", "foo", "image", "eu.gcr.io/image3")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -120,24 +120,24 @@ var _ = Describe("#242442", func() {
 		r := &rules.Rule242442{Client: client}
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
-		pod1.Status.ContainerStatuses[0].ImageID = "localhost:7777/image-a@sha256:" + digest1
-		pod1.Status.ContainerStatuses[1].ImageID = "localhost:7777/image-a@sha256:" + digest2
-		pod1.Status.ContainerStatuses[2].ImageID = "localhost:7777/image-b@sha256:" + digest3
+		pod1.Status.ContainerStatuses[0].ImageID = "localhost:7777/image1@sha256:" + digest1
+		pod1.Status.ContainerStatuses[1].ImageID = "localhost:7777/image1@sha256:" + digest2
+		pod1.Status.ContainerStatuses[2].ImageID = "localhost:7777/image2@sha256:" + digest3
 		Expect(client.Create(ctx, pod1)).To(Succeed())
 
 		pod2 := plainPod.DeepCopy()
 		pod2.Name = "pod2"
-		pod2.Status.ContainerStatuses[0].ImageID = "localhost:7777/image-b@sha256:" + digest3
-		pod2.Status.ContainerStatuses[1].ImageID = "localhost:7777/image-c@sha256:" + digest1
-		pod2.Status.ContainerStatuses[2].ImageID = "localhost:7777/image-c@sha256:" + digest3
+		pod2.Status.ContainerStatuses[0].ImageID = "localhost:7777/image2@sha256:" + digest3
+		pod2.Status.ContainerStatuses[1].ImageID = "localhost:7777/image3@sha256:" + digest1
+		pod2.Status.ContainerStatuses[2].ImageID = "localhost:7777/image3@sha256:" + digest3
 		Expect(client.Create(ctx, pod2)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "node", "name", "foo", "image", "localhost:7777/image-a")),
-			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "node", "name", "foo", "image", "localhost:7777/image-c")),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "node", "name", "foo", "image", "localhost:7777/image1")),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "node", "name", "foo", "image", "localhost:7777/image3")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -146,15 +146,15 @@ var _ = Describe("#242442", func() {
 		r := &rules.Rule242442{Client: client}
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
-		pod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image-a@sha256:" + digest1
-		pod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image-b@sha256:" + digest2
-		pod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image-c@sha256:" + digest3
+		pod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:" + digest1
+		pod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest2
+		pod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest3
 		Expect(client.Create(ctx, pod1)).To(Succeed())
 		pod2 := plainPod.DeepCopy()
 		pod2.Name = "pod2"
-		pod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image-b@sha256:" + digest3
-		pod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image-c@sha256:" + digest2
-		pod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image-d@sha256:" + digest1
+		pod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:" + digest3
+		pod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:" + digest2
+		pod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:" + digest1
 		pod2.Spec.NodeName = "bar"
 		Expect(client.Create(ctx, pod2)).To(Succeed())
 
@@ -178,16 +178,16 @@ var _ = Describe("#242442", func() {
 		}
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
-		pod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image-a@sha256:" + digest1
-		pod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image-b@sha256:" + digest2
-		pod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image-c@sha256:" + digest3
+		pod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:" + digest1
+		pod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest2
+		pod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest3
 		Expect(client.Create(ctx, pod1)).To(Succeed())
 		pod2 := plainPod.DeepCopy()
 		pod2.Name = "pod2"
 		pod2.Labels["foo"] = "bar"
-		pod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image-b@sha256:" + digest3
-		pod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image-c@sha256:" + digest2
-		pod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image-d@sha256:" + digest1
+		pod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:" + digest3
+		pod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:" + digest2
+		pod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:" + digest1
 		Expect(client.Create(ctx, pod2)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
@@ -204,8 +204,8 @@ var _ = Describe("#242442", func() {
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
 		pod1.Status.ContainerStatuses[0].Name = "not-found"
-		pod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image-b@sha256:" + digest2
-		pod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image-c@sha256:" + digest3
+		pod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest2
+		pod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest3
 		Expect(client.Create(ctx, pod1)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
