@@ -170,7 +170,7 @@ var _ = Describe("#242442", func() {
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
-	It("should return correct results when images are local", func() {
+	It("should return correct results when the image repository includes port number", func() {
 		r := &rules.Rule242442{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace}
 		pod1 := shootPod.DeepCopy()
 		pod1.Name = "pod1"

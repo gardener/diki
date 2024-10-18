@@ -8,7 +8,7 @@ import (
 	"context"
 	"slices"
 
-	dockerref "github.com/distribution/reference"
+	imageref "github.com/distribution/reference"
 	resourcesv1alpha1 "github.com/gardener/gardener/pkg/apis/resources/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -96,7 +96,7 @@ func (*Rule242442) checkImages(cluster string, pods []corev1.Pod) []rule.CheckRe
 				}
 
 				imageRef := pod.Status.ContainerStatuses[containerStatusIdx].ImageID
-				named, err := dockerref.ParseNormalizedNamed(imageRef)
+				named, err := imageref.ParseNormalizedNamed(imageRef)
 				if err != nil {
 					checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget("imageRef", imageRef)))
 					continue
