@@ -60,6 +60,7 @@ func (r *Rule242447) Name() string {
 func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults := []rule.CheckResult{}
 	kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
+	kubeProxyContainerNames := []string{"kube-proxy", "proxy"}
 
 	if r.Options != nil && len(r.Options.KubeProxyMatchLabels) > 0 {
 		kubeProxySelector = labels.SelectorFromSet(labels.Set(r.Options.KubeProxyMatchLabels))
@@ -137,7 +138,7 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 			expectedFilePermissionsMax := "644"
 			podTarget := target.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
 
-			rawKubeProxyCommand, err := kubeutils.GetContainerCommand(pod, "kube-proxy")
+			rawKubeProxyCommand, err := kubeutils.GetContainerCommand(pod, kubeProxyContainerNames...)
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), podTarget))
 				continue
@@ -155,7 +156,7 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 				continue
 			}
 
-			kubeProxyContainerID, err := intutils.GetContainerID(pod, "kube-proxy")
+			kubeProxyContainerID, err := intutils.GetContainerID(pod, kubeProxyContainerNames...)
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), podTarget))
 				continue
