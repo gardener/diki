@@ -147,6 +147,10 @@ var _ = Describe("#242400", func() {
 			},
 		}
 
+		plainProxyPod := plainPod.DeepCopy()
+		plainProxyPod.Status.ContainerStatuses[0].Name = "proxy"
+		plainProxyPod.Status.ContainerStatuses[0].ContainerID = "containerd://foo"
+
 		dikiPod = plainPod.DeepCopy()
 		dikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedrules.ID242400, "aaaaaaaaaa")
 		dikiPod.Labels = map[string]string{}
@@ -213,12 +217,28 @@ var _ = Describe("#242400", func() {
 		pod6.Spec.NodeName = "node1"
 		pod6.Spec.Containers[0].Command = []string{"--flag1=value1", "--feature-gates=AllAlpha=true", "--config=/var/lib/config"}
 
+		pod7 := plainPod.DeepCopy()
+		pod7.Name = "pod7"
+		pod7.OwnerReferences[0].UID = "7"
+		pod7.Spec.NodeName = "node1"
+		pod7.Spec.Containers[0].Name = "proxy"
+		pod7.Spec.Containers[0].Command = []string{"--flag=value1", "--flag=value2"}
+
+		pod8 := plainPod.DeepCopy()
+		pod8.Name = "pod8"
+		pod8.OwnerReferences[0].UID = "8"
+		pod8.Spec.NodeName = "node1"
+		pod8.Spec.Containers[0].Name = "proxy"
+		pod8.Spec.Containers[0].Command = []string{"--flag1=value1", "--feature-gates=AllAlpha=true"}
+
 		Expect(fakeClusterClient.Create(ctx, pod1)).To(Succeed())
 		Expect(fakeClusterClient.Create(ctx, pod2)).To(Succeed())
 		Expect(fakeClusterClient.Create(ctx, pod3)).To(Succeed())
 		Expect(fakeClusterClient.Create(ctx, pod4)).To(Succeed())
 		Expect(fakeClusterClient.Create(ctx, pod5)).To(Succeed())
 		Expect(fakeClusterClient.Create(ctx, pod6)).To(Succeed())
+		Expect(fakeClusterClient.Create(ctx, pod7)).To(Succeed())
+		Expect(fakeClusterClient.Create(ctx, pod8)).To(Succeed())
 
 		fakeRESTClient = &manualfake.RESTClient{
 			GroupVersion:         schema.GroupVersion{Group: "", Version: "v1"},
@@ -259,6 +279,8 @@ var _ = Describe("#242400", func() {
 			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "pod", "name", "pod4", "namespace", "kube-system")),
 			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("cluster", "shoot", "kind", "pod", "name", "pod5", "namespace", "kube-system")),
 			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("cluster", "shoot", "kind", "pod", "name", "pod6", "namespace", "kube-system")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("cluster", "shoot", "kind", "pod", "name", "pod7", "namespace", "kube-system")),
+			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("cluster", "shoot", "kind", "pod", "name", "pod8", "namespace", "kube-system")),
 			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
 			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node2")),
 			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
