@@ -208,7 +208,7 @@ var _ = Describe("#242447", func() {
 		expectedResults := []rule.CheckResult{
 			rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", kubeProxyContainerPod.Name, "namespace", kubeProxyContainerPod.Namespace, "kind", "pod", "details", "fileName: /var/lib/config, permissions: 644")),
 			rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", kubeProxyContainerPod.Name, "namespace", kubeProxyContainerPod.Namespace, "kind", "pod", "details", "fileName: /var/lib/kubeconfig, permissions: 600")),
-			rule.ErroredCheckResult("pod does not contain any of the containers specified in the provided list: [kube-proxy proxy]", rule.NewTarget("name", nonValidContainerPod.Name, "namespace", nonValidContainerPod.Namespace, "kind", "pod")),
+			rule.ErroredCheckResult("Failed to find any containers appropriate for evaluation", rule.NewTarget("name", nonValidContainerPod.Name, "namespace", nonValidContainerPod.Namespace, "kind", "pod", "details", "pod does not contain any of the containers specified in the provided list: [kube-proxy proxy]")),
 			rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", proxyContainerPod.Name, "namespace", proxyContainerPod.Namespace, "kind", "pod", "details", "fileName: /var/lib/config, permissions: 664, expectedPermissionsMax: 644")),
 			rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", proxyContainerPod.Name, "namespace", proxyContainerPod.Namespace, "kind", "pod", "details", "fileName: /var/lib/kubeconfig2, permissions: 606, expectedPermissionsMax: 644")),
 		}
