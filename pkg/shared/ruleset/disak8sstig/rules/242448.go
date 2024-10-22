@@ -66,6 +66,7 @@ func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults := []rule.CheckResult{}
 	options := option.FileOwnerOptions{}
 	kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
+	kubeProxyContainerNames := []string{"kube-proxy", "proxy"}
 
 	if r.Options != nil {
 		if r.Options.FileOwnerOptions != nil {
@@ -153,7 +154,7 @@ func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
 			selectedFileStats := []intutils.FileStats{}
 			podTarget := target.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
 
-			rawKubeProxyCommand, err := kubeutils.GetContainerCommand(pod, "kube-proxy")
+			rawKubeProxyCommand, err := kubeutils.GetContainerCommand(pod, kubeProxyContainerNames...)
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), podTarget))
 				continue
@@ -171,7 +172,7 @@ func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
 				continue
 			}
 
-			kubeProxyContainerID, err := intutils.GetContainerID(pod, "kube-proxy")
+			kubeProxyContainerID, err := intutils.GetContainerID(pod, kubeProxyContainerNames...)
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), podTarget))
 				continue

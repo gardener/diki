@@ -251,7 +251,7 @@ var _ = Describe("utils", func() {
 			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
 			result, err := utils.GetMountedFilesStats(ctx, "", fakePodExecutor, pod, []string{"/lib/modules"})
 
-			Expect(err).To(MatchError("container with name foo not (yet) in status\ncontainer with name bar not (yet) running\ncannot handle container with name baz"))
+			Expect(err).To(MatchError("container with name in [foo] not (yet) in status\ncontainer with name bar not (yet) running\ncannot handle container with name baz"))
 			Expect(result).To(Equal(map[string][]utils.FileStats{}))
 		})
 
@@ -310,7 +310,7 @@ var _ = Describe("utils", func() {
 			Entry("should return correct containerID",
 				"test", "test", "containerd://1", "1", BeNil()),
 			Entry("should return error when containerStatus missing",
-				"test", "test2", "containerd://1", "", MatchError("container with name test not (yet) in status")),
+				"test", "test2", "containerd://1", "", MatchError("container with name in [test] not (yet) in status")),
 			Entry("should return error when containerID is empty",
 				"test", "test", "", "", MatchError("container with name test not (yet) running")),
 			Entry("should return error when containerID is not recognized",

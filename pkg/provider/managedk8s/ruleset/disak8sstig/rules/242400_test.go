@@ -292,6 +292,69 @@ var _ = Describe("#242400", func() {
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
 	})
 
+	It("should correctly find the kube-proxy container", func() {
+		node1 := plainNode.DeepCopy()
+		node1.ObjectMeta.Name = "node1"
+		Expect(fakeClient.Create(ctx, node1)).To(Succeed())
+
+		kubeProxyContainerPod := plainPod.DeepCopy()
+		kubeProxyContainerPod.Name = "pod1"
+		kubeProxyContainerPod.Spec.NodeName = "node1"
+		kubeProxyContainerPod.Spec.Containers[0].Command = []string{"--flag1=value1", "--flag2=value2"}
+		kubeProxyContainerPod.OwnerReferences[0].UID = "1"
+		Expect(fakeClient.Create(ctx, kubeProxyContainerPod)).To(Succeed())
+
+		proxyContainerPod := plainPod.DeepCopy()
+		proxyContainerPod.Name = "pod2"
+		proxyContainerPod.Spec.NodeName = "node1"
+		proxyContainerPod.Spec.Containers[0].Name = "proxy"
+		proxyContainerPod.Spec.Containers[0].Command = []string{"--flag1=value1", "--feature-gates=AllAlpha=true"}
+		proxyContainerPod.OwnerReferences[0].UID = "2"
+		Expect(fakeClient.Create(ctx, proxyContainerPod)).To(Succeed())
+
+		nonValidContainerPod := plainPod.DeepCopy()
+		nonValidContainerPod.Name = "pod3"
+		nonValidContainerPod.Spec.NodeName = "node1"
+		nonValidContainerPod.Spec.Containers[0].Name = "foo"
+		nonValidContainerPod.Spec.Containers[0].Command = []string{"--flag1=value1", "--config=/var/lib/config"}
+		nonValidContainerPod.OwnerReferences[0].UID = "3"
+		Expect(fakeClient.Create(ctx, nonValidContainerPod)).To(Succeed())
+
+		fakeRESTClient = &manualfake.RESTClient{
+			GroupVersion:         schema.GroupVersion{Group: "", Version: "v1"},
+			NegotiatedSerializer: scheme.Codecs,
+			Client: manualfake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
+				switch req.URL.String() {
+				case "https://localhost/nodes/node1/proxy/configz":
+					return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader([]byte(podSecurityAllowedNodeConfig)))}, nil
+				default:
+					return &http.Response{StatusCode: http.StatusNotFound, Body: io.NopCloser(&bytes.Buffer{})}, nil
+				}
+			}),
+		}
+
+		fakePodContext = fakepod.NewFakeSimplePodContext([][]string{{}}, [][]error{{}})
+		r := &rules.Rule242400{
+			Logger:       testLogger,
+			InstanceID:   instanceID,
+			Client:       fakeClient,
+			V1RESTClient: fakeRESTClient,
+			PodContext:   fakePodContext,
+		}
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).To(BeNil())
+
+		expectedResults := []rule.CheckResult{
+			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("kind", "node", "name", "node1")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("name", "pod1", "namespace", "kube-system", "kind", "pod")),
+			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("name", "pod2", "namespace", "kube-system", "kind", "pod")),
+			rule.ErroredCheckResult("pod does not contain a container with name in [kube-proxy proxy]", rule.NewTarget("name", "pod3", "namespace", "kube-system", "kind", "pod")),
+		}
+
+		Expect(ruleResult.CheckResults).To(Equal(expectedResults))
+	})
+
 	It("should error when kube-proxy pods cannot be found", func() {
 		node1 := plainNode.DeepCopy()
 		node1.ObjectMeta.Name = "node1"

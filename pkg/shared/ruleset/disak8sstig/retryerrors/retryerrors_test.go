@@ -46,6 +46,6 @@ var _ = Describe("retryerrors", func() {
 		},
 		Entry("Should match diki pod not found", `pods "diki-111111-asdasdasda" not found`, true),
 		Entry("Should not match when pod is not diki", `pods "foo" not found`, false),
-		Entry("Should not match when pod does not fit diki pod regex", `pods "diki-1111-asdasdasda" not found`, false),
+		Entry("Should not match when Pod does not fit diki pod regex", `pods "diki-1111-asdasdasda" not found`, false),
 	)
 })
