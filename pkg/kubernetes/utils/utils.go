@@ -401,6 +401,7 @@ func GetKubeletCommand(ctx context.Context, podExecutor pod.PodExecutor) (string
 }
 
 // GetContainerCommand returns the used container command
+// The first container name that exists in the Pod is selected
 func GetContainerCommand(pod corev1.Pod, containerNames ...string) (string, error) {
 	for _, containerName := range containerNames {
 		if container, found := GetContainerFromPod(&pod, containerName); found {
