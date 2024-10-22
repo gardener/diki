@@ -249,31 +249,31 @@ func (r *Rule242400) checkKubeProxy(
 
 		var allAlpha *bool
 		if len(configPath) != 0 {
-			proxyContainerID, err := intutils.GetContainerID(pod, kubeProxyContainerNames...)
+			kubeProxyContainerID, err := intutils.GetContainerID(pod, kubeProxyContainerNames...)
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), podTarget))
 				continue
 			}
 
-			proxyMounts, err := intutils.GetContainerMounts(ctx, execContainerPath, podExecutor, proxyContainerID)
+			kubeProxyMounts, err := intutils.GetContainerMounts(ctx, execContainerPath, podExecutor, kubeProxyContainerID)
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 				continue
 			}
 
-			configSourcePath, err := kubeutils.FindFileMountSource(configPath, proxyMounts)
+			configSourcePath, err := kubeutils.FindFileMountSource(configPath, kubeProxyMounts)
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), podTarget))
 				continue
 			}
 
-			proxyConfig, err := kubeutils.GetKubeProxyConfig(ctx, podExecutor, configSourcePath)
+			kubeProxyConfig, err := kubeutils.GetKubeProxyConfig(ctx, podExecutor, configSourcePath)
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 				continue
 			}
 
-			if val, ok := proxyConfig.FeatureGates["AllAlpha"]; ok {
+			if val, ok := kubeProxyConfig.FeatureGates["AllAlpha"]; ok {
 				allAlpha = &val
 			}
 		} else {
