@@ -167,7 +167,7 @@ var _ = Describe("#242448", func() {
 		}))
 	})
 
-	It("should correctly look up for a proxy container if the kube-proxy container is absent", func() {
+	It("should correctly find the kube-proxy container", func() {
 		Expect(fakeClient.Create(ctx, Node)).To(Succeed())
 		Expect(fakeClient.Create(ctx, dikiPod)).To(Succeed())
 
@@ -207,11 +207,11 @@ var _ = Describe("#242448", func() {
 		Expect(err).To(BeNil())
 
 		expectedResults := []rule.CheckResult{
-			rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", kubeProxyContainerPod.Name, "namespace", kubeProxyContainerPod.Namespace, "kind", "pod", "details", "fileName: /var/lib/config, ownerUser: 0, ownerGroup: 0")),
-			rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", kubeProxyContainerPod.Name, "namespace", kubeProxyContainerPod.Namespace, "kind", "pod", "details", "fileName: /var/lib/kubeconfig, ownerUser: 0, ownerGroup: 0")),
-			rule.ErroredCheckResult("Failed to find any containers appropriate for evaluation", rule.NewTarget("name", nonValidContainerPod.Name, "namespace", nonValidContainerPod.Namespace, "kind", "pod", "details", "pod does not contain any of the containers specified in the provided list: [kube-proxy proxy]")),
-			rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("name", proxyContainerPod.Name, "namespace", proxyContainerPod.Namespace, "kind", "pod", "details", "fileName: /var/lib/config, ownerUser: 1000, expectedOwnerUsers: [0]")),
-			rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("name", proxyContainerPod.Name, "namespace", proxyContainerPod.Namespace, "kind", "pod", "details", "fileName: /var/lib/kubeconfig2, ownerGroup: 1000, expectedOwnerGroups: [0]")),
+			rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "kube-proxy-container-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, ownerUser: 0, ownerGroup: 0")),
+			rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "kube-proxy-container-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig, ownerUser: 0, ownerGroup: 0")),
+			rule.ErroredCheckResult("Pod does not contain any of the containers specified in the provided list: [kube-proxy proxy]", rule.NewTarget("name", "non-valid-container-pod", "namespace", "kube-system", "kind", "pod")),
+			rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("name", "proxy-container-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, ownerUser: 1000, expectedOwnerUsers: [0]")),
+			rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("name", "proxy-container-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig2, ownerGroup: 1000, expectedOwnerGroups: [0]")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedResults))

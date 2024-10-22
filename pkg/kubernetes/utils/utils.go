@@ -402,25 +402,15 @@ func GetKubeletCommand(ctx context.Context, podExecutor pod.PodExecutor) (string
 
 // GetContainerCommand returns the used container command
 func GetContainerCommand(pod corev1.Pod, containerNames ...string) (string, error) {
-	var (
-		container corev1.Container
-		found     = false
-	)
-
 	for _, containerName := range containerNames {
-		var foundContainer corev1.Container
-		foundContainer, found = GetContainerFromPod(&pod, containerName)
+		container, found := GetContainerFromPod(&pod, containerName)
 		if found {
-			container = foundContainer
-			break
+			rawCommand := strings.Join(append(container.Command, container.Args...), " ")
+			return rawCommand, nil
 		}
 	}
 
-	if !found {
-		return "", fmt.Errorf("pod does not contain any of the containers specified in the provided list: %s", containerNames)
-	}
-	rawCommand := strings.Join(append(container.Command, container.Args...), " ")
-	return rawCommand, nil
+	return "", fmt.Errorf("Pod does not contain any of the containers specified in the provided list: %s", containerNames)
 }
 
 // FindFileMountSource returns a mounted file's source location on the host

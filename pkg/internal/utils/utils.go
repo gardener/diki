@@ -163,7 +163,7 @@ func GetMountedFilesStats(
 	return stats, err
 }
 
-// GetContainerID returns the container ID specified in the container statust by container name
+// GetContainerID returns the container ID specified in the container status by container name
 func GetContainerID(pod corev1.Pod, containerNames ...string) (string, error) {
 	for _, containerName := range containerNames {
 		containerStatusIdx := slices.IndexFunc(pod.Status.ContainerStatuses, func(containerStatus corev1.ContainerStatus) bool {
@@ -184,7 +184,7 @@ func GetContainerID(pod corev1.Pod, containerNames ...string) (string, error) {
 			return "", fmt.Errorf("cannot handle container with name %s", containerName)
 		}
 	}
-	return "", fmt.Errorf("container with any of the specified names in the list %s not (yet) in status", containerNames)
+	return "", fmt.Errorf("container with name in %v not (yet) in status", containerNames)
 }
 
 // GetContainerMounts returns the container mounts of a container

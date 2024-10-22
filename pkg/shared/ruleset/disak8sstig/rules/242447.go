@@ -140,7 +140,7 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 
 			rawKubeProxyCommand, err := kubeutils.GetContainerCommand(pod, kubeProxyContainerNames...)
 			if err != nil {
-				checkResults = append(checkResults, rule.ErroredCheckResult("Failed to find any containers appropriate for evaluation", podTarget.With("details", err.Error())))
+				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), podTarget))
 				continue
 			}
 

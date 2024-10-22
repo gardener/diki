@@ -147,10 +147,6 @@ var _ = Describe("#242400", func() {
 			},
 		}
 
-		plainProxyPod := plainPod.DeepCopy()
-		plainProxyPod.Status.ContainerStatuses[0].Name = "proxy"
-		plainProxyPod.Status.ContainerStatuses[0].ContainerID = "containerd://foo"
-
 		dikiPod = plainPod.DeepCopy()
 		dikiPod.Name = fmt.Sprintf("diki-%s-%s", sharedrules.ID242400, "aaaaaaaaaa")
 		dikiPod.Labels = map[string]string{}

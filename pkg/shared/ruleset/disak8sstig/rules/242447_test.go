@@ -166,7 +166,7 @@ var _ = Describe("#242447", func() {
 		}))
 	})
 
-	It("should correctly look up for a proxy container if the kube-proxy container is absent", func() {
+	It("should correctly find the kube-proxy container", func() {
 		Expect(fakeClient.Create(ctx, Node)).To(Succeed())
 		Expect(fakeClient.Create(ctx, dikiPod)).To(Succeed())
 
@@ -206,11 +206,11 @@ var _ = Describe("#242447", func() {
 		Expect(err).To(BeNil())
 
 		expectedResults := []rule.CheckResult{
-			rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", kubeProxyContainerPod.Name, "namespace", kubeProxyContainerPod.Namespace, "kind", "pod", "details", "fileName: /var/lib/config, permissions: 644")),
-			rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", kubeProxyContainerPod.Name, "namespace", kubeProxyContainerPod.Namespace, "kind", "pod", "details", "fileName: /var/lib/kubeconfig, permissions: 600")),
-			rule.ErroredCheckResult("Failed to find any containers appropriate for evaluation", rule.NewTarget("name", nonValidContainerPod.Name, "namespace", nonValidContainerPod.Namespace, "kind", "pod", "details", "pod does not contain any of the containers specified in the provided list: [kube-proxy proxy]")),
-			rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", proxyContainerPod.Name, "namespace", proxyContainerPod.Namespace, "kind", "pod", "details", "fileName: /var/lib/config, permissions: 664, expectedPermissionsMax: 644")),
-			rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", proxyContainerPod.Name, "namespace", proxyContainerPod.Namespace, "kind", "pod", "details", "fileName: /var/lib/kubeconfig2, permissions: 606, expectedPermissionsMax: 644")),
+			rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-proxy-container-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, permissions: 644")),
+			rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-proxy-container-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig, permissions: 600")),
+			rule.ErroredCheckResult("Pod does not contain any of the containers specified in the provided list: [kube-proxy proxy]", rule.NewTarget("name", "non-valid-container-pod", "namespace", "kube-system", "kind", "pod")),
+			rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "proxy-container-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, permissions: 664, expectedPermissionsMax: 644")),
+			rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "proxy-container-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig2, permissions: 606, expectedPermissionsMax: 644")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedResults))

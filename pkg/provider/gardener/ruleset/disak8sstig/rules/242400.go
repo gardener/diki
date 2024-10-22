@@ -54,11 +54,11 @@ func (r *Rule242400) Name() string {
 func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 	const option = "featureGates.AllAlpha"
 	var (
-		checkResults    []rule.CheckResult
-		deploymentNames = []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
-		shootTarget     = rule.NewTarget("cluster", "shoot")
-		seedTarget      = rule.NewTarget("cluster", "seed")
-		proxySelector   = labels.SelectorFromSet(labels.Set{"role": "proxy"})
+		checkResults      []rule.CheckResult
+		deploymentNames   = []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
+		shootTarget       = rule.NewTarget("cluster", "shoot")
+		seedTarget        = rule.NewTarget("cluster", "seed")
+		kubeProxySelector = labels.SelectorFromSet(labels.Set{"role": "proxy"})
 	)
 
 	// control plane check
@@ -149,13 +149,13 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 	} else {
 		var pods []corev1.Pod
 		for _, p := range allPods {
-			if proxySelector.Matches(labels.Set(p.Labels)) {
+			if kubeProxySelector.Matches(labels.Set(p.Labels)) {
 				pods = append(pods, p)
 			}
 		}
 
 		if len(pods) == 0 {
-			checkResults = append(checkResults, rule.ErroredCheckResult("kube-proxy pods not found", shootTarget.With("selector", proxySelector.String())))
+			checkResults = append(checkResults, rule.ErroredCheckResult("kube-proxy pods not found", shootTarget.With("selector", kubeProxySelector.String())))
 		} else {
 			image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
 			if err != nil {
@@ -191,7 +191,7 @@ func (r *Rule242400) checkKubeProxy(
 		additionalLabels        = map[string]string{pod.LabelInstanceID: r.InstanceID}
 		podName                 = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
 		execPodTarget           = rule.NewTarget("cluster", "shoot", "name", podName, "namespace", "kube-system", "kind", "pod")
-		kubeProxyContainerNames = []string{"kube-proxy"}
+		kubeProxyContainerNames = "kube-proxy"
 	)
 
 	defer func() {
@@ -229,7 +229,7 @@ func (r *Rule242400) checkKubeProxy(
 	for _, pod := range pods {
 		podTarget := rule.NewTarget("cluster", "shoot", "name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
 
-		rawKubeProxyCommand, err := kubeutils.GetContainerCommand(pod, kubeProxyContainerNames...)
+		rawKubeProxyCommand, err := kubeutils.GetContainerCommand(pod, kubeProxyContainerNames)
 		if err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), podTarget))
 			continue
@@ -249,7 +249,7 @@ func (r *Rule242400) checkKubeProxy(
 
 		var allAlpha *bool
 		if len(configPath) != 0 {
-			kubeProxyContainerID, err := intutils.GetContainerID(pod, kubeProxyContainerNames...)
+			kubeProxyContainerID, err := intutils.GetContainerID(pod, kubeProxyContainerNames)
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), podTarget))
 				continue

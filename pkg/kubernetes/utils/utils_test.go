@@ -1310,7 +1310,7 @@ var _ = Describe("utils", func() {
 				"/bin/sh -c exec kube-proxy --kubeconfig=/var/lib/kube-proxy/kubeconfig", BeNil()),
 			Entry("should return error when container is not found", "not-bar",
 				[]string{}, []string{},
-				"", MatchError("pod does not contain any of the containers specified in the provided list: [not-bar]")),
+				"", MatchError("Pod does not contain any of the containers specified in the provided list: [not-bar]")),
 		)
 	})
 

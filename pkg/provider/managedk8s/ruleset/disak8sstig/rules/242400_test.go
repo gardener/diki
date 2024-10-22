@@ -292,7 +292,7 @@ var _ = Describe("#242400", func() {
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
 	})
 
-	It("should correctly look up for a proxy container if the kube-proxy container is absent", func() {
+	It("should correctly find the kube-proxy container", func() {
 		node1 := plainNode.DeepCopy()
 		node1.ObjectMeta.Name = "node1"
 		Expect(fakeClient.Create(ctx, node1)).To(Succeed())
@@ -347,9 +347,9 @@ var _ = Describe("#242400", func() {
 
 		expectedResults := []rule.CheckResult{
 			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("kind", "node", "name", "node1")),
-			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("name", kubeProxyContainerPod.Name, "namespace", kubeProxyContainerPod.Namespace, "kind", "pod")),
-			rule.ErroredCheckResult("Failed to find any containers appropriate for evaluation", rule.NewTarget("name", nonValidContainerPod.Name, "namespace", nonValidContainerPod.Namespace, "kind", "pod", "details", "pod does not contain any of the containers specified in the provided list: [kube-proxy proxy]")),
-			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("name", proxyContainerPod.Name, "namespace", proxyContainerPod.Namespace, "kind", "pod")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("name", "kube-proxy-container-pod", "namespace", "kube-system", "kind", "pod")),
+			rule.ErroredCheckResult("Pod does not contain any of the containers specified in the provided list: [kube-proxy proxy]", rule.NewTarget("name", "non-valid-container-pod", "namespace", "kube-system", "kind", "pod")),
+			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("name", "proxy-container-pod", "namespace", "kube-system", "kind", "pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedResults))
