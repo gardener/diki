@@ -166,7 +166,7 @@ var _ = Describe("#242447", func() {
 		}))
 	})
 
-	It("should correctly check if container names are in the valid specifications", func() {
+	It("should correctly look up for a proxy container if the kube-proxy container is absent", func() {
 		Expect(fakeClient.Create(ctx, Node)).To(Succeed())
 		Expect(fakeClient.Create(ctx, dikiPod)).To(Succeed())
 

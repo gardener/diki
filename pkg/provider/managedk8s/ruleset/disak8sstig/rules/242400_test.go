@@ -292,7 +292,7 @@ var _ = Describe("#242400", func() {
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
 	})
 
-	It("should correctly check if container names are in the valid specifications", func() {
+	It("should correctly look up for a proxy container if the kube-proxy container is absent", func() {
 		node1 := plainNode.DeepCopy()
 		node1.ObjectMeta.Name = "node1"
 		Expect(fakeClient.Create(ctx, node1)).To(Succeed())
