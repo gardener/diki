@@ -211,7 +211,7 @@ var _ = Describe("#242448", func() {
 			rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "pod1", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig, ownerUser: 0, ownerGroup: 0")),
 			rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("name", "pod2", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, ownerUser: 1000, expectedOwnerUsers: [0]")),
 			rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("name", "pod2", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig2, ownerGroup: 1000, expectedOwnerGroups: [0]")),
-			rule.ErroredCheckResult("Pod does not contain a container with name in [kube-proxy proxy]", rule.NewTarget("name", "pod3", "namespace", "kube-system", "kind", "pod")),
+			rule.ErroredCheckResult("pod does not contain a container with name in [kube-proxy proxy]", rule.NewTarget("name", "pod3", "namespace", "kube-system", "kind", "pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedResults))

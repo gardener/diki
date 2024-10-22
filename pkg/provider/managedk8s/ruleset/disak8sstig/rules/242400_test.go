@@ -349,7 +349,7 @@ var _ = Describe("#242400", func() {
 			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("kind", "node", "name", "node1")),
 			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("name", "pod1", "namespace", "kube-system", "kind", "pod")),
 			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("name", "pod2", "namespace", "kube-system", "kind", "pod")),
-			rule.ErroredCheckResult("Pod does not contain a container with name in [kube-proxy proxy]", rule.NewTarget("name", "pod3", "namespace", "kube-system", "kind", "pod")),
+			rule.ErroredCheckResult("pod does not contain a container with name in [kube-proxy proxy]", rule.NewTarget("name", "pod3", "namespace", "kube-system", "kind", "pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedResults))
