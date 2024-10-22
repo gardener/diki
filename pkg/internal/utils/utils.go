@@ -164,6 +164,7 @@ func GetMountedFilesStats(
 }
 
 // GetContainerID returns the container ID specified in the container status by container name
+// The first container name that exists in status is selected
 func GetContainerID(pod corev1.Pod, containerNames ...string) (string, error) {
 	for _, containerName := range containerNames {
 		containerStatusIdx := slices.IndexFunc(pod.Status.ContainerStatuses, func(containerStatus corev1.ContainerStatus) bool {

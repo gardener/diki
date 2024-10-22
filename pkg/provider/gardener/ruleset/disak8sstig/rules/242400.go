@@ -187,11 +187,11 @@ func (r *Rule242400) checkKubeProxy(
 ) []rule.CheckResult {
 	const option = "featureGates.AllAlpha"
 	var (
-		checkResults            []rule.CheckResult
-		additionalLabels        = map[string]string{pod.LabelInstanceID: r.InstanceID}
-		podName                 = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
-		execPodTarget           = rule.NewTarget("cluster", "shoot", "name", podName, "namespace", "kube-system", "kind", "pod")
-		kubeProxyContainerNames = "kube-proxy"
+		checkResults           []rule.CheckResult
+		additionalLabels       = map[string]string{pod.LabelInstanceID: r.InstanceID}
+		podName                = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
+		execPodTarget          = rule.NewTarget("cluster", "shoot", "name", podName, "namespace", "kube-system", "kind", "pod")
+		kubeProxyContainerName = "kube-proxy"
 	)
 
 	defer func() {
@@ -229,7 +229,7 @@ func (r *Rule242400) checkKubeProxy(
 	for _, pod := range pods {
 		podTarget := rule.NewTarget("cluster", "shoot", "name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
 
-		rawKubeProxyCommand, err := kubeutils.GetContainerCommand(pod, kubeProxyContainerNames)
+		rawKubeProxyCommand, err := kubeutils.GetContainerCommand(pod, kubeProxyContainerName)
 		if err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), podTarget))
 			continue
@@ -249,7 +249,7 @@ func (r *Rule242400) checkKubeProxy(
 
 		var allAlpha *bool
 		if len(configPath) != 0 {
-			kubeProxyContainerID, err := intutils.GetContainerID(pod, kubeProxyContainerNames)
+			kubeProxyContainerID, err := intutils.GetContainerID(pod, kubeProxyContainerName)
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), podTarget))
 				continue
