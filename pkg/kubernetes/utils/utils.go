@@ -410,7 +410,7 @@ func GetContainerCommand(pod corev1.Pod, containerNames ...string) (string, erro
 		}
 	}
 
-	return "", fmt.Errorf("Pod does not contain any of the containers specified in the provided list: %s", containerNames)
+	return "", fmt.Errorf("Pod does not contain a container with name in %v", containerNames)
 }
 
 // FindFileMountSource returns a mounted file's source location on the host

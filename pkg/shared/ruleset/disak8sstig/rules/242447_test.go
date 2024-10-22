@@ -210,7 +210,7 @@ var _ = Describe("#242447", func() {
 			rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "pod1", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig, permissions: 600")),
 			rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "pod2", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, permissions: 664, expectedPermissionsMax: 644")),
 			rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "pod2", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig2, permissions: 606, expectedPermissionsMax: 644")),
-			rule.ErroredCheckResult("Pod does not contain any of the containers specified in the provided list: [kube-proxy proxy]", rule.NewTarget("name", "pod3", "namespace", "kube-system", "kind", "pod")),
+			rule.ErroredCheckResult("Pod does not contain a container with name in [kube-proxy proxy]", rule.NewTarget("name", "pod3", "namespace", "kube-system", "kind", "pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedResults))
