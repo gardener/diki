@@ -172,14 +172,14 @@ var _ = Describe("#242448", func() {
 		Expect(fakeClient.Create(ctx, dikiPod)).To(Succeed())
 
 		kubeProxyContainerPod := plainPod.DeepCopy()
-		kubeProxyContainerPod.Name = "kube-proxy-container-pod"
+		kubeProxyContainerPod.Name = "pod1"
 		kubeProxyContainerPod.Labels["role"] = "proxy"
 		kubeProxyContainerPod.Spec.Containers[0].Command = []string{"--config=/var/lib/config", "--kubeconfig=/var/lib/kubeconfig"}
 		kubeProxyContainerPod.OwnerReferences[0].UID = "0"
 		Expect(fakeClient.Create(ctx, kubeProxyContainerPod)).To(Succeed())
 
 		proxyContainerPod := plainPod.DeepCopy()
-		proxyContainerPod.Name = "proxy-container-pod"
+		proxyContainerPod.Name = "pod2"
 		proxyContainerPod.Labels["role"] = "proxy"
 		proxyContainerPod.Spec.Containers[0].Name = "proxy"
 		proxyContainerPod.Spec.Containers[0].Command = []string{"--config=/var/lib/config"}
@@ -187,7 +187,7 @@ var _ = Describe("#242448", func() {
 		Expect(fakeClient.Create(ctx, proxyContainerPod)).To(Succeed())
 
 		nonValidContainerPod := plainPod.DeepCopy()
-		nonValidContainerPod.Name = "non-valid-container-pod"
+		nonValidContainerPod.Name = "pod3"
 		nonValidContainerPod.Labels["role"] = "proxy"
 		nonValidContainerPod.Spec.Containers[0].Name = "foo"
 		nonValidContainerPod.Spec.Containers[0].Command = []string{"--kubeconfig=/var/lib/kubeconfig"}
@@ -207,11 +207,11 @@ var _ = Describe("#242448", func() {
 		Expect(err).To(BeNil())
 
 		expectedResults := []rule.CheckResult{
-			rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "kube-proxy-container-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, ownerUser: 0, ownerGroup: 0")),
-			rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "kube-proxy-container-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig, ownerUser: 0, ownerGroup: 0")),
-			rule.ErroredCheckResult("Pod does not contain any of the containers specified in the provided list: [kube-proxy proxy]", rule.NewTarget("name", "non-valid-container-pod", "namespace", "kube-system", "kind", "pod")),
-			rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("name", "proxy-container-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, ownerUser: 1000, expectedOwnerUsers: [0]")),
-			rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("name", "proxy-container-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig2, ownerGroup: 1000, expectedOwnerGroups: [0]")),
+			rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "pod1", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, ownerUser: 0, ownerGroup: 0")),
+			rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "pod1", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig, ownerUser: 0, ownerGroup: 0")),
+			rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("name", "pod2", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, ownerUser: 1000, expectedOwnerUsers: [0]")),
+			rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("name", "pod2", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig2, ownerGroup: 1000, expectedOwnerGroups: [0]")),
+			rule.ErroredCheckResult("Pod does not contain any of the containers specified in the provided list: [kube-proxy proxy]", rule.NewTarget("name", "pod3", "namespace", "kube-system", "kind", "pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedResults))
