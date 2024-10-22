@@ -191,7 +191,7 @@ func (r *Rule242400) checkKubeProxy(
 		additionalLabels        = map[string]string{pod.LabelInstanceID: r.InstanceID}
 		podName                 = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
 		execPodTarget           = rule.NewTarget("cluster", "shoot", "name", podName, "namespace", "kube-system", "kind", "pod")
-		kubeProxyContainerNames = []string{"kube-proxy", "proxy"}
+		kubeProxyContainerNames = []string{"kube-proxy"}
 	)
 
 	defer func() {
