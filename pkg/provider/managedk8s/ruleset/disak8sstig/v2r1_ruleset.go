@@ -227,12 +227,10 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 			noControlPlaneMsg,
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedrules.ID242390,
-			"The Kubernetes API server must have anonymous authentication disabled (HIGH 242390)",
-			noControlPlaneMsg,
-			rule.Skipped,
-		),
+		&sharedrules.Rule242390{
+			Client:       client,
+			V1RESTClient: clientSet.CoreV1().RESTClient(),
+		},
 		&sharedrules.Rule242391{
 			Client:       client,
 			V1RESTClient: clientSet.CoreV1().RESTClient(),
