@@ -163,7 +163,7 @@ func GetMountedFilesStats(
 	return stats, err
 }
 
-// GetContainerID iterates over the passed container names and tries to find a match in the pod containers list.
+// GetContainerID iterates over the passed container names and tries to find a match in the pod container status.
 // It returns the container ID of the first match.
 func GetContainerID(pod corev1.Pod, containerNames ...string) (string, error) {
 	for _, containerName := range containerNames {
