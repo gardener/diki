@@ -84,7 +84,7 @@ diki:
             - gosec
             comment: |
               We use gosec (linter) for SAST scans, see: https://github.com/securego/gosec.
-              Enabled by https://github.com/gardener/diki/issues/331
+              Enabled by https://github.com/gardener/diki/pull/333
         slack:
           default_channel: 'internal_scp_workspace'
           channel_cfgs:
