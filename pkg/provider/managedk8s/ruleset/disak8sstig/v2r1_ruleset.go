@@ -5,8 +5,10 @@
 package disak8sstig
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/Masterminds/semver/v3"
 	"k8s.io/client-go/kubernetes"
@@ -227,9 +229,15 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 			noControlPlaneMsg,
 			rule.Skipped,
 		),
-		&sharedrules.Rule242390{
-			Client:       client,
-			V1RESTClient: clientSet.CoreV1().RESTClient(),
+		&rules.Rule242390{
+			KAPIExternalURL: r.Config.Host,
+			Client: &http.Client{
+				Transport: &http.Transport{
+					TLSClientConfig: &tls.Config{
+						InsecureSkipVerify: true, // #nosec G402
+					},
+				},
+			},
 		},
 		&sharedrules.Rule242391{
 			Client:       client,
