@@ -30,7 +30,7 @@ type RandString struct {
 // NewRand returns a not secure random string generator.
 func NewRand(source rand.Source, chars []rune) *RandString {
 	return &RandString{
-		random: rand.New(source), //nolint:gosec
+		random: rand.New(source), // #nosec G404
 		chars:  chars,
 	}
 }
