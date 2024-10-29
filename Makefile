@@ -39,6 +39,7 @@ check: $(GOIMPORTS) $(GOLANGCI_LINT)
 tidy:
 	@GO111MODULE=on go mod tidy
 	@mkdir -p $(REPO_ROOT)/.ci/hack && cp $(GARDENER_HACK_DIR)/.ci/* $(REPO_ROOT)/.ci/hack/ && chmod +xw $(REPO_ROOT)/.ci/hack/*
+	@cp $(GARDENER_HACK_DIR)/sast.sh $(HACK_DIR)/sast.sh && chmod +xw $(HACK_DIR)/sast.sh
 
 .PHONY: gen-styles
 gen-styles: $(TAILWINDCSS)
@@ -53,6 +54,14 @@ generate:
 check-generate:
 	@bash $(GARDENER_HACK_DIR)/check-generate.sh $(REPO_ROOT)
 
+.PHONY: sast
+sast: tidy $(GOSEC)
+	@$(HACK_DIR)/sast.sh
+
+.PHONY: sast-report
+sast-report: tidy $(GOSEC)
+	@$(HACK_DIR)/sast.sh --gosec-report true
+
 .PHONY: test-cov
 test-cov:
 	@bash $(GARDENER_HACK_DIR)/test-cover.sh ./cmd/... ./pkg/...
@@ -62,10 +71,10 @@ test-clean:
 	@bash $(GARDENER_HACK_DIR)/test-cover-clean.sh
 
 .PHONY: verify
-verify: format check test
+verify: format check test sast
 
 .PHONY: verify-extended
-verify-extended: check-generate check format test test-cov test-clean
+verify-extended: check-generate check format test test-cov test-clean sast-report
 
 #### BUILD ####
 
