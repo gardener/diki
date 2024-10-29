@@ -20,3 +20,6 @@ testbin
 .kube
 
 /hack/tools/bin
+
+# gosec
+gosec-report.sarif
