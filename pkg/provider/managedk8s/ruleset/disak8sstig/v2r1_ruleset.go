@@ -240,9 +240,9 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 			KAPIExternalURL: r.Config.Host,
 			Client: &http.Client{
 				Transport: &http.Transport{
-					TLSClientConfig: &tls.Config{
-						MinVersion: tls.VersionTLS13,
-						RootCAs:    authorityCertPool,
+					// the TLS MinVersion warnings are ignored in order to avoid version conflicts
+					TLSClientConfig: &tls.Config{ // #nosec: G402
+						RootCAs: authorityCertPool,
 					},
 				},
 			},
