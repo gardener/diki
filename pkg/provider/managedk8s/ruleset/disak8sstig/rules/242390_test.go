@@ -29,9 +29,9 @@ var _ = Describe("#242390", func() {
 		mockClient = manualfake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
 			switch req.URL.String() {
 			case enabledAnonymousAuthServer:
-				return &http.Response{StatusCode: http.StatusUnauthorized}, nil
-			case disabledAnonymousAuthServer:
 				return &http.Response{StatusCode: http.StatusForbidden}, nil
+			case disabledAnonymousAuthServer:
+				return &http.Response{StatusCode: http.StatusUnauthorized}, nil
 			default:
 				return &http.Response{StatusCode: http.StatusNotFound}, http.ErrHandlerTimeout
 			}
