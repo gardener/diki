@@ -27,8 +27,13 @@ func (r *Rule242390) Name() string {
 	return "The Kubernetes API server must have anonymous authentication disabled (HIGH 242390)"
 }
 
-func (r *Rule242390) Run(_ context.Context) (rule.RuleResult, error) {
-	httpResponse, err := r.Client.Get(r.KAPIExternalURL)
+func (r *Rule242390) Run(ctx context.Context) (rule.RuleResult, error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, r.KAPIExternalURL, nil)
+	if err != nil {
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult("failed to create a GET request", rule.NewTarget())), nil
+	}
+
+	httpResponse, err := r.Client.Do(request)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult("failed to access the kube-apiserver", rule.NewTarget())), nil
 	}
