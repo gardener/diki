@@ -6,6 +6,7 @@ package disak8sstig
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -49,6 +50,9 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 	if err != nil {
 		return err
 	}
+
+	authorityCertPool := x509.NewCertPool()
+	authorityCertPool.AppendCertsFromPEM(r.Config.CAData)
 
 	opts242383, err := getV2R1OptionOrNil[sharedrules.Options242383](ruleOptions[sharedrules.ID242383].Args)
 	if err != nil {
@@ -234,7 +238,7 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 			Client: &http.Client{
 				Transport: &http.Transport{
 					TLSClientConfig: &tls.Config{
-						InsecureSkipVerify: true, // #nosec G402
+						RootCAs: authorityCertPool,
 					},
 				},
 			},
