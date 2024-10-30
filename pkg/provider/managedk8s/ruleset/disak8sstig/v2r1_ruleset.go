@@ -238,7 +238,8 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 			Client: &http.Client{
 				Transport: &http.Transport{
 					TLSClientConfig: &tls.Config{
-						RootCAs: authorityCertPool,
+						MinVersion: tls.VersionTLS13,
+						RootCAs:    authorityCertPool,
 					},
 				},
 			},
