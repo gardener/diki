@@ -15,7 +15,6 @@ import (
 var _ rule.Rule = &Rule242390{}
 
 type Rule242390 struct {
-	InstanceID      string
 	Client          *http.Client
 	KAPIExternalURL string
 }
@@ -35,8 +34,8 @@ func (r *Rule242390) Run(_ context.Context) (rule.RuleResult, error) {
 	}
 
 	if httpResponse.StatusCode == http.StatusForbidden {
-		return rule.SingleCheckResult(r, rule.PassedCheckResult("kube-apiserver has anonymous authentication disabled", rule.NewTarget())), nil
-	} else {
 		return rule.SingleCheckResult(r, rule.FailedCheckResult("kube-apiserver has anonymous authentication enabled", rule.NewTarget())), nil
+	} else {
+		return rule.SingleCheckResult(r, rule.PassedCheckResult("kube-apiserver has anonymous authentication disabled", rule.NewTarget())), nil
 	}
 }
