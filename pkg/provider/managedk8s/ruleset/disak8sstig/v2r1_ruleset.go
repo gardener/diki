@@ -5,8 +5,11 @@
 package disak8sstig
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/Masterminds/semver/v3"
 	"k8s.io/client-go/kubernetes"
@@ -46,6 +49,12 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 	semverKubernetesVersion, err := semver.NewVersion(kubernetesVersion.String())
 	if err != nil {
 		return err
+	}
+
+	authorityCertPool := x509.NewCertPool()
+	ok := authorityCertPool.AppendCertsFromPEM(r.Config.CAData)
+	if !ok {
+		return fmt.Errorf("failed to parse kube-apiserver CA data from config")
 	}
 
 	opts242383, err := getV2R1OptionOrNil[sharedrules.Options242383](ruleOptions[sharedrules.ID242383].Args)
@@ -227,12 +236,17 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 			noControlPlaneMsg,
 			rule.Skipped,
 		),
-		rule.NewSkipRule(
-			sharedrules.ID242390,
-			"The Kubernetes API server must have anonymous authentication disabled (HIGH 242390)",
-			noControlPlaneMsg,
-			rule.Skipped,
-		),
+		&rules.Rule242390{
+			KAPIExternalURL: r.Config.Host,
+			Client: &http.Client{
+				Transport: &http.Transport{
+					// the TLS MinVersion warnings are ignored in order to avoid version conflicts
+					TLSClientConfig: &tls.Config{ // #nosec: G402
+						RootCAs: authorityCertPool,
+					},
+				},
+			},
+		},
 		&sharedrules.Rule242391{
 			Client:       client,
 			V1RESTClient: clientSet.CoreV1().RESTClient(),
