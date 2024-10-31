@@ -6,6 +6,7 @@ package rules
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/gardener/diki/pkg/rule"
@@ -30,12 +31,12 @@ func (r *Rule242390) Name() string {
 func (r *Rule242390) Run(ctx context.Context) (rule.RuleResult, error) {
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, r.KAPIExternalURL, nil)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult("failed to create a GET request", rule.NewTarget())), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(fmt.Sprintf("could not create request: %s", err.Error()), rule.NewTarget())), nil
 	}
 
 	httpResponse, err := r.Client.Do(request)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult("failed to access the kube-apiserver - "+err.Error(), rule.NewTarget())), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(fmt.Sprintf("could not access kube-apiserver: %s", err.Error()), rule.NewTarget())), nil
 	}
 
 	if httpResponse.StatusCode == http.StatusForbidden {

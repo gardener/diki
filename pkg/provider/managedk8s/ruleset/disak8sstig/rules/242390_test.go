@@ -75,7 +75,7 @@ var _ = Describe("#242390", func() {
 		Expect(err).To(BeNil())
 
 		expectedResult := []rule.CheckResult{
-			rule.ErroredCheckResult("failed to access the kube-apiserver - Get \"https://unreachable-server-example.com\": http: Handler timeout", rule.NewTarget()),
+			rule.ErroredCheckResult("could not access kube-apiserver: Get \"https://unreachable-server-example.com\": http: Handler timeout", rule.NewTarget()),
 		}
 		Expect(ruleResult.CheckResults).To(Equal(expectedResult))
 	})
