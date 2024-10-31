@@ -34,14 +34,15 @@ func (r *Rule242390) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(fmt.Sprintf("could not create request: %s", err.Error()), rule.NewTarget())), nil
 	}
 
-	httpResponse, err := r.Client.Do(request)
+	response, err := r.Client.Do(request)
 	if err != nil {
 		return rule.SingleCheckResult(r, rule.ErroredCheckResult(fmt.Sprintf("could not access kube-apiserver: %s", err.Error()), rule.NewTarget())), nil
 	}
 
-	if httpResponse.StatusCode == http.StatusForbidden {
-		return rule.SingleCheckResult(r, rule.FailedCheckResult("kube-apiserver has anonymous authentication enabled", rule.NewTarget())), nil
+	if response.StatusCode >= 500 && response.StatusCode <= 599 {
+		return rule.SingleCheckResult(r, rule.WarningCheckResult("the anonymous authentication status of the kube-apiserver can not be determined", rule.NewTarget())), nil
+	} else if response.StatusCode == http.StatusUnauthorized {
+		return rule.SingleCheckResult(r, rule.PassedCheckResult("kube-apiserver has anonymous authentication disabled", rule.NewTarget())), nil
 	}
-
-	return rule.SingleCheckResult(r, rule.PassedCheckResult("kube-apiserver has anonymous authentication disabled", rule.NewTarget())), nil
+	return rule.SingleCheckResult(r, rule.FailedCheckResult("kube-apiserver has anonymous authentication enabled", rule.NewTarget())), nil
 }

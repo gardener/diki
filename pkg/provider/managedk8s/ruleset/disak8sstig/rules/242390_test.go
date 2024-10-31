@@ -21,6 +21,7 @@ var _ = Describe("#242390", func() {
 		enabledAnonymousAuthServer  = "https://enabled-anonymous-auth-example.com"
 		disabledAnonymousAuthServer = "https://disabled-anonymous-auth-example.com"
 		unreachableServer           = "https://unreachable-server-example.com"
+		internalErrorServer         = "https://internal-error-server-example.com"
 	)
 
 	var (
@@ -35,6 +36,8 @@ var _ = Describe("#242390", func() {
 				return &http.Response{StatusCode: http.StatusForbidden}, nil
 			case disabledAnonymousAuthServer:
 				return &http.Response{StatusCode: http.StatusUnauthorized}, nil
+			case internalErrorServer:
+				return &http.Response{StatusCode: http.StatusBadGateway}, nil
 			default:
 				return &http.Response{StatusCode: http.StatusNotFound}, http.ErrHandlerTimeout
 			}
@@ -59,6 +62,9 @@ var _ = Describe("#242390", func() {
 		}),
 		Entry("should error when the kube-apiserver URL cannot be resolved", unreachableServer, []rule.CheckResult{
 			rule.ErroredCheckResult("could not access kube-apiserver: Get \"https://unreachable-server-example.com\": http: Handler timeout", rule.NewTarget()),
+		}),
+		Entry("should warn when the kube-apiserver URL cannot be reached", internalErrorServer, []rule.CheckResult{
+			rule.WarningCheckResult("the anonymous authentication status of the kube-apiserver can not be determined", rule.NewTarget()),
 		}),
 	)
 })
