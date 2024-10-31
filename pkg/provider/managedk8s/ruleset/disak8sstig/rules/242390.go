@@ -31,12 +31,12 @@ func (r *Rule242390) Name() string {
 func (r *Rule242390) Run(ctx context.Context) (rule.RuleResult, error) {
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, r.KAPIExternalURL, nil)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(fmt.Sprintf("Could not create request: %s.", err.Error()), rule.NewTarget())), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(fmt.Sprintf("could not create request: %s", err.Error()), rule.NewTarget())), nil
 	}
 
 	response, err := r.Client.Do(request)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(fmt.Sprintf("Could not access kube-apiserver: %s.", err.Error()), rule.NewTarget())), nil
+		return rule.SingleCheckResult(r, rule.ErroredCheckResult(fmt.Sprintf("could not access kube-apiserver: %s", err.Error()), rule.NewTarget())), nil
 	}
 
 	if response.StatusCode >= 500 && response.StatusCode <= 599 {

@@ -61,7 +61,7 @@ var _ = Describe("#242390", func() {
 			rule.PassedCheckResult("The kube-apiserver has anonymous authentication disabled.", rule.NewTarget()),
 		}),
 		Entry("should error when the kube-apiserver URL cannot be resolved", unreachableServer, []rule.CheckResult{
-			rule.ErroredCheckResult("Could not access kube-apiserver: Get \"https://unreachable-server-example.com\": http: Handler timeout.", rule.NewTarget()),
+			rule.ErroredCheckResult("could not access kube-apiserver: Get \"https://unreachable-server-example.com\": http: Handler timeout", rule.NewTarget()),
 		}),
 		Entry("should warn when the kube-apiserver URL cannot be reached", internalErrorServer, []rule.CheckResult{
 			rule.WarningCheckResult("Cannot determine if anonymous authentication is enabled for the kube-apiserver.", rule.NewTarget("details", "the request returned 5xx status code")),
