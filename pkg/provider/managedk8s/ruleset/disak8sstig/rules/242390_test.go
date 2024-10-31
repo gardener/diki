@@ -55,16 +55,16 @@ var _ = Describe("#242390", func() {
 			Expect(ruleResult.CheckResults).To(Equal(expectedResult))
 		},
 		Entry("should fail when the kube-apiserver anonymous authentication is enabled", enabledAnonymousAuthServer, []rule.CheckResult{
-			rule.FailedCheckResult("kube-apiserver has anonymous authentication enabled", rule.NewTarget()),
+			rule.FailedCheckResult("The kube-apiserver has anonymous authentication enabled.", rule.NewTarget()),
 		}),
 		Entry("should pass when the kube-apiserver anonymous authentication is disabled", disabledAnonymousAuthServer, []rule.CheckResult{
-			rule.PassedCheckResult("kube-apiserver has anonymous authentication disabled", rule.NewTarget()),
+			rule.PassedCheckResult("The kube-apiserver has anonymous authentication disabled.", rule.NewTarget()),
 		}),
 		Entry("should error when the kube-apiserver URL cannot be resolved", unreachableServer, []rule.CheckResult{
-			rule.ErroredCheckResult("could not access kube-apiserver: Get \"https://unreachable-server-example.com\": http: Handler timeout", rule.NewTarget()),
+			rule.ErroredCheckResult("Could not access kube-apiserver: Get \"https://unreachable-server-example.com\": http: Handler timeout.", rule.NewTarget()),
 		}),
 		Entry("should warn when the kube-apiserver URL cannot be reached", internalErrorServer, []rule.CheckResult{
-			rule.WarningCheckResult("the anonymous authentication status of the kube-apiserver can not be determined", rule.NewTarget()),
+			rule.WarningCheckResult("Cannot determine if anonymous authentication is enabled for the kube-apiserver.", rule.NewTarget("details", "the request returned 5xx status code")),
 		}),
 	)
 })
