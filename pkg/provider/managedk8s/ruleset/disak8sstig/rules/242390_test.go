@@ -17,12 +17,15 @@ import (
 )
 
 var _ = Describe("#242390", func() {
-
-	var (
-		mockClient                  *http.Client
+	const (
 		enabledAnonymousAuthServer  = "https://enabled-anonymous-auth-example.com"
 		disabledAnonymousAuthServer = "https://disabled-anonymous-auth-example.com"
 		unreachableServer           = "https://unreachable-server-example.com"
+	)
+
+	var (
+		mockClient *http.Client
+		ctx        = context.TODO()
 	)
 
 	BeforeEach(func() {
@@ -38,46 +41,24 @@ var _ = Describe("#242390", func() {
 		})
 	})
 
-	It("should fail when the kube-apiserver anonymous authentication is enabled", func() {
-		r := rules.Rule242390{
-			KAPIExternalURL: enabledAnonymousAuthServer,
-			Client:          mockClient,
-		}
-		ruleResult, err := r.Run(context.TODO())
-		Expect(err).To(BeNil())
-
-		expectedResult := []rule.CheckResult{
+	DescribeTable("Run cases",
+		func(hostURL string, expectedResult []rule.CheckResult) {
+			r := rules.Rule242390{
+				KAPIExternalURL: hostURL,
+				Client:          mockClient,
+			}
+			ruleResult, err := r.Run(ctx)
+			Expect(err).To(BeNil())
+			Expect(ruleResult.CheckResults).To(Equal(expectedResult))
+		},
+		Entry("should fail when the kube-apiserver anonymous authentication is enabled", enabledAnonymousAuthServer, []rule.CheckResult{
 			rule.FailedCheckResult("kube-apiserver has anonymous authentication enabled", rule.NewTarget()),
-		}
-		Expect(ruleResult.CheckResults).To(Equal(expectedResult))
-	})
-
-	It("should pass when the kube-apiserver anonymous authentication is disabled", func() {
-		r := rules.Rule242390{
-			KAPIExternalURL: disabledAnonymousAuthServer,
-			Client:          mockClient,
-		}
-		ruleResult, err := r.Run(context.TODO())
-		Expect(err).To(BeNil())
-
-		expectedResult := []rule.CheckResult{
+		}),
+		Entry("should pass when the kube-apiserver anonymous authentication is disabled", disabledAnonymousAuthServer, []rule.CheckResult{
 			rule.PassedCheckResult("kube-apiserver has anonymous authentication disabled", rule.NewTarget()),
-		}
-		Expect(ruleResult.CheckResults).To(Equal(expectedResult))
-	})
-
-	It("should error when the kube-apiserver URL can not be resolved", func() {
-		r := rules.Rule242390{
-			KAPIExternalURL: unreachableServer,
-			Client:          mockClient,
-		}
-		ruleResult, err := r.Run(context.TODO())
-		Expect(err).To(BeNil())
-
-		expectedResult := []rule.CheckResult{
+		}),
+		Entry("should error when the kube-apiserver URL can not be resolved", unreachableServer, []rule.CheckResult{
 			rule.ErroredCheckResult("could not access kube-apiserver: Get \"https://unreachable-server-example.com\": http: Handler timeout", rule.NewTarget()),
-		}
-		Expect(ruleResult.CheckResults).To(Equal(expectedResult))
-	})
-
+		}),
+	)
 })
