@@ -49,7 +49,9 @@ func (r *Rule242445) Name() string {
 func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 	var checkResults []rule.CheckResult
 	etcdMainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
+	etcdMainNewVersionSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
 	etcdEventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
+	etcdEventsNewVersionSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
 	options := option.FileOwnerOptions{}
 
 	if r.Options != nil {
@@ -75,7 +77,8 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("namespace", r.Namespace, "kind", "podList"))), nil
 	}
-	podSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector}
+	podsSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector}
+	podsNewVersionSelectors := []labels.Selector{etcdMainNewVersionSelector, etcdEventsNewVersionSelector}
 	var checkPods []corev1.Pod
 
 	for _, podSelector := range podSelectors {
@@ -87,7 +90,6 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		if len(pods) == 0 {
-			checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", target.With("namespace", r.Namespace, "selector", podSelector.String())))
 			continue
 		}
 
@@ -95,7 +97,46 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if len(checkPods) == 0 {
+		for _, podSelector := range podsNewVersionSelectors {
+			pods := []corev1.Pod{}
+			for _, p := range allPods {
+				if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
+					pods = append(pods, p)
+				}
+			}
+
+			if len(pods) == 0 {
+				checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", target.With("namespace", r.Namespace, "selector", podSelector.String())))
+				continue
+			}
+
+			checkPods = append(checkPods, pods...)
+		}
+	}
+
+	if len(checkPods) == 0 {
+<<<<<<< HEAD
+=======
+		for _, podSelector := range podsNewVersionSelectors {
+			pods := []corev1.Pod{}
+			for _, p := range allPods {
+				if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
+					pods = append(pods, p)
+				}
+			}
+
+			if len(pods) == 0 {
+				checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", target.With("namespace", r.Namespace, "selector", podSelector.String())))
+				continue
+			}
+
+			checkPods = append(checkPods, pods...)
+		}
+	}
+
+	if len(checkPods) == 0 {
 		return rule.Result(r, checkResults...), nil
+>>>>>>> c4daca8 (Refactor label matching for ETCD pods)
 	}
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)

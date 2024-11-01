@@ -241,13 +241,13 @@ tlsCertFile: /var/lib/certs/tls.crt`
 		etcdMainPod = plainPod.DeepCopy()
 		etcdMainPod.Name = "1-pod"
 		etcdMainPod.Labels["name"] = "etcd"
-		etcdMainPod.Labels["instance"] = "etcd-main"
+		etcdMainPod.Labels["app.kubernetes.io/part-of"] = "etcd-main"
 		etcdMainPod.OwnerReferences[0].UID = "1"
 
 		etcdEventsPod = plainPod.DeepCopy()
 		etcdEventsPod.Name = "etcd-events"
 		etcdEventsPod.Labels["name"] = "etcd"
-		etcdEventsPod.Labels["instance"] = "etcd-events"
+		etcdEventsPod.Labels["app.kubernetes.io/part-of"] = "etcd-events"
 		etcdEventsPod.OwnerReferences[0].UID = "2"
 
 		kubeAPIServerPod = plainPod.DeepCopy()
@@ -294,8 +294,8 @@ tlsCertFile: /var/lib/certs/tls.crt`
 	})
 
 	It("should error when pods cannot be found", func() {
-		mainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
-		eventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
+		mainSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
+		eventsSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
 		kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
 		fakeControlPlanePodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
 		fakeClusterPodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})

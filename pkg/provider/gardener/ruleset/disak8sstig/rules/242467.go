@@ -51,13 +51,15 @@ func (r *Rule242467) Name() string {
 
 func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
-		checkResults               []rule.CheckResult
-		expectedFilePermissionsMax = "640"
-		etcdMainSelector           = labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
-		etcdEventsSelector         = labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
-		kubeProxySelector          = labels.SelectorFromSet(labels.Set{"role": "proxy"})
-		deploymentNames            = []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
-		nodeLabels                 = []string{"worker.gardener.cloud/pool"}
+		checkResults                 []rule.CheckResult
+		expectedFilePermissionsMax   = "640"
+		etcdMainSelector             = labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
+		etcdMainNewVersionSelector   = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
+		etcdEventsSelector           = labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
+		etcdEventsNewVersionSelector = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
+		kubeProxySelector            = labels.SelectorFromSet(labels.Set{"role": "proxy"})
+		deploymentNames              = []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
+		nodeLabels                   = []string{"worker.gardener.cloud/pool"}
 	)
 
 	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
@@ -73,12 +75,13 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList")))
 	} else {
 		var (
-			checkPods    []corev1.Pod
-			podSelectors = []labels.Selector{etcdMainSelector, etcdEventsSelector}
+			checkPods              []corev1.Pod
+			podSelectors           = []labels.Selector{etcdMainSelector, etcdEventsSelector}
+			podNewVersionSelectors = []labels.Selector{etcdMainNewVersionSelector, etcdEventsNewVersionSelector}
 		)
 
 		for _, podSelector := range podSelectors {
-			var pods []corev1.Pod
+			pods := []corev1.Pod{}
 			for _, p := range allSeedPods {
 				if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.ControlPlaneNamespace {
 					pods = append(pods, p)
@@ -86,11 +89,28 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 			}
 
 			if len(pods) == 0 {
-				checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", seedTarget.With("namespace", r.ControlPlaneNamespace, "selector", podSelector.String())))
 				continue
 			}
 
 			checkPods = append(checkPods, pods...)
+		}
+
+		if len(checkPods) == 0 {
+			for _, podSelector := range podNewVersionSelectors {
+				pods := []corev1.Pod{}
+				for _, p := range allSeedPods {
+					if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.ControlPlaneNamespace {
+						pods = append(pods, p)
+					}
+				}
+
+				if len(pods) == 0 {
+					checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", seedTarget.With("namespace", r.ControlPlaneNamespace, "selector", podSelector.String())))
+					continue
+				}
+
+				checkPods = append(checkPods, pods...)
+			}
 		}
 
 		for _, deploymentName := range deploymentNames {

@@ -134,12 +134,12 @@ var _ = Describe("#242459", func() {
 		etcdMainPod = plainPod.DeepCopy()
 		etcdMainPod.Name = "1-pod"
 		etcdMainPod.Labels["name"] = "etcd"
-		etcdMainPod.Labels["instance"] = "etcd-main"
+		etcdMainPod.Labels["app.kubernetes.io/part-of"] = "etcd-main"
 
 		etcdEventsPod = plainPod.DeepCopy()
 		etcdEventsPod.Name = "etcd-events"
 		etcdEventsPod.Labels["name"] = "etcd"
-		etcdEventsPod.Labels["instance"] = "etcd-events"
+		etcdEventsPod.Labels["app.kubernetes.io/part-of"] = "etcd-events"
 
 		fooPod = plainPod.DeepCopy()
 		fooPod.Name = "foo"
@@ -153,8 +153,8 @@ var _ = Describe("#242459", func() {
 	It("should fail when etcd pods cannot be found", func() {
 		Expect(fakeClient.Create(ctx, Node)).To(Succeed())
 		Expect(fakeClient.Create(ctx, fooPod)).To(Succeed())
-		mainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
-		eventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
+		mainSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
+		eventsSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
 		fakePodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
 		r := &rules.Rule242459{
 			Logger:             testLogger,
@@ -190,8 +190,8 @@ var _ = Describe("#242459", func() {
 				Client:             fakeClient,
 				Namespace:          Namespace,
 				PodContext:         fakePodContext,
-				ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"instance": "etcd-main"}),
-				ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"instance": "etcd-events"}),
+				ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"}),
+				ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"}),
 			}
 
 			ruleResult, err := r.Run(ctx)
