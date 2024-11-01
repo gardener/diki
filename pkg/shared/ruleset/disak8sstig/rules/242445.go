@@ -28,14 +28,16 @@ import (
 var _ rule.Rule = &Rule242445{}
 
 type Rule242445 struct {
-	InstanceID         string
-	Client             client.Client
-	Namespace          string
-	PodContext         pod.PodContext
-	ETCDMainSelector   labels.Selector
-	ETCDEventsSelector labels.Selector
-	Options            *option.FileOwnerOptions
-	Logger             provider.Logger
+	InstanceID                   string
+	Client                       client.Client
+	Namespace                    string
+	PodContext                   pod.PodContext
+	ETCDMainSelector             labels.Selector
+	ETCDMainNewVersionSelector   labels.Selector
+	ETCDEventsSelector           labels.Selector
+	ETCDEventsNewVersionSelector labels.Selector
+	Options                      *option.FileOwnerOptions
+	Logger                       provider.Logger
 }
 
 func (r *Rule242445) ID() string {
@@ -70,6 +72,14 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	if r.ETCDEventsSelector != nil {
 		etcdEventsSelector = r.ETCDEventsSelector
+	}
+
+	if r.ETCDMainNewVersionSelector != nil {
+		etcdMainNewVersionSelector = r.ETCDMainSelector
+	}
+
+	if r.ETCDEventsNewVersionSelector != nil {
+		etcdEventsNewVersionSelector = r.ETCDEventsSelector
 	}
 
 	target := rule.NewTarget()

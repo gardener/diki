@@ -49,11 +49,13 @@ func (r *Rule242451) Name() string {
 
 func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
-		checkResults       []rule.CheckResult
-		options            option.FileOwnerOptions
-		etcdMainSelector   = labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-main"})
-		etcdEventsSelector = labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-events"})
-		deploymentNames    = []string{"virtual-garden-kube-apiserver", "virtual-garden-kube-controller-manager"}
+		checkResults                 []rule.CheckResult
+		options                      option.FileOwnerOptions
+		etcdMainSelector             = labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
+		etcdMainNewVersionSelector   = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "virtual-garden-etcd-main"})
+		etcdEventsSelector           = labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
+		etcdEventsNewVersionSelector = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "virtual-garden-etcd-events"})
+		deploymentNames              = []string{"virtual-garden-kube-apiserver", "virtual-garden-kube-controller-manager"}
 	)
 
 	if r.Options != nil {
@@ -72,12 +74,13 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	var (
-		checkPods    []corev1.Pod
-		podSelectors = []labels.Selector{etcdMainSelector, etcdEventsSelector}
+		checkPods              []corev1.Pod
+		podSelectors           = []labels.Selector{etcdMainSelector, etcdEventsSelector}
+		podNewVersionSelectors = []labels.Selector{etcdMainNewVersionSelector, etcdEventsNewVersionSelector}
 	)
 
 	for _, podSelector := range podSelectors {
-		var pods []corev1.Pod
+		pods := []corev1.Pod{}
 		for _, p := range allPods {
 			if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
 				pods = append(pods, p)
@@ -85,11 +88,28 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		if len(pods) == 0 {
-			checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", rule.NewTarget("namespace", r.Namespace, "selector", podSelector.String())))
 			continue
 		}
 
 		checkPods = append(checkPods, pods...)
+	}
+
+	if len(checkPods) == 0 {
+		for _, podSelector := range podNewVersionSelectors {
+			pods := []corev1.Pod{}
+			for _, p := range allPods {
+				if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
+					pods = append(pods, p)
+				}
+			}
+
+			if len(pods) == 0 {
+				checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", rule.NewTarget("namespace", r.Namespace, "selector", podSelector.String())))
+				continue
+			}
+
+			checkPods = append(checkPods, pods...)
+		}
 	}
 
 	for _, deploymentName := range deploymentNames {
