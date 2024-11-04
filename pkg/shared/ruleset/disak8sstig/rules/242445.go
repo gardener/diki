@@ -28,16 +28,12 @@ import (
 var _ rule.Rule = &Rule242445{}
 
 type Rule242445 struct {
-	InstanceID                   string
-	Client                       client.Client
-	Namespace                    string
-	PodContext                   pod.PodContext
-	ETCDMainSelector             labels.Selector
-	ETCDMainNewVersionSelector   labels.Selector
-	ETCDEventsSelector           labels.Selector
-	ETCDEventsNewVersionSelector labels.Selector
-	Options                      *option.FileOwnerOptions
-	Logger                       provider.Logger
+	InstanceID string
+	Client     client.Client
+	Namespace  string
+	PodContext pod.PodContext
+	Options    *option.FileOwnerOptions
+	Logger     provider.Logger
 }
 
 func (r *Rule242445) ID() string {
@@ -50,11 +46,15 @@ func (r *Rule242445) Name() string {
 
 func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 	var checkResults []rule.CheckResult
-	etcdMainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
-	etcdMainNewVersionSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
-	etcdEventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
-	etcdEventsNewVersionSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
-	options := option.FileOwnerOptions{}
+	// TODO: Drop support for "instance" etcd label in a future release
+	// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
+	etcdMainOldSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
+	etcdMainSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
+	// TODO: Drop support for "instance" etcd label in a future release
+	// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
+	etcdEventsOldSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
+	etcdEventsSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
+	var options option.FileOwnerOptions
 
 	if r.Options != nil {
 		options = *r.Options
@@ -66,32 +66,20 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 		options.ExpectedFileOwner.Groups = []string{"0"}
 	}
 
-	if r.ETCDMainSelector != nil {
-		etcdMainSelector = r.ETCDMainSelector
-	}
-
-	if r.ETCDEventsSelector != nil {
-		etcdEventsSelector = r.ETCDEventsSelector
-	}
-
-	if r.ETCDMainNewVersionSelector != nil {
-		etcdMainNewVersionSelector = r.ETCDMainSelector
-	}
-
-	if r.ETCDEventsNewVersionSelector != nil {
-		etcdEventsNewVersionSelector = r.ETCDEventsSelector
-	}
-
 	target := rule.NewTarget()
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("namespace", r.Namespace, "kind", "podList"))), nil
 	}
-	podsSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector}
-	podsNewVersionSelectors := []labels.Selector{etcdMainNewVersionSelector, etcdEventsNewVersionSelector}
+	// TODO: Drop support for "instance" etcd label in a future release
+	// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
+	podOldSelectors := []labels.Selector{etcdMainOldSelector, etcdEventsOldSelector}
+	podSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector}
 	var checkPods []corev1.Pod
 
-	for _, podSelector := range podSelectors {
+	var oldSelectorCheckResults []rule.CheckResult
+
+	for _, podSelector := range podOldSelectors {
 		var pods []corev1.Pod
 		for _, p := range allPods {
 			if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
@@ -100,6 +88,7 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		if len(pods) == 0 {
+			oldSelectorCheckResults = append(oldSelectorCheckResults, rule.ErroredCheckResult("pods not found", target.With("namespace", r.Namespace, "selector", podSelector.String())))
 			continue
 		}
 
@@ -107,7 +96,7 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if len(checkPods) == 0 {
-		for _, podSelector := range podsNewVersionSelectors {
+		for _, podSelector := range podSelectors {
 			pods := []corev1.Pod{}
 			for _, p := range allPods {
 				if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
@@ -122,6 +111,8 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 
 			checkPods = append(checkPods, pods...)
 		}
+	} else {
+		checkResults = append(checkResults, oldSelectorCheckResults...)
 	}
 
 	if len(checkPods) == 0 {

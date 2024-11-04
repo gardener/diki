@@ -47,13 +47,17 @@ func (r *Rule242466) Name() string {
 
 func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
-		checkResults                 []rule.CheckResult
-		expectedFilePermissionsMax   = "644"
-		etcdMainSelector             = labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-main"})
-		etcdMainNewVersionSelector   = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "virtual-garden-etcd-main"})
-		etcdEventsSelector           = labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-events"})
-		etcdEventsNewVersionSelector = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "virtual-garden-etcd-events"})
-		deploymentNames              = []string{"virtual-garden-kube-apiserver", "virtual-garden-kube-controller-manager"}
+		checkResults               []rule.CheckResult
+		expectedFilePermissionsMax = "644"
+		// TODO: Drop support for "instance" etcd label in a future release
+		// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
+		etcdMainOldSelector = labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-main"})
+		etcdMainSelector    = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "virtual-garden-etcd-main"})
+		// TODO: Drop support for "instance" etcd label in a future release
+		// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
+		etcdEventsOldSelector = labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-events"})
+		etcdEventsSelector    = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "virtual-garden-etcd-events"})
+		deploymentNames       = []string{"virtual-garden-kube-apiserver", "virtual-garden-kube-controller-manager"}
 	)
 
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
@@ -62,12 +66,16 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	var (
-		checkPods              []corev1.Pod
-		podSelectors           = []labels.Selector{etcdMainSelector, etcdEventsSelector}
-		podNewVersionSelectors = []labels.Selector{etcdMainNewVersionSelector, etcdEventsNewVersionSelector}
+		checkPods []corev1.Pod
+		// TODO: Drop support for "instance" etcd label in a future release
+		// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
+		podOldSelectors = []labels.Selector{etcdMainOldSelector, etcdEventsOldSelector}
+		podSelectors    = []labels.Selector{etcdMainSelector, etcdEventsSelector}
 	)
 
-	for _, podSelector := range podSelectors {
+	oldSelectorCheckResults := []rule.CheckResult{}
+
+	for _, podSelector := range podOldSelectors {
 		var pods []corev1.Pod
 		for _, p := range allPods {
 			if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
@@ -76,6 +84,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		if len(pods) == 0 {
+			oldSelectorCheckResults = append(oldSelectorCheckResults, rule.ErroredCheckResult("pods not found", rule.NewTarget("namespace", r.Namespace, "selector", podSelector.String())))
 			continue
 		}
 
@@ -83,7 +92,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if len(checkPods) == 0 {
-		for _, podSelector := range podNewVersionSelectors {
+		for _, podSelector := range podSelectors {
 			pods := []corev1.Pod{}
 			for _, p := range allPods {
 				if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
@@ -98,6 +107,8 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 
 			checkPods = append(checkPods, pods...)
 		}
+	} else {
+		checkResults = append(checkResults, oldSelectorCheckResults...)
 	}
 
 	for _, deploymentName := range deploymentNames {

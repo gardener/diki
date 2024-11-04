@@ -157,13 +157,11 @@ var _ = Describe("#242459", func() {
 		eventsSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
 		fakePodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
 		r := &rules.Rule242459{
-			Logger:             testLogger,
-			InstanceID:         instanceID,
-			Client:             fakeClient,
-			Namespace:          Namespace,
-			PodContext:         fakePodContext,
-			ETCDMainSelector:   mainSelector,
-			ETCDEventsSelector: eventsSelector,
+			Logger:     testLogger,
+			InstanceID: instanceID,
+			Client:     fakeClient,
+			Namespace:  Namespace,
+			PodContext: fakePodContext,
 		}
 
 		ruleResult, err := r.Run(ctx)
@@ -185,13 +183,11 @@ var _ = Describe("#242459", func() {
 
 			fakePodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
 			r := &rules.Rule242459{
-				Logger:             testLogger,
-				InstanceID:         instanceID,
-				Client:             fakeClient,
-				Namespace:          Namespace,
-				PodContext:         fakePodContext,
-				ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"}),
-				ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"}),
+				Logger:     testLogger,
+				InstanceID: instanceID,
+				Client:     fakeClient,
+				Namespace:  Namespace,
+				PodContext: fakePodContext,
 			}
 
 			ruleResult, err := r.Run(ctx)

@@ -51,15 +51,19 @@ func (r *Rule242467) Name() string {
 
 func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
-		checkResults                 []rule.CheckResult
-		expectedFilePermissionsMax   = "640"
-		etcdMainSelector             = labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
-		etcdMainNewVersionSelector   = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
-		etcdEventsSelector           = labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
-		etcdEventsNewVersionSelector = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
-		kubeProxySelector            = labels.SelectorFromSet(labels.Set{"role": "proxy"})
-		deploymentNames              = []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
-		nodeLabels                   = []string{"worker.gardener.cloud/pool"}
+		checkResults               []rule.CheckResult
+		expectedFilePermissionsMax = "640"
+		// TODO: Drop support for "instance" etcd label in a future release
+		// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
+		etcdMainOldSelector = labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
+		etcdMainSelector    = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
+		// TODO: Drop support for "instance" etcd label in a future release
+		// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
+		etcdEventsOldSelector = labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
+		etcdEventsSelector    = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
+		kubeProxySelector     = labels.SelectorFromSet(labels.Set{"role": "proxy"})
+		deploymentNames       = []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
+		nodeLabels            = []string{"worker.gardener.cloud/pool"}
 	)
 
 	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
@@ -75,12 +79,16 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList")))
 	} else {
 		var (
-			checkPods              []corev1.Pod
-			podSelectors           = []labels.Selector{etcdMainSelector, etcdEventsSelector}
-			podNewVersionSelectors = []labels.Selector{etcdMainNewVersionSelector, etcdEventsNewVersionSelector}
+			checkPods []corev1.Pod
+			// TODO: Drop support for "instance" etcd label in a future release
+			// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
+			podOldSelectors = []labels.Selector{etcdMainOldSelector, etcdEventsOldSelector}
+			podSelectors    = []labels.Selector{etcdMainSelector, etcdEventsSelector}
 		)
 
-		for _, podSelector := range podSelectors {
+		oldSelectorCheckResults := []rule.CheckResult{}
+
+		for _, podSelector := range podOldSelectors {
 			pods := []corev1.Pod{}
 			for _, p := range allSeedPods {
 				if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.ControlPlaneNamespace {
@@ -89,6 +97,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 			}
 
 			if len(pods) == 0 {
+				oldSelectorCheckResults = append(oldSelectorCheckResults, rule.ErroredCheckResult("pods not found", seedTarget.With("namespace", r.ControlPlaneNamespace, "selector", podSelector.String())))
 				continue
 			}
 
@@ -96,7 +105,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		if len(checkPods) == 0 {
-			for _, podSelector := range podNewVersionSelectors {
+			for _, podSelector := range podSelectors {
 				pods := []corev1.Pod{}
 				for _, p := range allSeedPods {
 					if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.ControlPlaneNamespace {
@@ -111,6 +120,8 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 
 				checkPods = append(checkPods, pods...)
 			}
+		} else {
+			checkResults = append(checkResults, oldSelectorCheckResults...)
 		}
 
 		for _, deploymentName := range deploymentNames {
@@ -178,7 +189,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, checkResults...), nil
 	}
 
-	var pods []corev1.Pod
+	pods := []corev1.Pod{}
 	for _, p := range allShootPods {
 		if kubeProxySelector.Matches(labels.Set(p.Labels)) {
 			pods = append(pods, p)
