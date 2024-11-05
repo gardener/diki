@@ -53,11 +53,11 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 		options      option.FileOwnerOptions
 		// TODO: Drop support for "instance" etcd label in a future release
 		// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
-		etcdMainOldSelector = labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
+		etcdMainOldSelector = labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-main"})
 		etcdMainSelector    = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "virtual-garden-etcd-main"})
 		// TODO: Drop support for "instance" etcd label in a future release
 		// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
-		etcdEventsOldSelector = labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
+		etcdEventsOldSelector = labels.SelectorFromSet(labels.Set{"instance": "virtual-garden-etcd-events"})
 		etcdEventsSelector    = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "virtual-garden-etcd-events"})
 		deploymentNames       = []string{"virtual-garden-kube-apiserver", "virtual-garden-kube-controller-manager"}
 	)
@@ -78,9 +78,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	var (
-		checkPods []corev1.Pod
-		// TODO: Drop support for "instance" etcd label in a future release
-		// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
+		checkPods       []corev1.Pod
 		podOldSelectors = []labels.Selector{etcdMainOldSelector, etcdEventsOldSelector}
 		podSelectors    = []labels.Selector{etcdMainSelector, etcdEventsSelector}
 	)

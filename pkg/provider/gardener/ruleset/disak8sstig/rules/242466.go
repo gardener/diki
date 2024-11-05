@@ -79,9 +79,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList")))
 	} else {
 		var (
-			checkPods []corev1.Pod
-			// TODO: Drop support for "instance" etcd label in a future release
-			// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
+			checkPods       []corev1.Pod
 			podOldSelectors = []labels.Selector{etcdMainOldSelector, etcdEventsOldSelector}
 			podSelectors    = []labels.Selector{etcdMainSelector, etcdEventsSelector}
 		)
