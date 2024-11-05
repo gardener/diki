@@ -27,11 +27,13 @@ import (
 var _ rule.Rule = &Rule242459{}
 
 type Rule242459 struct {
-	InstanceID string
-	Client     client.Client
-	Namespace  string
-	PodContext pod.PodContext
-	Logger     provider.Logger
+	InstanceID         string
+	Client             client.Client
+	Namespace          string
+	PodContext         pod.PodContext
+	Logger             provider.Logger
+	ETCDMainSelector   labels.Selector
+	ETCDEventsSelector labels.Selector
 }
 
 func (r *Rule242459) ID() string {
@@ -53,6 +55,14 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 	etcdEventsOldSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
 	etcdEventsSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
 
+	if r.ETCDMainSelector != nil {
+		etcdMainSelector = r.ETCDMainSelector
+	}
+
+	if r.ETCDEventsSelector != nil {
+		etcdEventsSelector = r.ETCDEventsSelector
+	}
+
 	target := rule.NewTarget()
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
@@ -66,7 +76,7 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 	var oldSelectorCheckResults []rule.CheckResult
 
 	for _, podSelector := range checkOldPodSelectors {
-		pods := []corev1.Pod{}
+		var pods = []corev1.Pod{}
 		for _, p := range allPods {
 			if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
 				pods = append(pods, p)
@@ -83,7 +93,7 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	if len(checkPods) == 0 {
 		for _, podSelector := range checkPodSelectors {
-			pods := []corev1.Pod{}
+			var pods = []corev1.Pod{}
 			for _, p := range allPods {
 				if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
 					pods = append(pods, p)

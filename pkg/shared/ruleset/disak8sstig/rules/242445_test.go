@@ -70,6 +70,8 @@ var _ = Describe("#242445", func() {
 		fooPod         *corev1.Pod
 		dikiPod        *corev1.Pod
 		ctx            = context.TODO()
+		mainSelector   = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
+		eventsSelector = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
 	)
 
 	BeforeEach(func() {
@@ -154,15 +156,15 @@ var _ = Describe("#242445", func() {
 	It("should fail when etcd pods cannot be found", func() {
 		Expect(fakeClient.Create(ctx, Node)).To(Succeed())
 		Expect(fakeClient.Create(ctx, fooPod)).To(Succeed())
-		mainSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
-		eventsSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
 		fakePodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
 		r := &rules.Rule242445{
-			Logger:     testLogger,
-			InstanceID: instanceID,
-			Client:     fakeClient,
-			Namespace:  Namespace,
-			PodContext: fakePodContext,
+			Logger:             testLogger,
+			InstanceID:         instanceID,
+			Client:             fakeClient,
+			Namespace:          Namespace,
+			PodContext:         fakePodContext,
+			ETCDMainSelector:   mainSelector,
+			ETCDEventsSelector: eventsSelector,
 		}
 
 		ruleResult, err := r.Run(ctx)
@@ -196,12 +198,14 @@ var _ = Describe("#242445", func() {
 
 			fakePodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
 			r := &rules.Rule242445{
-				Logger:     testLogger,
-				InstanceID: instanceID,
-				Client:     fakeClient,
-				Namespace:  Namespace,
-				PodContext: fakePodContext,
-				Options:    options,
+				Logger:             testLogger,
+				InstanceID:         instanceID,
+				Client:             fakeClient,
+				Namespace:          Namespace,
+				PodContext:         fakePodContext,
+				Options:            options,
+				ETCDMainSelector:   mainSelector,
+				ETCDEventsSelector: eventsSelector,
 			}
 
 			ruleResult, err := r.Run(ctx)
@@ -237,12 +241,14 @@ var _ = Describe("#242445", func() {
 
 			fakePodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
 			r := &rules.Rule242445{
-				Logger:     testLogger,
-				InstanceID: instanceID,
-				Client:     fakeClient,
-				Namespace:  Namespace,
-				PodContext: fakePodContext,
-				Options:    options,
+				Logger:             testLogger,
+				InstanceID:         instanceID,
+				Client:             fakeClient,
+				Namespace:          Namespace,
+				PodContext:         fakePodContext,
+				Options:            options,
+				ETCDMainSelector:   mainSelector,
+				ETCDEventsSelector: eventsSelector,
 			}
 
 			ruleResult, err := r.Run(ctx)

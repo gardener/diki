@@ -28,12 +28,14 @@ import (
 var _ rule.Rule = &Rule242445{}
 
 type Rule242445 struct {
-	InstanceID string
-	Client     client.Client
-	Namespace  string
-	PodContext pod.PodContext
-	Options    *option.FileOwnerOptions
-	Logger     provider.Logger
+	InstanceID         string
+	Client             client.Client
+	Namespace          string
+	PodContext         pod.PodContext
+	ETCDMainSelector   labels.Selector
+	ETCDEventsSelector labels.Selector
+	Options            *option.FileOwnerOptions
+	Logger             provider.Logger
 }
 
 func (r *Rule242445) ID() string {
@@ -66,6 +68,14 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 		options.ExpectedFileOwner.Groups = []string{"0"}
 	}
 
+	if r.ETCDMainSelector != nil {
+		etcdMainSelector = r.ETCDMainSelector
+	}
+
+	if r.ETCDEventsSelector != nil {
+		etcdEventsSelector = r.ETCDEventsSelector
+	}
+
 	target := rule.NewTarget()
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
@@ -96,7 +106,7 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	if len(checkPods) == 0 {
 		for _, podSelector := range podSelectors {
-			pods := []corev1.Pod{}
+			var pods = []corev1.Pod{}
 			for _, p := range allPods {
 				if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
 					pods = append(pods, p)

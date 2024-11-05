@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/config"
@@ -444,12 +445,14 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		retry.New(
 			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242445)),
 			retry.WithBaseRule(&sharedrules.Rule242445{
-				Logger:     r.Logger().With("rule_id", sharedrules.ID242445),
-				InstanceID: r.instanceID,
-				Client:     runtimeClient,
-				Namespace:  ns,
-				PodContext: runtimePodContext,
-				Options:    opts242445,
+				Logger:             r.Logger().With("rule_id", sharedrules.ID242445),
+				InstanceID:         r.instanceID,
+				Client:             runtimeClient,
+				Namespace:          ns,
+				PodContext:         runtimePodContext,
+				ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": etcdMain}),
+				ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": etcdEvents}),
+				Options:            opts242445,
 			}),
 			retry.WithRetryCondition(rcFileChecks),
 			retry.WithMaxRetries(*r.args.MaxRetries),
@@ -544,11 +547,13 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		retry.New(
 			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242459)),
 			retry.WithBaseRule(&sharedrules.Rule242459{
-				Logger:     r.Logger().With("rule_id", sharedrules.ID242459),
-				InstanceID: r.instanceID,
-				Client:     runtimeClient,
-				Namespace:  ns,
-				PodContext: runtimePodContext,
+				Logger:             r.Logger().With("rule_id", sharedrules.ID242459),
+				InstanceID:         r.instanceID,
+				Client:             runtimeClient,
+				Namespace:          ns,
+				ETCDMainSelector:   labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": etcdMain}),
+				ETCDEventsSelector: labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": etcdEvents}),
+				PodContext:         runtimePodContext,
 			}),
 			retry.WithRetryCondition(rcFileChecks),
 			retry.WithMaxRetries(*r.args.MaxRetries),
