@@ -115,28 +115,7 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if len(checkPods) == 0 {
-<<<<<<< HEAD
-=======
-		for _, podSelector := range podsNewVersionSelectors {
-			pods := []corev1.Pod{}
-			for _, p := range allPods {
-				if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
-					pods = append(pods, p)
-				}
-			}
-
-			if len(pods) == 0 {
-				checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", target.With("namespace", r.Namespace, "selector", podSelector.String())))
-				continue
-			}
-
-			checkPods = append(checkPods, pods...)
-		}
-	}
-
-	if len(checkPods) == 0 {
 		return rule.Result(r, checkResults...), nil
->>>>>>> c4daca8 (Refactor label matching for ETCD pods)
 	}
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
