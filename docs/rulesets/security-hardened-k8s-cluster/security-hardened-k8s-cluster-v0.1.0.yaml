@@ -9,37 +9,37 @@ ruleset:
 rules:
 - id: 2000
   name: "Ingress and egress traffic must be restricted by default."
-  description: "This rule follows the requirements from Kyverno best practices policy [Add Network Policy](https://release-1-12-0.kyverno.io/policies/best-practices/add-network-policy/add-network-policy/)."
+  description: "This rule follows the requirements from Kyverno best practices policy [Add Network Policy](https://github.com/kyverno/policies/tree/release-1.12/best-practices/add-network-policy/add-network-policy.yaml)."
   severity: "HIGH"
 - id: 2001
   name: "Containers must be forbidden to escalate privileges."
-  description: "This rule follows the requirements from Kyverno pod security policy [Disallow Privilege Escalation](https://release-1-12-0.kyverno.io/policies/pod-security/restricted/disallow-privilege-escalation/disallow-privilege-escalation/)."
+  description: "This rule follows the requirements from Kyverno pod security policy [Disallow Privilege Escalation](https://github.com/kyverno/policies/tree/release-1.12/pod-security/restricted/disallow-privilege-escalation/disallow-privilege-escalation.yaml)."
   severity: "HIGH"
 - id: 2002
   name: "Storage Classes should have a \"Delete\" reclaim policy."
-  description: "This rule follows the requirements from Kyverno policy [Restrict StorageClass](https://release-1-12-0.kyverno.io/policies/other/restrict-storageclass/restrict-storageclass/)."
+  description: "This rule follows the requirements from Kyverno policy [Restrict StorageClass](https://github.com/kyverno/policies/tree/release-1.12/other/restrict-storageclass/restrict-storageclass.yaml)."
   severity: "MEDIUM"
 - id: 2003
   name: "Pods should use only allowed volume types."
-  description: "This rule follows the requirements from Kyverno pod security policy [Restrict Volume Type](https://release-1-12-0.kyverno.io/policies/pod-security/restricted/restrict-volume-types/restrict-volume-types/)."
+  description: "This rule follows the requirements from Kyverno pod security policy [Restrict Volume Type](https://github.com/kyverno/policies/tree/release-1.12/pod-security/restricted/restrict-volume-types/restrict-volume-types.yaml)."
   severity: "MEDIUM"
 - id: 2004
   name: "Limit the Services of type NodePort."
-  description: "This rule follows the requirements from Kyverno best practices policy [Disallow NodePort](https://release-1-12-0.kyverno.io/policies/best-practices/restrict-node-port/restrict-node-port/)."
+  description: "This rule follows the requirements from Kyverno best practices policy [Disallow NodePort](https://github.com/kyverno/policies/tree/release-1.12/best-practices/restrict-node-port/restrict-node-port.yaml)."
   severity: "MEDIUM"
 - id: 2005
   name: "Container images must come from trusted repositories."
-  description: "This rule follows the requirements from Kyverno policy [Allowed Image Repositories](https://release-1-12-0.kyverno.io/policies/other/allowed-image-repos/allowed-image-repos/)."
+  description: "This rule follows the requirements from Kyverno policy [Allowed Image Repositories](https://github.com/kyverno/policies/tree/release-1.12/other/allowed-image-repos/allowed-image-repos.yaml)."
   severity: "HIGH"
 - id: 2006
   name: "Limit the use of wildcards in RBAC resources."
-  description: "This rule follows the requirements from Kyverno policy [Restrict Wildcards in Resources](https://release-1-12-0.kyverno.io/policies/other/restrict-wildcard-resources/restrict-wildcard-resources/)."
+  description: "This rule follows the requirements from Kyverno policy [Restrict Wildcards in Resources](https://github.com/kyverno/policies/tree/release-1.12/other/restrict-wildcard-resources/restrict-wildcard-resources.yaml)."
   severity: "MEDIUM"
 - id: 2007
   name: "Limit the use of wildcards in RBAC verbs."
-  description: "This rule follows the requirements from Kyverno policy [Restrict Wildcard in Verbs](https://release-1-12-0.kyverno.io/policies/other/restrict-wildcard-verbs/restrict-wildcard-verbs/)."
+  description: "This rule follows the requirements from Kyverno policy [Restrict Wildcard in Verbs](https://github.com/kyverno/policies/tree/release-1.12/other/restrict-wildcard-verbs/restrict-wildcard-verbs.yaml)."
   severity: "MEDIUM"
 - id: 2008
   name: "Pods must not be allowed to mount host directories."
-  description: "This rule follows the requirements from Kyverno pod security policy [Disallow hostPath](https://release-1-12-0.kyverno.io/policies/pod-security/baseline/disallow-host-path/disallow-host-path/)."
+  description: "This rule follows the requirements from Kyverno pod security policy [Disallow hostPath](https://github.com/kyverno/policies/tree/release-1.12/pod-security/baseline/disallow-host-path/disallow-host-path.yaml)."
   severity: "HIGH"
