@@ -129,21 +129,13 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	allShootPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList")))
-		return rule.RuleResult{
-			RuleID:       r.ID(),
-			RuleName:     r.Name(),
-			CheckResults: checkResults,
-		}, nil
+		return rule.Result(r, checkResults...), nil
 	}
 
 	shootNodes, err := kubeutils.GetNodes(ctx, r.ClusterClient, 300)
 	if err != nil {
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "nodeList")))
-		return rule.RuleResult{
-			RuleID:       r.ID(),
-			RuleName:     r.Name(),
-			CheckResults: checkResults,
-		}, nil
+		return rule.Result(r, checkResults...), nil
 	}
 	shootNodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allShootPods, shootNodes)
 
@@ -163,11 +155,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	// kube-proxy check
 	if r.Options != nil && r.Options.KubeProxyDisabled {
 		checkResults = append(checkResults, rule.AcceptedCheckResult("kube-proxy check is skipped.", shootTarget))
-		return rule.RuleResult{
-			RuleID:       r.ID(),
-			RuleName:     r.Name(),
-			CheckResults: checkResults,
-		}, nil
+		return rule.Result(r, checkResults...), nil
 	}
 
 	var pods []corev1.Pod
@@ -189,11 +177,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 	}
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }
 
 func (r *Rule242467) checkPods(

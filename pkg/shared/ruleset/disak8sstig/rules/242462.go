@@ -48,25 +48,25 @@ func (r *Rule242462) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	optSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, option)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	if len(optSlice) == 0 {
-		return rule.SingleCheckResult(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has not been set.", option), target)), nil
+		return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has not been set.", option), target)), nil
 	}
 
 	if len(optSlice) > 1 {
-		return rule.SingleCheckResult(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", option), target)), nil
+		return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", option), target)), nil
 	}
 
 	auditLogMaxSize, err := strconv.ParseInt(optSlice[0], 10, 0)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	if auditLogMaxSize < 100 {
-		return rule.SingleCheckResult(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", option), target)), nil
+		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", option), target)), nil
 	}
 
-	return rule.SingleCheckResult(r, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", option), target)), nil
+	return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", option), target)), nil
 }

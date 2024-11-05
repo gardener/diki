@@ -68,7 +68,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
 	}
 
 	var (
@@ -108,16 +108,12 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if len(checkPods) == 0 {
-		return rule.RuleResult{
-			RuleID:       r.ID(),
-			RuleName:     r.Name(),
-			CheckResults: checkResults,
-		}, nil
+		return rule.Result(r, checkResults...), nil
 	}
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "nodeList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "nodeList"))), nil
 	}
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
 	groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(checkPods, nodesAllocatablePods, rule.NewTarget())
@@ -133,11 +129,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 			r.checkPods(ctx, pods, nodeName, image.String(), options)...)
 	}
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }
 
 func (r *Rule242451) checkPods(

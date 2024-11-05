@@ -4,12 +4,12 @@
 
 package rule
 
-// SingleCheckResult returns a [RuleResult] containing a single check.
-func SingleCheckResult(r Rule, checkResult CheckResult) RuleResult {
+// Result returns a [RuleResult] containing the passed checks.
+func Result(r Rule, checkResults ...CheckResult) RuleResult {
 	return RuleResult{
 		RuleID:       r.ID(),
 		RuleName:     r.Name(),
-		CheckResults: []CheckResult{checkResult},
+		CheckResults: checkResults,
 	}
 }
 

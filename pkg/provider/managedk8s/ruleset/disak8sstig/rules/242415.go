@@ -39,20 +39,16 @@ func (r *Rule242415) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "podList"))), nil
 	}
 
 	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "namespaceList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "namespaceList"))), nil
 	}
 	checkResults := r.checkPods(pods, namespaces, target)
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }
 
 func (r *Rule242415) checkPods(pods []corev1.Pod, namespaces map[string]corev1.Namespace, clusterTarget rule.Target) []rule.CheckResult {

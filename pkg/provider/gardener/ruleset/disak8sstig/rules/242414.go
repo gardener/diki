@@ -41,35 +41,27 @@ func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {
 	seedTarget := rule.NewTarget("cluster", "seed")
 	shootTarget := rule.NewTarget("cluster", "shoot")
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
 	}
 
 	seedNamespaces, err := kubeutils.GetNamespaces(ctx, r.ControlPlaneClient)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "namespaceList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "namespaceList"))), nil
 	}
 	checkResults := r.checkPods(seedPods, seedNamespaces, seedTarget)
 
 	shootPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.RuleResult{
-			RuleID:       r.ID(),
-			RuleName:     r.Name(),
-			CheckResults: append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList"))),
-		}, nil
+		return rule.Result(r, append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList")))...), nil
 	}
 
 	shootNamespaces, err := kubeutils.GetNamespaces(ctx, r.ClusterClient)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "namespaceList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "namespaceList"))), nil
 	}
 	checkResults = append(checkResults, r.checkPods(shootPods, shootNamespaces, shootTarget)...)
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }
 
 func (r *Rule242414) checkPods(pods []corev1.Pod, namespaces map[string]corev1.Namespace, clusterTarget rule.Target) []rule.CheckResult {

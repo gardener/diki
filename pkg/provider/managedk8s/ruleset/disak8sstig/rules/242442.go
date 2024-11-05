@@ -59,11 +59,11 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	kubeProxyPods, err := kubeutils.GetPods(ctx, r.Client, "", kubeProxySelector, 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
 	}
 
 	if len(kubeProxyPods) == 0 {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget("selector", kubeProxySelector.String()))), nil
+		return rule.Result(r, rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget("selector", kubeProxySelector.String()))), nil
 	}
 
 	for _, pod := range kubeProxyPods {
@@ -76,14 +76,10 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if len(checkResults) == 0 {
-		return rule.SingleCheckResult(r, rule.PassedCheckResult("All found images use current versions.", rule.Target{})), nil
+		return rule.Result(r, rule.PassedCheckResult("All found images use current versions.", rule.Target{})), nil
 	}
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }
 
 func (*Rule242442) checkImages(pods []corev1.Pod, target rule.Target) []rule.CheckResult {

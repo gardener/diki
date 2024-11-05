@@ -56,29 +56,29 @@ func (r *Rule242403) Run(ctx context.Context) (rule.RuleResult, error) {
 	target := rule.NewTarget("kind", "deployment", "name", deploymentName, "namespace", r.Namespace)
 
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(deployment), deployment); err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	volume, found := kubeutils.GetVolumeFromDeployment(deployment, mountName)
 	if !found {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(fmt.Sprintf("Deployment does not contain volume with name: %s.", mountName), target)), nil
+		return rule.Result(r, rule.ErroredCheckResult(fmt.Sprintf("Deployment does not contain volume with name: %s.", mountName), target)), nil
 	}
 
 	auditPolicyByteSlice, err := kubeutils.GetFileDataFromVolume(ctx, r.Client, r.Namespace, volume, fileName)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	auditPolicy := &auditv1.Policy{}
 	if err = yaml.Unmarshal(auditPolicyByteSlice, auditPolicy); err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	if r.isPolicyConformant(auditPolicy) {
-		return rule.SingleCheckResult(r, rule.PassedCheckResult("Audit log policy file is conformant with required specification.", target)), nil
+		return rule.Result(r, rule.PassedCheckResult("Audit log policy file is conformant with required specification.", target)), nil
 	}
 
-	return rule.SingleCheckResult(r, rule.FailedCheckResult("Audit log policy file is not conformant with required specification.", target)), nil
+	return rule.Result(r, rule.FailedCheckResult("Audit log policy file is not conformant with required specification.", target)), nil
 }
 
 func (r *Rule242403) isPolicyConformant(auditPolicy *auditv1.Policy) bool {

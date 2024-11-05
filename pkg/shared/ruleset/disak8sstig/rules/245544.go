@@ -52,7 +52,7 @@ func (r *Rule245544) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	kubeletClientCertificateOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, certOptName)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	switch {
@@ -68,7 +68,7 @@ func (r *Rule245544) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	kubeletClientKeyOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, keyOptName)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	switch {
@@ -82,9 +82,5 @@ func (r *Rule245544) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s set.", keyOptName), target))
 	}
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }

@@ -31,9 +31,9 @@ func (r *simpleRule) Name() string {
 func (r *simpleRule) Run(_ context.Context) (rule.RuleResult, error) {
 	counter++
 	if counter >= 2 {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult("bar", rule.NewTarget())), nil
+		return rule.Result(r, rule.ErroredCheckResult("bar", rule.NewTarget())), nil
 	}
-	return rule.SingleCheckResult(r, rule.ErroredCheckResult("foo", rule.NewTarget())), nil
+	return rule.Result(r, rule.ErroredCheckResult("foo", rule.NewTarget())), nil
 }
 
 var _ = Describe("retryablerule", func() {
@@ -106,27 +106,27 @@ var _ = Describe("retryablerule", func() {
 		It("should create retry condition from a single regex", func() {
 			rc := retry.RetryConditionFromRegex(*fooRegex)
 
-			result := rc(rule.SingleCheckResult(&simpleRule, fooCheckResult))
+			result := rc(rule.Result(&simpleRule, fooCheckResult))
 			Expect(result).To(Equal(true))
 
-			result = rc(rule.SingleCheckResult(&simpleRule, barCheckResult))
+			result = rc(rule.Result(&simpleRule, barCheckResult))
 			Expect(result).To(Equal(false))
 
 			fooCheckResult.Status = rule.Passed
-			result = rc(rule.SingleCheckResult(&simpleRule, fooCheckResult))
+			result = rc(rule.Result(&simpleRule, fooCheckResult))
 			Expect(result).To(Equal(false))
 		})
 		It("should create retry condition from multiple regexes", func() {
 			rc := retry.RetryConditionFromRegex(*fooRegex, *barRegex)
 
-			result := rc(rule.SingleCheckResult(&simpleRule, fooCheckResult))
+			result := rc(rule.Result(&simpleRule, fooCheckResult))
 			Expect(result).To(Equal(true))
 
-			result = rc(rule.SingleCheckResult(&simpleRule, barCheckResult))
+			result = rc(rule.Result(&simpleRule, barCheckResult))
 			Expect(result).To(Equal(true))
 
 			fooCheckResult.Status = rule.Passed
-			result = rc(rule.SingleCheckResult(&simpleRule, fooCheckResult))
+			result = rc(rule.Result(&simpleRule, fooCheckResult))
 			Expect(result).To(Equal(false))
 		})
 	})

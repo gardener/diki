@@ -108,7 +108,7 @@ func (r *Rule242383) Name() string {
 func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
 	allNamespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 	}
 	checkResults := []rule.CheckResult{}
 	systemNamespaces := []string{"default", "kube-public", "kube-node-lease"}
@@ -136,7 +136,7 @@ func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	notDikiPodReq, err := labels.NewRequirement(pod.LabelComplianceRoleKey, selection.NotEquals, []string{pod.LabelComplianceRolePrivPod})
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 	}
 
 	selector := labels.NewSelector().Add(*notDikiPodReq)
@@ -144,7 +144,7 @@ func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
 	for _, namespace := range systemNamespaces {
 		partialMetadata, err := kubeutils.GetAllObjectsMetadata(ctx, r.Client, namespace, selector, 300)
 		if err != nil {
-			return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", namespace, "kind", "allList"))), nil
+			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", namespace, "kind", "allList"))), nil
 		}
 		for _, p := range partialMetadata {
 			target := rule.NewTarget("name", p.Name, "namespace", p.Namespace, "kind", p.Kind)
@@ -181,9 +181,5 @@ func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 	}
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }

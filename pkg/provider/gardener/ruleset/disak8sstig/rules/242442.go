@@ -39,33 +39,29 @@ func (r *Rule242442) Name() string {
 func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 	seedPods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, labels.NewSelector(), 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "seed", "namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "seed", "namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
 	}
 
 	checkResults := r.checkImages("seed", seedPods)
 
 	managedByGardenerReq, err := labels.NewRequirement(resourcesv1alpha1.ManagedBy, selection.Equals, []string{"gardener"})
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 	}
 
 	managedByGardenerSelector := labels.NewSelector().Add(*managedByGardenerReq)
 	shootPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", managedByGardenerSelector, 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "shoot", "kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "shoot", "kind", "podList"))), nil
 	}
 
 	checkResults = append(checkResults, r.checkImages("shoot", shootPods)...)
 
 	if len(checkResults) == 0 {
-		return rule.SingleCheckResult(r, rule.PassedCheckResult("All found images use current versions.", rule.Target{})), nil
+		return rule.Result(r, rule.PassedCheckResult("All found images use current versions.", rule.Target{})), nil
 	}
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }
 
 func (*Rule242442) checkImages(cluster string, pods []corev1.Pod) []rule.CheckResult {

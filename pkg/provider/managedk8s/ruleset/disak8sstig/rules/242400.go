@@ -75,11 +75,11 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "nodeList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "nodeList"))), nil
 	}
 
 	if len(nodes) == 0 {
-		return rule.SingleCheckResult(r, rule.WarningCheckResult("No nodes found.", rule.NewTarget())), nil
+		return rule.Result(r, rule.WarningCheckResult("No nodes found.", rule.NewTarget())), nil
 	}
 
 	// kubelet check
@@ -111,11 +111,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 	// kube-proxy check
 	if r.Options != nil && r.Options.KubeProxyDisabled {
 		checkResults = append(checkResults, rule.AcceptedCheckResult("kube-proxy check is skipped.", rule.NewTarget()))
-		return rule.RuleResult{
-			RuleID:       r.ID(),
-			RuleName:     r.Name(),
-			CheckResults: checkResults,
-		}, nil
+		return rule.Result(r, checkResults...), nil
 	}
 
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
@@ -147,11 +143,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 	}
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }
 
 func (r *Rule242400) checkKubeProxy(
