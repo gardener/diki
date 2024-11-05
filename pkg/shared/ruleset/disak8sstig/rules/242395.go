@@ -32,7 +32,7 @@ func (r *Rule242395) Name() string {
 func (r *Rule242395) Run(ctx context.Context) (rule.RuleResult, error) {
 	podsPartialMetadata, err := kubeutils.GetObjectsMetadata(ctx, r.Client, corev1.SchemeGroupVersion.WithKind("PodList"), "", labels.SelectorFromSet(labels.Set{"k8s-app": "kubernetes-dashboard"}), 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
 	}
 
 	checkResults := []rule.CheckResult{}
@@ -42,7 +42,7 @@ func (r *Rule242395) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if len(checkResults) == 0 {
-		return rule.SingleCheckResult(r, rule.PassedCheckResult("Kubernetes dashboard not installed", rule.NewTarget())), nil
+		return rule.Result(r, rule.PassedCheckResult("Kubernetes dashboard not installed", rule.NewTarget())), nil
 	}
 
 	return rule.RuleResult{

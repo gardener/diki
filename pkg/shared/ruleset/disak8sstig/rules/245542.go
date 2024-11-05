@@ -47,13 +47,13 @@ func (r *Rule245542) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	basicAuthFileOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, optName)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	// empty options are required
 	if len(basicAuthFileOptionSlice) == 0 {
-		return rule.SingleCheckResult(r, rule.PassedCheckResult(fmt.Sprintf("Option %s has not been set.", optName), target)), nil
+		return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Option %s has not been set.", optName), target)), nil
 	}
 
-	return rule.SingleCheckResult(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set.", optName), target)), nil
+	return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set.", optName), target)), nil
 }

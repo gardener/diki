@@ -71,15 +71,15 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	admissionControlConfigFileOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, "admission-control-config-file")
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	if len(admissionControlConfigFileOptionSlice) == 0 {
-		return rule.SingleCheckResult(r, rule.WarningCheckResult("Option admission-control-config-file has not been set.", target)), nil
+		return rule.Result(r, rule.WarningCheckResult("Option admission-control-config-file has not been set.", target)), nil
 	}
 
 	if len(admissionControlConfigFileOptionSlice) > 1 {
-		return rule.SingleCheckResult(r, rule.WarningCheckResult("Option admission-control-config-file has been set more than once in container command.", target)), nil
+		return rule.Result(r, rule.WarningCheckResult("Option admission-control-config-file has been set more than once in container command.", target)), nil
 	}
 
 	kubeAPIDeployment := &appsv1.Deployment{
@@ -89,20 +89,20 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 		},
 	}
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(kubeAPIDeployment), kubeAPIDeployment); err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	volumePath := admissionControlConfigFileOptionSlice[0]
 
 	admissionConfigByteSlice, err := kubeutils.GetVolumeConfigByteSliceByMountPath(ctx, r.Client, kubeAPIDeployment, containerName, volumePath)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	admissionConfig := apiserverv1.AdmissionConfiguration{}
 	_, _, err = serializer.NewCodecFactory(scheme.Scheme).UniversalDeserializer().Decode(admissionConfigByteSlice, nil, &admissionConfig)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	if r.Options == nil {
@@ -123,13 +123,13 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 			if strings.TrimSpace(plugin.Path) != "" {
 				pluginAdmissionConfigByteSlice, err := kubeutils.GetVolumeConfigByteSliceByMountPath(ctx, r.Client, kubeAPIDeployment, "kube-apiserver", plugin.Path)
 				if err != nil {
-					return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+					return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 				}
 
 				pluginConfig := admissionapiv1.PodSecurityConfiguration{}
 				_, _, err = serializer.NewCodecFactory(scheme.Scheme).UniversalDeserializer().Decode(pluginAdmissionConfigByteSlice, nil, &pluginConfig)
 				if err != nil {
-					return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+					return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 				}
 
 				return rule.RuleResult{
@@ -141,7 +141,7 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 	}
 
-	return rule.SingleCheckResult(r, rule.FailedCheckResult("PodSecurity is not configured", rule.NewTarget())), nil
+	return rule.Result(r, rule.FailedCheckResult("PodSecurity is not configured", rule.NewTarget())), nil
 }
 
 func privilegeLevel(privilege string) int {

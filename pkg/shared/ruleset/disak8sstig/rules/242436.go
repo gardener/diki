@@ -52,31 +52,31 @@ func (r *Rule242436) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	disableAdmissionPluginsSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, disableAdmissionPlugins)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	if len(disableAdmissionPluginsSlice) > 1 {
-		return rule.SingleCheckResult(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", disableAdmissionPlugins), target)), nil
+		return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", disableAdmissionPlugins), target)), nil
 	}
 	if len(disableAdmissionPluginsSlice) == 1 && slices.Contains(strings.Split(disableAdmissionPluginsSlice[0], ","), "ValidatingAdmissionWebhook") {
-		return rule.SingleCheckResult(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", disableAdmissionPlugins), target)), nil
+		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", disableAdmissionPlugins), target)), nil
 	}
 
 	enableAdmissionPluginsSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, enableAdmissionPlugins)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	// enable-admission-plugins defaults to allowed value ValidatingAdmissionWebhook
 	// see https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/
 	switch {
 	case len(enableAdmissionPluginsSlice) == 0:
-		return rule.SingleCheckResult(r, rule.PassedCheckResult(fmt.Sprintf("Option %s has not been set.", enableAdmissionPlugins), target)), nil
+		return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Option %s has not been set.", enableAdmissionPlugins), target)), nil
 	case len(enableAdmissionPluginsSlice) > 1:
-		return rule.SingleCheckResult(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", enableAdmissionPlugins), target)), nil
+		return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", enableAdmissionPlugins), target)), nil
 	case slices.Contains(strings.Split(enableAdmissionPluginsSlice[0], ","), "ValidatingAdmissionWebhook"):
-		return rule.SingleCheckResult(r, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", enableAdmissionPlugins), target)), nil
+		return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", enableAdmissionPlugins), target)), nil
 	default:
-		return rule.SingleCheckResult(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", enableAdmissionPlugins), target)), nil
+		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", enableAdmissionPlugins), target)), nil
 	}
 }

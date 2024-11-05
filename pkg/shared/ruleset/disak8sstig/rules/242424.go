@@ -37,11 +37,11 @@ func (r *Rule242424) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "nodeList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "nodeList"))), nil
 	}
 
 	if len(nodes) == 0 {
-		return rule.SingleCheckResult(r, rule.WarningCheckResult("No nodes found.", rule.NewTarget())), nil
+		return rule.Result(r, rule.WarningCheckResult("No nodes found.", rule.NewTarget())), nil
 	}
 
 	const tlsPrivateKeyFileConfigOption = "tlsPrivateKeyFile"

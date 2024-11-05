@@ -47,13 +47,13 @@ func (r *Rule242388) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	insecureBindAddressOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, optName)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	if len(insecureBindAddressOptionSlice) == 0 {
-		return rule.SingleCheckResult(r, rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", optName), target)), nil
+		return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", optName), target)), nil
 	}
 
 	// insecure-bind-address is deprecated but still needed for health checks. ref https://github.com/kubernetes/kubernetes/issues/43784
-	return rule.SingleCheckResult(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set.", optName), target)), nil
+	return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set.", optName), target)), nil
 }

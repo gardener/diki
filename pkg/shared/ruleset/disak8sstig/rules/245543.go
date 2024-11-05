@@ -83,29 +83,29 @@ func (r *Rule245543) Run(ctx context.Context) (rule.RuleResult, error) {
 	target := rule.NewTarget("kind", "deployment", "name", deploymentName, "namespace", r.Namespace)
 
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(deployment), deployment); err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	optSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, option)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	if r.Options == nil {
 		if len(optSlice) == 0 {
-			return rule.SingleCheckResult(r, rule.PassedCheckResult(fmt.Sprintf("Option %s has not been set.", option), target)), nil
+			return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Option %s has not been set.", option), target)), nil
 		}
 
-		return rule.SingleCheckResult(r, rule.FailedCheckResult(fmt.Sprintf("Option %s is set.", option), target)), nil
+		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Option %s is set.", option), target)), nil
 	}
 
 	if len(optSlice) > 1 {
-		return rule.SingleCheckResult(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", option), target)), nil
+		return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", option), target)), nil
 	}
 
 	optionByteSlice, err := kubeutils.GetVolumeConfigByteSliceByMountPath(ctx, r.Client, deployment, containerName, optSlice[0])
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target)), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	optionString := string(optionByteSlice)
@@ -116,7 +116,7 @@ func (r *Rule245543) Run(ctx context.Context) (rule.RuleResult, error) {
 		token[0] = "***"
 
 		if len(token) < 3 {
-			return rule.SingleCheckResult(r, rule.FailedCheckResult("Invalid token.", target)), nil
+			return rule.Result(r, rule.FailedCheckResult("Invalid token.", target)), nil
 		}
 
 		// we append an empty string in the end,
@@ -136,11 +136,11 @@ func (r *Rule245543) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	for _, token := range tokens {
 		if !r.isTokenAccepted([4]string(token)) {
-			return rule.SingleCheckResult(r, rule.FailedCheckResult("Invalid token.", target)), nil
+			return rule.Result(r, rule.FailedCheckResult("Invalid token.", target)), nil
 		}
 	}
 
-	return rule.SingleCheckResult(r, rule.AcceptedCheckResult("All defined tokens are accepted.", target)), nil
+	return rule.Result(r, rule.AcceptedCheckResult("All defined tokens are accepted.", target)), nil
 }
 
 func (r *Rule245543) isTokenAccepted(token [4]string) bool {

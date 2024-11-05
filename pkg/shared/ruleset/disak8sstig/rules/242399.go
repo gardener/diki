@@ -39,16 +39,16 @@ func (r *Rule242399) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	// featureGates.DynamicKubeletConfig removed in v1.26. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
 	if r.KubernetesVersion != nil && versionutils.ConstraintK8sGreaterEqual126.Check(r.KubernetesVersion) {
-		return rule.SingleCheckResult(r, rule.SkippedCheckResult(fmt.Sprintf("Option %s removed in Kubernetes v1.26.", option), rule.NewTarget("details", fmt.Sprintf("Used Kubernetes version %s.", r.KubernetesVersion.String())))), nil
+		return rule.Result(r, rule.SkippedCheckResult(fmt.Sprintf("Option %s removed in Kubernetes v1.26.", option), rule.NewTarget("details", fmt.Sprintf("Used Kubernetes version %s.", r.KubernetesVersion.String())))), nil
 	}
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "nodeList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "nodeList"))), nil
 	}
 
 	if len(nodes) == 0 {
-		return rule.SingleCheckResult(r, rule.WarningCheckResult("No nodes found.", rule.NewTarget())), nil
+		return rule.Result(r, rule.WarningCheckResult("No nodes found.", rule.NewTarget())), nil
 	}
 
 	for _, node := range nodes {

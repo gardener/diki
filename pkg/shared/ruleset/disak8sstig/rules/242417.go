@@ -77,20 +77,20 @@ func (r *Rule242417) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	notDikiPodReq, err := labels.NewRequirement(pod.LabelComplianceRoleKey, selection.NotEquals, []string{pod.LabelComplianceRolePrivPod})
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.CheckResult{Status: rule.Errored, Message: err.Error(), Target: rule.NewTarget()}), nil
+		return rule.Result(r, rule.CheckResult{Status: rule.Errored, Message: err.Error(), Target: rule.NewTarget()}), nil
 	}
 
 	selector := labels.NewSelector().Add(*notDikiPodReq)
 
 	allNamespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 	}
 
 	for _, namespace := range systemNamespaces {
 		podsPartialMetadata, err := kubeutils.GetObjectsMetadata(ctx, r.Client, corev1.SchemeGroupVersion.WithKind("PodList"), namespace, selector, 300)
 		if err != nil {
-			return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", namespace, "kind", "podList"))), nil
+			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", namespace, "kind", "podList"))), nil
 		}
 
 		for _, podPartialMetadata := range podsPartialMetadata {

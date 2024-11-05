@@ -86,7 +86,7 @@ func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
 	target := rule.NewTarget()
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "podList"))), nil
 	}
 
 	pods := []corev1.Pod{}
@@ -97,12 +97,12 @@ func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if len(pods) == 0 {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult("kube-proxy pods not found", target.With("selector", kubeProxySelector.String()))), nil
+		return rule.Result(r, rule.ErroredCheckResult("kube-proxy pods not found", target.With("selector", kubeProxySelector.String()))), nil
 	}
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
-		return rule.SingleCheckResult(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "nodeList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "nodeList"))), nil
 	}
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
 	groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, target)
