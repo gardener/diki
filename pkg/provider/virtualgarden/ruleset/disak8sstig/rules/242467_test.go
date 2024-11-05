@@ -258,6 +258,57 @@ var _ = Describe("#242467", func() {
 		}))
 	})
 
+	//TODO: Remove these describe table test cases once support for the instance labels is deprecated
+	DescribeTable("Run temporary instance label cases",
+		func(includeETCDEventsPod bool, executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
+
+			oldSelectorETCDMainPod := etcdMainPod.DeepCopy()
+			delete(oldSelectorETCDMainPod.Labels, "app.kubernetes.io/part-of")
+			oldSelectorETCDMainPod.Labels["instance"] = "virtual-garden-etcd-main"
+			Expect(fakeClient.Create(ctx, oldSelectorETCDMainPod))
+
+			if includeETCDEventsPod {
+				oldSelectorETCDEventsPod := etcdEventsPod.DeepCopy()
+				delete(oldSelectorETCDEventsPod.Labels, "app.kubernetes.io/part-of")
+				oldSelectorETCDEventsPod.Labels["instance"] = "virtual-garden-etcd-events"
+				Expect(fakeClient.Create(ctx, oldSelectorETCDEventsPod))
+			}
+
+			Expect(fakeClient.Create(ctx, kubeAPIServerPod)).To(Succeed())
+			Expect(fakeClient.Create(ctx, kubeControllerManagerPod)).To(Succeed())
+			Expect(fakeClient.Create(ctx, dikiPod)).To(Succeed())
+
+			fakePodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
+			r := &rules.Rule242467{
+				Logger:     testLogger,
+				InstanceID: instanceID,
+				Client:     fakeClient,
+				Namespace:  Namespace,
+				PodContext: fakePodContext,
+			}
+
+			ruleResult, err := r.Run(ctx)
+
+			Expect(err).To(BeNil())
+			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+		},
+		Entry("should return passed checkResults from ETCD pods with old labels", true,
+			[][]string{{mounts, compliantStats, mounts, compliantStats2, emptyMounts, emptyMounts, emptyMounts}},
+			[][]error{{nil, nil, nil, nil, nil, nil, nil}},
+			[]rule.CheckResult{
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 640")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.key, permissions: 600")),
+			}),
+		Entry("should return correct errored checkResults when old ETCD pods are partially found", false,
+			[][]string{{mounts, compliantStats, emptyMounts, emptyMounts, emptyMounts}},
+			[][]error{{nil, nil, nil, nil, nil}},
+			[]rule.CheckResult{
+				rule.ErroredCheckResult("pods not found", rule.NewTarget("selector", "instance=virtual-garden-etcd-events", "namespace", "foo")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 640")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
+			}))
+
 	DescribeTable("Run cases",
 		func(executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			Expect(fakeClient.Create(ctx, etcdMainPod)).To(Succeed())
