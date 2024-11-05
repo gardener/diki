@@ -114,11 +114,7 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 	for _, plugin := range admissionConfig.Plugins {
 		if plugin.Name == "PodSecurity" {
 			if plugin.Configuration != nil {
-				return rule.RuleResult{
-					RuleID:       r.ID(),
-					RuleName:     r.Name(),
-					CheckResults: r.checkPodSecurityConfiguration(plugin.Configuration),
-				}, nil
+				return rule.Result(r, r.checkPodSecurityConfiguration(plugin.Configuration)...), nil
 			}
 			if strings.TrimSpace(plugin.Path) != "" {
 				pluginAdmissionConfigByteSlice, err := kubeutils.GetVolumeConfigByteSliceByMountPath(ctx, r.Client, kubeAPIDeployment, "kube-apiserver", plugin.Path)
@@ -132,11 +128,7 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 					return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 				}
 
-				return rule.RuleResult{
-					RuleID:       r.ID(),
-					RuleName:     r.Name(),
-					CheckResults: r.checkPrivilegeLevel(pluginConfig),
-				}, nil
+				return rule.Result(r, r.checkPrivilegeLevel(pluginConfig)...), nil
 			}
 		}
 	}

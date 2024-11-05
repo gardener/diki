@@ -88,11 +88,7 @@ func (r *Rule242446) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if len(checkPods) == 0 {
-		return rule.RuleResult{
-			RuleID:       r.ID(),
-			RuleName:     r.Name(),
-			CheckResults: checkResults,
-		}, nil
+		return rule.Result(r, checkResults...), nil
 	}
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
@@ -164,9 +160,5 @@ func (r *Rule242446) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 	}
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }

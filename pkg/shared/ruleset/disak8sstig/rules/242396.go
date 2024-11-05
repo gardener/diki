@@ -104,11 +104,7 @@ func (r *Rule242396) Run(ctx context.Context) (rule.RuleResult, error) {
 			r.checkKubectl(ctx, node.Name, image.String(), constraintK8s))
 	}
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }
 
 func (r *Rule242396) checkKubectl(

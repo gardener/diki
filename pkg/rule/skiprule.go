@@ -41,14 +41,10 @@ func (s *SkipRule) Name() string {
 // Run immediately returns a RuleResult containing
 // a single CheckResult with a predefined status and justification.
 func (s *SkipRule) Run(context.Context) (RuleResult, error) {
-	return RuleResult{
-		RuleID:   s.ID(),
-		RuleName: s.Name(),
-		CheckResults: []CheckResult{
-			{
-				Status:  s.status,
-				Message: s.justification,
-			},
+	return Result(s, []CheckResult{
+		{
+			Status:  s.status,
+			Message: s.justification,
 		},
-	}, nil
+	}...), nil
 }

@@ -61,11 +61,7 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.PassedCheckResult("All found images use current versions.", rule.Target{})), nil
 	}
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }
 
 func (*Rule242442) checkImages(cluster string, pods []corev1.Pod) []rule.CheckResult {

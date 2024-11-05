@@ -235,11 +235,7 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 	}
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }
 
 func (r *Rule242447) getKubeProxyFlagValue(rawCommand, flag string) (string, error) {

@@ -133,9 +133,5 @@ func (r *Rule242393) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults = append(checkResults, rule.PassedCheckResult("SSH daemon inactive (or could not be probed)", nodeTarget))
 	}
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }

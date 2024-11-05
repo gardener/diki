@@ -131,9 +131,5 @@ func (r *Rule242407) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults = append(checkResults, rule.PassedCheckResult("File has expected permissions", detailedTarget))
 	}
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }

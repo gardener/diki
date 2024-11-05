@@ -62,11 +62,7 @@ func (r *Rule242415) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 	checkResults = append(checkResults, r.checkPods(shootPods, shootNamespaces, shootTarget)...)
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }
 
 func (r *Rule242415) checkPods(pods []corev1.Pod, namespaces map[string]corev1.Namespace, clusterTarget rule.Target) []rule.CheckResult {

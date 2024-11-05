@@ -96,11 +96,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if len(checkPods) == 0 {
-		return rule.RuleResult{
-			RuleID:       r.ID(),
-			RuleName:     r.Name(),
-			CheckResults: checkResults,
-		}, nil
+		return rule.Result(r, checkResults...), nil
 	}
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
@@ -121,11 +117,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 			r.checkPods(ctx, pods, nodeName, image.String(), expectedFilePermissionsMax)...)
 	}
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }
 
 func (r *Rule242466) checkPods(

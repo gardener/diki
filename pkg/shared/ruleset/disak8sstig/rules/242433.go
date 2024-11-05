@@ -50,11 +50,7 @@ func (r *Rule242433) Run(ctx context.Context) (rule.RuleResult, error) {
 	checkResults = append(checkResults, r.checkStatefulSet(ctx, etcdMain))
 	checkResults = append(checkResults, r.checkStatefulSet(ctx, etcdEvents))
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }
 
 func (r *Rule242433) checkStatefulSet(ctx context.Context, statefulSetName string) rule.CheckResult {

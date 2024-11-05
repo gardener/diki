@@ -162,12 +162,7 @@ func (r *Rule242453) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 	}
-
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }
 
 func (r *Rule242453) getKubeletFlagValue(rawCommand, flag string) (string, error) {

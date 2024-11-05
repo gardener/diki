@@ -85,11 +85,7 @@ func (r *Rule242404) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults = append(checkResults, checkResult)
 	}
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }
 
 func (r *Rule242404) checkNode(ctx context.Context, node corev1.Node, privPodImage string) rule.CheckResult {

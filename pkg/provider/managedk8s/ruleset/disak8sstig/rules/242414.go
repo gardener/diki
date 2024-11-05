@@ -46,11 +46,7 @@ func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 	checkResults := r.checkPods(pods, namespaces)
 
-	return rule.RuleResult{
-		RuleID:       r.ID(),
-		RuleName:     r.Name(),
-		CheckResults: checkResults,
-	}, nil
+	return rule.Result(r, checkResults...), nil
 }
 
 func (r *Rule242414) checkPods(pods []corev1.Pod, namespaces map[string]corev1.Namespace) []rule.CheckResult {
