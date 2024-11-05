@@ -29,6 +29,10 @@ issues:
       linters:
         - revive
       text: "exported: exported"
+    - path: 'pkg/provider/garden/ruleset/securityhardenedshoot/rules/'
+      linters:
+        - revive
+      text: "exported: exported"
     - path: 'pkg/shared/ruleset/disak8sstig/rules/'
       linters:
         - revive

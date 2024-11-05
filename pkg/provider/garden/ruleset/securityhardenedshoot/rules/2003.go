@@ -37,21 +37,23 @@ func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	var checkResults []rule.CheckResult
-	if shoot.Spec.Kubernetes.Kubelet == nil || shoot.Spec.Kubernetes.Kubelet.ProtectKernelDefaults == nil {
+	switch {
+	case shoot.Spec.Kubernetes.Kubelet == nil || shoot.Spec.Kubernetes.Kubelet.ProtectKernelDefaults == nil:
 		checkResults = append(checkResults, rule.PassedCheckResult("Default kubelet config does not disable kernel protection.", rule.NewTarget()))
-	} else if *shoot.Spec.Kubernetes.Kubelet.ProtectKernelDefaults {
+	case *shoot.Spec.Kubernetes.Kubelet.ProtectKernelDefaults:
 		checkResults = append(checkResults, rule.PassedCheckResult("Default kubelet config enables kernel protection.", rule.NewTarget()))
-	} else {
+	default:
 		checkResults = append(checkResults, rule.FailedCheckResult("Default kubelet config disables kernel protection.", rule.NewTarget()))
 	}
 
 	for _, w := range shoot.Spec.Provider.Workers {
 		workerTarget := rule.NewTarget("worker", w.Name)
-		if w.Kubernetes == nil || w.Kubernetes.Kubelet == nil || w.Kubernetes.Kubelet.ProtectKernelDefaults == nil {
+		switch {
+		case w.Kubernetes == nil || w.Kubernetes.Kubelet == nil || w.Kubernetes.Kubelet.ProtectKernelDefaults == nil:
 			checkResults = append(checkResults, rule.PassedCheckResult("Worker kubelet config does not disable kernel protection.", workerTarget))
-		} else if *w.Kubernetes.Kubelet.ProtectKernelDefaults {
+		case *w.Kubernetes.Kubelet.ProtectKernelDefaults:
 			checkResults = append(checkResults, rule.PassedCheckResult("Worker kubelet config enables kernel protection.", workerTarget))
-		} else {
+		default:
 			checkResults = append(checkResults, rule.FailedCheckResult("Worker kubelet config disables kernel protection.", workerTarget))
 		}
 	}
