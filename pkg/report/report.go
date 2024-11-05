@@ -213,14 +213,13 @@ func getChecks(checkResults []rule.CheckResult, opts *ReportOptions) []Check {
 			check := &Check{
 				Status:  checkResult.Status,
 				Message: checkResult.Message,
-				Targets: []rule.Target{},
 			}
 
-			if checkResult.Target != nil {
+			if len(checkResult.Target) > 0 {
 				check.Targets = append(check.Targets, checkResult.Target)
 			}
 			groupedChecks[key] = check
-		} else if checkResult.Target != nil {
+		} else if len(checkResult.Target) > 0 {
 			check.Targets = append(check.Targets, checkResult.Target)
 		}
 	}
