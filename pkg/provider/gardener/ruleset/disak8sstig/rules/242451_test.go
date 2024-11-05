@@ -564,5 +564,4 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.ErroredCheckResult("could not retrieve kubelet config: bar", rule.NewTarget("cluster", "shoot", "name", "diki-242451-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
 			}),
 	)
-
 })

@@ -32,10 +32,10 @@ type Rule242445 struct {
 	Client             client.Client
 	Namespace          string
 	PodContext         pod.PodContext
-	ETCDMainSelector   labels.Selector
-	ETCDEventsSelector labels.Selector
 	Options            *option.FileOwnerOptions
 	Logger             provider.Logger
+	ETCDMainSelector   labels.Selector
+	ETCDEventsSelector labels.Selector
 }
 
 func (r *Rule242445) ID() string {
