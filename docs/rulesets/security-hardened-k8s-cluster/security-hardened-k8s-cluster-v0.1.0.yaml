@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+ruleset:
+  id: security-hardened-kubernetes-cluster
+  name: "Security Hardened Kubernetes Cluster"
+  version: "v0.1.0"
+rules:
+- id: 2000
+  name: "Ingress and egress traffic must be restricted by default."
+  description: "This rule follows the requirements from Kyverno best practices policy [Add Network Policy](https://release-1-12-0.kyverno.io/policies/best-practices/add-network-policy/add-network-policy/)."
+  severity: "HIGH"
+- id: 2001
+  name: "Containers must be forbidden to escalate privileges."
+  description: "This rule follows the requirements from Kyverno pod security policy [Disallow Privilege Escalation](https://release-1-12-0.kyverno.io/policies/pod-security/restricted/disallow-privilege-escalation/disallow-privilege-escalation/)."
+  severity: "HIGH"
+- id: 2002
+  name: "Storage Classes should have a \"Delete\" reclaim policy."
+  description: "This rule follows the requirements from Kyverno policy [Restrict StorageClass](https://release-1-12-0.kyverno.io/policies/other/restrict-storageclass/restrict-storageclass/)."
+  severity: "MEDIUM"
+- id: 2003
+  name: "Pods should use only allowed volume types."
+  description: "This rule follows the requirements from Kyverno pod security policy [Restrict Volume Type](https://release-1-12-0.kyverno.io/policies/pod-security/restricted/restrict-volume-types/restrict-volume-types/)."
+  severity: "MEDIUM"
+- id: 2004
+  name: "Limit the Services of type NodePort."
+  description: "This rule follows the requirements from Kyverno best practices policy [Disallow NodePort](https://release-1-12-0.kyverno.io/policies/best-practices/restrict-node-port/restrict-node-port/)."
+  severity: "MEDIUM"
+- id: 2005
+  name: "Container images must come from trusted repositories."
+  description: "This rule follows the requirements from Kyverno policy [Allowed Image Repositories](https://release-1-12-0.kyverno.io/policies/other/allowed-image-repos/allowed-image-repos/)."
+  severity: "HIGH"
+- id: 2006
+  name: "Limit the use of wildcards in RBAC resources."
+  description: "This rule follows the requirements from Kyverno policy [Restrict Wildcards in Resources](https://release-1-12-0.kyverno.io/policies/other/restrict-wildcard-resources/restrict-wildcard-resources/)."
+  severity: "MEDIUM"
+- id: 2007
+  name: "Limit the use of wildcards in RBAC verbs."
+  description: "This rule follows the requirements from Kyverno policy [Restrict Wildcard in Verbs](https://release-1-12-0.kyverno.io/policies/other/restrict-wildcard-verbs/restrict-wildcard-verbs/)."
+  severity: "MEDIUM"
+- id: 2008
+  name: "Pods must not be allowed to mount host directories."
+  description: "This rule follows the requirements from Kyverno pod security policy [Disallow hostPath](https://release-1-12-0.kyverno.io/policies/pod-security/baseline/disallow-host-path/disallow-host-path/)."
+  severity: "HIGH"
