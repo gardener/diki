@@ -17,11 +17,14 @@ var _ = Describe("utils", func() {
 
 	Describe("#Result", func() {
 		It("should return the correct result", func() {
-			result := rule.Result(&fakeRule{}, rule.CheckResult{Status: rule.Passed, Message: "foo", Target: rule.Target{}})
+			result := rule.Result(&fakeRule{}, rule.CheckResult{Status: rule.Passed, Message: "foo", Target: rule.Target{}}, rule.CheckResult{Status: rule.Passed, Message: "bar", Target: rule.Target{}})
 			Expect(result).To(Equal(rule.RuleResult{
-				RuleName:     "name",
-				RuleID:       "id",
-				CheckResults: []rule.CheckResult{{Status: rule.Passed, Message: "foo", Target: rule.Target{}}},
+				RuleName: "name",
+				RuleID:   "id",
+				CheckResults: []rule.CheckResult{
+					{Status: rule.Passed, Message: "foo", Target: rule.Target{}},
+					{Status: rule.Passed, Message: "bar", Target: rule.Target{}},
+				},
 			}))
 		})
 	})
