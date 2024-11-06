@@ -164,7 +164,7 @@ func generateDiffCmd(args []string, generateDiffOpts generateDiffOptions, rootOp
 		return errors.New("--identity-attributes is not set but required")
 	}
 
-	differences := []*report.DifferenceReport{}
+	var differences []*report.DifferenceReport
 	for _, arg := range args {
 		fileData, err := os.ReadFile(filepath.Clean(arg))
 		if err != nil {
@@ -263,7 +263,7 @@ func generateCmd(args []string, rootOpts reportOptions, opts generateOptions, lo
 		return errors.New("generate command requires a single filepath argument when the distinct-by flag is not set")
 	}
 
-	reports := []*report.Report{}
+	var reports []*report.Report
 	for _, arg := range args {
 		fileData, err := os.ReadFile(filepath.Clean(arg))
 		if err != nil {
@@ -343,7 +343,7 @@ func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.Provide
 	}
 
 	if opts.all {
-		providerResults := []provider.ProviderResult{}
+		var providerResults []provider.ProviderResult
 		for _, p := range providers {
 			res, err := p.RunAll(ctx)
 			if err != nil {
@@ -353,7 +353,7 @@ func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.Provide
 		}
 
 		if len(outputPath) > 0 {
-			reportOpts := []report.ReportOption{}
+			var reportOpts []report.ReportOption
 			if dikiConfig.Output != nil && len(dikiConfig.Output.MinStatus) > 0 {
 				reportOpts = append(reportOpts, report.MinStatus(dikiConfig.Output.MinStatus))
 			}
@@ -381,7 +381,7 @@ func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.Provide
 		providerResults := []provider.ProviderResult{res}
 
 		if len(outputPath) > 0 {
-			reportOpts := []report.ReportOption{}
+			var reportOpts []report.ReportOption
 			if dikiConfig.Output != nil && len(dikiConfig.Output.MinStatus) > 0 {
 				reportOpts = append(reportOpts, report.MinStatus(dikiConfig.Output.MinStatus))
 			}
@@ -407,7 +407,7 @@ func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.Provide
 		providerResults := []provider.ProviderResult{{ProviderID: p.ID(), ProviderName: p.Name(), Metadata: p.Metadata(), RulesetResults: []ruleset.RulesetResult{res}}}
 
 		if len(outputPath) > 0 {
-			reportOpts := []report.ReportOption{}
+			var reportOpts []report.ReportOption
 			if dikiConfig.Output != nil && len(dikiConfig.Output.MinStatus) > 0 {
 				reportOpts = append(reportOpts, report.MinStatus(dikiConfig.Output.MinStatus))
 			}

@@ -65,7 +65,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	)
 
 	for _, podSelector := range podSelectors {
-		pods := []corev1.Pod{}
+		var pods []corev1.Pod
 		for _, p := range allPods {
 			if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
 				pods = append(pods, p)

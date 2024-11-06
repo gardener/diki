@@ -155,7 +155,7 @@ func numOfRulesWithStatus(ruleset *Ruleset, status rule.Status) int {
 
 // rulesWithStatus return all rules that have results with a given status.
 func rulesWithStatus(ruleset *Ruleset, status rule.Status) []Rule {
-	result := []Rule{}
+	var result []Rule
 	for _, rule := range ruleset.Rules {
 		ruleWithStatus := Rule{ID: rule.ID, Name: rule.Name}
 		for _, check := range rule.Checks {

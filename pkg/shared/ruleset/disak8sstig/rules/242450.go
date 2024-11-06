@@ -59,9 +59,11 @@ func (r *Rule242450) Name() string {
 }
 
 func (r *Rule242450) Run(ctx context.Context) (rule.RuleResult, error) {
-	checkResults := []rule.CheckResult{}
-	options := option.FileOwnerOptions{}
-	nodeLabels := []string{}
+	var (
+		checkResults []rule.CheckResult
+		nodeLabels   []string
+		options      = option.FileOwnerOptions{}
+	)
 
 	if r.Options != nil {
 		if r.Options.FileOwnerOptions != nil {

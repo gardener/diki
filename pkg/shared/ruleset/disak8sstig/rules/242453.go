@@ -59,9 +59,11 @@ func (r *Rule242453) Name() string {
 }
 
 func (r *Rule242453) Run(ctx context.Context) (rule.RuleResult, error) {
-	checkResults := []rule.CheckResult{}
-	options := option.FileOwnerOptions{}
-	nodeLabels := []string{}
+	var (
+		checkResults []rule.CheckResult
+		nodeLabels   []string
+		options      = option.FileOwnerOptions{}
+	)
 
 	if r.Options != nil {
 		if r.Options.FileOwnerOptions != nil {
@@ -102,7 +104,7 @@ func (r *Rule242453) Run(ctx context.Context) (rule.RuleResult, error) {
 	image.WithOptionalTag(version.Get().GitVersion)
 
 	for _, node := range selectedNodes {
-		selectedFilePaths := []string{}
+		var selectedFilePaths []string
 		podName := fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
 		nodeTarget := rule.NewTarget("kind", "node", "name", node.Name)
 		execPodTarget := rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")

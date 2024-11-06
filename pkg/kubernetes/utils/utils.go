@@ -40,7 +40,7 @@ import (
 func GetObjectsMetadata(ctx context.Context, c client.Client, gvk schema.GroupVersionKind, namespace string, selector labels.Selector, limit int64) ([]metav1.PartialObjectMetadata, error) {
 	objectList := &metav1.PartialObjectMetadataList{}
 	objectList.SetGroupVersionKind(gvk)
-	objects := []metav1.PartialObjectMetadata{}
+	var objects []metav1.PartialObjectMetadata
 
 	for {
 		if err := c.List(ctx, objectList, client.InNamespace(namespace), client.Limit(limit), client.MatchingLabelsSelector{Selector: selector}, client.Continue(objectList.Continue)); err != nil {
@@ -91,7 +91,7 @@ func GetAllObjectsMetadata(ctx context.Context, c client.Client, namespace strin
 // It retrieves pods by portions set by limit.
 func GetPods(ctx context.Context, c client.Client, namespace string, selector labels.Selector, limit int64) ([]corev1.Pod, error) {
 	podList := &corev1.PodList{}
-	pods := []corev1.Pod{}
+	var pods []corev1.Pod
 
 	for {
 		if err := c.List(ctx, podList, client.InNamespace(namespace), client.Limit(limit), client.MatchingLabelsSelector{Selector: selector}, client.Continue(podList.Continue)); err != nil {
@@ -110,7 +110,7 @@ func GetPods(ctx context.Context, c client.Client, namespace string, selector la
 // It retrieves replicaSets by portions set by limit.
 func GetReplicaSets(ctx context.Context, c client.Client, namespace string, selector labels.Selector, limit int64) ([]appsv1.ReplicaSet, error) {
 	replicaSetList := &appsv1.ReplicaSetList{}
-	replicaSets := []appsv1.ReplicaSet{}
+	var replicaSets []appsv1.ReplicaSet
 
 	for {
 		if err := c.List(ctx, replicaSetList, client.InNamespace(namespace), client.Limit(limit), client.MatchingLabelsSelector{Selector: selector}, client.Continue(replicaSetList.Continue)); err != nil {
@@ -148,7 +148,7 @@ func GetDeploymentPods(ctx context.Context, c client.Client, name, namespace str
 		return nil, err
 	}
 
-	pods := []corev1.Pod{}
+	var pods []corev1.Pod
 	for _, replicaSet := range replicaSets {
 		// When not specified replicaSet.Spec.Replicas defaults to 1: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/#replicas
 		ownerRef := replicaSet.OwnerReferences[0]
@@ -167,7 +167,7 @@ func GetDeploymentPods(ctx context.Context, c client.Client, name, namespace str
 // GetNodes return all nodes. It retrieves pods by portions set by limit.
 func GetNodes(ctx context.Context, c client.Client, limit int64) ([]corev1.Node, error) {
 	nodeList := &corev1.NodeList{}
-	nodes := []corev1.Node{}
+	var nodes []corev1.Node
 
 	for {
 		if err := c.List(ctx, nodeList, client.Limit(limit), client.Continue(nodeList.Continue)); err != nil {
@@ -277,7 +277,7 @@ func FindFlagValueRaw(command []string, flag string) []string {
 	// TODO: reimplement this func to accept (string, string)
 	flag = fmt.Sprintf("-%s", flag)
 
-	result := []string{}
+	var result []string
 	for idx, c := range command {
 		before, after, found := strings.Cut(c, flag)
 		if found && (before == "" || before == "-") && (len(after) == 0 || after[0] == '=' || after[0] == ' ') {
@@ -296,7 +296,7 @@ func FindFlagValueRaw(command []string, flag string) []string {
 // FindInnerValue returns the value of a specific flag when the format is
 // flag1=value1,flag3=value3,flag3=value3
 func FindInnerValue(values []string, flag string) []string {
-	result := []string{}
+	var result []string
 	flag = fmt.Sprintf("%s=", flag)
 	for _, value := range values {
 		v := value
@@ -367,12 +367,12 @@ func GetCommandOptionFromDeployment(ctx context.Context, c client.Client, deploy
 	}
 
 	if err := c.Get(ctx, client.ObjectKeyFromObject(deployment), deployment); err != nil {
-		return []string{}, err
+		return nil, err
 	}
 
 	container, found := GetContainerFromDeployment(deployment, containerName)
 	if !found {
-		return []string{}, fmt.Errorf("deployment: %s does not contain container: %s", deploymentName, containerName)
+		return nil, fmt.Errorf("deployment: %s does not contain container: %s", deploymentName, containerName)
 	}
 
 	optionSlice := FindFlagValueRaw(append(container.Command, container.Args...), option)
@@ -575,8 +575,10 @@ func GetNodesAllocatablePodsNum(pods []corev1.Pod, nodes []corev1.Node) map[stri
 // Nodes that have reached their allocation limit will not be returned.
 // If no labels are provided all allocatable nodes will be returned.
 func SelectNodes(nodes []corev1.Node, nodesAllocatablePods map[string]int, labels []string) ([]corev1.Node, []rule.CheckResult) {
-	selectedNodes := []corev1.Node{}
-	checkResults := []rule.CheckResult{}
+	var (
+		selectedNodes []corev1.Node
+		checkResults  []rule.CheckResult
+	)
 
 	// if no labels are provided return all allocatable nodes
 	if len(labels) == 0 {
@@ -632,9 +634,11 @@ func SelectNodes(nodes []corev1.Node, nodesAllocatablePods map[string]int, label
 // Pods will not be grouped to nodes, which have reached their allocation limit.
 // It tries to pick the pods in a way that fewer nodes will be selected.
 func SelectPodOfReferenceGroup(pods []corev1.Pod, nodesAllocatablePods map[string]int, target rule.Target) (map[string][]corev1.Pod, []rule.CheckResult) {
-	checkResults := []rule.CheckResult{}
-	groupedPodsByNodes := map[string][]corev1.Pod{}
-	groupedPodsByReferences := map[string][]corev1.Pod{}
+	var (
+		checkResults            []rule.CheckResult
+		groupedPodsByNodes      = map[string][]corev1.Pod{}
+		groupedPodsByReferences = map[string][]corev1.Pod{}
+	)
 
 	for _, pod := range pods {
 		podTarget := target.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")

@@ -77,16 +77,16 @@ var _ = Describe("utils", func() {
 				}, BeNil()),
 			Entry("Should return not objects when there are no files",
 				[]string{"", "0\n"}, []error{nil, nil},
-				[]utils.FileStats{}, BeNil()),
+				nil, BeNil()),
 			Entry("Should return correct error message when command errors",
 				[]string{"600\t0\t1000\tregular file\t/destination/file 1.txt\n"}, []error{errors.New("foo")},
-				[]utils.FileStats{}, MatchError("foo")),
+				nil, MatchError("foo")),
 			Entry("Should return correct error message files cannot be found",
 				[]string{"", "2\n"}, []error{nil, nil},
-				[]utils.FileStats{}, MatchError("could not find files in foo/dir")),
+				nil, MatchError("could not find files in foo/dir")),
 			Entry("Should return correct error message when second command errors",
 				[]string{"", ""}, []error{nil, errors.New("bar")},
-				[]utils.FileStats{}, MatchError("bar")),
+				nil, MatchError("bar")),
 		)
 	})
 	Describe("#GetMountedFilesStats", func() {
@@ -246,8 +246,10 @@ var _ = Describe("utils", func() {
 					},
 				},
 			}
-			executeReturnString := []string{}
-			executeReturnError := []error{}
+			var (
+				executeReturnString []string
+				executeReturnError  []error
+			)
 			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
 			result, err := utils.GetMountedFilesStats(ctx, "", fakePodExecutor, pod, []string{"/lib/modules"})
 
@@ -352,7 +354,7 @@ var _ = Describe("utils", func() {
 				[]config.Mount{{Destination: "/foo", Source: "/foo-bar"}, {Destination: "/bar", Source: "/foo"}}, BeNil()),
 			Entry("should return error when command errors",
 				[]string{mounts}, []error{errors.New("command error")},
-				[]config.Mount{}, MatchError("command error")),
+				nil, MatchError("command error")),
 		)
 	})
 

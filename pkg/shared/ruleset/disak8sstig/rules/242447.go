@@ -58,7 +58,7 @@ func (r *Rule242447) Name() string {
 }
 
 func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
-	checkResults := []rule.CheckResult{}
+	var checkResults []rule.CheckResult
 	kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
 	kubeProxyContainerNames := []string{"kube-proxy", "proxy"}
 
@@ -72,7 +72,7 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "podList"))), nil
 	}
 
-	pods := []corev1.Pod{}
+	var pods []corev1.Pod
 	for _, p := range allPods {
 		if kubeProxySelector.Matches(labels.Set(p.Labels)) {
 			pods = append(pods, p)
@@ -134,7 +134,7 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 		})
 
 		for _, pod := range pods {
-			selectedFileStats := []intutils.FileStats{}
+			var selectedFileStats []intutils.FileStats
 			expectedFilePermissionsMax := "644"
 			podTarget := target.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
 

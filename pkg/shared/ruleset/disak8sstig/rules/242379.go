@@ -35,7 +35,7 @@ func (r *Rule242379) Name() string {
 }
 
 func (r *Rule242379) Run(ctx context.Context) (rule.RuleResult, error) {
-	checkResults := []rule.CheckResult{}
+	var checkResults []rule.CheckResult
 	etcdMain := "etcd-main"
 	etcdEvents := "etcd-events"
 

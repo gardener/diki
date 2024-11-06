@@ -67,9 +67,11 @@ func (r *Rule242417) Name() string {
 }
 
 func (r *Rule242417) Run(ctx context.Context) (rule.RuleResult, error) {
-	checkResults := []rule.CheckResult{}
-	systemNamespaces := []string{"kube-system", "kube-public", "kube-node-lease"}
-	acceptedPods := []AcceptedPods242417{}
+	var (
+		checkResults     []rule.CheckResult
+		acceptedPods     []AcceptedPods242417
+		systemNamespaces = []string{"kube-system", "kube-public", "kube-node-lease"}
+	)
 
 	if r.Options != nil && r.Options.AcceptedPods != nil {
 		acceptedPods = r.Options.AcceptedPods

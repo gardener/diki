@@ -35,7 +35,7 @@ func (r *Rule242395) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
 	}
 
-	checkResults := []rule.CheckResult{}
+	var checkResults []rule.CheckResult
 	for _, podPartialMetadata := range podsPartialMetadata {
 		target := rule.NewTarget("name", podPartialMetadata.Name, "namespace", podPartialMetadata.Namespace, "kind", "pod")
 		checkResults = append(checkResults, rule.FailedCheckResult("Kubernetes dashboard installed", target))

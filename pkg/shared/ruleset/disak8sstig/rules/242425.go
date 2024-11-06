@@ -33,7 +33,7 @@ func (r *Rule242425) Name() string {
 }
 
 func (r *Rule242425) Run(ctx context.Context) (rule.RuleResult, error) {
-	checkResults := []rule.CheckResult{}
+	var checkResults []rule.CheckResult
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
