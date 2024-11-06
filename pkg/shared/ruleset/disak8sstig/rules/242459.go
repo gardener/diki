@@ -51,15 +51,21 @@ func (r *Rule242459) Name() string {
 }
 
 func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
-	var checkResults []rule.CheckResult
-	// TODO: Drop support for "instance" etcd label in a future release
-	// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
-	etcdMainOldSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
-	etcdMainSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
-	// TODO: Drop support for "instance" etcd label in a future release
-	// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
-	etcdEventsOldSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
-	etcdEventsSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
+	var (
+		checkResults []rule.CheckResult
+		// TODO: Drop support for "instance" etcd label in a future release
+		// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
+		etcdMainOldSelector = labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
+		etcdMainSelector    = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
+		// TODO: Drop support for "instance" etcd label in a future release
+		// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
+		etcdEventsOldSelector   = labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
+		etcdEventsSelector      = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
+		checkOldPodSelectors    = []labels.Selector{etcdMainOldSelector, etcdEventsOldSelector}
+		checkPodSelectors       = []labels.Selector{etcdMainSelector, etcdEventsSelector}
+		checkPods               []corev1.Pod
+		oldSelectorCheckResults []rule.CheckResult
+	)
 
 	if r.ETCDMainOldSelector != nil {
 		etcdMainOldSelector = r.ETCDMainSelector
@@ -82,12 +88,6 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("namespace", r.Namespace, "kind", "podList"))), nil
 	}
-
-	checkOldPodSelectors := []labels.Selector{etcdMainOldSelector, etcdEventsOldSelector}
-	checkPodSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector}
-
-	var checkPods []corev1.Pod
-	var oldSelectorCheckResults []rule.CheckResult
 
 	for _, podSelector := range checkOldPodSelectors {
 		var pods []corev1.Pod
