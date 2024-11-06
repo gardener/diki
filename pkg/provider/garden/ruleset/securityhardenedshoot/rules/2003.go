@@ -27,7 +27,7 @@ func (r *Rule2003) ID() string {
 }
 
 func (r *Rule2003) Name() string {
-	return "Shoot clusters must enable kernel protection for Kubelets."
+	return "Shoot clusters must enable kernel protection for Kubelets (HIGH 2003)"
 }
 
 func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
