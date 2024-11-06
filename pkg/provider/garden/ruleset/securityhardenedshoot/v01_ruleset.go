@@ -11,11 +11,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/config"
+	"github.com/gardener/diki/pkg/provider/garden/ruleset/securityhardenedshoot/rules"
 	"github.com/gardener/diki/pkg/rule"
 )
 
 func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
-	_, err := client.New(r.Config, client.Options{
+	c, err := client.New(r.Config, client.Options{
 		Scheme: gardenerk8s.GardenScheme,
 	})
 	if err != nil {
@@ -47,12 +48,11 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			"Not implemented.",
 			rule.NotImplemented,
 		),
-		rule.NewSkipRule(
-			"2003",
-			"Shoot clusters must enable kernel protection for Kubelet.",
-			"Not implemented.",
-			rule.NotImplemented,
-		),
+		&rules.Rule2003{
+			Client:         c,
+			ShootName:      r.args.ShootName,
+			ShootNamespace: r.args.ProjectNamespace,
+		},
 		rule.NewSkipRule(
 			"2004",
 			"Shoot clusters must have ValidatingAdmissionWebhook admission plugin enabled.",
