@@ -61,11 +61,9 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 		etcdMainSelector    = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
 		// TODO: Drop support for "instance" etcd label in a future release
 		// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
-		etcdEventsOldSelector   = labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
-		etcdEventsSelector      = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
-		options                 option.FileOwnerOptions
-		checkPods               []corev1.Pod
-		oldSelectorCheckResults []rule.CheckResult
+		etcdEventsOldSelector = labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
+		etcdEventsSelector    = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
+		options               option.FileOwnerOptions
 	)
 
 	if r.Options != nil {
@@ -95,8 +93,12 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 		etcdEventsSelector = r.ETCDEventsSelector
 	}
 
-	podOldSelectors := []labels.Selector{etcdMainOldSelector, etcdEventsOldSelector}
-	podSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector}
+	var (
+		checkPods               []corev1.Pod
+		oldSelectorCheckResults []rule.CheckResult
+		podOldSelectors         = []labels.Selector{etcdMainOldSelector, etcdEventsOldSelector}
+		podSelectors            = []labels.Selector{etcdMainSelector, etcdEventsSelector}
+	)
 
 	target := rule.NewTarget()
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
