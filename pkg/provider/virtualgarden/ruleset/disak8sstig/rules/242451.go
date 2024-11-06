@@ -85,7 +85,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 	)
 
 	for _, podSelector := range podOldSelectors {
-		var pods = []corev1.Pod{}
+		var pods []corev1.Pod
 		for _, p := range allPods {
 			if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
 				pods = append(pods, p)
@@ -102,7 +102,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	if len(checkPods) == 0 {
 		for _, podSelector := range podSelectors {
-			var pods = []corev1.Pod{}
+			var pods []corev1.Pod
 			for _, p := range allPods {
 				if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
 					pods = append(pods, p)

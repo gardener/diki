@@ -86,7 +86,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 		)
 
 		for _, podSelector := range podOldSelectors {
-			var pods = []corev1.Pod{}
+			var pods []corev1.Pod
 			for _, p := range allSeedPods {
 				if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.ControlPlaneNamespace {
 					pods = append(pods, p)
@@ -103,7 +103,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 
 		if len(checkPods) == 0 {
 			for _, podSelector := range podSelectors {
-				var pods = []corev1.Pod{}
+				var pods []corev1.Pod
 				for _, p := range allSeedPods {
 					if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.ControlPlaneNamespace {
 						pods = append(pods, p)
@@ -186,7 +186,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, checkResults...), nil
 	}
 
-	var pods = []corev1.Pod{}
+	var pods []corev1.Pod
 	for _, p := range allShootPods {
 		if kubeProxySelector.Matches(labels.Set(p.Labels)) {
 			pods = append(pods, p)
