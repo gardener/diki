@@ -45,7 +45,7 @@ func (r *Rule242459) Name() string {
 }
 
 func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
-	checkResults := []rule.CheckResult{}
+	var checkResults []rule.CheckResult
 	etcdMainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
 	etcdEventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
 
@@ -63,10 +63,10 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("namespace", r.Namespace, "kind", "podList"))), nil
 	}
 	checkPodsSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector}
-	checkPods := []corev1.Pod{}
+	var checkPods []corev1.Pod
 
 	for _, podSelector := range checkPodsSelectors {
-		pods := []corev1.Pod{}
+		var pods []corev1.Pod
 		for _, p := range allPods {
 			if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
 				pods = append(pods, p)

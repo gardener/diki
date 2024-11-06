@@ -157,7 +157,7 @@ func (r *Rule254800) checkPodSecurityConfiguration(pluginConfig *runtime.Unknown
 }
 
 func (r *Rule254800) checkPrivilegeLevel(podSecurityConfig admissionapiv1.PodSecurityConfiguration) []rule.CheckResult {
-	checkResults := []rule.CheckResult{}
+	var checkResults []rule.CheckResult
 	target := rule.NewTarget("kind", "PodSecurityConfiguration")
 	if privilegeLevel(podSecurityConfig.Defaults.Enforce) < privilegeLevel(r.Options.MinPodSecurityLevel) {
 		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Enforce level is lower than the minimum pod security level allowed: %s", r.Options.MinPodSecurityLevel), target))

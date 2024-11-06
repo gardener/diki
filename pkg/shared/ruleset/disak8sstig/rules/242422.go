@@ -47,7 +47,7 @@ func (r *Rule242422) Run(ctx context.Context) (rule.RuleResult, error) {
 	if r.ContainerName != "" {
 		containerName = r.ContainerName
 	}
-	checkResults := []rule.CheckResult{}
+	var checkResults []rule.CheckResult
 	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
 
 	tlsCertFileOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, certOptName)

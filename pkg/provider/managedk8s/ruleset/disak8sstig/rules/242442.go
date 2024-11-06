@@ -86,7 +86,7 @@ func (*Rule242442) checkImages(pods []corev1.Pod, target rule.Target) []rule.Che
 	var (
 		images         = map[string]string{}
 		reportedImages = map[string]struct{}{}
-		checkResults   = []rule.CheckResult{}
+		checkResults   []rule.CheckResult
 	)
 	for _, pod := range pods {
 		for _, container := range pod.Spec.Containers {

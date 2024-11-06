@@ -35,7 +35,7 @@ func (r *Rule242399) Name() string {
 
 func (r *Rule242399) Run(ctx context.Context) (rule.RuleResult, error) {
 	const option = "featureGates.DynamicKubeletConfig"
-	checkResults := []rule.CheckResult{}
+	var checkResults []rule.CheckResult
 
 	// featureGates.DynamicKubeletConfig removed in v1.26. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
 	if r.KubernetesVersion != nil && versionutils.ConstraintK8sGreaterEqual126.Check(r.KubernetesVersion) {

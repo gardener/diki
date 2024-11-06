@@ -53,10 +53,12 @@ func (r *Rule242407) Name() string {
 }
 
 func (r *Rule242407) Run(ctx context.Context) (rule.RuleResult, error) {
-	var kubeletServicePath string
-	checkResults := []rule.CheckResult{}
-	expectedFilePermissionsMax := "644"
-	nodeLabels := []string{}
+	var (
+		kubeletServicePath         string
+		checkResults               []rule.CheckResult
+		nodeLabels                 []string
+		expectedFilePermissionsMax = "644"
+	)
 
 	if r.Options != nil && r.Options.NodeGroupByLabels != nil {
 		nodeLabels = slices.Clone(r.Options.NodeGroupByLabels)

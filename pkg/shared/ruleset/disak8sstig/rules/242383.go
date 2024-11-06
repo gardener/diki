@@ -110,7 +110,7 @@ func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 	}
-	checkResults := []rule.CheckResult{}
+	var checkResults []rule.CheckResult
 	systemNamespaces := []string{"default", "kube-public", "kube-node-lease"}
 	acceptedResources := []AcceptedResources242383{
 		{

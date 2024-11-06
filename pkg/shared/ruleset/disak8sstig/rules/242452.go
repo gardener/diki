@@ -54,9 +54,11 @@ func (r *Rule242452) Name() string {
 }
 
 func (r *Rule242452) Run(ctx context.Context) (rule.RuleResult, error) {
-	checkResults := []rule.CheckResult{}
-	expectedFilePermissionsMax := "644"
-	nodeLabels := []string{}
+	var (
+		checkResults               []rule.CheckResult
+		nodeLabels                 []string
+		expectedFilePermissionsMax = "644"
+	)
 
 	if r.Options != nil && r.Options.NodeGroupByLabels != nil {
 		nodeLabels = slices.Clone(r.Options.NodeGroupByLabels)

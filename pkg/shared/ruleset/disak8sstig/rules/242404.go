@@ -53,8 +53,10 @@ func (r *Rule242404) Name() string {
 }
 
 func (r *Rule242404) Run(ctx context.Context) (rule.RuleResult, error) {
-	checkResults := []rule.CheckResult{}
-	nodeLabels := []string{}
+	var (
+		checkResults []rule.CheckResult
+		nodeLabels   []string
+	)
 
 	if r.Options != nil && r.Options.NodeGroupByLabels != nil {
 		nodeLabels = slices.Clone(r.Options.NodeGroupByLabels)

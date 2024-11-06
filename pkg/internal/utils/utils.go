@@ -91,7 +91,7 @@ func GetFileStatsByDir(
 	podExecutor pod.PodExecutor,
 	dirPath string,
 ) ([]FileStats, error) {
-	fileStats := []FileStats{}
+	var fileStats []FileStats
 	delimiter := "\t"
 	statsRaw, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`find %s -type f -exec stat -Lc "%%a%[2]s%%u%[2]s%%g%[2]s%%F%[2]s%%n" {} \;`, dirPath, delimiter))
 	if err != nil {
@@ -197,13 +197,13 @@ func GetContainerMounts(
 ) ([]config.Mount, error) {
 	commandResult, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`%s/usr/local/bin/nerdctl --namespace k8s.io inspect --mode=native %s | jq -r .[0].Spec.mounts`, podExecutorRootPath, containerID))
 	if err != nil {
-		return []config.Mount{}, err
+		return nil, err
 	}
 
-	mounts := []config.Mount{}
+	var mounts []config.Mount
 	err = json.Unmarshal([]byte(commandResult), &mounts)
 	if err != nil {
-		return []config.Mount{}, err
+		return nil, err
 	}
 
 	return mounts, nil
@@ -217,8 +217,10 @@ func getContainerMountedFileStatResults(
 	containerName, containerID string,
 	excludedSources []string,
 ) ([]FileStats, error) {
-	stats := []FileStats{}
-	var err error
+	var (
+		stats []FileStats
+		err   error
+	)
 
 	mounts, err := GetContainerMounts(ctx, podExecutorRootPath, podExecutor, containerID)
 	if err != nil {
@@ -322,7 +324,7 @@ func MatchFileOwnersCases(
 	expectedFileOwnerGroups []string,
 	target rule.Target,
 ) []rule.CheckResult {
-	checkResults := []rule.CheckResult{}
+	var checkResults []rule.CheckResult
 
 	if !slices.Contains(expectedFileOwnerUsers, fileStats.UserOwner) {
 		detailedTarget := target.With("details", fmt.Sprintf("fileName: %s, ownerUser: %s, expectedOwnerUsers: %v", fileStats.Path, fileStats.UserOwner, expectedFileOwnerUsers))

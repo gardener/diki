@@ -50,7 +50,7 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 }
 
 func (*Rule242442) checkImages(pods []corev1.Pod, images map[string]string, reportedImages map[string]struct{}) []rule.CheckResult {
-	checkResults := []rule.CheckResult{}
+	var checkResults []rule.CheckResult
 	for _, pod := range pods {
 		for _, container := range pod.Spec.Containers {
 			containerStatusIdx := slices.IndexFunc(pod.Status.ContainerStatuses, func(containerStatus corev1.ContainerStatus) bool {

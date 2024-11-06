@@ -66,7 +66,7 @@ func (r *Rule242415) Run(ctx context.Context) (rule.RuleResult, error) {
 }
 
 func (r *Rule242415) checkPods(pods []corev1.Pod, namespaces map[string]corev1.Namespace, clusterTarget rule.Target) []rule.CheckResult {
-	checkResults := []rule.CheckResult{}
+	var checkResults []rule.CheckResult
 	for _, pod := range pods {
 		target := clusterTarget.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
 		passed := true

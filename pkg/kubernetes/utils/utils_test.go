@@ -599,7 +599,7 @@ var _ = Describe("utils", func() {
 
 			pods, err := utils.GetDeploymentPods(ctx, fakeClient, "foo", namespace)
 
-			Expect(pods).To(Equal([]corev1.Pod{}))
+			Expect(pods).To(HaveLen(0))
 			Expect(err).To(BeNil())
 		})
 
@@ -955,7 +955,7 @@ var _ = Describe("utils", func() {
 		Entry("should return empty string when no values are found",
 			[]string{"flag1=value1,flag2=value2,flag3=value3", "flag4=value2", "flag4=value4,flag1=value5"},
 			"flag6",
-			[]string{}),
+			nil),
 	)
 
 	Describe("#GetVolumeConfigByteSlice", func() {
@@ -1134,11 +1134,11 @@ var _ = Describe("utils", func() {
 			Entry("should return correct values for flag when there are more than 1 occurances",
 				deploymentName, containerName, namespace, "bar1", []string{"foo1", "foo3"}, BeNil()),
 			Entry("should return empty slice when the options is missing",
-				deploymentName, containerName, namespace, "foo5", []string{}, BeNil()),
+				deploymentName, containerName, namespace, "foo5", nil, BeNil()),
 			Entry("should return error when the deployment is missing",
-				"test", containerName, namespace, "foo", []string{}, MatchError("deployments.apps \"test\" not found")),
+				"test", containerName, namespace, "foo", nil, MatchError("deployments.apps \"test\" not found")),
 			Entry("should return error when the container is missing",
-				deploymentName, "test", namespace, "foo", []string{}, MatchError("deployment: foo does not contain container: test")),
+				deploymentName, "test", namespace, "foo", nil, MatchError("deployment: foo does not contain container: test")),
 		)
 
 	})
@@ -1651,7 +1651,7 @@ readOnlyPort: 222
 
 			expectedRes := []corev1.Node{node1, node2}
 			Expect(res).To(ConsistOf(expectedRes))
-			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+			Expect(checkResult).To(HaveLen(0))
 		})
 
 		It("should return nodes by unique label value combination", func() {
@@ -1668,7 +1668,7 @@ readOnlyPort: 222
 
 			expectedRes := []corev1.Node{node1, node2, node4}
 			Expect(res).To(ConsistOf(expectedRes))
-			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+			Expect(checkResult).To(HaveLen(0))
 		})
 
 		It("should return warning chackResult when node does not label", func() {
@@ -1735,7 +1735,7 @@ readOnlyPort: 222
 
 			expectedRes := []corev1.Node{node1, node2, node4}
 			Expect(res).To(ConsistOf(expectedRes))
-			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+			Expect(checkResult).To(HaveLen(0))
 		})
 	})
 
@@ -1784,7 +1784,7 @@ readOnlyPort: 222
 			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.Target{})
 
 			Expect(res).To(Equal(expectedRes))
-			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+			Expect(checkResult).To(HaveLen(0))
 		})
 
 		It("should correclty select pods when reference groups are present", func() {
@@ -1833,7 +1833,7 @@ readOnlyPort: 222
 			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.Target{})
 
 			Expect(res).To(Equal(expectedRes))
-			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+			Expect(checkResult).To(HaveLen(0))
 		})
 
 		It("should correclty select minimal groups", func() {
@@ -1887,7 +1887,7 @@ readOnlyPort: 222
 			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.Target{})
 
 			Expect(res).To(Equal(expectedRes))
-			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+			Expect(checkResult).To(HaveLen(0))
 		})
 
 		It("should correctly select minimal groups", func() {
@@ -1941,7 +1941,7 @@ readOnlyPort: 222
 			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.Target{})
 
 			Expect(res).To(Equal(expectedRes))
-			Expect(checkResult).To(Equal([]rule.CheckResult{}))
+			Expect(checkResult).To(HaveLen(0))
 		})
 
 		It("should return correct checkResults when pod is not scheduled", func() {

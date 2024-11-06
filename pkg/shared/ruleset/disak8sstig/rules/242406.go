@@ -58,10 +58,12 @@ func (r *Rule242406) Name() string {
 }
 
 func (r *Rule242406) Run(ctx context.Context) (rule.RuleResult, error) {
-	var kubeletServicePath string
-	checkResults := []rule.CheckResult{}
-	options := option.FileOwnerOptions{}
-	nodeLabels := []string{}
+	var (
+		kubeletServicePath string
+		checkResults       []rule.CheckResult
+		nodeLabels         []string
+		options            = option.FileOwnerOptions{}
+	)
 
 	if r.Options != nil {
 		if r.Options.FileOwnerOptions != nil {

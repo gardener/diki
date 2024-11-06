@@ -46,7 +46,7 @@ func (r *Rule242460) Name() string {
 }
 
 func (r *Rule242460) Run(ctx context.Context) (rule.RuleResult, error) {
-	checkResults := []rule.CheckResult{}
+	var checkResults []rule.CheckResult
 	deploymentNames := []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
 
 	if r.DeploymentNames != nil {
@@ -58,7 +58,7 @@ func (r *Rule242460) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("namespace", r.Namespace, "kind", "podList"))), nil
 	}
-	checkPods := []corev1.Pod{}
+	var checkPods []corev1.Pod
 
 	for _, deploymentName := range deploymentNames {
 		pods, err := kubeutils.GetDeploymentPods(ctx, r.Client, deploymentName, r.Namespace)

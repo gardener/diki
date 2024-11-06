@@ -66,7 +66,7 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 
 func (*Rule242442) checkImages(cluster string, pods []corev1.Pod) []rule.CheckResult {
 	var (
-		checkResults    = []rule.CheckResult{}
+		checkResults    []rule.CheckResult
 		podsByNamespace = map[string][]corev1.Pod{}
 	)
 
