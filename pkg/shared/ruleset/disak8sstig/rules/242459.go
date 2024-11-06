@@ -27,13 +27,19 @@ import (
 var _ rule.Rule = &Rule242459{}
 
 type Rule242459 struct {
-	InstanceID         string
-	Client             client.Client
-	Namespace          string
-	PodContext         pod.PodContext
-	Logger             provider.Logger
-	ETCDMainSelector   labels.Selector
-	ETCDEventsSelector labels.Selector
+	InstanceID string
+	Client     client.Client
+	Namespace  string
+	PodContext pod.PodContext
+	Logger     provider.Logger
+	// TODO: Drop support for "instance" etcd label in a future release
+	// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
+	ETCDMainOldSelector labels.Selector
+	ETCDMainSelector    labels.Selector
+	// TODO: Drop support for "instance" etcd label in a future release
+	// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
+	ETCDEventsOldSelector labels.Selector
+	ETCDEventsSelector    labels.Selector
 }
 
 func (r *Rule242459) ID() string {
@@ -55,8 +61,16 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 	etcdEventsOldSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
 	etcdEventsSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
 
+	if r.ETCDMainOldSelector != nil {
+		etcdMainOldSelector = r.ETCDMainSelector
+	}
+
 	if r.ETCDMainSelector != nil {
 		etcdMainSelector = r.ETCDMainSelector
+	}
+
+	if r.ETCDEventsOldSelector != nil {
+		etcdEventsOldSelector = r.ETCDEventsSelector
 	}
 
 	if r.ETCDEventsSelector != nil {
@@ -71,8 +85,8 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	checkOldPodSelectors := []labels.Selector{etcdMainOldSelector, etcdEventsOldSelector}
 	checkPodSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector}
-	var checkPods []corev1.Pod
 
+	var checkPods []corev1.Pod
 	var oldSelectorCheckResults []rule.CheckResult
 
 	for _, podSelector := range checkOldPodSelectors {

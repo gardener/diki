@@ -82,7 +82,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 			checkPods               []corev1.Pod
 			podOldSelectors         = []labels.Selector{etcdMainOldSelector, etcdEventsOldSelector}
 			podSelectors            = []labels.Selector{etcdMainSelector, etcdEventsSelector}
-			oldSelectorCheckResults = []rule.CheckResult{}
+			oldSelectorCheckResults []rule.CheckResult
 		)
 
 		for _, podSelector := range podOldSelectors {

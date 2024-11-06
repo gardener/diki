@@ -28,14 +28,20 @@ import (
 var _ rule.Rule = &Rule242445{}
 
 type Rule242445 struct {
-	InstanceID         string
-	Client             client.Client
-	Namespace          string
-	PodContext         pod.PodContext
-	Options            *option.FileOwnerOptions
-	Logger             provider.Logger
-	ETCDMainSelector   labels.Selector
-	ETCDEventsSelector labels.Selector
+	InstanceID string
+	Client     client.Client
+	Namespace  string
+	PodContext pod.PodContext
+	Options    *option.FileOwnerOptions
+	Logger     provider.Logger
+	// TODO: Drop support for "instance" etcd label in a future release
+	// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
+	ETCDMainOldSelector labels.Selector
+	ETCDMainSelector    labels.Selector
+	// TODO: Drop support for "instance" etcd label in a future release
+	// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
+	ETCDEventsOldSelector labels.Selector
+	ETCDEventsSelector    labels.Selector
 }
 
 func (r *Rule242445) ID() string {
@@ -61,6 +67,7 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 	if r.Options != nil {
 		options = *r.Options
 	}
+
 	if len(options.ExpectedFileOwner.Users) == 0 {
 		options.ExpectedFileOwner.Users = []string{"0"}
 	}
@@ -68,8 +75,16 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 		options.ExpectedFileOwner.Groups = []string{"0"}
 	}
 
+	if r.ETCDMainOldSelector != nil {
+		etcdMainOldSelector = r.ETCDMainSelector
+	}
+
 	if r.ETCDMainSelector != nil {
 		etcdMainSelector = r.ETCDMainSelector
+	}
+
+	if r.ETCDEventsOldSelector != nil {
+		etcdEventsOldSelector = r.ETCDEventsSelector
 	}
 
 	if r.ETCDEventsSelector != nil {
