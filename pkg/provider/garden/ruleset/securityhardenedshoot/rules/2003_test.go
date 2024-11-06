@@ -30,7 +30,7 @@ var _ = Describe("#2003", func() {
 		shoot *gardencorev1beta1.Shoot
 
 		r        rule.Rule
-		ruleName = "Shoot clusters must enable kernel protection for Kubelets."
+		ruleName = "Shoot clusters must enable kernel protection for Kubelets (HIGH 2003)"
 		ruleID   = "2003"
 	)
 
