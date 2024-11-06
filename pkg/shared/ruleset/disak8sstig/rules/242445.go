@@ -64,8 +64,6 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 		etcdEventsOldSelector   = labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
 		etcdEventsSelector      = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
 		options                 option.FileOwnerOptions
-		podOldSelectors         = []labels.Selector{etcdMainOldSelector, etcdEventsOldSelector}
-		podSelectors            = []labels.Selector{etcdMainSelector, etcdEventsSelector}
 		checkPods               []corev1.Pod
 		oldSelectorCheckResults []rule.CheckResult
 	)
@@ -82,7 +80,7 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if r.ETCDMainOldSelector != nil {
-		etcdMainOldSelector = r.ETCDMainSelector
+		etcdMainOldSelector = r.ETCDMainOldSelector
 	}
 
 	if r.ETCDMainSelector != nil {
@@ -90,12 +88,15 @@ func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if r.ETCDEventsOldSelector != nil {
-		etcdEventsOldSelector = r.ETCDEventsSelector
+		etcdEventsOldSelector = r.ETCDEventsOldSelector
 	}
 
 	if r.ETCDEventsSelector != nil {
 		etcdEventsSelector = r.ETCDEventsSelector
 	}
+
+	podOldSelectors := []labels.Selector{etcdMainOldSelector, etcdEventsOldSelector}
+	podSelectors := []labels.Selector{etcdMainSelector, etcdEventsSelector}
 
 	target := rule.NewTarget()
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
