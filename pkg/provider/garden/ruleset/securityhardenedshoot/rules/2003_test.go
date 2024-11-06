@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+// SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -68,7 +68,7 @@ var _ = Describe("#2003", func() {
 			func() {},
 			rule.RuleResult{RuleID: ruleID, RuleName: ruleName, CheckResults: []rule.CheckResult{{Status: rule.Passed, Message: "Default kubelet config does not disable kernel protection.", Target: rule.NewTarget()}}},
 		),
-		Entry("should pass when shoot does sets default kubelet config",
+		Entry("should pass when shoot sets default kubelet config",
 			func() { shoot.Spec.Kubernetes.Kubelet = &gardencorev1beta1.KubeletConfig{} },
 			rule.RuleResult{RuleID: ruleID, RuleName: ruleName, CheckResults: []rule.CheckResult{{Status: rule.Passed, Message: "Default kubelet config does not disable kernel protection.", Target: rule.NewTarget()}}},
 		),
@@ -160,7 +160,7 @@ var _ = Describe("#2003", func() {
 				{Status: rule.Passed, Message: "Worker kubelet config enables kernel protection.", Target: rule.NewTarget("worker", "worker1")},
 			}},
 		),
-		Entry("should pass when shoot worker enables kernel defaults protection in kubelet config",
+		Entry("should fail when shoot worker disables kernel defaults protection in kubelet config",
 			func() {
 				shoot.Spec.Provider.Workers = []gardencorev1beta1.Worker{
 					{
