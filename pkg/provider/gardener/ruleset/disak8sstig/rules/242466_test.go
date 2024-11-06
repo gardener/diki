@@ -241,13 +241,13 @@ tlsCertFile: /var/lib/certs/tls.crt`
 		etcdMainPod = plainPod.DeepCopy()
 		etcdMainPod.Name = "1-pod"
 		etcdMainPod.Labels["name"] = "etcd"
-		etcdMainPod.Labels["instance"] = "etcd-main"
+		etcdMainPod.Labels["app.kubernetes.io/part-of"] = "etcd-main"
 		etcdMainPod.OwnerReferences[0].UID = "1"
 
 		etcdEventsPod = plainPod.DeepCopy()
 		etcdEventsPod.Name = "etcd-events"
 		etcdEventsPod.Labels["name"] = "etcd"
-		etcdEventsPod.Labels["instance"] = "etcd-events"
+		etcdEventsPod.Labels["app.kubernetes.io/part-of"] = "etcd-events"
 		etcdEventsPod.OwnerReferences[0].UID = "2"
 
 		kubeAPIServerPod = plainPod.DeepCopy()
@@ -294,8 +294,8 @@ tlsCertFile: /var/lib/certs/tls.crt`
 	})
 
 	It("should error when pods cannot be found", func() {
-		mainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
-		eventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
+		mainSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
+		eventsSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
 		kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
 		fakeControlPlanePodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
 		fakeClusterPodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
@@ -322,6 +322,75 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			rule.ErroredCheckResult("pods not found", rule.NewTarget("cluster", "shoot", "selector", kubeProxySelector.String())),
 		}))
 	})
+
+	//TODO: Remove these describe table test cases once support for the instance labels is deprecated
+	DescribeTable("Run temporary instance label cases",
+		func(includeETCDEventsPod bool, seedExecuteReturnString, shootExecuteReturnString [][]string, seedExecuteReturnError, shootExecuteReturnError [][]error, option *option.KubeProxyOptions, expectedCheckResults []rule.CheckResult) {
+			oldSelectorETCDMainPod := etcdMainPod.DeepCopy()
+			delete(oldSelectorETCDMainPod.Labels, "app.kubernetes.io/part-of")
+			oldSelectorETCDMainPod.Labels["instance"] = "etcd-main"
+			Expect(fakeControlPlaneClient.Create(ctx, oldSelectorETCDMainPod))
+
+			if includeETCDEventsPod {
+				oldSelectorETCDEventsPod := etcdEventsPod.DeepCopy()
+				delete(oldSelectorETCDEventsPod.Labels, "app.kubernetes.io/part-of")
+				oldSelectorETCDEventsPod.Labels["instance"] = "etcd-events"
+				Expect(fakeControlPlaneClient.Create(ctx, oldSelectorETCDEventsPod))
+			}
+
+			Expect(fakeControlPlaneClient.Create(ctx, kubeAPIServerPod)).To(Succeed())
+			Expect(fakeControlPlaneClient.Create(ctx, kubeControllerManagerPod)).To(Succeed())
+			Expect(fakeControlPlaneClient.Create(ctx, kubeSchedulerPod)).To(Succeed())
+			Expect(fakeControlPlaneClient.Create(ctx, controlPlaneDikiPod)).To(Succeed())
+
+			Expect(fakeClusterClient.Create(ctx, clusterNode)).To(Succeed())
+			Expect(fakeClusterClient.Create(ctx, kubeProxyPod)).To(Succeed())
+			Expect(fakeClusterClient.Create(ctx, clusterDikiPod)).To(Succeed())
+
+			fakeControlPlanePodContext = fakepod.NewFakeSimplePodContext(seedExecuteReturnString, seedExecuteReturnError)
+			fakeClusterPodContext = fakepod.NewFakeSimplePodContext(shootExecuteReturnString, shootExecuteReturnError)
+			r := &rules.Rule242466{
+				Logger:                 testLogger,
+				InstanceID:             instanceID,
+				ControlPlaneClient:     fakeControlPlaneClient,
+				ClusterClient:          fakeClusterClient,
+				ControlPlaneNamespace:  Namespace,
+				ControlPlanePodContext: fakeControlPlanePodContext,
+				ClusterPodContext:      fakeClusterPodContext,
+				Options:                option,
+			}
+
+			ruleResult, err := r.Run(ctx)
+
+			Expect(err).To(BeNil())
+			Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
+		},
+		Entry("should return correct errored checkResults when old ETCD pods are partially found", false,
+			[][]string{{mounts, compliantStats, emptyMounts, emptyMounts, emptyMounts}},
+			[][]string{{kubeletPID, kubeletCommand, tlsKubeletConfig, compliantCertStats}, {mounts, compliantStats}},
+			[][]error{{nil, nil, nil, nil, nil}},
+			[][]error{{nil, nil, nil, nil}, {nil, nil}}, nil,
+			[]rule.CheckResult{
+				rule.ErroredCheckResult("pods not found", rule.NewTarget("cluster", "seed", "namespace", "foo", "selector", "instance=etcd-events")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.crt, permissions: 644")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "shoot", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.crt, permissions: 644")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "shoot", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /var/lib/certs/tls.crt, permissions: 644")),
+			}),
+		Entry("should return passed checkResults from ETCD pods with old labels", true,
+			[][]string{{mounts, compliantStats, mounts, compliantStats2, emptyMounts, emptyMounts, emptyMounts}},
+			[][]string{{kubeletPID, kubeletCommand, tlsKubeletConfig, compliantCertStats}, {mounts, compliantStats}},
+			[][]error{{nil, nil, nil, nil, nil, nil, nil}},
+			[][]error{{nil, nil, nil, nil}, {nil, nil}}, nil,
+			[]rule.CheckResult{
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.crt, permissions: 644")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "seed", "name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.crt, permissions: 600")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "shoot", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.crt, permissions: 644")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "shoot", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /var/lib/certs/tls.crt, permissions: 644")),
+			}))
 
 	DescribeTable("Run cases",
 		func(seedExecuteReturnString, shootExecuteReturnString [][]string, seedExecuteReturnError, shootExecuteReturnError [][]error, option *option.KubeProxyOptions, expectedCheckResults []rule.CheckResult) {

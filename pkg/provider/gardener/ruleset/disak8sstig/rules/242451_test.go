@@ -246,13 +246,13 @@ tlsCertFile: /var/lib/certs/tls.crt`
 		etcdMainPod = plainPod.DeepCopy()
 		etcdMainPod.Name = "1-pod"
 		etcdMainPod.Labels["name"] = "etcd"
-		etcdMainPod.Labels["instance"] = "etcd-main"
+		etcdMainPod.Labels["app.kubernetes.io/part-of"] = "etcd-main"
 		etcdMainPod.OwnerReferences[0].UID = "1"
 
 		etcdEventsPod = plainPod.DeepCopy()
 		etcdEventsPod.Name = "etcd-events"
 		etcdEventsPod.Labels["name"] = "etcd"
-		etcdEventsPod.Labels["instance"] = "etcd-events"
+		etcdEventsPod.Labels["app.kubernetes.io/part-of"] = "etcd-events"
 		etcdEventsPod.OwnerReferences[0].UID = "2"
 
 		kubeAPIServerPod = plainPod.DeepCopy()
@@ -299,8 +299,8 @@ tlsCertFile: /var/lib/certs/tls.crt`
 	})
 
 	It("should fail when pods cannot be found", func() {
-		mainSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
-		eventsSelector := labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
+		mainSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
+		eventsSelector := labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
 		kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
 		fakeControlPlanePodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
 		fakeClusterPodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
@@ -327,6 +327,85 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			rule.ErroredCheckResult("no allocatable nodes could be selected", rule.NewTarget("cluster", "shoot")),
 		}))
 	})
+
+	//TODO: Remove these describe table test cases once support for the instance labels is deprecated
+	DescribeTable("Run temporary instance label cases", func(options rules.Options242451, includeETCDEventsPod bool, seedExecuteReturnString, shootExecuteReturnString [][]string, seedExecuteReturnError, shootExecuteReturnError [][]error, expectedCheckResults []rule.CheckResult) {
+		oldSelectorETCDMainPod := etcdMainPod.DeepCopy()
+		delete(oldSelectorETCDMainPod.Labels, "app.kubernetes.io/part-of")
+		oldSelectorETCDMainPod.Labels["instance"] = "etcd-main"
+		Expect(fakeControlPlaneClient.Create(ctx, oldSelectorETCDMainPod))
+
+		if includeETCDEventsPod {
+			oldSelectorETCDEventsPod := etcdEventsPod.DeepCopy()
+			delete(oldSelectorETCDEventsPod.Labels, "app.kubernetes.io/part-of")
+			oldSelectorETCDEventsPod.Labels["instance"] = "etcd-events"
+			Expect(fakeControlPlaneClient.Create(ctx, oldSelectorETCDEventsPod))
+		}
+
+		Expect(fakeControlPlaneClient.Create(ctx, kubeAPIServerPod)).To(Succeed())
+		Expect(fakeControlPlaneClient.Create(ctx, kubeControllerManagerPod)).To(Succeed())
+		Expect(fakeControlPlaneClient.Create(ctx, kubeSchedulerPod)).To(Succeed())
+		Expect(fakeControlPlaneClient.Create(ctx, controlPlaneDikiPod)).To(Succeed())
+
+		Expect(fakeClusterClient.Create(ctx, clusterNode)).To(Succeed())
+		Expect(fakeClusterClient.Create(ctx, kubeProxyPod)).To(Succeed())
+		Expect(fakeClusterClient.Create(ctx, clusterDikiPod)).To(Succeed())
+
+		fakeControlPlanePodContext = fakepod.NewFakeSimplePodContext(seedExecuteReturnString, seedExecuteReturnError)
+		fakeClusterPodContext = fakepod.NewFakeSimplePodContext(shootExecuteReturnString, shootExecuteReturnError)
+		r := &rules.Rule242451{
+			Logger:                 testLogger,
+			InstanceID:             instanceID,
+			ControlPlaneClient:     fakeControlPlaneClient,
+			ClusterClient:          fakeClusterClient,
+			ControlPlaneNamespace:  Namespace,
+			ControlPlanePodContext: fakeControlPlanePodContext,
+			ClusterPodContext:      fakeClusterPodContext,
+			Options:                &options,
+		}
+
+		ruleResult, err := r.Run(ctx)
+
+		Expect(err).To(BeNil())
+		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
+	},
+		Entry("should return correct errored checkResults when finding old ETCD pods are partially found", nil, false,
+			[][]string{{mounts, compliantStats, compliantDirStats, emptyMounts, emptyMounts, emptyMounts}},
+			[][]string{{kubeletPID, kubeletCommand, tlsKubeletConfig, compliantKeyStats, compliantCertStats, compliantKeyDirStats, compliantCertDirStats}, {mounts, compliantStats, compliantDirStats}},
+			[][]error{{nil, nil, nil, nil, nil, nil}},
+			[][]error{{nil, nil, nil, nil, nil, nil, nil}, {nil, nil, nil}},
+			[]rule.CheckResult{
+				rule.ErroredCheckResult("pods not found", rule.NewTarget("cluster", "seed", "namespace", "foo", "selector", "instance=etcd-events")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /var/lib/keys/tls.key, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /var/lib/certs/tls.crt, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /var/lib/keys, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /var/lib/certs, ownerUser: 0, ownerGroup: 0")),
+			}),
+		Entry("should return passed checkResults from ETCD pods with old labels", nil, true,
+			[][]string{{mounts, compliantStats, compliantDirStats, mounts, compliantStats2, compliantDirStats, emptyMounts, emptyMounts, emptyMounts}},
+			[][]string{{kubeletPID, kubeletCommand, tlsKubeletConfig, compliantKeyStats, compliantCertStats, compliantKeyDirStats, compliantCertDirStats}, {mounts, compliantStats, compliantDirStats}},
+			[][]error{{nil, nil, nil, nil, nil, nil, nil, nil, nil}},
+			[][]error{{nil, nil, nil, nil, nil, nil, nil}, {nil, nil, nil}},
+			[]rule.CheckResult{
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.crt, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "seed", "name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /var/lib/keys/tls.key, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /var/lib/certs/tls.crt, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /var/lib/keys, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "node", "details", "fileName: /var/lib/certs, ownerUser: 0, ownerGroup: 0")),
+			}))
 
 	DescribeTable("Run cases",
 		func(options rules.Options242451, seedExecuteReturnString, shootExecuteReturnString [][]string, seedExecuteReturnError, shootExecuteReturnError [][]error, expectedCheckResults []rule.CheckResult) {
