@@ -21,13 +21,45 @@ import (
 )
 
 var _ = Describe("#242382", func() {
+	const (
+		authzConfig = `apiVersion: apiserver.config.k8s.io/v1beta1
+kind: AuthorizationConfiguration
+authorizers:
+- type: Node
+  name: node
+- type: RBAC
+  name: rbac`
+		notAllowedAuthzConfig = `apiVersion: apiserver.config.k8s.io/v1beta1
+kind: AuthorizationConfiguration
+authorizers:
+- type: AlwaysAllow
+  name: AlwaysAllow`
+		notExpectedAuthzConfig = `apiVersion: apiserver.config.k8s.io/v1beta1
+kind: AuthorizationConfiguration
+authorizers:
+- type: Webhook
+  name: Webhook
+- type: Node
+  name: node
+- type: RBAC
+  name: rbac`
+		notAllExpectedAuthzConfig = `apiVersion: apiserver.config.k8s.io/v1beta1
+kind: AuthorizationConfiguration
+authorizers:
+- type: Node
+  name: node`
+	)
 	var (
-		fakeClient client.Client
-		ctx        = context.TODO()
-		namespace  = "foo"
-
-		kcmDeployment *appsv1.Deployment
-		target        = rule.NewTarget("name", "kube-apiserver", "namespace", namespace, "kind", "deployment")
+		fakeClient                client.Client
+		ctx                       = context.TODO()
+		namespace                 = "foo"
+		fileName                  = "fileName.yaml"
+		configMapName             = "kube-apiserver-authorization-config"
+		configMapData             = "configMapData"
+		kcmDeployment             *appsv1.Deployment
+		configMap                 *corev1.ConfigMap
+		target                    = rule.NewTarget("name", "kube-apiserver", "namespace", namespace, "kind", "deployment")
+		authorizationConfigTarget = rule.NewTarget("kind", "AuthorizationConfiguration")
 	)
 
 	BeforeEach(func() {
@@ -45,10 +77,37 @@ var _ = Describe("#242382", func() {
 								Name:    "kube-apiserver",
 								Command: []string{},
 								Args:    []string{},
+								VolumeMounts: []corev1.VolumeMount{
+									{
+										Name:      "authorization-config",
+										MountPath: "/foo/bar",
+									},
+								},
+							},
+						},
+						Volumes: []corev1.Volume{
+							{
+								Name: "authorization-config",
+								VolumeSource: corev1.VolumeSource{
+									ConfigMap: &corev1.ConfigMapVolumeSource{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: configMapName,
+										},
+									},
+								},
 							},
 						},
 					},
 				},
+			},
+		}
+		configMap = &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      configMapName,
+				Namespace: namespace,
+			},
+			Data: map[string]string{
+				fileName: configMapData,
 			},
 		}
 	})
@@ -68,7 +127,7 @@ var _ = Describe("#242382", func() {
 		))
 	})
 
-	DescribeTable("Run cases",
+	DescribeTable("Run authorization-mode cases",
 		func(expectedModes []string, container corev1.Container, expectedCheckResults []rule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
 			kcmDeployment.Spec.Template.Spec.Containers = []corev1.Container{container}
 			Expect(fakeClient.Create(ctx, kcmDeployment)).To(Succeed())
@@ -123,6 +182,57 @@ var _ = Describe("#242382", func() {
 		Entry("should error when deployment does not have container 'kube-apiserver'", []string{},
 			corev1.Container{Name: "not-kube-apiserver", Command: []string{"--authorization-mode=RBAC,Node"}},
 			[]rule.CheckResult{{Status: rule.Errored, Message: "deployment: kube-apiserver does not contain container: kube-apiserver", Target: target}},
+			BeNil()),
+	)
+
+	DescribeTable("Run AuthorizationConfiguration cases",
+		func(expectedModes, command, args []string, configMapData map[string]string, expectedCheckResults []rule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
+			kcmDeployment.Spec.Template.Spec.Containers[0].Command = command
+			kcmDeployment.Spec.Template.Spec.Containers[0].Args = args
+			Expect(fakeClient.Create(ctx, kcmDeployment)).To(Succeed())
+
+			configMap.Data = configMapData
+			Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
+
+			r := &rules.Rule242382{
+				Client:        fakeClient,
+				Namespace:     namespace,
+				ExpectedModes: expectedModes,
+			}
+			ruleResult, err := r.Run(ctx)
+			Expect(err).To(errorMatcher)
+
+			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+		},
+
+		Entry("should pass when AuthorizationConfiguration contains only expected mode types Node,RBAC", []string{},
+			[]string{"--authorization-config=/foo/bar/fileName.yaml"}, []string{},
+			map[string]string{fileName: authzConfig},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Expected modes set.", Target: authorizationConfigTarget}},
+			BeNil()),
+		Entry("should fail when AuthorizationConfiguration contains not allowd mode type AlwaysAllow", []string{},
+			[]string{"--authorization-config=/foo/bar/fileName.yaml"}, []string{},
+			map[string]string{fileName: notAllowedAuthzConfig},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Not allowed mode set.", Target: authorizationConfigTarget}},
+			BeNil()),
+		Entry("should fail when AuthorizationConfiguration contains not expected mode type", []string{},
+			[]string{"--authorization-config=/foo/bar/fileName.yaml"}, []string{},
+			map[string]string{fileName: notExpectedAuthzConfig},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Not expected mode set.", Target: authorizationConfigTarget}},
+			BeNil()),
+		Entry("should fail when AuthorizationConfiguration does not contain all expected mode types", []string{},
+			[]string{"--authorization-config=/foo/bar/fileName.yaml"}, []string{},
+			map[string]string{fileName: notAllExpectedAuthzConfig},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Not expected mode set.", Target: authorizationConfigTarget}},
+			BeNil()),
+		Entry("should return correct checkResults when expectedModes are set", []string{"RBAC", "Node", "Webhook"},
+			[]string{"--authorization-config=/foo/bar/fileName.yaml"}, []string{},
+			map[string]string{fileName: notExpectedAuthzConfig},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Expected modes set.", Target: authorizationConfigTarget}},
+			BeNil()),
+		Entry("should warn when authorization-config is set more than once", []string{},
+			[]string{"--authorization-config=/foo/bar"}, []string{"--authorization-config=/bar/foo"}, map[string]string{},
+			[]rule.CheckResult{{Status: rule.Warning, Message: "Option authorization-config has been set more than once in container command.", Target: target}},
 			BeNil()),
 	)
 })
