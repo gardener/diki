@@ -92,9 +92,10 @@ func (mr *MergedRuleset) mergeRules(uniqueAttrVal string, rules []Rule) {
 
 // MergedRule contains information about a ran rule for multiple reports.
 type MergedRule struct {
-	ID     string        `json:"id"`
-	Name   string        `json:"name"`
-	Checks []MergedCheck `json:"checks"`
+	ID       string        `json:"id"`
+	Name     string        `json:"name"`
+	Severity string        `json:"severity,omitempty"`
+	Checks   []MergedCheck `json:"checks"`
 }
 
 // mergeChecks traverses the checks from a single rule
