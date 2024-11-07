@@ -193,9 +193,10 @@ func getRules(ruleResults []rule.RuleResult, opts *ReportOptions) []Rule {
 	rules := make([]Rule, 0, len(ruleResults))
 	for _, ruleResult := range ruleResults {
 		r := Rule{
-			ID:     ruleResult.RuleID,
-			Name:   ruleResult.RuleName,
-			Checks: getChecks(ruleResult.CheckResults, opts),
+			ID:       ruleResult.RuleID,
+			Name:     ruleResult.RuleName,
+			Severity: string(ruleResult.Severity),
+			Checks:   getChecks(ruleResult.CheckResults, opts),
 		}
 		rules = append(rules, r)
 	}
