@@ -47,7 +47,7 @@ func NewPrivilegedPod(name, namespace, image, nodeName string, additionalLabels 
 				{
 					Name:    "container",
 					Image:   image,
-					Command: []string{"chroot", "/host", "/bin/bash", "-c", "nsenter --all -t $(pgrep -xo systemd) sleep 600"},
+					Command: []string{"chroot", "/host", "/bin/bash", "-c", "nsenter -m -t $(pgrep -xo systemd) sleep 600"},
 					SecurityContext: &corev1.SecurityContext{
 						Privileged: ptr.To(true),
 					},
