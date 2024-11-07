@@ -6,10 +6,18 @@ package rule
 
 // Result returns a [RuleResult] containing the passed checks.
 func Result(r Rule, checkResults ...CheckResult) RuleResult {
+	var severity Severity
+
+	measurer, ok := r.(Assessor)
+	if ok {
+		severity = measurer.Severity()
+	}
+
 	return RuleResult{
 		RuleID:       r.ID(),
 		RuleName:     r.Name(),
 		CheckResults: checkResults,
+		Severity:     severity,
 	}
 }
 

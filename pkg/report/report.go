@@ -49,9 +49,10 @@ type Ruleset struct {
 
 // Rule contains information about a ran rule.
 type Rule struct {
-	ID     string  `json:"id"`
-	Name   string  `json:"name"`
-	Checks []Check `json:"checks"`
+	ID       string  `json:"id"`
+	Name     string  `json:"name"`
+	Severity string  `json:"severity,omitempty"`
+	Checks   []Check `json:"checks"`
 }
 
 // Check is the result of a single Rule check.

@@ -20,7 +20,23 @@ type Rule interface {
 // RuleResult contains a Rule identification and the results of a Rule run.
 type RuleResult struct {
 	RuleID, RuleName string
+	Severity         Severity
 	CheckResults     []CheckResult
+}
+
+// Severity defines the importance of a Rule.
+type Severity string
+
+// These constants define the three levels of severity - Low, Medium and High
+const (
+	SeverityLow    Severity = "Low"
+	SeverityMedium Severity = "Medium"
+	SeverityHigh   Severity = "High"
+)
+
+// Assessor defines the importance of a rule
+type Assessor interface {
+	Severity() Severity
 }
 
 // Target is used to describe the things that were checked during ruleset runs.
