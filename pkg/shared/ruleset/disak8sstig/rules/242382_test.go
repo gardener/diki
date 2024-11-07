@@ -28,7 +28,9 @@ authorizers:
 - type: Node
   name: node
 - type: RBAC
-  name: rbac`
+  name: rbac
+- type: Webhook
+  name: Webhook`
 		notAllowedAuthzConfig = `apiVersion: apiserver.config.k8s.io/v1beta1
 kind: AuthorizationConfiguration
 authorizers:
@@ -46,6 +48,13 @@ authorizers:
 		notAllExpectedAuthzConfig = `apiVersion: apiserver.config.k8s.io/v1beta1
 kind: AuthorizationConfiguration
 authorizers:
+- type: Node
+  name: node`
+		wrongOrderAuthzConfig = `apiVersion: apiserver.config.k8s.io/v1beta1
+kind: AuthorizationConfiguration
+authorizers:
+- type: RBAC
+  name: rbac
 - type: Node
   name: node`
 	)
@@ -133,9 +142,9 @@ authorizers:
 			Expect(fakeClient.Create(ctx, kcmDeployment)).To(Succeed())
 
 			r := &rules.Rule242382{
-				Client:        fakeClient,
-				Namespace:     namespace,
-				ExpectedModes: expectedModes,
+				Client:               fakeClient,
+				Namespace:            namespace,
+				ExpectedInitialModes: expectedModes,
 			}
 			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
@@ -148,7 +157,7 @@ authorizers:
 			[]rule.CheckResult{{Status: rule.Failed, Message: "Option authorization-mode has not been set.", Target: target}},
 			BeNil()),
 		Entry("should pass when authorization-mode is set to expected value Node,RBAC", []string{},
-			corev1.Container{Name: "kube-apiserver", Command: []string{"--authorization-mode=Node,RBAC"}},
+			corev1.Container{Name: "kube-apiserver", Command: []string{"--authorization-mode=Node,RBAC,Webhook"}},
 			[]rule.CheckResult{{Status: rule.Passed, Message: "Option authorization-mode set to expected value.", Target: target}},
 			BeNil()),
 		Entry("should fail when authorization-mode is set to not expected value RBAC,Node", []string{},
@@ -195,9 +204,9 @@ authorizers:
 			Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
 
 			r := &rules.Rule242382{
-				Client:        fakeClient,
-				Namespace:     namespace,
-				ExpectedModes: expectedModes,
+				Client:               fakeClient,
+				Namespace:            namespace,
+				ExpectedInitialModes: expectedModes,
 			}
 			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
@@ -208,27 +217,32 @@ authorizers:
 		Entry("should pass when AuthorizationConfiguration contains only expected mode types Node,RBAC", []string{},
 			[]string{"--authorization-config=/foo/bar/fileName.yaml"}, []string{},
 			map[string]string{fileName: authzConfig},
-			[]rule.CheckResult{{Status: rule.Passed, Message: "Expected modes set.", Target: authorizationConfigTarget}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "AuthorizationConfiguration has expected initial mode types set.", Target: authorizationConfigTarget}},
 			BeNil()),
 		Entry("should fail when AuthorizationConfiguration contains not allowd mode type AlwaysAllow", []string{},
 			[]string{"--authorization-config=/foo/bar/fileName.yaml"}, []string{},
 			map[string]string{fileName: notAllowedAuthzConfig},
-			[]rule.CheckResult{{Status: rule.Failed, Message: "Not allowed mode set.", Target: authorizationConfigTarget}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "AuthorizationConfiguration has not allowed mode type set.", Target: authorizationConfigTarget}},
 			BeNil()),
 		Entry("should fail when AuthorizationConfiguration contains not expected mode type", []string{},
 			[]string{"--authorization-config=/foo/bar/fileName.yaml"}, []string{},
 			map[string]string{fileName: notExpectedAuthzConfig},
-			[]rule.CheckResult{{Status: rule.Failed, Message: "Not expected mode set.", Target: authorizationConfigTarget}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "AuthorizationConfiguration has not expected initial mode type set.", Target: authorizationConfigTarget}},
 			BeNil()),
 		Entry("should fail when AuthorizationConfiguration does not contain all expected mode types", []string{},
 			[]string{"--authorization-config=/foo/bar/fileName.yaml"}, []string{},
 			map[string]string{fileName: notAllExpectedAuthzConfig},
-			[]rule.CheckResult{{Status: rule.Failed, Message: "Not expected mode set.", Target: authorizationConfigTarget}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "AuthorizationConfiguration has not expected initial mode type set.", Target: authorizationConfigTarget}},
 			BeNil()),
-		Entry("should return correct checkResults when expectedModes are set", []string{"RBAC", "Node", "Webhook"},
+		Entry("should fail when AuthorizationConfiguration sets expected mode types in wrong order", []string{},
+			[]string{"--authorization-config=/foo/bar/fileName.yaml"}, []string{},
+			map[string]string{fileName: wrongOrderAuthzConfig},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "AuthorizationConfiguration has not expected initial mode type set.", Target: authorizationConfigTarget}},
+			BeNil()),
+		Entry("should return correct checkResults when expectedModes are set", []string{"Webhook", "Node", "RBAC"},
 			[]string{"--authorization-config=/foo/bar/fileName.yaml"}, []string{},
 			map[string]string{fileName: notExpectedAuthzConfig},
-			[]rule.CheckResult{{Status: rule.Passed, Message: "Expected modes set.", Target: authorizationConfigTarget}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "AuthorizationConfiguration has expected initial mode types set.", Target: authorizationConfigTarget}},
 			BeNil()),
 		Entry("should warn when authorization-config is set more than once", []string{},
 			[]string{"--authorization-config=/foo/bar"}, []string{"--authorization-config=/bar/foo"}, map[string]string{},

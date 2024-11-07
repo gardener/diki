@@ -27,6 +27,20 @@ func Subset(s1, s2 []string) bool {
 	return true
 }
 
+// InitialSegment checks if all ordered elements of s1 are the initial ordered elements of s2. An empty s1 is always a initial segment of s2.
+func InitialSegment(s1, s2 []string) bool {
+	if len(s1) > len(s2) {
+		return false
+	}
+
+	for i := range s1 {
+		if s1[i] != s2[i] {
+			return false
+		}
+	}
+	return true
+}
+
 // MatchLabels checks if all m2 keys and values are present in m1. If m1 or m2 is nil returns false.
 func MatchLabels(m1, m2 map[string]string) bool {
 	if m1 == nil || m2 == nil {

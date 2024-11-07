@@ -104,11 +104,11 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			ContainerName:  kcmContainerName,
 		},
 		&sharedrules.Rule242382{
-			Client:         runtimeClient,
-			Namespace:      ns,
-			DeploymentName: apiserverDeploymentName,
-			ContainerName:  apiserverContainerName,
-			ExpectedModes:  []string{"RBAC", "Webhook"},
+			Client:               runtimeClient,
+			Namespace:            ns,
+			DeploymentName:       apiserverDeploymentName,
+			ContainerName:        apiserverContainerName,
+			ExpectedInitialModes: []string{"RBAC", "Webhook"},
 		},
 		rule.NewSkipRule(
 			sharedrules.ID242383,

@@ -25,11 +25,11 @@ import (
 var _ rule.Rule = &Rule242382{}
 
 type Rule242382 struct {
-	Client         client.Client
-	Namespace      string
-	DeploymentName string
-	ContainerName  string
-	ExpectedModes  []string
+	Client               client.Client
+	Namespace            string
+	DeploymentName       string
+	ContainerName        string
+	ExpectedInitialModes []string
 }
 
 func (r *Rule242382) ID() string {
@@ -46,9 +46,9 @@ func (r *Rule242382) Run(ctx context.Context) (rule.RuleResult, error) {
 		authorizationConfigOpt = "authorization-config"
 	)
 	var (
-		deploymentName = "kube-apiserver"
-		containerName  = "kube-apiserver"
-		expectedModes  = []string{"Node", "RBAC"}
+		deploymentName       = "kube-apiserver"
+		containerName        = "kube-apiserver"
+		expectedInitialModes = []string{"Node", "RBAC"}
 	)
 
 	if r.DeploymentName != "" {
@@ -59,8 +59,8 @@ func (r *Rule242382) Run(ctx context.Context) (rule.RuleResult, error) {
 		containerName = r.ContainerName
 	}
 
-	if len(r.ExpectedModes) != 0 {
-		expectedModes = r.ExpectedModes
+	if len(r.ExpectedInitialModes) != 0 {
+		expectedInitialModes = r.ExpectedInitialModes
 	}
 
 	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
@@ -76,7 +76,7 @@ func (r *Rule242382) Run(ctx context.Context) (rule.RuleResult, error) {
 	case len(authzConfigOptSlice) == 1 && strings.TrimSpace(authzConfigOptSlice[0]) == "":
 		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Option %s is empty.", authorizationConfigOpt), target)), nil
 	case len(authzConfigOptSlice) == 1:
-		return r.checkAuthzConfig(ctx, deploymentName, containerName, authzConfigOptSlice[0], expectedModes), nil
+		return r.checkAuthzConfig(ctx, deploymentName, containerName, authzConfigOptSlice[0], expectedInitialModes), nil
 	default:
 	}
 
@@ -93,7 +93,7 @@ func (r *Rule242382) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", authorizationModeOpt), target)), nil
 	case slices.Contains(strings.Split(authzModeOptSlice[0], ","), "AlwaysAllow"):
 		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", authorizationModeOpt), target)), nil
-	case slices.Equal(expectedModes, strings.Split(authzModeOptSlice[0], ",")):
+	case utils.InitialSegment(expectedInitialModes, strings.Split(authzModeOptSlice[0], ",")):
 		return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Option %s set to expected value.", authorizationModeOpt), target)), nil
 	default:
 		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not expected value.", authorizationModeOpt), target)), nil
@@ -128,17 +128,14 @@ func (r *Rule242382) checkAuthzConfig(ctx context.Context, deploymentName, conta
 	var modes []string
 	for _, authorizer := range authorizationConfig.Authorizers {
 		if authorizer.Type == "AlwaysAllow" {
-			return rule.Result(r, rule.FailedCheckResult("Not allowed mode set.", authzConfigTarget))
-		}
-		if !slices.Contains(expectedModes, authorizer.Type) {
-			return rule.Result(r, rule.FailedCheckResult("Not expected mode set.", authzConfigTarget))
+			return rule.Result(r, rule.FailedCheckResult("AuthorizationConfiguration has not allowed mode type set.", authzConfigTarget))
 		}
 		modes = append(modes, authorizer.Type)
 	}
 
-	if utils.Subset(expectedModes, modes) {
-		return rule.Result(r, rule.PassedCheckResult("Expected modes set.", authzConfigTarget))
+	if utils.InitialSegment(expectedModes, modes) {
+		return rule.Result(r, rule.PassedCheckResult("AuthorizationConfiguration has expected initial mode types set.", authzConfigTarget))
 	}
 
-	return rule.Result(r, rule.FailedCheckResult("Not expected mode set.", authzConfigTarget))
+	return rule.Result(r, rule.FailedCheckResult("AuthorizationConfiguration has not expected initial mode type set.", authzConfigTarget))
 }
