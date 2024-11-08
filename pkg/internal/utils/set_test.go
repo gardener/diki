@@ -42,6 +42,22 @@ var _ = Describe("utils", func() {
 			[]string{"foo", "bar", "foo-bar"}, []string{"foo", "bar"}, false),
 	)
 
+	DescribeTable("#InitialSegment",
+		func(s1, s2 []string, expectedResult bool) {
+			result := utils.StartsWith(s1, s2...)
+
+			Expect(result).To(Equal(expectedResult))
+		},
+		Entry("should return true when s1 is empty",
+			[]string{"foo", "bar"}, []string{}, true),
+		Entry("should return true when s1 is a initial segment of s2",
+			[]string{"foo", "bar", "foo-bar"}, []string{"foo", "bar"}, true),
+		Entry("should return false when s1 is not a initial segment of s2",
+			[]string{"foo", "bar", "test"}, []string{"bar", "test"}, false),
+		Entry("should return false when s1 has more elements than s2",
+			[]string{"foo", "bar"}, []string{"foo", "bar", "foo-bar"}, false),
+	)
+
 	DescribeTable("#MatchLabels",
 		func(m1, m2 map[string]string, expectedResult bool) {
 			result := utils.MatchLabels(m1, m2)

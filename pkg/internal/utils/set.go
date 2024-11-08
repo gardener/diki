@@ -27,6 +27,20 @@ func Subset(s1, s2 []string) bool {
 	return true
 }
 
+// StartsWith checks if all ordered elements of s2 are the first elements that occur in s1. If s2 is empty, the function returns true.
+func StartsWith(s1 []string, s2 ...string) bool {
+	if len(s2) > len(s1) {
+		return false
+	}
+
+	for i := range s2 {
+		if s2[i] != s1[i] {
+			return false
+		}
+	}
+	return true
+}
+
 // MatchLabels checks if all m2 keys and values are present in m1. If m1 or m2 is nil returns false.
 func MatchLabels(m1, m2 map[string]string) bool {
 	if m1 == nil || m2 == nil {
