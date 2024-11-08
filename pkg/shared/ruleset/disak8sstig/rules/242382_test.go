@@ -142,9 +142,9 @@ authorizers:
 			Expect(fakeClient.Create(ctx, kcmDeployment)).To(Succeed())
 
 			r := &rules.Rule242382{
-				Client:               fakeClient,
-				Namespace:            namespace,
-				ExpectedInitialModes: expectedModes,
+				Client:             fakeClient,
+				Namespace:          namespace,
+				ExpectedStartModes: expectedModes,
 			}
 			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
@@ -204,9 +204,9 @@ authorizers:
 			Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
 
 			r := &rules.Rule242382{
-				Client:               fakeClient,
-				Namespace:            namespace,
-				ExpectedInitialModes: expectedModes,
+				Client:             fakeClient,
+				Namespace:          namespace,
+				ExpectedStartModes: expectedModes,
 			}
 			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
@@ -217,7 +217,7 @@ authorizers:
 		Entry("should pass when AuthorizationConfiguration contains only expected mode types Node,RBAC", []string{},
 			[]string{"--authorization-config=/foo/bar/fileName.yaml"}, []string{},
 			map[string]string{fileName: authzConfig},
-			[]rule.CheckResult{{Status: rule.Passed, Message: "AuthorizationConfiguration has expected initial mode types set.", Target: authorizationConfigTarget}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "AuthorizationConfiguration has expected start mode types set.", Target: authorizationConfigTarget}},
 			BeNil()),
 		Entry("should fail when AuthorizationConfiguration contains not allowd mode type AlwaysAllow", []string{},
 			[]string{"--authorization-config=/foo/bar/fileName.yaml"}, []string{},
@@ -227,22 +227,22 @@ authorizers:
 		Entry("should fail when AuthorizationConfiguration contains not expected mode type", []string{},
 			[]string{"--authorization-config=/foo/bar/fileName.yaml"}, []string{},
 			map[string]string{fileName: notExpectedAuthzConfig},
-			[]rule.CheckResult{{Status: rule.Failed, Message: "AuthorizationConfiguration has not expected initial mode type set.", Target: authorizationConfigTarget}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "AuthorizationConfiguration does not have expected start mode types set.", Target: authorizationConfigTarget}},
 			BeNil()),
 		Entry("should fail when AuthorizationConfiguration does not contain all expected mode types", []string{},
 			[]string{"--authorization-config=/foo/bar/fileName.yaml"}, []string{},
 			map[string]string{fileName: notAllExpectedAuthzConfig},
-			[]rule.CheckResult{{Status: rule.Failed, Message: "AuthorizationConfiguration has not expected initial mode type set.", Target: authorizationConfigTarget}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "AuthorizationConfiguration does not have expected start mode types set.", Target: authorizationConfigTarget}},
 			BeNil()),
 		Entry("should fail when AuthorizationConfiguration sets expected mode types in wrong order", []string{},
 			[]string{"--authorization-config=/foo/bar/fileName.yaml"}, []string{},
 			map[string]string{fileName: wrongOrderAuthzConfig},
-			[]rule.CheckResult{{Status: rule.Failed, Message: "AuthorizationConfiguration has not expected initial mode type set.", Target: authorizationConfigTarget}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "AuthorizationConfiguration does not have expected start mode types set.", Target: authorizationConfigTarget}},
 			BeNil()),
 		Entry("should return correct checkResults when expectedModes are set", []string{"Webhook", "Node", "RBAC"},
 			[]string{"--authorization-config=/foo/bar/fileName.yaml"}, []string{},
 			map[string]string{fileName: notExpectedAuthzConfig},
-			[]rule.CheckResult{{Status: rule.Passed, Message: "AuthorizationConfiguration has expected initial mode types set.", Target: authorizationConfigTarget}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "AuthorizationConfiguration has expected start mode types set.", Target: authorizationConfigTarget}},
 			BeNil()),
 		Entry("should warn when authorization-config is set more than once", []string{},
 			[]string{"--authorization-config=/foo/bar"}, []string{"--authorization-config=/bar/foo"}, map[string]string{},

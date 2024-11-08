@@ -27,14 +27,14 @@ func Subset(s1, s2 []string) bool {
 	return true
 }
 
-// InitialSegment checks if all ordered elements of s1 are the initial ordered elements of s2. An empty s1 is always a initial segment of s2.
-func InitialSegment(s1, s2 []string) bool {
-	if len(s1) > len(s2) {
+// StartsWith checks if all ordered elements of s2 are the first elements that occur in s1. If s2 is empty, the function returns true.
+func StartsWith(s1 []string, s2 ...string) bool {
+	if len(s2) > len(s1) {
 		return false
 	}
 
-	for i := range s1 {
-		if s1[i] != s2[i] {
+	for i := range s2 {
+		if s2[i] != s1[i] {
 			return false
 		}
 	}
