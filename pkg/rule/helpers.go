@@ -12,7 +12,7 @@ func Result(r Rule, checkResults ...CheckResult) RuleResult {
 		CheckResults: checkResults,
 	}
 
-	if severity, ok := r.(Assessor); ok {
+	if severity, ok := r.(Severity); ok {
 		result.Severity = severity.Severity()
 	}
 	return result

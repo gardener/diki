@@ -36,8 +36,8 @@ const (
 	SeverityHigh SeverityLevel = "High"
 )
 
-// Assessor defines the importance of a rule
-type Assessor interface {
+// Severity defines the importance of a rule
+type Severity interface {
 	Severity() SeverityLevel
 }
 

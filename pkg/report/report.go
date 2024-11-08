@@ -49,10 +49,10 @@ type Ruleset struct {
 
 // Rule contains information about a ran rule.
 type Rule struct {
-	ID       string  `json:"id"`
-	Name     string  `json:"name"`
-	Severity string  `json:"severity,omitempty"`
-	Checks   []Check `json:"checks"`
+	ID       string             `json:"id"`
+	Name     string             `json:"name"`
+	Severity rule.SeverityLevel `json:"severity,omitempty"`
+	Checks   []Check            `json:"checks"`
 }
 
 // Check is the result of a single Rule check.
@@ -158,7 +158,7 @@ func numOfRulesWithStatus(ruleset *Ruleset, status rule.Status) int {
 func rulesWithStatus(ruleset *Ruleset, status rule.Status) []Rule {
 	var result []Rule
 	for _, rule := range ruleset.Rules {
-		ruleWithStatus := Rule{ID: rule.ID, Name: rule.Name}
+		ruleWithStatus := Rule{ID: rule.ID, Name: rule.Name, Severity: rule.Severity}
 		for _, check := range rule.Checks {
 			if check.Status == status {
 				ruleWithStatus.Checks = append(ruleWithStatus.Checks, check)
@@ -195,7 +195,7 @@ func getRules(ruleResults []rule.RuleResult, opts *ReportOptions) []Rule {
 		r := Rule{
 			ID:       ruleResult.RuleID,
 			Name:     ruleResult.RuleName,
-			Severity: string(ruleResult.Severity),
+			Severity: ruleResult.Severity,
 			Checks:   getChecks(ruleResult.CheckResults, opts),
 		}
 		rules = append(rules, r)
