@@ -68,6 +68,7 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 		"rulesetSummaryText": rulesetSummaryText,
 		"rulesWithStatus":    rulesWithStatus,
 		"sortedMapKeys":      sortedKeys[string],
+		"createRuleTitle":    createRuleTitle,
 	}).ParseFS(files, tmplReportPath, tmplStylesPath)
 	if err != nil {
 		return nil, err
@@ -84,6 +85,7 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 		"mergedRulesetSummaryText": mergedRulesetSummaryText,
 		"mergedRulesWithStatus":    mergedRulesWithStatus,
 		"sortedMapKeys":            sortedKeys[string],
+		"createRuleTitle":          createRuleTitle,
 	}).ParseFS(files, tmplMergedReportPath, tmplStylesPath)
 	if err != nil {
 		return nil, err
@@ -100,6 +102,7 @@ func NewHTMLRenderer() (*HTMLRenderer, error) {
 		"keyExists":                     keyExists,
 		"getAttrString":                 getProviderDiffIDText,
 		"sortedMapKeys":                 sortedKeys[string],
+		"createRuleTitle":               createRuleTitle,
 	}).ParseFS(files, tmplDifferenceReportPath, tmplStylesPath)
 	if err != nil {
 		return nil, err

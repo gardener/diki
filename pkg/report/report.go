@@ -55,6 +55,14 @@ type Rule struct {
 	Checks   []Check            `json:"checks"`
 }
 
+// createRuleTitle creates a title string that is used to describe the rule in the HTML report
+func createRuleTitle(id string, severity rule.SeverityLevel, name string) string {
+	if severity == "" {
+		return fmt.Sprintf("%s - %s", id, name)
+	}
+	return fmt.Sprintf("%s (%s) - %s", id, severity, name)
+}
+
 // Check is the result of a single Rule check.
 type Check struct {
 	Status  rule.Status   `json:"status"`
