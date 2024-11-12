@@ -22,13 +22,22 @@ type SkipRule struct {
 
 // NewSkipRule returns a new skipped Rule.
 func NewSkipRule(id, name, justification string, status Status, severity ...SeverityLevel) *SkipRule {
-	return &SkipRule{
+	skipRule := &SkipRule{
 		id:            id,
 		name:          name,
-		severity:      severity[0],
 		justification: justification,
 		status:        status,
 	}
+
+	if len(severity) == 1 {
+		skipRule.severity = severity[0]
+	}
+
+	if len(severity) > 1 {
+		return nil
+	}
+
+	return skipRule
 }
 
 // ID returns the id of the Rule.
