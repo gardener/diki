@@ -193,12 +193,12 @@ func generateDiffCmd(args []string, generateDiffOpts generateDiffOptions, rootOp
 		writer = file
 	}
 
-	htlmRenderer, err := report.NewHTMLRenderer()
+	htmlRenderer, err := report.NewHTMLRenderer()
 	if err != nil {
 		return fmt.Errorf("failed to initialize renderer: %w", err)
 	}
 
-	return htlmRenderer.Render(writer, &report.DifferenceReportsWrapper{
+	return htmlRenderer.Render(writer, &report.DifferenceReportsWrapper{
 		DifferenceReports:  differences,
 		IdentityAttributes: generateDiffOpts.identityAttributes,
 	})
@@ -307,12 +307,12 @@ func generateCmd(args []string, rootOpts reportOptions, opts generateOptions, lo
 
 	switch opts.format {
 	case "html":
-		htlmRenderer, err := report.NewHTMLRenderer()
+		htmlRenderer, err := report.NewHTMLRenderer()
 		if err != nil {
 			return fmt.Errorf("failed to initialize renderer: %w", err)
 		}
 
-		return htlmRenderer.Render(writer, outputReport)
+		return htmlRenderer.Render(writer, outputReport)
 	case "json":
 		data, err := json.Marshal(outputReport)
 		if err != nil {

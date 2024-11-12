@@ -69,12 +69,12 @@ Diki can generate a human readable report from the output files of a `diki run` 
 
 - Generate an html report
 ```bash
-diki report generate --output=report.hmtl output.json
+diki report generate --output=report.html output.json
 ```
 
 - Generate merged html report
 ```bash
-diki report generate --distinct-by=gardener=id --output=report.hmtl output1.json output2.json
+diki report generate --distinct-by=gardener=id --output=report.html output1.json output2.json
 ```
 
 #### Difference
