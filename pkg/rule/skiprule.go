@@ -20,18 +20,18 @@ type SkipRule struct {
 	status        Status
 }
 
-// Option is an interface that allows adding additional parameters to the SkipRule instances
-type Option func(*SkipRule)
+// SkipRuleOption is an interface that allows adding additional parameters to the SkipRule instances.
+type SkipRuleOption func(*SkipRule)
 
-// WithSeverity returns an Option method that adds a Severity value to the SkipRule instance
-func WithSeverity(severity SeverityLevel) Option {
+// WithSeverity returns a SkipRuleOption method that adds a Severity value to the SkipRule instance.
+func WithSeverity(severity SeverityLevel) SkipRuleOption {
 	return func(skipRule *SkipRule) {
 		skipRule.severity = severity
 	}
 }
 
 // NewSkipRule returns a new skipped Rule.
-func NewSkipRule(id, name, justification string, status Status, optionalParameters ...Option) *SkipRule {
+func NewSkipRule(id, name, justification string, status Status, optionalParameters ...SkipRuleOption) *SkipRule {
 	skipRule := &SkipRule{
 		id:            id,
 		name:          name,
