@@ -80,9 +80,10 @@ func (mr *MergedRuleset) mergeRules(uniqueAttrVal string, rules []Rule) {
 			mr.Rules[idx].mergeChecks(uniqueAttrVal, rule.Checks)
 		} else {
 			mergedRule := MergedRule{
-				ID:     rule.ID,
-				Name:   rule.Name,
-				Checks: []MergedCheck{},
+				ID:       rule.ID,
+				Name:     rule.Name,
+				Severity: rule.Severity,
+				Checks:   []MergedCheck{},
 			}
 			mergedRule.mergeChecks(uniqueAttrVal, rule.Checks)
 			mr.Rules = append(mr.Rules, mergedRule)
@@ -92,9 +93,10 @@ func (mr *MergedRuleset) mergeRules(uniqueAttrVal string, rules []Rule) {
 
 // MergedRule contains information about a ran rule for multiple reports.
 type MergedRule struct {
-	ID     string        `json:"id"`
-	Name   string        `json:"name"`
-	Checks []MergedCheck `json:"checks"`
+	ID       string             `json:"id"`
+	Name     string             `json:"name"`
+	Severity rule.SeverityLevel `json:"severity,omitempty"`
+	Checks   []MergedCheck      `json:"checks"`
 }
 
 // mergeChecks traverses the checks from a single rule
@@ -228,7 +230,7 @@ func MergeReport(reports []*Report, distinctByAttrs map[string]string) (*MergedR
 func mergedRulesWithStatus(ruleset *MergedRuleset, status rule.Status) []MergedRule {
 	result := []MergedRule{}
 	for _, rule := range ruleset.Rules {
-		ruleWithStatus := MergedRule{ID: rule.ID, Name: rule.Name}
+		ruleWithStatus := MergedRule{ID: rule.ID, Name: rule.Name, Severity: rule.Severity}
 		for _, check := range rule.Checks {
 			if check.Status == status {
 				ruleWithStatus.Checks = append(ruleWithStatus.Checks, check)

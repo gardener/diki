@@ -113,7 +113,7 @@
                                     <li>
                                         <button onclick="collapse(event)" class="tw-pr-2"><i
                                                 class="arrow right"></i></button>
-                                        <span class="tw-font-semibold">{{ .Name }}</span>
+                                        <span class="tw-font-semibold">{{ ruleTitle .ID .Severity  .Name }}</span>
                                         <ul class="tw-list-inside tw-pl-5 tw-hidden">
                                             {{- range .Checks }}
                                             <li>

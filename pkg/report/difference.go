@@ -50,14 +50,15 @@ type RulesetDifference struct {
 
 // RuleDifference contains the difference between two reports for a single rule.
 type RuleDifference struct {
-	ID      string  `json:"id"`
-	Name    string  `json:"name"`
-	Added   []Check `json:"added,omitempty"`
-	Removed []Check `json:"removed,omitempty"`
+	ID       string             `json:"id"`
+	Name     string             `json:"name"`
+	Severity rule.SeverityLevel `json:"severity,omitempty"`
+	Added    []Check            `json:"added,omitempty"`
+	Removed  []Check            `json:"removed,omitempty"`
 }
 
 // CreateDifference creates the difference between two reports.
-func CreateDifference(oldReport Report, newReport Report, title string) (*DifferenceReport, error) {
+func CreateDifference(oldReport, newReport Report, title string) (*DifferenceReport, error) {
 	var minStatus rule.Status
 	switch {
 	case oldReport.MinStatus == newReport.MinStatus:
@@ -178,9 +179,10 @@ func getRulesDifference(oldRules, newRules []Rule) []RuleDifference {
 
 	for _, newCheck := range addedChecks {
 		ruleDiff = append(ruleDiff, RuleDifference{
-			ID:    newCheck.ID,
-			Name:  newCheck.Name,
-			Added: newCheck.Checks,
+			ID:       newCheck.ID,
+			Severity: newCheck.Severity,
+			Name:     newCheck.Name,
+			Added:    newCheck.Checks,
 		})
 	}
 
@@ -195,9 +197,10 @@ func getRulesDifference(oldRules, newRules []Rule) []RuleDifference {
 		}
 
 		ruleDiff = append(ruleDiff, RuleDifference{
-			ID:      removedCheck.ID,
-			Name:    removedCheck.Name,
-			Removed: removedCheck.Checks,
+			ID:       removedCheck.ID,
+			Severity: removedCheck.Severity,
+			Name:     removedCheck.Name,
+			Removed:  removedCheck.Checks,
 		})
 	}
 
@@ -239,9 +242,10 @@ func getCheckDifference(rules1, rules2 []Rule) []Rule {
 
 		if len(difference) > 0 {
 			uniqueRulesChecks = append(uniqueRulesChecks, Rule{
-				ID:     rule1.ID,
-				Name:   rule1.Name,
-				Checks: difference,
+				ID:       rule1.ID,
+				Name:     rule1.Name,
+				Severity: rule1.Severity,
+				Checks:   difference,
 			})
 		}
 	}

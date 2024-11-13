@@ -52,8 +52,9 @@ var _ = Describe("merged report", func() {
 								Version: rulesetVersion,
 								Rules: []report.Rule{
 									{
-										ID:   "1",
-										Name: "1",
+										ID:       "1",
+										Name:     "1",
+										Severity: rule.SeverityLow,
 										Checks: []report.Check{
 											{
 												Status:  rule.Passed,
@@ -63,8 +64,9 @@ var _ = Describe("merged report", func() {
 										},
 									},
 									{
-										ID:   "2",
-										Name: "2",
+										ID:       "2",
+										Name:     "2",
+										Severity: rule.SeverityHigh,
 										Checks: []report.Check{
 											{
 												Status:  rule.Passed,
@@ -106,8 +108,9 @@ var _ = Describe("merged report", func() {
 								Version: rulesetVersion,
 								Rules: []report.Rule{
 									{
-										ID:   "2",
-										Name: "2",
+										ID:       "2",
+										Name:     "2",
+										Severity: rule.SeverityHigh,
 										Checks: []report.Check{
 											{
 												Status:  rule.Passed,
@@ -213,8 +216,9 @@ var _ = Describe("merged report", func() {
 								Version: "v1",
 								Rules: []report.MergedRule{
 									{
-										ID:   "1",
-										Name: "1",
+										ID:       "1",
+										Name:     "1",
+										Severity: rule.SeverityLow,
 										Checks: []report.MergedCheck{
 											{
 												Status:  "Passed",
@@ -226,8 +230,9 @@ var _ = Describe("merged report", func() {
 										},
 									},
 									{
-										ID:   "2",
-										Name: "2",
+										ID:       "2",
+										Name:     "2",
+										Severity: rule.SeverityHigh,
 										Checks: []report.MergedCheck{
 											{
 												Status:  "Passed",
@@ -306,8 +311,9 @@ var _ = Describe("merged report", func() {
 								Version: "v1",
 								Rules: []report.MergedRule{
 									{
-										ID:   "1",
-										Name: "1",
+										ID:       "1",
+										Name:     "1",
+										Severity: rule.SeverityLow,
 										Checks: []report.MergedCheck{
 											{
 												Status:  "Passed",
@@ -319,8 +325,9 @@ var _ = Describe("merged report", func() {
 										},
 									},
 									{
-										ID:   "2",
-										Name: "2",
+										ID:       "2",
+										Name:     "2",
+										Severity: rule.SeverityHigh,
 										Checks: []report.MergedCheck{
 											{
 												Status:  "Passed",
@@ -346,8 +353,9 @@ var _ = Describe("merged report", func() {
 								Version: "v1",
 								Rules: []report.MergedRule{
 									{
-										ID:   "2",
-										Name: "2",
+										ID:       "2",
+										Name:     "2",
+										Severity: rule.SeverityHigh,
 										Checks: []report.MergedCheck{
 											{
 												Status:  "Passed",
@@ -395,8 +403,9 @@ var _ = Describe("merged report", func() {
 						Version: rulesetVersion,
 						Rules: []report.Rule{
 							{
-								ID:   "1",
-								Name: "1",
+								ID:       "1",
+								Name:     "1",
+								Severity: rule.SeverityLow,
 								Checks: []report.Check{
 									{
 										Status:  rule.Passed,
@@ -424,8 +433,9 @@ var _ = Describe("merged report", func() {
 						Version: rulesetVersion,
 						Rules: []report.Rule{
 							{
-								ID:   "1",
-								Name: "1",
+								ID:       "1",
+								Name:     "1",
+								Severity: rule.SeverityLow,
 								Checks: []report.Check{
 									{
 										Status:  rule.Passed,
@@ -471,8 +481,9 @@ var _ = Describe("merged report", func() {
 								Version: "v1",
 								Rules: []report.MergedRule{
 									{
-										ID:   "1",
-										Name: "1",
+										ID:       "1",
+										Name:     "1",
+										Severity: rule.SeverityLow,
 										Checks: []report.MergedCheck{
 											{
 												Status:  "Passed",
@@ -511,8 +522,9 @@ var _ = Describe("merged report", func() {
 								Version: "v1",
 								Rules: []report.MergedRule{
 									{
-										ID:   "1",
-										Name: "1",
+										ID:       "1",
+										Name:     "1",
+										Severity: rule.SeverityLow,
 										Checks: []report.MergedCheck{
 											{
 												Status:  "Passed",
@@ -524,8 +536,9 @@ var _ = Describe("merged report", func() {
 										},
 									},
 									{
-										ID:   "2",
-										Name: "2",
+										ID:       "2",
+										Name:     "2",
+										Severity: rule.SeverityHigh,
 										Checks: []report.MergedCheck{
 											{
 												Status:  "Passed",
@@ -602,8 +615,9 @@ var _ = Describe("merged report", func() {
 								Version: "v1",
 								Rules: []report.MergedRule{
 									{
-										ID:   "1",
-										Name: "1",
+										ID:       "1",
+										Name:     "1",
+										Severity: rule.SeverityLow,
 										Checks: []report.MergedCheck{
 											{
 												Status:  "Passed",
@@ -615,8 +629,9 @@ var _ = Describe("merged report", func() {
 										},
 									},
 									{
-										ID:   "2",
-										Name: "2",
+										ID:       "2",
+										Name:     "2",
+										Severity: rule.SeverityHigh,
 										Checks: []report.MergedCheck{
 											{
 												Status:  "Passed",
@@ -693,8 +708,9 @@ var _ = Describe("merged report", func() {
 								Version: "v1",
 								Rules: []report.MergedRule{
 									{
-										ID:   "1",
-										Name: "1",
+										ID:       "1",
+										Name:     "1",
+										Severity: rule.SeverityLow,
 										Checks: []report.MergedCheck{
 											{
 												Status:  "Passed",
@@ -706,8 +722,9 @@ var _ = Describe("merged report", func() {
 										},
 									},
 									{
-										ID:   "2",
-										Name: "2",
+										ID:       "2",
+										Name:     "2",
+										Severity: rule.SeverityHigh,
 										Checks: []report.MergedCheck{
 											{
 												Status:  "Passed",
