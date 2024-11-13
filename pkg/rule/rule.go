@@ -36,7 +36,7 @@ const (
 	SeverityHigh SeverityLevel = "High"
 )
 
-// Severity defines the importance of a rule
+// Severity defines the importance of a rule.
 type Severity interface {
 	Severity() SeverityLevel
 }

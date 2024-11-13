@@ -8,8 +8,10 @@ import (
 	"context"
 )
 
-var _ Rule = &SkipRule{}
-var _ Severity = &SkipRule{}
+var (
+	_ Rule     = &SkipRule{}
+	_ Severity = &SkipRule{}
+)
 
 // SkipRule is a Rule that always reports a predefined status.
 type SkipRule struct {
@@ -20,10 +22,10 @@ type SkipRule struct {
 	status        Status
 }
 
-// SkipRuleOption is an interface that allows adding additional parameters to the SkipRule instances.
+// SkipRuleOption allows to additionally configure a SkipRule.
 type SkipRuleOption func(*SkipRule)
 
-// SkipRuleWithSeverity returns a SkipRuleOption method that adds a Severity value to the SkipRule instance.
+// SkipRuleWithSeverity allows configuring the severity of a SkipRule.
 func SkipRuleWithSeverity(severity SeverityLevel) SkipRuleOption {
 	return func(skipRule *SkipRule) {
 		skipRule.severity = severity
@@ -31,7 +33,7 @@ func SkipRuleWithSeverity(severity SeverityLevel) SkipRuleOption {
 }
 
 // NewSkipRule returns a new skipped Rule.
-func NewSkipRule(id, name, justification string, status Status, optionalParameters ...SkipRuleOption) *SkipRule {
+func NewSkipRule(id, name, justification string, status Status, options ...SkipRuleOption) *SkipRule {
 	skipRule := &SkipRule{
 		id:            id,
 		name:          name,
@@ -39,7 +41,7 @@ func NewSkipRule(id, name, justification string, status Status, optionalParamete
 		status:        status,
 	}
 
-	for _, option := range optionalParameters {
+	for _, option := range options {
 		option(skipRule)
 	}
 
@@ -56,7 +58,7 @@ func (s *SkipRule) Name() string {
 	return s.name
 }
 
-// Severity returns the severity level of the Rule
+// Severity returns the severity level of the Rule.
 func (s *SkipRule) Severity() SeverityLevel {
 	return s.severity
 }
