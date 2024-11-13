@@ -55,14 +55,6 @@ type Rule struct {
 	Checks   []Check            `json:"checks"`
 }
 
-// ruleTitle returns a rule title string with the given id, severity and name.
-func ruleTitle(id string, severity rule.SeverityLevel, name string) string {
-	if severity == "" {
-		return fmt.Sprintf("%s - %s", id, name)
-	}
-	return fmt.Sprintf("%s (%s) - %s", id, severity, name)
-}
-
 // Check is the result of a single Rule check.
 type Check struct {
 	Status  rule.Status   `json:"status"`
@@ -147,6 +139,14 @@ func rulesetSummaryText(ruleset *Ruleset) string {
 		}
 	}
 	return summaryText
+}
+
+// ruleTitle returns a rule title string with the given id, severity and name.
+func ruleTitle(id string, severity rule.SeverityLevel, name string) string {
+	if severity == "" {
+		return fmt.Sprintf("%s - %s", id, name)
+	}
+	return fmt.Sprintf("%s (%s) - %s", id, severity, name)
 }
 
 func numOfRulesWithStatus(ruleset *Ruleset, status rule.Status) int {
