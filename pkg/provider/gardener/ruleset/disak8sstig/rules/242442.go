@@ -20,8 +20,10 @@ import (
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
-var _ rule.Rule = &Rule242442{}
-var _ rule.Severity = &Rule242442{}
+var (
+	_ rule.Rule     = &Rule242442{}
+	_ rule.Severity = &Rule242442{}
+)
 
 type Rule242442 struct {
 	ClusterClient         client.Client

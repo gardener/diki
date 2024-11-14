@@ -14,8 +14,10 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-var _ rule.Rule = &Rule242388{}
-var _ rule.Severity = &Rule242388{}
+var (
+	_ rule.Rule     = &Rule242388{}
+	_ rule.Severity = &Rule242388{}
+)
 
 type Rule242388 struct {
 	Client         client.Client

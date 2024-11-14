@@ -24,8 +24,10 @@ import (
 	"github.com/gardener/diki/pkg/shared/provider"
 )
 
-var _ rule.Rule = &Rule242459{}
-var _ rule.Severity = &Rule242459{}
+var (
+	_ rule.Rule     = &Rule242459{}
+	_ rule.Severity = &Rule242459{}
+)
 
 type Rule242459 struct {
 	InstanceID string

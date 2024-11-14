@@ -23,8 +23,10 @@ import (
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
-var _ rule.Rule = &Rule242383{}
-var _ rule.Severity = &Rule242383{}
+var (
+	_ rule.Rule     = &Rule242383{}
+	_ rule.Severity = &Rule242383{}
+)
 
 type Rule242383 struct {
 	Client  client.Client

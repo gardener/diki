@@ -25,8 +25,10 @@ import (
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
-var _ rule.Rule = &Rule242452{}
-var _ rule.Severity = &Rule242452{}
+var (
+	_ rule.Rule     = &Rule242452{}
+	_ rule.Severity = &Rule242452{}
+)
 
 type Rule242452 struct {
 	InstanceID string

@@ -15,8 +15,10 @@ import (
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
-var _ rule.Rule = &Rule242400{}
-var _ rule.Severity = &Rule242400{}
+var (
+	_ rule.Rule     = &Rule242400{}
+	_ rule.Severity = &Rule242400{}
+)
 
 type Rule242400 struct {
 	Client    client.Client
