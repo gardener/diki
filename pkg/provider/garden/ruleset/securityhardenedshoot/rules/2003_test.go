@@ -30,7 +30,7 @@ var _ = Describe("#2003", func() {
 		shoot *gardencorev1beta1.Shoot
 
 		r        rule.Rule
-		ruleName = "Shoot clusters must enable kernel protection for Kubelets (HIGH 2003)"
+		ruleName = "Shoot clusters must enable kernel protection for Kubelets."
 		ruleID   = "2003"
 	)
 
@@ -51,26 +51,27 @@ var _ = Describe("#2003", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(updateFn func(), expectedResult rule.RuleResult) {
+		func(updateFn func(), expectedCheckResult []rule.CheckResult) {
 			updateFn()
 
 			Expect(fakeClient.Create(ctx, shoot)).To(Succeed())
 			res, err := r.Run(ctx)
 			Expect(err).ToNot(HaveOccurred())
+			expectedResult := rule.RuleResult{RuleID: ruleID, RuleName: ruleName, Severity: rule.SeverityHigh, CheckResults: expectedCheckResult}
 			Expect(res).To(Equal(expectedResult))
 		},
 
 		Entry("should error when shoot is not found",
 			func() { shoot.Name = "one" },
-			rule.RuleResult{RuleID: ruleID, RuleName: ruleName, CheckResults: []rule.CheckResult{{Status: rule.Errored, Message: "shoots.core.gardener.cloud \"bar\" not found", Target: rule.NewTarget("name", "bar", "namespace", "foo", "kind", "Shoot")}}},
+			[]rule.CheckResult{{Status: rule.Errored, Message: "shoots.core.gardener.cloud \"bar\" not found", Target: rule.NewTarget("name", "bar", "namespace", "foo", "kind", "Shoot")}},
 		),
 		Entry("should pass when shoot does not set kubelet config",
 			func() {},
-			rule.RuleResult{RuleID: ruleID, RuleName: ruleName, CheckResults: []rule.CheckResult{{Status: rule.Passed, Message: "Default kubelet config does not disable kernel protection.", Target: rule.NewTarget()}}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Default kubelet config does not disable kernel protection.", Target: rule.NewTarget()}},
 		),
 		Entry("should pass when shoot sets default kubelet config",
 			func() { shoot.Spec.Kubernetes.Kubelet = &gardencorev1beta1.KubeletConfig{} },
-			rule.RuleResult{RuleID: ruleID, RuleName: ruleName, CheckResults: []rule.CheckResult{{Status: rule.Passed, Message: "Default kubelet config does not disable kernel protection.", Target: rule.NewTarget()}}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Default kubelet config does not disable kernel protection.", Target: rule.NewTarget()}},
 		),
 		Entry("should pass when shoot enables kernel defaults protection in the default kubelet config",
 			func() {
@@ -78,7 +79,7 @@ var _ = Describe("#2003", func() {
 					ProtectKernelDefaults: ptr.To(true),
 				}
 			},
-			rule.RuleResult{RuleID: ruleID, RuleName: ruleName, CheckResults: []rule.CheckResult{{Status: rule.Passed, Message: "Default kubelet config enables kernel protection.", Target: rule.NewTarget()}}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Default kubelet config enables kernel protection.", Target: rule.NewTarget()}},
 		),
 		Entry("should fail when shoot disables kernel defaults protection in the default kubelet config",
 			func() {
@@ -86,7 +87,7 @@ var _ = Describe("#2003", func() {
 					ProtectKernelDefaults: ptr.To(false),
 				}
 			},
-			rule.RuleResult{RuleID: ruleID, RuleName: ruleName, CheckResults: []rule.CheckResult{{Status: rule.Failed, Message: "Default kubelet config disables kernel protection.", Target: rule.NewTarget()}}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Default kubelet config disables kernel protection.", Target: rule.NewTarget()}},
 		),
 		Entry("should pass when shoot worker does not set kubelet config",
 			func() {
@@ -96,10 +97,10 @@ var _ = Describe("#2003", func() {
 					},
 				}
 			},
-			rule.RuleResult{RuleID: ruleID, RuleName: ruleName, CheckResults: []rule.CheckResult{
+			[]rule.CheckResult{
 				{Status: rule.Passed, Message: "Default kubelet config does not disable kernel protection.", Target: rule.NewTarget()},
 				{Status: rule.Passed, Message: "Worker kubelet config does not disable kernel protection.", Target: rule.NewTarget("worker", "worker1")},
-			}},
+			},
 		),
 		Entry("should pass when shoot worker does not set kubernetes config",
 			func() {
@@ -109,10 +110,10 @@ var _ = Describe("#2003", func() {
 					},
 				}
 			},
-			rule.RuleResult{RuleID: ruleID, RuleName: ruleName, CheckResults: []rule.CheckResult{
+			[]rule.CheckResult{
 				{Status: rule.Passed, Message: "Default kubelet config does not disable kernel protection.", Target: rule.NewTarget()},
 				{Status: rule.Passed, Message: "Worker kubelet config does not disable kernel protection.", Target: rule.NewTarget("worker", "worker1")},
-			}},
+			},
 		),
 		Entry("should pass when shoot worker sets default kubernetes config",
 			func() {
@@ -123,10 +124,10 @@ var _ = Describe("#2003", func() {
 					},
 				}
 			},
-			rule.RuleResult{RuleID: ruleID, RuleName: ruleName, CheckResults: []rule.CheckResult{
+			[]rule.CheckResult{
 				{Status: rule.Passed, Message: "Default kubelet config does not disable kernel protection.", Target: rule.NewTarget()},
 				{Status: rule.Passed, Message: "Worker kubelet config does not disable kernel protection.", Target: rule.NewTarget("worker", "worker1")},
-			}},
+			},
 		),
 		Entry("should pass when shoot worker sets default kubelet config",
 			func() {
@@ -137,10 +138,10 @@ var _ = Describe("#2003", func() {
 					},
 				}
 			},
-			rule.RuleResult{RuleID: ruleID, RuleName: ruleName, CheckResults: []rule.CheckResult{
+			[]rule.CheckResult{
 				{Status: rule.Passed, Message: "Default kubelet config does not disable kernel protection.", Target: rule.NewTarget()},
 				{Status: rule.Passed, Message: "Worker kubelet config does not disable kernel protection.", Target: rule.NewTarget("worker", "worker1")},
-			}},
+			},
 		),
 		Entry("should pass when shoot worker enables kernel defaults protection in kubelet config",
 			func() {
@@ -155,10 +156,10 @@ var _ = Describe("#2003", func() {
 					},
 				}
 			},
-			rule.RuleResult{RuleID: ruleID, RuleName: ruleName, CheckResults: []rule.CheckResult{
+			[]rule.CheckResult{
 				{Status: rule.Passed, Message: "Default kubelet config does not disable kernel protection.", Target: rule.NewTarget()},
 				{Status: rule.Passed, Message: "Worker kubelet config enables kernel protection.", Target: rule.NewTarget("worker", "worker1")},
-			}},
+			},
 		),
 		Entry("should fail when shoot worker disables kernel defaults protection in kubelet config",
 			func() {
@@ -173,10 +174,10 @@ var _ = Describe("#2003", func() {
 					},
 				}
 			},
-			rule.RuleResult{RuleID: ruleID, RuleName: ruleName, CheckResults: []rule.CheckResult{
+			[]rule.CheckResult{
 				{Status: rule.Passed, Message: "Default kubelet config does not disable kernel protection.", Target: rule.NewTarget()},
 				{Status: rule.Failed, Message: "Worker kubelet config disables kernel protection.", Target: rule.NewTarget("worker", "worker1")},
-			}},
+			},
 		),
 	)
 })

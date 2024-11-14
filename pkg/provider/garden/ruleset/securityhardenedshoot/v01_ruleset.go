@@ -29,24 +29,28 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			"Shoot clusters should enable required extensions.",
 			"Not implemented.",
 			rule.NotImplemented,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			"2000",
 			"Shoot clusters must have anonymous authentication disabled for the Kubernetes API server.",
 			"Not implemented.",
 			rule.NotImplemented,
+			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 		rule.NewSkipRule(
 			"2001",
 			"Shoot clusters must disable ssh access to worker nodes.",
 			"Not implemented.",
 			rule.NotImplemented,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			"2002",
 			"Shoot clusters must not have Alpha APIs enabled for any Kubernetes component.",
 			"Not implemented.",
 			rule.NotImplemented,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		&rules.Rule2003{
 			Client:         c,
@@ -58,24 +62,28 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			"Shoot clusters must have ValidatingAdmissionWebhook admission plugin enabled.",
 			"Not implemented.",
 			rule.NotImplemented,
+			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 		rule.NewSkipRule(
 			"2005",
 			"Shoot clusters must not disable timeouts for Kubelet.",
 			"Not implemented.",
 			rule.NotImplemented,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			"2006",
 			"Shoot clusters must have static token kubeconfig disabled.",
 			"Not implemented.",
 			rule.NotImplemented,
+			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 		rule.NewSkipRule(
 			"2007",
 			"Shoot clusters must have a PodSecurity admission plugin configured.",
 			"Not implemented.",
 			rule.NotImplemented,
+			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 	}
 
