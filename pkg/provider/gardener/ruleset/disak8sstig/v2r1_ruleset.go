@@ -663,9 +663,16 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 	}
 
 	for i, r := range rules {
+		var severityLevel rule.SeverityLevel
+		if severity, ok := rules[i].(rule.Severity); !ok {
+			return fmt.Errorf("rule %s does not implement rule.Severity", rules[i].ID())
+		} else {
+			severityLevel = severity.Severity()
+		}
+
 		opt, found := ruleOptions[r.ID()]
 		if found && opt.Skip != nil && opt.Skip.Enabled {
-			rules[i] = rule.NewSkipRule(r.ID(), r.Name(), opt.Skip.Justification, rule.Accepted)
+			rules[i] = rule.NewSkipRule(r.ID(), r.Name(), opt.Skip.Justification, rule.Accepted, rule.SkipRuleWithSeverity(severityLevel))
 		}
 	}
 
