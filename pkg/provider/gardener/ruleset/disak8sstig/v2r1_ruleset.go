@@ -273,7 +273,7 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242405,
-			"Kubernetes manifests must be owned by root (MEDIUM 242405)",
+			"Kubernetes manifests must be owned by root.",
 			"Gardener does not deploy any control plane component as systemd processes or static pod.",
 			rule.Skipped,
 			rule.SkipRuleWithSeverity(rule.SeverityMedium),
@@ -309,7 +309,7 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242408,
-			"The Kubernetes manifest files must have least privileges  (MEDIUM 242408)",
+			"The Kubernetes manifest files must have least privileges.",
 			`Gardener does not deploy any control plane component as systemd processes or static pod.`,
 			rule.Skipped,
 			rule.SkipRuleWithSeverity(rule.SeverityMedium),
@@ -317,7 +317,7 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 		&sharedrules.Rule242409{Client: seedClient, Namespace: r.shootNamespace},
 		rule.NewSkipRule(
 			sharedrules.ID242410,
-			"The Kubernetes API Server must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242410)",
+			"The Kubernetes API Server must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL).",
 			"Cannot be tested and should be enforced organizationally. Gardener uses a minimum of known and automatically opened/used/created ports/protocols/services (PPSM stands for Ports, Protocols, Service Management).",
 			rule.Skipped,
 			rule.SkipRuleWithSeverity(rule.SeverityMedium),
@@ -553,7 +553,7 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242454,
-			"Kubernetes kubeadm.conf must be owned by root(MEDIUM 242454)",
+			"Kubernetes kubeadm.conf must be owned by root.",
 			`Gardener does not use "kubeadm" and also does not store any "main config" anywhere in seed or shoot (flow/component logic built-in/in-code).`,
 			rule.Skipped,
 			rule.SkipRuleWithSeverity(rule.SeverityMedium),
@@ -655,7 +655,7 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 		rule.NewSkipRule(
 			// featureGates.PodSecurity made GA in v1.25 and removed in v1.28. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
 			sharedrules.ID254801,
-			"Kubernetes must enable PodSecurity admission controller on static pods and Kubelets (HIGH 254801)",
+			"Kubernetes must enable PodSecurity admission controller on static pods and Kubelets.",
 			"Option featureGates.PodSecurity was made GA in v1.25 and removed in v1.28.",
 			rule.Skipped,
 			rule.SkipRuleWithSeverity(rule.SeverityHigh),
