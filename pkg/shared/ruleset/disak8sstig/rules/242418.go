@@ -17,6 +17,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242418{}
+var _ rule.Severity = &Rule242418{}
 
 type Rule242418 struct {
 	Client         client.Client
@@ -30,7 +31,11 @@ func (r *Rule242418) ID() string {
 }
 
 func (r *Rule242418) Name() string {
-	return "The Kubernetes API server must use approved cipher suites (MEDIUM 242418)"
+	return "The Kubernetes API server must use approved cipher suites."
+}
+
+func (r *Rule242418) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242418) Run(ctx context.Context) (rule.RuleResult, error) {

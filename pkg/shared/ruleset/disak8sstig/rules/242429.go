@@ -16,6 +16,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242429{}
+var _ rule.Severity = &Rule242429{}
 
 type Rule242429 struct {
 	Client         client.Client
@@ -29,7 +30,11 @@ func (r *Rule242429) ID() string {
 }
 
 func (r *Rule242429) Name() string {
-	return "Kubernetes etcd must have the SSL Certificate Authority set (MEDIUM 242429)"
+	return "Kubernetes etcd must have the SSL Certificate Authority set."
+}
+
+func (r *Rule242429) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242429) Run(ctx context.Context) (rule.RuleResult, error) {

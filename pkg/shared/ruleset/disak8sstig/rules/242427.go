@@ -19,6 +19,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242427{}
+var _ rule.Severity = &Rule242427{}
 
 type Rule242427 struct {
 	Client                client.Client
@@ -32,7 +33,11 @@ func (r *Rule242427) ID() string {
 }
 
 func (r *Rule242427) Name() string {
-	return "Kubernetes etcd must have a key file for secure communication (MEDIUM 242427)"
+	return "Kubernetes etcd must have a key file for secure communication."
+}
+
+func (r *Rule242427) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242427) Run(ctx context.Context) (rule.RuleResult, error) {

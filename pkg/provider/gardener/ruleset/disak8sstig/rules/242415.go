@@ -20,6 +20,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242415{}
+var _ rule.Severity = &Rule242415{}
 
 type Rule242415 struct {
 	ClusterClient         client.Client
@@ -33,7 +34,11 @@ func (r *Rule242415) ID() string {
 }
 
 func (r *Rule242415) Name() string {
-	return "Secrets in Kubernetes must not be stored as environment variables (HIGH 242415)"
+	return "Secrets in Kubernetes must not be stored as environment variables."
+}
+
+func (r *Rule242415) Severity() rule.SeverityLevel {
+	return rule.SeverityHigh
 }
 
 func (r *Rule242415) Run(ctx context.Context) (rule.RuleResult, error) {

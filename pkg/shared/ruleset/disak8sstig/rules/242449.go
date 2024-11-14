@@ -26,6 +26,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242449{}
+var _ rule.Severity = &Rule242449{}
 
 type Rule242449 struct {
 	InstanceID string
@@ -50,7 +51,11 @@ func (r *Rule242449) ID() string {
 }
 
 func (r *Rule242449) Name() string {
-	return "The Kubernetes Kubelet certificate authority file must have file permissions set to 644 or more restrictive (MEDIUM 242449)"
+	return "The Kubernetes Kubelet certificate authority file must have file permissions set to 644 or more restrictive."
+}
+
+func (r *Rule242449) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242449) Run(ctx context.Context) (rule.RuleResult, error) {

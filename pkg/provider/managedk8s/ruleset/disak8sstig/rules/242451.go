@@ -31,6 +31,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242451{}
+var _ rule.Severity = &Rule242451{}
 
 type Rule242451 struct {
 	InstanceID string
@@ -63,7 +64,11 @@ func (r *Rule242451) ID() string {
 }
 
 func (r *Rule242451) Name() string {
-	return "The Kubernetes component PKI must be owned by root (MEDIUM 242451)"
+	return "The Kubernetes component PKI must be owned by root."
+}
+
+func (r *Rule242451) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {

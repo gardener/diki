@@ -21,6 +21,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242442{}
+var _ rule.Severity = &Rule242442{}
 
 type Rule242442 struct {
 	ClusterClient         client.Client
@@ -33,7 +34,11 @@ func (r *Rule242442) ID() string {
 }
 
 func (r *Rule242442) Name() string {
-	return "Kubernetes must remove old components after updated versions have been installed (MEDIUM 242442)"
+	return "Kubernetes must remove old components after updated versions have been installed."
+}
+
+func (r *Rule242442) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {

@@ -17,6 +17,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242436{}
+var _ rule.Severity = &Rule242436{}
 
 type Rule242436 struct {
 	Client         client.Client
@@ -30,7 +31,11 @@ func (r *Rule242436) ID() string {
 }
 
 func (r *Rule242436) Name() string {
-	return "The Kubernetes API server must have the ValidatingAdmissionWebhook enabled (HIGH 242436)"
+	return "The Kubernetes API server must have the ValidatingAdmissionWebhook enabled."
+}
+
+func (r *Rule242436) Severity() rule.SeverityLevel {
+	return rule.SeverityHigh
 }
 
 func (r *Rule242436) Run(ctx context.Context) (rule.RuleResult, error) {

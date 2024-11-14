@@ -26,6 +26,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242452{}
+var _ rule.Severity = &Rule242452{}
 
 type Rule242452 struct {
 	InstanceID string
@@ -50,7 +51,11 @@ func (r *Rule242452) ID() string {
 }
 
 func (r *Rule242452) Name() string {
-	return "The Kubernetes kubelet KubeConfig must have file permissions set to 644 or more restrictive (MEDIUM 242452)"
+	return "The Kubernetes kubelet KubeConfig must have file permissions set to 644 or more restrictive."
+}
+
+func (r *Rule242452) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242452) Run(ctx context.Context) (rule.RuleResult, error) {

@@ -26,6 +26,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242450{}
+var _ rule.Severity = &Rule242450{}
 
 type Rule242450 struct {
 	InstanceID string
@@ -55,7 +56,11 @@ func (r *Rule242450) ID() string {
 }
 
 func (r *Rule242450) Name() string {
-	return "The Kubernetes Kubelet certificate authority must be owned by root (MEDIUM 242450)"
+	return "The Kubernetes Kubelet certificate authority must be owned by root."
+}
+
+func (r *Rule242450) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242450) Run(ctx context.Context) (rule.RuleResult, error) {

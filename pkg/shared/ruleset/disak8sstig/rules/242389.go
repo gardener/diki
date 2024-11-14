@@ -15,6 +15,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242389{}
+var _ rule.Severity = &Rule242389{}
 
 type Rule242389 struct {
 	Client         client.Client
@@ -28,7 +29,11 @@ func (r *Rule242389) ID() string {
 }
 
 func (r *Rule242389) Name() string {
-	return "The Kubernetes API server must have the secure port set (MEDIUM 242389)"
+	return "The Kubernetes API server must have the secure port set."
+}
+
+func (r *Rule242389) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242389) Run(ctx context.Context) (rule.RuleResult, error) {

@@ -17,6 +17,7 @@ import (
 )
 
 var _ rule.Rule = &Rule245541{}
+var _ rule.Severity = &Rule245541{}
 
 type Rule245541 struct {
 	Client       client.Client
@@ -28,7 +29,11 @@ func (r *Rule245541) ID() string {
 }
 
 func (r *Rule245541) Name() string {
-	return "Kubernetes Kubelet must not disable timeouts (MEDIUM 245541)"
+	return "Kubernetes Kubelet must not disable timeouts."
+}
+
+func (r *Rule245541) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule245541) Run(ctx context.Context) (rule.RuleResult, error) {

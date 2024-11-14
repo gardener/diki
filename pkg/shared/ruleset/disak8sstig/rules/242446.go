@@ -28,6 +28,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242446{}
+var _ rule.Severity = &Rule242446{}
 
 type Rule242446 struct {
 	InstanceID      string
@@ -44,7 +45,11 @@ func (r *Rule242446) ID() string {
 }
 
 func (r *Rule242446) Name() string {
-	return "The Kubernetes conf files must be owned by root (MEDIUM 242446)"
+	return "The Kubernetes conf files must be owned by root."
+}
+
+func (r *Rule242446) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242446) Run(ctx context.Context) (rule.RuleResult, error) {

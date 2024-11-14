@@ -15,6 +15,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242388{}
+var _ rule.Severity = &Rule242388{}
 
 type Rule242388 struct {
 	Client         client.Client
@@ -28,7 +29,11 @@ func (r *Rule242388) ID() string {
 }
 
 func (r *Rule242388) Name() string {
-	return "The Kubernetes API server must have the insecure bind address not set (HIGH 242388)"
+	return "The Kubernetes API server must have the insecure bind address not set."
+}
+
+func (r *Rule242388) Severity() rule.SeverityLevel {
+	return rule.SeverityHigh
 }
 
 func (r *Rule242388) Run(ctx context.Context) (rule.RuleResult, error) {

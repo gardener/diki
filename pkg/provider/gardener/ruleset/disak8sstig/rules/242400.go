@@ -31,6 +31,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242400{}
+var _ rule.Severity = &Rule242400{}
 
 type Rule242400 struct {
 	InstanceID            string
@@ -48,7 +49,11 @@ func (r *Rule242400) ID() string {
 }
 
 func (r *Rule242400) Name() string {
-	return "The Kubernetes API server must have Alpha APIs disabled (MEDIUM 242400)"
+	return "The Kubernetes API server must have Alpha APIs disabled."
+}
+
+func (r *Rule242400) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {

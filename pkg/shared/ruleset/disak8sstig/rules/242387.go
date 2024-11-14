@@ -17,6 +17,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242387{}
+var _ rule.Severity = &Rule242387{}
 
 type Rule242387 struct {
 	Client       client.Client
@@ -28,7 +29,11 @@ func (r *Rule242387) ID() string {
 }
 
 func (r *Rule242387) Name() string {
-	return `The Kubernetes Kubelet must have the "readOnlyPort" flag disabled (HIGH 242387)`
+	return `The Kubernetes Kubelet must have the "readOnlyPort" flag disabled.`
+}
+
+func (r *Rule242387) Severity() rule.SeverityLevel {
+	return rule.SeverityHigh
 }
 
 func (r *Rule242387) Run(ctx context.Context) (rule.RuleResult, error) {

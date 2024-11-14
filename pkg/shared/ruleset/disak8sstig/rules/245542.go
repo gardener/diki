@@ -15,6 +15,7 @@ import (
 )
 
 var _ rule.Rule = &Rule245542{}
+var _ rule.Severity = &Rule245542{}
 
 type Rule245542 struct {
 	Client         client.Client
@@ -28,7 +29,11 @@ func (r *Rule245542) ID() string {
 }
 
 func (r *Rule245542) Name() string {
-	return "Kubernetes API Server must disable basic authentication to protect information in transit (HIGH 245542)"
+	return "Kubernetes API Server must disable basic authentication to protect information in transit."
+}
+
+func (r *Rule245542) Severity() rule.SeverityLevel {
+	return rule.SeverityHigh
 }
 
 func (r *Rule245542) Run(ctx context.Context) (rule.RuleResult, error) {

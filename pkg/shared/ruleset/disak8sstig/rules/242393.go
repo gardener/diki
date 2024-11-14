@@ -27,6 +27,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242393{}
+var _ rule.Severity = &Rule242393{}
 
 type Rule242393 struct {
 	InstanceID string
@@ -51,7 +52,11 @@ func (r *Rule242393) ID() string {
 }
 
 func (r *Rule242393) Name() string {
-	return "Kubernetes Worker Nodes must not have sshd service running (MEDIUM 242393)"
+	return "Kubernetes Worker Nodes must not have sshd service running."
+}
+
+func (r *Rule242393) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242393) Run(ctx context.Context) (rule.RuleResult, error) {

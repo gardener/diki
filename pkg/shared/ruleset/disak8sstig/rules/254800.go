@@ -26,6 +26,7 @@ import (
 )
 
 var _ rule.Rule = &Rule254800{}
+var _ rule.Severity = &Rule254800{}
 
 type Rule254800 struct {
 	Client         client.Client
@@ -53,7 +54,11 @@ func (r *Rule254800) ID() string {
 }
 
 func (r *Rule254800) Name() string {
-	return "Kubernetes must have a Pod Security Admission control file configured (HIGH 254800)"
+	return "Kubernetes must have a Pod Security Admission control file configured."
+}
+
+func (r *Rule254800) Severity() rule.SeverityLevel {
+	return rule.SeverityHigh
 }
 
 func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {

@@ -20,6 +20,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242414{}
+var _ rule.Severity = &Rule242414{}
 
 type Rule242414 struct {
 	ControlPlaneClient    client.Client
@@ -33,7 +34,11 @@ func (r *Rule242414) ID() string {
 }
 
 func (r *Rule242414) Name() string {
-	return "The Kubernetes cluster must use non-privileged host ports for user pods (MEDIUM 242414)"
+	return "The Kubernetes cluster must use non-privileged host ports for user pods."
+}
+
+func (r *Rule242414) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {

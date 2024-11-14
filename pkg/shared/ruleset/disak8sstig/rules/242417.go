@@ -24,6 +24,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242417{}
+var _ rule.Severity = &Rule242417{}
 
 type Rule242417 struct {
 	Client  client.Client
@@ -63,7 +64,11 @@ func (r *Rule242417) ID() string {
 }
 
 func (r *Rule242417) Name() string {
-	return "Kubernetes must separate user functionality (MEDIUM 242417)"
+	return "Kubernetes must separate user functionality."
+}
+
+func (r *Rule242417) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242417) Run(ctx context.Context) (rule.RuleResult, error) {

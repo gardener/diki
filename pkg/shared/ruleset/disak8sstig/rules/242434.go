@@ -16,6 +16,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242434{}
+var _ rule.Severity = &Rule242434{}
 
 type Rule242434 struct {
 	Client       client.Client
@@ -27,7 +28,11 @@ func (r *Rule242434) ID() string {
 }
 
 func (r *Rule242434) Name() string {
-	return "Kubernetes Kubelet must enable kernel protection (HIGH 242434)"
+	return "Kubernetes Kubelet must enable kernel protection."
+}
+
+func (r *Rule242434) Severity() rule.SeverityLevel {
+	return rule.SeverityHigh
 }
 
 func (r *Rule242434) Run(ctx context.Context) (rule.RuleResult, error) {

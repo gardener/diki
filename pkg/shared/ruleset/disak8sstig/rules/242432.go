@@ -19,6 +19,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242432{}
+var _ rule.Severity = &Rule242432{}
 
 type Rule242432 struct {
 	Client                client.Client
@@ -32,7 +33,11 @@ func (r *Rule242432) ID() string {
 }
 
 func (r *Rule242432) Name() string {
-	return "Kubernetes etcd must have peer-cert-file set for secure communication (MEDIUM 242432)"
+	return "Kubernetes etcd must have peer-cert-file set for secure communication."
+}
+
+func (r *Rule242432) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242432) Run(ctx context.Context) (rule.RuleResult, error) {

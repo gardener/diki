@@ -16,6 +16,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242397{}
+var _ rule.Severity = &Rule242397{}
 
 type Rule242397 struct {
 	Client       client.Client
@@ -27,7 +28,11 @@ func (r *Rule242397) ID() string {
 }
 
 func (r *Rule242397) Name() string {
-	return "The Kubernetes kubelet staticPodPath must not enable static pods (HIGH 242397)"
+	return "The Kubernetes kubelet staticPodPath must not enable static pods."
+}
+
+func (r *Rule242397) Severity() rule.SeverityLevel {
+	return rule.SeverityHigh
 }
 
 func (r *Rule242397) Run(ctx context.Context) (rule.RuleResult, error) {

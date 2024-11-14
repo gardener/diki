@@ -30,6 +30,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242448{}
+var _ rule.Severity = &Rule242448{}
 
 type Rule242448 struct {
 	InstanceID string
@@ -59,7 +60,11 @@ func (r *Rule242448) ID() string {
 }
 
 func (r *Rule242448) Name() string {
-	return "The Kubernetes Kube Proxy kubeconfig must be owned by root (MEDIUM 242448)"
+	return "The Kubernetes Kube Proxy kubeconfig must be owned by root."
+}
+
+func (r *Rule242448) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {

@@ -30,6 +30,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242396{}
+var _ rule.Severity = &Rule242396{}
 
 type Rule242396 struct {
 	InstanceID string
@@ -54,7 +55,11 @@ func (r *Rule242396) ID() string {
 }
 
 func (r *Rule242396) Name() string {
-	return "Kubernetes Kubectl cp command must give expected access and results (MEDIUM 242396)"
+	return "Kubernetes Kubectl cp command must give expected access and results."
+}
+
+func (r *Rule242396) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242396) Run(ctx context.Context) (rule.RuleResult, error) {

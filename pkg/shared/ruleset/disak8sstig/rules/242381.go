@@ -15,6 +15,7 @@ import (
 )
 
 var _ rule.Rule = &Rule242381{}
+var _ rule.Severity = &Rule242381{}
 
 type Rule242381 struct {
 	Client         client.Client
@@ -28,7 +29,11 @@ func (r *Rule242381) ID() string {
 }
 
 func (r *Rule242381) Name() string {
-	return "The Kubernetes Controller Manager must create unique service accounts for each work payload(HIGH 242381)"
+	return "The Kubernetes Controller Manager must create unique service accounts for each work payload."
+}
+
+func (r *Rule242381) Severity() rule.SeverityLevel {
+	return rule.SeverityHigh
 }
 
 func (r *Rule242381) Run(ctx context.Context) (rule.RuleResult, error) {
