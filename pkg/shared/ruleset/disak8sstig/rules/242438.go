@@ -15,7 +15,10 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-var _ rule.Rule = &Rule242438{}
+var (
+	_ rule.Rule     = &Rule242438{}
+	_ rule.Severity = &Rule242438{}
+)
 
 type Rule242438 struct {
 	Client         client.Client
@@ -29,7 +32,11 @@ func (r *Rule242438) ID() string {
 }
 
 func (r *Rule242438) Name() string {
-	return "Kubernetes API Server must configure timeouts to limit attack surface (MEDIUM 242438)"
+	return "Kubernetes API Server must configure timeouts to limit attack surface."
+}
+
+func (r *Rule242438) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242438) Run(ctx context.Context) (rule.RuleResult, error) {

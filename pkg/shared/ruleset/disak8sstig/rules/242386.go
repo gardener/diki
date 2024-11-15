@@ -14,7 +14,10 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-var _ rule.Rule = &Rule242386{}
+var (
+	_ rule.Rule     = &Rule242386{}
+	_ rule.Severity = &Rule242386{}
+)
 
 type Rule242386 struct {
 	Client         client.Client
@@ -28,7 +31,11 @@ func (r *Rule242386) ID() string {
 }
 
 func (r *Rule242386) Name() string {
-	return "The Kubernetes API server must have the insecure port flag disabled (HIGH 242386)"
+	return "The Kubernetes API server must have the insecure port flag disabled."
+}
+
+func (r *Rule242386) Severity() rule.SeverityLevel {
+	return rule.SeverityHigh
 }
 
 func (r *Rule242386) Run(ctx context.Context) (rule.RuleResult, error) {

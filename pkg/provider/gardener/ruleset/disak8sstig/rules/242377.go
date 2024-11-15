@@ -16,7 +16,10 @@ import (
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
-var _ rule.Rule = &Rule242377{}
+var (
+	_ rule.Rule     = &Rule242377{}
+	_ rule.Severity = &Rule242377{}
+)
 
 type Rule242377 struct {
 	Client    client.Client
@@ -28,7 +31,11 @@ func (r *Rule242377) ID() string {
 }
 
 func (r *Rule242377) Name() string {
-	return "Kubernetes Scheduler must use TLS 1.2, at a minimum, to protect the confidentiality of sensitive data during electronic dissemination (MEDIUM 242377)"
+	return "Kubernetes Scheduler must use TLS 1.2, at a minimum, to protect the confidentiality of sensitive data during electronic dissemination."
+}
+
+func (r *Rule242377) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242377) Run(ctx context.Context) (rule.RuleResult, error) {

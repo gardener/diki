@@ -15,7 +15,10 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-var _ rule.Rule = &Rule242378{}
+var (
+	_ rule.Rule     = &Rule242378{}
+	_ rule.Severity = &Rule242378{}
+)
 
 type Rule242378 struct {
 	Client         client.Client
@@ -29,7 +32,11 @@ func (r *Rule242378) ID() string {
 }
 
 func (r *Rule242378) Name() string {
-	return "The Kubernetes API Server must use TLS 1.2, at a minimum, to protect the confidentiality of sensitive data during electronic dissemination (MEDIUM 242378)"
+	return "The Kubernetes API Server must use TLS 1.2, at a minimum, to protect the confidentiality of sensitive data during electronic dissemination."
+}
+
+func (r *Rule242378) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242378) Run(ctx context.Context) (rule.RuleResult, error) {

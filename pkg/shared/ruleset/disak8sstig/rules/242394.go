@@ -26,7 +26,10 @@ import (
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
-var _ rule.Rule = &Rule242394{}
+var (
+	_ rule.Rule     = &Rule242394{}
+	_ rule.Severity = &Rule242394{}
+)
 
 type Rule242394 struct {
 	InstanceID string
@@ -51,7 +54,11 @@ func (r *Rule242394) ID() string {
 }
 
 func (r *Rule242394) Name() string {
-	return "Kubernetes Worker Nodes must not have the sshd service enabled (MEDIUM 242394)"
+	return "Kubernetes Worker Nodes must not have the sshd service enabled."
+}
+
+func (r *Rule242394) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242394) Run(ctx context.Context) (rule.RuleResult, error) {

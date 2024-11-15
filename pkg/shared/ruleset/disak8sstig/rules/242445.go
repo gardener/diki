@@ -25,7 +25,10 @@ import (
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
-var _ rule.Rule = &Rule242445{}
+var (
+	_ rule.Rule     = &Rule242445{}
+	_ rule.Severity = &Rule242445{}
+)
 
 type Rule242445 struct {
 	InstanceID string
@@ -49,7 +52,11 @@ func (r *Rule242445) ID() string {
 }
 
 func (r *Rule242445) Name() string {
-	return "The Kubernetes component etcd must be owned by etcd (MEDIUM 242445)"
+	return "The Kubernetes component etcd must be owned by etcd."
+}
+
+func (r *Rule242445) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242445) Run(ctx context.Context) (rule.RuleResult, error) {

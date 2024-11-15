@@ -13,7 +13,10 @@ import (
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
-var _ rule.Rule = &Rule242390{}
+var (
+	_ rule.Rule     = &Rule242390{}
+	_ rule.Severity = &Rule242390{}
+)
 
 type Rule242390 struct {
 	Client          *http.Client
@@ -25,7 +28,11 @@ func (r *Rule242390) ID() string {
 }
 
 func (r *Rule242390) Name() string {
-	return "The Kubernetes API server must have anonymous authentication disabled (HIGH 242390)"
+	return "The Kubernetes API server must have anonymous authentication disabled."
+}
+
+func (r *Rule242390) Severity() rule.SeverityLevel {
+	return rule.SeverityHigh
 }
 
 func (r *Rule242390) Run(ctx context.Context) (rule.RuleResult, error) {

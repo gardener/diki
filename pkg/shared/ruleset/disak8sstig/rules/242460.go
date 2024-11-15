@@ -26,7 +26,10 @@ import (
 	"github.com/gardener/diki/pkg/shared/provider"
 )
 
-var _ rule.Rule = &Rule242460{}
+var (
+	_ rule.Rule     = &Rule242460{}
+	_ rule.Severity = &Rule242460{}
+)
 
 type Rule242460 struct {
 	InstanceID      string
@@ -42,7 +45,11 @@ func (r *Rule242460) ID() string {
 }
 
 func (r *Rule242460) Name() string {
-	return "The Kubernetes admin.conf must have file permissions set to 644 or more restrictive (MEDIUM 242460)"
+	return "The Kubernetes admin.conf must have file permissions set to 644 or more restrictive."
+}
+
+func (r *Rule242460) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242460) Run(ctx context.Context) (rule.RuleResult, error) {

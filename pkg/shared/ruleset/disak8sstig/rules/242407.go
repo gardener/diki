@@ -24,7 +24,10 @@ import (
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
-var _ rule.Rule = &Rule242407{}
+var (
+	_ rule.Rule     = &Rule242407{}
+	_ rule.Severity = &Rule242407{}
+)
 
 type Rule242407 struct {
 	InstanceID string
@@ -49,7 +52,11 @@ func (r *Rule242407) ID() string {
 }
 
 func (r *Rule242407) Name() string {
-	return "The Kubernetes kubelet configuration files must have file permissions set to 644 or more restrictive (MEDIUM 242407)"
+	return "The Kubernetes kubelet configuration files must have file permissions set to 644 or more restrictive."
+}
+
+func (r *Rule242407) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242407) Run(ctx context.Context) (rule.RuleResult, error) {

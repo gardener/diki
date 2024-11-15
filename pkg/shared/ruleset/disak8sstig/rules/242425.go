@@ -17,7 +17,10 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-var _ rule.Rule = &Rule242425{}
+var (
+	_ rule.Rule     = &Rule242425{}
+	_ rule.Severity = &Rule242425{}
+)
 
 type Rule242425 struct {
 	Client       client.Client
@@ -29,7 +32,11 @@ func (r *Rule242425) ID() string {
 }
 
 func (r *Rule242425) Name() string {
-	return "Kubernetes Kubelet must enable tlsCertFile for client authentication to secure service (MEDIUM 242425)"
+	return "Kubernetes Kubelet must enable tlsCertFile for client authentication to secure service."
+}
+
+func (r *Rule242425) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242425) Run(ctx context.Context) (rule.RuleResult, error) {

@@ -15,7 +15,10 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-var _ rule.Rule = &Rule242392{}
+var (
+	_ rule.Rule     = &Rule242392{}
+	_ rule.Severity = &Rule242392{}
+)
 
 type Rule242392 struct {
 	Client       client.Client
@@ -27,7 +30,11 @@ func (r *Rule242392) ID() string {
 }
 
 func (r *Rule242392) Name() string {
-	return "The Kubernetes kubelet must enable explicit authorization (HIGH 242392)"
+	return "The Kubernetes kubelet must enable explicit authorization."
+}
+
+func (r *Rule242392) Severity() rule.SeverityLevel {
+	return rule.SeverityHigh
 }
 
 func (r *Rule242392) Run(ctx context.Context) (rule.RuleResult, error) {

@@ -25,7 +25,10 @@ import (
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
-var _ rule.Rule = &Rule242453{}
+var (
+	_ rule.Rule     = &Rule242453{}
+	_ rule.Severity = &Rule242453{}
+)
 
 type Rule242453 struct {
 	InstanceID string
@@ -55,7 +58,11 @@ func (r *Rule242453) ID() string {
 }
 
 func (r *Rule242453) Name() string {
-	return "The Kubernetes kubelet KubeConfig file must be owned by root (MEDIUM 242453)"
+	return "The Kubernetes kubelet KubeConfig file must be owned by root."
+}
+
+func (r *Rule242453) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242453) Run(ctx context.Context) (rule.RuleResult, error) {

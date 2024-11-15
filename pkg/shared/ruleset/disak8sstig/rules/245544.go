@@ -15,7 +15,10 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-var _ rule.Rule = &Rule245544{}
+var (
+	_ rule.Rule     = &Rule245544{}
+	_ rule.Severity = &Rule245544{}
+)
 
 type Rule245544 struct {
 	Client         client.Client
@@ -29,7 +32,11 @@ func (r *Rule245544) ID() string {
 }
 
 func (r *Rule245544) Name() string {
-	return "Kubernetes endpoints must use approved organizational certificate and key pair to protect information in transit (HIGH 245544)"
+	return "Kubernetes endpoints must use approved organizational certificate and key pair to protect information in transit."
+}
+
+func (r *Rule245544) Severity() rule.SeverityLevel {
+	return rule.SeverityHigh
 }
 
 func (r *Rule245544) Run(ctx context.Context) (rule.RuleResult, error) {

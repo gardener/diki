@@ -14,7 +14,10 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-var _ rule.Rule = &Rule242409{}
+var (
+	_ rule.Rule     = &Rule242409{}
+	_ rule.Severity = &Rule242409{}
+)
 
 type Rule242409 struct {
 	Client         client.Client
@@ -28,7 +31,11 @@ func (r *Rule242409) ID() string {
 }
 
 func (r *Rule242409) Name() string {
-	return "Kubernetes Controller Manager must disable profiling (MEDIUM 242409)"
+	return "Kubernetes Controller Manager must disable profiling."
+}
+
+func (r *Rule242409) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242409) Run(ctx context.Context) (rule.RuleResult, error) {

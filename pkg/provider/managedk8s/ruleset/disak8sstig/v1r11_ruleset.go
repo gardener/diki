@@ -149,45 +149,52 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	rules := []rule.Rule{
 		rule.NewSkipRule(
 			sharedrules.ID242376,
-			"The Kubernetes Controller Manager must use TLS 1.2, at a minimum, to protect the confidentiality of sensitive data during electronic dissemination (MEDIUM 242376)",
+			"The Kubernetes Controller Manager must use TLS 1.2, at a minimum, to protect the confidentiality of sensitive data during electronic dissemination.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242377,
-			"The Kubernetes Scheduler must use TLS 1.2, at a minimum, to protect the confidentiality of sensitive data during electronic dissemination (MEDIUM 242377)",
+			"The Kubernetes Scheduler must use TLS 1.2, at a minimum, to protect the confidentiality of sensitive data during electronic dissemination.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242378,
-			"The Kubernetes API Server must use TLS 1.2, at a minimum, to protect the confidentiality of sensitive data during electronic dissemination (MEDIUM 242378)",
+			"The Kubernetes API Server must use TLS 1.2, at a minimum, to protect the confidentiality of sensitive data during electronic dissemination.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242379,
-			"The Kubernetes etcd must use TLS to protect the confidentiality of sensitive data during electronic dissemination (MEDIUM 242379)",
+			"The Kubernetes etcd must use TLS to protect the confidentiality of sensitive data during electronic dissemination.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242380,
-			"The Kubernetes etcd must use TLS to protect the confidentiality of sensitive data during electronic dissemination (MEDIUM 242380)",
+			"The Kubernetes etcd must use TLS to protect the confidentiality of sensitive data during electronic dissemination.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242381,
-			"The Kubernetes Controller Manager must create unique service accounts for each work payload (HIGH 242381)",
+			"The Kubernetes Controller Manager must create unique service accounts for each work payload.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242382,
-			"The Kubernetes API Server must enable Node,RBAC as the authorization mode (MEDIUM 242382)",
+			"The Kubernetes API Server must enable Node,RBAC as the authorization mode.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		&sharedrules.Rule242383{
 			Client:  client,
@@ -195,21 +202,24 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		},
 		rule.NewSkipRule(
 			sharedrules.ID242384,
-			"The Kubernetes Scheduler must have secure binding (MEDIUM 242384)",
+			"The Kubernetes Scheduler must have secure binding.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242385,
-			"The Kubernetes Controller Manager must have secure binding (MEDIUM 242385)",
+			"The Kubernetes Controller Manager must have secure binding.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242386,
-			"The Kubernetes API server must have the insecure port flag disabled (HIGH 242386)",
+			"The Kubernetes API server must have the insecure port flag disabled.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 		&sharedrules.Rule242387{
 			Client:       client,
@@ -217,21 +227,24 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		},
 		rule.NewSkipRule(
 			sharedrules.ID242388,
-			"The Kubernetes API server must have the insecure bind address not set (HIGH 242388)",
+			"The Kubernetes API server must have the insecure bind address not set.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242389,
-			"The Kubernetes API server must have the secure port set (MEDIUM 242389)",
+			"The Kubernetes API server must have the secure port set.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242390,
-			"The Kubernetes API server must have anonymous authentication disabled (HIGH 242390)",
+			"The Kubernetes API server must have anonymous authentication disabled.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 		&sharedrules.Rule242391{
 			Client:       client,
@@ -285,9 +298,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		rule.NewSkipRule(
 			// feature-gates.DynamicAuditing removed in v1.19. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
 			sharedrules.ID242398,
-			"Kubernetes DynamicAuditing must not be enabled (MEDIUM 242398)",
+			"Kubernetes DynamicAuditing must not be enabled.",
 			"Option feature-gates.DynamicAuditing was removed in Kubernetes v1.19.",
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		&sharedrules.Rule242399{
 			Client:            client,
@@ -310,15 +324,17 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 
 		rule.NewSkipRule(
 			sharedrules.ID242402,
-			"The Kubernetes API Server must have an audit log path set (MEDIUM 242402)",
+			"The Kubernetes API Server must have an audit log path set.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242403,
-			"Kubernetes API Server must generate audit records that identify what type of event has occurred, identify the source of the event, contain the event results, identify any users, and identify any containers associated with the event (MEDIUM 242403)",
+			"Kubernetes API Server must generate audit records that identify what type of event has occurred, identify the source of the event, contain the event results, identify any users, and identify any containers associated with the event.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		retry.New(
 			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242404)),
@@ -334,9 +350,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242405,
-			"Kubernetes manifests must be owned by root (MEDIUM 242405)",
+			"Kubernetes manifests must be owned by root.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		retry.New(
 			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242406)),
@@ -364,39 +381,45 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242408,
-			"The Kubernetes manifest files must have least privileges (MEDIUM 242408)",
+			"The Kubernetes manifest files must have least privileges.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242409,
-			"Kubernetes Controller Manager must disable profiling (MEDIUM 242409)",
+			"Kubernetes Controller Manager must disable profiling.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242410,
-			"The Kubernetes API Server must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242410)",
+			"The Kubernetes API Server must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL).",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242411,
-			"The Kubernetes Scheduler must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242411)",
+			"The Kubernetes Scheduler must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL).",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242412,
-			"The Kubernetes Controllers must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242412)",
+			"The Kubernetes Controllers must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL).",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242413,
-			"The Kubernetes etcd must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242413)",
+			"The Kubernetes etcd must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL).",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		&rules.Rule242414{
 			Client:  client,
@@ -412,15 +435,17 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		},
 		rule.NewSkipRule(
 			sharedrules.ID242418,
-			"The Kubernetes API server must use approved cipher suites (MEDIUM 242418)",
+			"The Kubernetes API server must use approved cipher suites.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242419,
-			"Kubernetes API Server must have the SSL Certificate Authority set (MEDIUM 242419)",
+			"Kubernetes API Server must have the SSL Certificate Authority set.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		&sharedrules.Rule242420{
 			Client:       client,
@@ -428,21 +453,24 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		},
 		rule.NewSkipRule(
 			sharedrules.ID242421,
-			"Kubernetes Controller Manager must have the SSL Certificate Authority set (MEDIUM 242421)",
+			"Kubernetes Controller Manager must have the SSL Certificate Authority set.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242422,
-			"Kubernetes API Server must have a certificate for communication (MEDIUM 242422)",
+			"Kubernetes API Server must have a certificate for communication.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242423,
-			"Kubernetes etcd must enable client authentication to secure service (MEDIUM 242423)",
+			"Kubernetes etcd must enable client authentication to secure service.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		&sharedrules.Rule242424{
 			Client:       client,
@@ -454,51 +482,59 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		},
 		rule.NewSkipRule(
 			sharedrules.ID242426,
-			"Kubernetes etcd must enable client authentication to secure service (MEDIUM 242426)",
+			"Kubernetes etcd must enable client authentication to secure service.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242427,
-			"Kubernetes etcd must have a key file for secure communication (MEDIUM 242427)",
+			"Kubernetes etcd must have a key file for secure communication.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242428,
-			"Kubernetes etcd must have a certificate for communication (MEDIUM 242428)",
+			"Kubernetes etcd must have a certificate for communication.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242429,
-			"Kubernetes etcd must have the SSL Certificate Authority set (MEDIUM 242429)",
+			"Kubernetes etcd must have the SSL Certificate Authority set.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242430,
-			"Kubernetes etcd must have a certificate for communication (MEDIUM 242430)",
+			"Kubernetes etcd must have a certificate for communication.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242431,
-			"Kubernetes etcd must have a key file for secure communication (MEDIUM 242431)",
+			"Kubernetes etcd must have a key file for secure communication.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242432,
-			"Kubernetes etcd must have peer-cert-file set for secure communication (MEDIUM 242432)",
+			"Kubernetes etcd must have peer-cert-file set for secure communication.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242433,
-			"Kubernetes etcd must have a peer-key-file set for secure communication (MEDIUM 242433)",
+			"Kubernetes etcd must have a peer-key-file set for secure communication.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		&sharedrules.Rule242434{
 			Client:       client,
@@ -506,21 +542,24 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		},
 		rule.NewSkipRule(
 			sharedrules.ID242436,
-			"The Kubernetes API server must have the ValidatingAdmissionWebhook enabled (HIGH 242436)",
+			"The Kubernetes API server must have the ValidatingAdmissionWebhook enabled.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242437,
-			"Kubernetes must have a pod security policy set (HIGH 242437)",
+			"Kubernetes must have a pod security policy set.",
 			"PSPs are removed in K8s version 1.25.",
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242438,
-			"Kubernetes API Server must configure timeouts to limit attack surface (MEDIUM 242438)",
+			"Kubernetes API Server must configure timeouts to limit attack surface.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		&rules.Rule242442{
 			// We check only system (kube-proxy) pods in this rule, since there can be a user case to run different versions of images.
@@ -529,27 +568,31 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		},
 		rule.NewSkipRule(
 			sharedrules.ID242443,
-			"Kubernetes must contain the latest updates as authorized by IAVMs, CTOs, DTMs, and STIGs (MEDIUM 242443)",
+			"Kubernetes must contain the latest updates as authorized by IAVMs, CTOs, DTMs, and STIGs.",
 			"Scanning/patching security vulnerabilities should be enforced organizationally. Security vulnerability scanning should be automated and maintainers should be informed automatically.",
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242444,
-			"Kubernetes component manifests must be owned by root (MEDIUM 242444)",
+			"Kubernetes component manifests must be owned by root.",
 			"Rule is duplicate of 242405. "+noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242445,
-			"The Kubernetes component etcd must be owned by etcd (MEDIUM 242445)",
+			"The Kubernetes component etcd must be owned by etcd.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242446,
-			"The Kubernetes conf files must be owned by root (MEDIUM 242446)",
+			"The Kubernetes conf files must be owned by root.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		retry.New(
 			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242447)),
@@ -637,69 +680,80 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242454,
-			"The Kubernetes kubeadm.conf must be owned by root (MEDIUM 242454)",
+			"The Kubernetes kubeadm.conf must be owned by root.",
 			`Gardener does not use kubeadm and also does not store any "main config" anywhere (flow/component logic built-in/in-code).`,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242455,
-			"The Kubernetes kubeadm.conf must have file permissions set to 644 or more restrictive (MEDIUM 242455)",
+			"The Kubernetes kubeadm.conf must have file permissions set to 644 or more restrictive.",
 			`Gardener does not use kubeadm and also does not store any "main config" anywhere (flow/component logic built-in/in-code).`,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242456,
-			"The Kubernetes kubelet config must have file permissions set to 644 or more restrictive (MEDIUM 242456)",
+			"The Kubernetes kubelet config must have file permissions set to 644 or more restrictive.",
 			"Duplicate of 242452.",
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242457,
-			"The Kubernetes kubelet config must be owned by root (MEDIUM 242457)",
+			"The Kubernetes kubelet config must be owned by root.",
 			"Duplicate of 242453.",
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242459,
-			"The Kubernetes etcd must have file permissions set to 644 or more restrictive (MEDIUM 242459)",
+			"The Kubernetes etcd must have file permissions set to 644 or more restrictive.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242460,
-			"The Kubernetes admin kubeconfig must have file permissions set to 644 or more restrictive (MEDIUM 242460)",
+			"The Kubernetes admin kubeconfig must have file permissions set to 644 or more restrictive.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242461,
-			"Kubernetes API Server audit logs must be enabled (MEDIUM 242461)",
+			"Kubernetes API Server audit logs must be enabled.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242462,
-			"The Kubernetes API Server must be set to audit log max size (MEDIUM 242462)",
+			"The Kubernetes API Server must be set to audit log max size.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242463,
-			"The Kubernetes API Server must be set to audit log maximum backup (MEDIUM 242463)",
+			"The Kubernetes API Server must be set to audit log maximum backup.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242464,
-			"The Kubernetes API Server audit log retention must be set (MEDIUM 242464)",
+			"The Kubernetes API Server audit log retention must be set.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242465,
-			"The Kubernetes API Server audit log path must be set (MEDIUM 242465)",
+			"The Kubernetes API Server audit log path must be set.",
 			"Duplicate of 242402. "+noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		retry.New(
 			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242466)),
@@ -731,41 +785,53 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		},
 		rule.NewSkipRule(
 			sharedrules.ID245542,
-			"Kubernetes API Server must disable basic authentication to protect information in transit (HIGH 245542)",
+			"Kubernetes API Server must disable basic authentication to protect information in transit.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID245543,
-			"Kubernetes API Server must disable token authentication to protect information in transit (HIGH 245543)",
+			"Kubernetes API Server must disable token authentication to protect information in transit.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID245544,
-			"Kubernetes endpoints must use approved organizational certificate and key pair to protect information in transit (HIGH 245544)",
+			"Kubernetes endpoints must use approved organizational certificate and key pair to protect information in transit.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID254800,
-			"Kubernetes must have a Pod Security Admission control file configured (HIGH 254800)",
+			"Kubernetes must have a Pod Security Admission control file configured.",
 			noControlPlaneMsg,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 		rule.NewSkipRule(
 			// featureGates.PodSecurity made GA in v1.25 and removed in v1.28. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
 			sharedrules.ID254801,
-			"Kubernetes must enable PodSecurity admission controller on static pods and Kubelets (HIGH 254801)",
+			"Kubernetes must enable PodSecurity admission controller on static pods and Kubelets.",
 			"Option featureGates.PodSecurity was made GA in v1.25 and removed in v1.28.",
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 	}
 
 	for i, r := range rules {
+		var severityLevel rule.SeverityLevel
+		if severity, ok := r.(rule.Severity); !ok {
+			return fmt.Errorf("rule %s does not implement rule.Severity", r.ID())
+		} else {
+			severityLevel = severity.Severity()
+		}
+
 		opt, found := ruleOptions[r.ID()]
 		if found && opt.Skip != nil && opt.Skip.Enabled {
-			rules[i] = rule.NewSkipRule(r.ID(), r.Name(), opt.Skip.Justification, rule.Accepted)
+			rules[i] = rule.NewSkipRule(r.ID(), r.Name(), opt.Skip.Justification, rule.Accepted, rule.SkipRuleWithSeverity(severityLevel))
 		}
 	}
 

@@ -15,7 +15,10 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-var _ rule.Rule = &Rule242461{}
+var (
+	_ rule.Rule     = &Rule242461{}
+	_ rule.Severity = &Rule242461{}
+)
 
 type Rule242461 struct {
 	Client         client.Client
@@ -29,7 +32,11 @@ func (r *Rule242461) ID() string {
 }
 
 func (r *Rule242461) Name() string {
-	return "The Kubernetes API Server audit logs must be enabled (MEDIUM 242461)"
+	return "The Kubernetes API Server audit logs must be enabled."
+}
+
+func (r *Rule242461) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242461) Run(ctx context.Context) (rule.RuleResult, error) {

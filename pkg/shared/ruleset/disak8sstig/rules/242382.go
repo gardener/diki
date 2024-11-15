@@ -22,7 +22,10 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-var _ rule.Rule = &Rule242382{}
+var (
+	_ rule.Rule     = &Rule242382{}
+	_ rule.Severity = &Rule242382{}
+)
 
 type Rule242382 struct {
 	Client             client.Client
@@ -37,7 +40,11 @@ func (r *Rule242382) ID() string {
 }
 
 func (r *Rule242382) Name() string {
-	return "The Kubernetes API Server must enable Node,RBAC as the authorization mode (MEDIUM 242382)"
+	return "The Kubernetes API Server must enable Node,RBAC as the authorization mode."
+}
+
+func (r *Rule242382) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242382) Run(ctx context.Context) (rule.RuleResult, error) {

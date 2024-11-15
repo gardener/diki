@@ -19,7 +19,10 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-var _ rule.Rule = &Rule242403{}
+var (
+	_ rule.Rule     = &Rule242403{}
+	_ rule.Severity = &Rule242403{}
+)
 
 type Rule242403 struct {
 	Client         client.Client
@@ -32,7 +35,11 @@ func (r *Rule242403) ID() string {
 }
 
 func (r *Rule242403) Name() string {
-	return "The Kubernetes API Server must generate audit records that identify what type of event has occurred, identify the source of the event, contain the event results, identify any users, and identify any containers associated with the event (MEDIUM 242403)"
+	return "The Kubernetes API Server must generate audit records that identify what type of event has occurred, identify the source of the event, contain the event results, identify any users, and identify any containers associated with the event."
+}
+
+func (r *Rule242403) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242403) Run(ctx context.Context) (rule.RuleResult, error) {

@@ -15,7 +15,10 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-var _ rule.Rule = &Rule242391{}
+var (
+	_ rule.Rule     = &Rule242391{}
+	_ rule.Severity = &Rule242391{}
+)
 
 type Rule242391 struct {
 	Client       client.Client
@@ -27,7 +30,11 @@ func (r *Rule242391) ID() string {
 }
 
 func (r *Rule242391) Name() string {
-	return "The Kubernetes Kubelet must have anonymous authentication disabled (HIGH 242391)"
+	return "The Kubernetes Kubelet must have anonymous authentication disabled."
+}
+
+func (r *Rule242391) Severity() rule.SeverityLevel {
+	return rule.SeverityHigh
 }
 
 func (r *Rule242391) Run(ctx context.Context) (rule.RuleResult, error) {

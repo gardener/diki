@@ -28,7 +28,10 @@ import (
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
-var _ rule.Rule = &Rule242466{}
+var (
+	_ rule.Rule     = &Rule242466{}
+	_ rule.Severity = &Rule242466{}
+)
 
 type Rule242466 struct {
 	InstanceID             string
@@ -46,7 +49,11 @@ func (r *Rule242466) ID() string {
 }
 
 func (r *Rule242466) Name() string {
-	return "The Kubernetes PKI CRT must have file permissions set to 644 or more restrictive (MEDIUM 242466)"
+	return "The Kubernetes PKI CRT must have file permissions set to 644 or more restrictive."
+}
+
+func (r *Rule242466) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {

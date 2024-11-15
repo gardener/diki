@@ -24,7 +24,10 @@ import (
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
-var _ rule.Rule = &Rule242404{}
+var (
+	_ rule.Rule     = &Rule242404{}
+	_ rule.Severity = &Rule242404{}
+)
 
 type Rule242404 struct {
 	InstanceID string
@@ -49,7 +52,11 @@ func (r *Rule242404) ID() string {
 }
 
 func (r *Rule242404) Name() string {
-	return "Kubernetes Kubelet must deny hostname override (MEDIUM 242404)"
+	return "Kubernetes Kubelet must deny hostname override."
+}
+
+func (r *Rule242404) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242404) Run(ctx context.Context) (rule.RuleResult, error) {

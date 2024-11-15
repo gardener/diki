@@ -20,7 +20,10 @@ type Logger interface {
 	Info(string, ...any)
 }
 
-var _ rule.Rule = &RetryableRule{}
+var (
+	_ rule.Rule     = &RetryableRule{}
+	_ rule.Severity = &RetryableRule{}
+)
 
 // RetryableRule wraps [rule.Rule] and allows a rule to be retried when the retry condition is met.
 type RetryableRule struct {
@@ -55,6 +58,17 @@ func (rr *RetryableRule) ID() string {
 // Name returns the name of the rule.
 func (rr *RetryableRule) Name() string {
 	return rr.BaseRule.Name()
+}
+
+// Severity returns the severity level of the Rule.
+func (rr *RetryableRule) Severity() rule.SeverityLevel {
+	var severity rule.SeverityLevel
+
+	if s, ok := rr.BaseRule.(rule.Severity); ok {
+		severity = s.Severity()
+	}
+
+	return severity
 }
 
 // Run executes the base rule and retries when the retry condition is met and max retries are not reached yet.

@@ -23,7 +23,10 @@ import (
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
-var _ rule.Rule = &Rule242383{}
+var (
+	_ rule.Rule     = &Rule242383{}
+	_ rule.Severity = &Rule242383{}
+)
 
 type Rule242383 struct {
 	Client  client.Client
@@ -102,7 +105,11 @@ func (r *Rule242383) ID() string {
 }
 
 func (r *Rule242383) Name() string {
-	return "Kubernetes must separate user functionality (MEDIUM 242383)"
+	return "Kubernetes must separate user functionality."
+}
+
+func (r *Rule242383) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {

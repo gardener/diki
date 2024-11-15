@@ -15,7 +15,10 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-var _ rule.Rule = &Rule242395{}
+var (
+	_ rule.Rule     = &Rule242395{}
+	_ rule.Severity = &Rule242395{}
+)
 
 type Rule242395 struct {
 	Client client.Client
@@ -26,7 +29,11 @@ func (r *Rule242395) ID() string {
 }
 
 func (r *Rule242395) Name() string {
-	return "Kubernetes dashboard must not be enabled (MEDIUM 242395)"
+	return "Kubernetes dashboard must not be enabled."
+}
+
+func (r *Rule242395) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242395) Run(ctx context.Context) (rule.RuleResult, error) {

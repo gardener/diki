@@ -17,7 +17,10 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-var _ rule.Rule = &Rule242399{}
+var (
+	_ rule.Rule     = &Rule242399{}
+	_ rule.Severity = &Rule242399{}
+)
 
 type Rule242399 struct {
 	Client            client.Client
@@ -30,7 +33,11 @@ func (r *Rule242399) ID() string {
 }
 
 func (r *Rule242399) Name() string {
-	return "Kubernetes DynamicKubeletConfig must not be enabled (MEDIUM 242399)"
+	return "Kubernetes DynamicKubeletConfig must not be enabled."
+}
+
+func (r *Rule242399) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242399) Run(ctx context.Context) (rule.RuleResult, error) {

@@ -161,15 +161,17 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		},
 		rule.NewSkipRule(
 			sharedrules.ID242384,
-			"The Kubernetes Scheduler must have secure binding (MEDIUM 242384)",
+			"The Kubernetes Scheduler must have secure binding.",
 			"The Kubernetes Scheduler runs in a container which already has limited access to network interfaces. In addition ingress traffic to the Kubernetes Scheduler is restricted via network policies, making an unintended exposure less likely.",
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242385,
-			"The Kubernetes Controller Manager must have secure binding (MEDIUM 242385)",
+			"The Kubernetes Controller Manager must have secure binding.",
 			"The Kubernetes Controller Manager runs in a container which already has limited access to network interfaces. In addition ingress traffic to the Kubernetes Controller Manager is restricted via network policies, making an unintended exposure less likely.",
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		&sharedrules.Rule242386{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedrules.Rule242387{
@@ -218,9 +220,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedrules.Rule242395{Client: shootClient},
 		rule.NewSkipRule(
 			sharedrules.ID242396,
-			"Kubernetes Kubectl cp command must give expected access and results (MEDIUM 242396)",
+			"Kubernetes Kubectl cp command must give expected access and results.",
 			`"kubectl" is not installed into control plane pods or worker nodes and Gardener does not offer Kubernetes v1.12 or older.`,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		&sharedrules.Rule242397{
 			Client:       shootClient,
@@ -228,10 +231,11 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		},
 		rule.NewSkipRule(
 			sharedrules.ID242398,
-			"Kubernetes DynamicAuditing must not be enabled (MEDIUM 242398)",
+			"Kubernetes DynamicAuditing must not be enabled.",
 			// feature-gates.DynamicAuditing removed in v1.19. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
 			"Option feature-gates.DynamicAuditing removed in Kubernetes v1.19.",
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		&sharedrules.Rule242399{
 			Client:            shootClient,
@@ -271,9 +275,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242405,
-			"Kubernetes manifests must be owned by root (MEDIUM 242405)",
+			"Kubernetes manifests must be owned by root.",
 			"Gardener does not deploy any control plane component as systemd processes or static pod.",
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		retry.New(
 			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242406)),
@@ -306,34 +311,39 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242408,
-			"The Kubernetes manifest files must have least privileges  (MEDIUM 242408)",
+			"The Kubernetes manifest files must have least privileges.",
 			`Gardener does not deploy any control plane component as systemd processes or static pod.`,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		&sharedrules.Rule242409{Client: seedClient, Namespace: r.shootNamespace},
 		rule.NewSkipRule(
 			sharedrules.ID242410,
-			"The Kubernetes API Server must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242410)",
+			"The Kubernetes API Server must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL).",
 			"Cannot be tested and should be enforced organizationally. Gardener uses a minimum of known and automatically opened/used/created ports/protocols/services (PPSM stands for Ports, Protocols, Service Management).",
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242411,
-			"The Kubernetes Scheduler must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242411)",
+			"The Kubernetes Scheduler must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL).",
 			"Cannot be tested and should be enforced organizationally. Gardener uses a minimum of known and automatically opened/used/created ports/protocols/services (PPSM stands for Ports, Protocols, Service Management).",
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242412,
-			"The Kubernetes Controllers must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242412)",
+			"The Kubernetes Controllers must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL).",
 			"Cannot be tested and should be enforced organizationally. Gardener uses a minimum of known and automatically opened/used/created ports/protocols/services (PPSM stands for Ports, Protocols, Service Management).",
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242413,
-			"The Kubernetes etcd must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) (MEDIUM 242413)",
+			"The Kubernetes etcd must enforce ports, protocols, and services (PPS) that adhere to the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL).",
 			"Cannot be tested and should be enforced organizationally. Gardener uses a minimum of known and automatically opened/used/created ports/protocols/services (PPSM stands for Ports, Protocols, Service Management).",
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		&rules.Rule242414{
 			ClusterClient:         shootClient,
@@ -398,23 +408,26 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedrules.Rule242436{Client: seedClient, Namespace: r.shootNamespace},
 		rule.NewSkipRule(
 			sharedrules.ID242437,
-			"Kubernetes must have a pod security policy set (HIGH 242437)",
+			"Kubernetes must have a pod security policy set.",
 			"PSPs are removed in K8s version 1.25.",
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 		&sharedrules.Rule242438{Client: seedClient, Namespace: r.shootNamespace},
 		&rules.Rule242442{ClusterClient: shootClient, ControlPlaneClient: seedClient, ControlPlaneNamespace: r.shootNamespace},
 		rule.NewSkipRule(
 			sharedrules.ID242443,
-			"Kubernetes must contain the latest updates as authorized by IAVMs, CTOs, DTMs, and STIGs (MEDIUM 242443)",
+			"Kubernetes must contain the latest updates as authorized by IAVMs, CTOs, DTMs, and STIGs.",
 			"Scanning/patching security vulnerabilities should be enforced organizationally. Security vulnerability scanning should be automated and maintainers should be informed automatically.",
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242444,
-			"Kubernetes component manifests must be owned by root (MEDIUM 242444)",
+			"Kubernetes component manifests must be owned by root.",
 			`Rule is duplicate of "242405"`,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		retry.New(
 			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242445)),
@@ -542,27 +555,31 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242454,
-			"Kubernetes kubeadm.conf must be owned by root(MEDIUM 242454)",
+			"Kubernetes kubeadm.conf must be owned by root.",
 			`Gardener does not use "kubeadm" and also does not store any "main config" anywhere in seed or shoot (flow/component logic built-in/in-code).`,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242455,
-			"Kubernetes kubeadm.conf must have file permissions set to 644 or more restrictive (MEDIUM 242455)",
+			"Kubernetes kubeadm.conf must have file permissions set to 644 or more restrictive.",
 			`Gardener does not use "kubeadm" and also does not store any "main config" anywhere in seed or shoot (flow/component logic built-in/in-code).`,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242456,
-			"Kubernetes kubelet config must have file permissions set to 644 or more restrictive (MEDIUM 242456)",
+			"Kubernetes kubelet config must have file permissions set to 644 or more restrictive.",
 			`Rule is duplicate of "242452".`,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID242457,
-			"Kubernetes kubelet config must be owned by root (MEDIUM 242457)",
+			"Kubernetes kubelet config must be owned by root.",
 			`Rule is duplicate of "242453".`,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		retry.New(
 			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242459)),
@@ -594,9 +611,10 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		&sharedrules.Rule242464{Client: seedClient, Namespace: r.shootNamespace},
 		rule.NewSkipRule(
 			sharedrules.ID242465,
-			"Kubernetes API Server audit log path must be set (MEDIUM 242465)",
+			"Kubernetes API Server audit log path must be set.",
 			`Rule is duplicate of "242402"`,
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 		retry.New(
 			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242466)),
@@ -639,16 +657,24 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		rule.NewSkipRule(
 			// featureGates.PodSecurity made GA in v1.25 and removed in v1.28. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
 			sharedrules.ID254801,
-			"Kubernetes must enable PodSecurity admission controller on static pods and Kubelets (HIGH 254801)",
+			"Kubernetes must enable PodSecurity admission controller on static pods and Kubelets.",
 			"Option featureGates.PodSecurity was made GA in v1.25 and removed in v1.28.",
 			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 	}
 
 	for i, r := range rules {
+		var severityLevel rule.SeverityLevel
+		if severity, ok := r.(rule.Severity); !ok {
+			return fmt.Errorf("rule %s does not implement rule.Severity", r.ID())
+		} else {
+			severityLevel = severity.Severity()
+		}
+
 		opt, found := ruleOptions[r.ID()]
 		if found && opt.Skip != nil && opt.Skip.Enabled {
-			rules[i] = rule.NewSkipRule(r.ID(), r.Name(), opt.Skip.Justification, rule.Accepted)
+			rules[i] = rule.NewSkipRule(r.ID(), r.Name(), opt.Skip.Justification, rule.Accepted, rule.SkipRuleWithSeverity(severityLevel))
 		}
 	}
 

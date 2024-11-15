@@ -18,7 +18,10 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-var _ rule.Rule = &Rule242433{}
+var (
+	_ rule.Rule     = &Rule242433{}
+	_ rule.Severity = &Rule242433{}
+)
 
 type Rule242433 struct {
 	Client                client.Client
@@ -32,7 +35,11 @@ func (r *Rule242433) ID() string {
 }
 
 func (r *Rule242433) Name() string {
-	return "Kubernetes etcd must have a peer-key-file set for secure communication (MEDIUM 242433)"
+	return "Kubernetes etcd must have a peer-key-file set for secure communication."
+}
+
+func (r *Rule242433) Severity() rule.SeverityLevel {
+	return rule.SeverityMedium
 }
 
 func (r *Rule242433) Run(ctx context.Context) (rule.RuleResult, error) {
