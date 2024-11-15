@@ -12,6 +12,7 @@ import (
 	"github.com/gardener/diki/pkg/provider"
 	"github.com/gardener/diki/pkg/provider/managedk8s"
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig"
+	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/securityhardenedcluster"
 	"github.com/gardener/diki/pkg/ruleset"
 )
 
@@ -36,6 +37,14 @@ func ManagedK8SProviderFromConfig(conf config.ProviderConfig) (provider.Provider
 			}
 			setLoggerDISA := disak8sstig.WithLogger(providerLogger.With("ruleset", ruleset.ID(), "version", ruleset.Version()))
 			setLoggerDISA(ruleset)
+			rulesets = append(rulesets, ruleset)
+		case securityhardenedcluster.RulesetID:
+			ruleset, err := securityhardenedcluster.FromGenericConfig(rulesetConfig, p.Config)
+			if err != nil {
+				return nil, err
+			}
+			setLoggerHardened := securityhardenedcluster.WithLogger(providerLogger.With("ruleset", ruleset.ID(), "version", ruleset.Version()))
+			setLoggerHardened(ruleset)
 			rulesets = append(rulesets, ruleset)
 		default:
 			return nil, fmt.Errorf("unknown ruleset identifier: %s", rulesetConfig.ID)
