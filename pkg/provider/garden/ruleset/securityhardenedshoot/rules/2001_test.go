@@ -60,17 +60,17 @@ var _ = Describe("#2001", func() {
 
 		Entry("should error when the shoot is not found",
 			func() { shoot.Name = "notFoo" }, []rule.CheckResult{{Status: rule.Errored, Message: "shoots.core.gardener.cloud \"foo\" not found", Target: rule.NewTarget("kind", "Shoot", "name", "foo", "namespace", "bar")}}),
-		Entry("should fail when the workers' settings field is not specified",
-			func() { shoot.Spec.Provider = gardencorev1beta1.Provider{} }, []rule.CheckResult{{Status: rule.Failed, Message: "Provider config doesn't disable SSH access to the worker nodes.", Target: rule.NewTarget()}}),
-		Entry("should fail when the SSH access field is not specified",
-			func() { shoot.Spec.Provider.WorkersSettings = &gardencorev1beta1.WorkersSettings{} }, []rule.CheckResult{{Status: rule.Failed, Message: "Provider config doesn't disable SSH access to the worker nodes.", Target: rule.NewTarget()}}),
-		Entry("should fail when the SSH access field is set to true",
+		Entry("should fail when the WorkersSettings field is not specified",
+			func() { shoot.Spec.Provider = gardencorev1beta1.Provider{} }, []rule.CheckResult{{Status: rule.Failed, Message: "SSH access to worker nodes is not disabled.", Target: rule.NewTarget()}}),
+		Entry("should fail when the SSHAccess field is not specified",
+			func() { shoot.Spec.Provider.WorkersSettings = &gardencorev1beta1.WorkersSettings{} }, []rule.CheckResult{{Status: rule.Failed, Message: "SSH access to worker nodes is not disabled.", Target: rule.NewTarget()}}),
+		Entry("should fail when the SSH access is enabled",
 			func() {
 				shoot.Spec.Provider.WorkersSettings = ptr.To(gardencorev1beta1.WorkersSettings{SSHAccess: ptr.To(gardencorev1beta1.SSHAccess{Enabled: true})})
-			}, []rule.CheckResult{{Status: rule.Failed, Message: "Provider config explicitly enables SSH access to the worker nodes.", Target: rule.NewTarget()}}),
-		Entry("should pass when the SSH access field is set to false",
+			}, []rule.CheckResult{{Status: rule.Failed, Message: "SSH access is enabled for worker nodes.", Target: rule.NewTarget()}}),
+		Entry("should pass when the SSH access is disabled",
 			func() {
 				shoot.Spec.Provider.WorkersSettings = ptr.To(gardencorev1beta1.WorkersSettings{SSHAccess: ptr.To(gardencorev1beta1.SSHAccess{Enabled: false})})
-			}, []rule.CheckResult{{Status: rule.Passed, Message: "Provider config disables SSH access to the worker nodes", Target: rule.NewTarget()}}),
+			}, []rule.CheckResult{{Status: rule.Passed, Message: "SSH access is disabled for worker nodes.", Target: rule.NewTarget()}}),
 	)
 })

@@ -46,11 +46,11 @@ func (r *Rule2001) Run(ctx context.Context) (rule.RuleResult, error) {
 	var checkResults []rule.CheckResult
 	switch {
 	case shoot.Spec.Provider.WorkersSettings == nil || shoot.Spec.Provider.WorkersSettings.SSHAccess == nil:
-		checkResults = append(checkResults, rule.FailedCheckResult("Provider config doesn't disable SSH access to the worker nodes.", rule.NewTarget()))
+		checkResults = append(checkResults, rule.FailedCheckResult("SSH access to worker nodes is not disabled.", rule.NewTarget()))
 	case !shoot.Spec.Provider.WorkersSettings.SSHAccess.Enabled:
-		checkResults = append(checkResults, rule.PassedCheckResult("Provider config disables SSH access to the worker nodes", rule.NewTarget()))
+		checkResults = append(checkResults, rule.PassedCheckResult("SSH access is disabled for worker nodes.", rule.NewTarget()))
 	default:
-		checkResults = append(checkResults, rule.FailedCheckResult("Provider config explicitly enables SSH access to the worker nodes.", rule.NewTarget()))
+		checkResults = append(checkResults, rule.FailedCheckResult("SSH access is enabled for worker nodes.", rule.NewTarget()))
 	}
 	return rule.Result(r, checkResults...), nil
 }
