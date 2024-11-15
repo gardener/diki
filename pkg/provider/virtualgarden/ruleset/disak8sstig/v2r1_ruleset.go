@@ -718,8 +718,8 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 
 	for i, r := range rules {
 		var severityLevel rule.SeverityLevel
-		if severity, ok := rules[i].(rule.Severity); !ok {
-			return fmt.Errorf("rule %s does not implement rule.Severity", rules[i].ID())
+		if severity, ok := r.(rule.Severity); !ok {
+			return fmt.Errorf("rule %s does not implement rule.Severity", r.ID())
 		} else {
 			severityLevel = severity.Severity()
 		}
