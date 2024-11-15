@@ -49,13 +49,13 @@ var _ = Describe("#2001", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(updateFn func(), expectedResults []rule.CheckResult) {
+		func(updateFn func(), expectedResults rule.CheckResult) {
 			updateFn()
 
 			Expect(fakeClient.Create(ctx, shoot)).To(Succeed())
 			res, err := r.Run(ctx)
 			Expect(err).To(BeNil())
-			Expect(res).To(Equal(rule.RuleResult{RuleID: ruleID, RuleName: ruleName, CheckResults: expectedResults, Severity: rule.SeverityMedium}))
+			Expect(res).To(Equal(rule.RuleResult{RuleID: ruleID, RuleName: ruleName, CheckResults: []rule.CheckResult{expectedResults}, Severity: rule.SeverityMedium}))
 		},
 
 		Entry("should error when the shoot is not found",

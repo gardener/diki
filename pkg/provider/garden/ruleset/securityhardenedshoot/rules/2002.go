@@ -6,9 +6,11 @@ package rules
 
 import (
 	"context"
+	"fmt"
 
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/rule"
@@ -43,51 +45,62 @@ func (r *Rule2002) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "Shoot", "name", r.ShootName, "namespace", r.ShootNamespace))), nil
 	}
 
+	var (
+		kubernetesSpec = shoot.Spec.Kubernetes
+		allAlpha       = "AllAlpha"
+		components     = []string{"kube apiserver", "kube controller manager", "kube scheduler", "kube proxy", "kubelet"}
+	)
+
+	allAlphaFeatureGatesValues := map[string]*bool{}
+
+	allAlphaFeatureGatesValues["kube apiserver"] = func() *bool {
+		if kubernetesSpec.KubeAPIServer != nil && kubernetesSpec.KubeAPIServer.FeatureGates != nil {
+			return ptr.To(kubernetesSpec.KubeAPIServer.FeatureGates[allAlpha])
+		}
+		return nil
+	}()
+
+	allAlphaFeatureGatesValues["kube controller manager"] = func() *bool {
+		if kubernetesSpec.KubeControllerManager != nil && kubernetesSpec.KubeControllerManager.FeatureGates != nil {
+			return ptr.To(kubernetesSpec.KubeControllerManager.FeatureGates[allAlpha])
+		}
+		return nil
+	}()
+
+	allAlphaFeatureGatesValues["kube scheduler"] = func() *bool {
+		if kubernetesSpec.KubeScheduler != nil && kubernetesSpec.KubeScheduler.FeatureGates != nil {
+			return ptr.To(kubernetesSpec.KubeScheduler.FeatureGates[allAlpha])
+		}
+		return nil
+	}()
+
+	allAlphaFeatureGatesValues["kube proxy"] = func() *bool {
+		if kubernetesSpec.KubeProxy != nil && kubernetesSpec.KubeProxy.FeatureGates != nil {
+			return ptr.To(kubernetesSpec.KubeProxy.FeatureGates[allAlpha])
+		}
+		return nil
+	}()
+
+	allAlphaFeatureGatesValues["kubelet"] = func() *bool {
+		if kubernetesSpec.Kubelet != nil && kubernetesSpec.Kubelet.FeatureGates != nil {
+			return ptr.To(kubernetesSpec.Kubelet.FeatureGates[allAlpha])
+		}
+		return nil
+	}()
+
 	var checkResults []rule.CheckResult
 
-	switch {
-	case shoot.Spec.Kubernetes.KubeAPIServer == nil || shoot.Spec.Kubernetes.KubeAPIServer.FeatureGates == nil:
-		checkResults = append(checkResults, rule.PassedCheckResult("AllAlpha featureGates are not enabled for the kube apiserver.", rule.NewTarget()))
-	case shoot.Spec.Kubernetes.KubeAPIServer.FeatureGates["AllAlpha"]:
-		checkResults = append(checkResults, rule.FailedCheckResult("AllAlpha featureGates are enabled for the kube apiserver.", rule.NewTarget()))
-	default:
-		checkResults = append(checkResults, rule.PassedCheckResult("AllAlpha featureGates are disabled for the kube apiserver.", rule.NewTarget()))
-	}
+	for _, component := range components {
 
-	switch {
-	case shoot.Spec.Kubernetes.KubeControllerManager == nil || shoot.Spec.Kubernetes.KubeControllerManager.FeatureGates == nil:
-		checkResults = append(checkResults, rule.PassedCheckResult("AllAlpha featureGates are not enabled for the kube controller manager.", rule.NewTarget()))
-	case shoot.Spec.Kubernetes.KubeControllerManager.FeatureGates["AllAlpha"]:
-		checkResults = append(checkResults, rule.FailedCheckResult("AllAlpha featureGates are enabled for the kube controller manager.", rule.NewTarget()))
-	default:
-		checkResults = append(checkResults, rule.PassedCheckResult("AllAlpha featureGates are disabled for the kube controller manager.", rule.NewTarget()))
-	}
-
-	switch {
-	case shoot.Spec.Kubernetes.KubeScheduler == nil || shoot.Spec.Kubernetes.KubeScheduler.FeatureGates == nil:
-		checkResults = append(checkResults, rule.PassedCheckResult("AllAlpha featureGates are not enabled for the kube scheduler.", rule.NewTarget()))
-	case shoot.Spec.Kubernetes.KubeScheduler.FeatureGates["AllAlpha"]:
-		checkResults = append(checkResults, rule.FailedCheckResult("AllAlpha featureGates are enabled for the kube scheduler.", rule.NewTarget()))
-	default:
-		checkResults = append(checkResults, rule.PassedCheckResult("AllAlpha featureGates are disabled for the kube scheduler.", rule.NewTarget()))
-	}
-
-	switch {
-	case shoot.Spec.Kubernetes.KubeProxy == nil || shoot.Spec.Kubernetes.KubeProxy.FeatureGates == nil:
-		checkResults = append(checkResults, rule.PassedCheckResult("AllAlpha featureGates are not enabled for the kube proxy.", rule.NewTarget()))
-	case shoot.Spec.Kubernetes.KubeProxy.FeatureGates["AllAlpha"]:
-		checkResults = append(checkResults, rule.FailedCheckResult("AllAlpha featureGates are enabled for the kube proxy.", rule.NewTarget()))
-	default:
-		checkResults = append(checkResults, rule.PassedCheckResult("AllAlpha featureGates are disabled for the kube proxy.", rule.NewTarget()))
-	}
-
-	switch {
-	case shoot.Spec.Kubernetes.Kubelet == nil || shoot.Spec.Kubernetes.Kubelet.FeatureGates == nil:
-		checkResults = append(checkResults, rule.PassedCheckResult("AllAlpha featureGates are not enabled for the kubelet.", rule.NewTarget()))
-	case shoot.Spec.Kubernetes.Kubelet.FeatureGates["AllAlpha"]:
-		checkResults = append(checkResults, rule.FailedCheckResult("AllAlpha featureGates are enabled for the kubelet.", rule.NewTarget()))
-	default:
-		checkResults = append(checkResults, rule.PassedCheckResult("AllAlpha featureGates are disabled for the kubelet.", rule.NewTarget()))
+		if allAlphaFeatureGatesValues[component] == nil {
+			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("AllAlpha featureGates are not enabled for the %s.", component), rule.NewTarget()))
+		} else {
+			if *(allAlphaFeatureGatesValues[component]) {
+				checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("AllAlpha featureGates are enabled for the %s.", component), rule.NewTarget()))
+			} else {
+				checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("AllAlpha featureGates are disabled for the %s.", component), rule.NewTarget()))
+			}
+		}
 	}
 
 	return rule.Result(r, checkResults...), nil
