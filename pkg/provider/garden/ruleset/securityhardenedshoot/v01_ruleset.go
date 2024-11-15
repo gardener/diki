@@ -38,13 +38,11 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			rule.NotImplemented,
 			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
-		rule.NewSkipRule(
-			"2001",
-			"Shoot clusters must disable ssh access to worker nodes.",
-			"Not implemented.",
-			rule.NotImplemented,
-			rule.SkipRuleWithSeverity(rule.SeverityMedium),
-		),
+		&rules.Rule2001{
+			Client:         c,
+			ShootName:      r.args.ShootName,
+			ShootNamespace: r.args.ProjectNamespace,
+		},
 		rule.NewSkipRule(
 			"2002",
 			"Shoot clusters must not have Alpha APIs enabled for any Kubernetes component.",
