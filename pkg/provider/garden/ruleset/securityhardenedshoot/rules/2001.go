@@ -45,7 +45,7 @@ func (r *Rule2001) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	switch {
 	case shoot.Spec.Provider.WorkersSettings == nil || shoot.Spec.Provider.WorkersSettings.SSHAccess == nil:
-		return rule.Result(r, rule.FailedCheckResult("SSH access to worker nodes is not disabled.", rule.NewTarget())), nil
+		return rule.Result(r, rule.FailedCheckResult("SSH access is not disabled for worker nodes.", rule.NewTarget())), nil
 	case !shoot.Spec.Provider.WorkersSettings.SSHAccess.Enabled:
 		return rule.Result(r, rule.PassedCheckResult("SSH access is disabled for worker nodes.", rule.NewTarget())), nil
 	default:
