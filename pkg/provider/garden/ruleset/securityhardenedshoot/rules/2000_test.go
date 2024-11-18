@@ -51,20 +51,20 @@ var _ = Describe("#2000", func() {
 		}
 	})
 
-	DescribeTable("Run cases", func(updateFn func(), expectedCheckResults []rule.CheckResult) {
+	DescribeTable("Run cases", func(updateFn func(), expectedCheckResult rule.CheckResult) {
 		updateFn()
 		Expect(fakeClient.Create(ctx, shoot)).To(Succeed())
 		res, err := r.Run(ctx)
 		Expect(err).To(BeNil())
-		Expect(res).To(Equal(rule.RuleResult{RuleID: ruleID, RuleName: ruleName, Severity: severity, CheckResults: expectedCheckResults}))
+		Expect(res).To(Equal(rule.RuleResult{RuleID: ruleID, RuleName: ruleName, Severity: severity, CheckResults: []rule.CheckResult{expectedCheckResult}}))
 	},
 		Entry("should error when the shoot is not found",
 			func() { shoot.Name = "notFoo" },
-			[]rule.CheckResult{{Status: rule.Errored, Message: "shoots.core.gardener.cloud \"foo\" not found", Target: rule.NewTarget("kind", "Shoot", "name", "foo", "namespace", "bar")}},
+			rule.CheckResult{Status: rule.Errored, Message: "shoots.core.gardener.cloud \"foo\" not found", Target: rule.NewTarget("kind", "Shoot", "name", "foo", "namespace", "bar")},
 		),
 		Entry("should pass when kube-apiserver configuration is not set",
 			func() {},
-			[]rule.CheckResult{{Status: rule.Passed, Message: "Anonymous authentication is not enabled.", Target: rule.NewTarget()}},
+			rule.CheckResult{Status: rule.Passed, Message: "Anonymous authentication is not enabled.", Target: rule.NewTarget()},
 		),
 		Entry("should pass when anonymous authentication is not set",
 			func() {
@@ -76,7 +76,7 @@ var _ = Describe("#2000", func() {
 					},
 				}
 			},
-			[]rule.CheckResult{{Status: rule.Passed, Message: "Anonymous authentication is not enabled.", Target: rule.NewTarget()}},
+			rule.CheckResult{Status: rule.Passed, Message: "Anonymous authentication is not enabled.", Target: rule.NewTarget()},
 		),
 		Entry("should pass when anonymous authentication is disabled",
 			func() {
@@ -86,7 +86,7 @@ var _ = Describe("#2000", func() {
 					},
 				}
 			},
-			[]rule.CheckResult{{Status: rule.Passed, Message: "Anonymous authentication is disabled on the kube-apiserver.", Target: rule.NewTarget()}},
+			rule.CheckResult{Status: rule.Passed, Message: "Anonymous authentication is disabled on the kube-apiserver.", Target: rule.NewTarget()},
 		),
 		Entry("should fail when anonymous authentication is enabled",
 			func() {
@@ -96,7 +96,7 @@ var _ = Describe("#2000", func() {
 					},
 				}
 			},
-			[]rule.CheckResult{{Status: rule.Failed, Message: "Anonymous authentication is enabled on the kube-apiserver.", Target: rule.NewTarget()}},
+			rule.CheckResult{Status: rule.Failed, Message: "Anonymous authentication is enabled on the kube-apiserver.", Target: rule.NewTarget()},
 		),
 	)
 })
