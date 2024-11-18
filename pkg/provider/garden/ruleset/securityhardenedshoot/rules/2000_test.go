@@ -62,11 +62,11 @@ var _ = Describe("#2000", func() {
 			func() { shoot.Name = "notFoo" },
 			[]rule.CheckResult{{Status: rule.Errored, Message: "shoots.core.gardener.cloud \"foo\" not found", Target: rule.NewTarget("kind", "Shoot", "name", "foo", "namespace", "bar")}},
 		),
-		Entry("should warn when kube-apiserver configuration is not set",
+		Entry("should pass when kube-apiserver configuration is not set",
 			func() {},
 			[]rule.CheckResult{{Status: rule.Passed, Message: "Anonymous authentication is not enabled.", Target: rule.NewTarget()}},
 		),
-		Entry("should warn when anonymous authentication is not set",
+		Entry("should pass when anonymous authentication is not set",
 			func() {
 				shoot.Spec.Kubernetes = gardencorev1beta1.Kubernetes{
 					KubeAPIServer: &gardencorev1beta1.KubeAPIServerConfig{
