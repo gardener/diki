@@ -84,26 +84,26 @@ func (r *Rule2002) Run(ctx context.Context) (rule.RuleResult, error) {
 	var checkResults []rule.CheckResult
 	for _, component := range components {
 		if v, ok := featureGateValues[component]; !ok {
-			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("%s featureGate is not enabled for the %s.", featureGate, component), rule.NewTarget()))
+			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("AllAlpha featureGate is not enabled for the %s.", component), rule.NewTarget()))
 		} else if v {
-			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("%s featureGate is enabled for the %s.", featureGate, component), rule.NewTarget()))
+			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("AllAlpha featureGate is enabled for the %s.", component), rule.NewTarget()))
 		} else {
-			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("%s featureGate is disabled for the %s.", featureGate, component), rule.NewTarget()))
+			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("AllAlpha featureGate is disabled for the %s.", component), rule.NewTarget()))
 		}
 	}
 
 	for _, worker := range shoot.Spec.Provider.Workers {
 		workerTarget := rule.NewTarget("worker", worker.Name)
 		if worker.Kubernetes == nil || worker.Kubernetes.Kubelet == nil || worker.Kubernetes.Kubelet.FeatureGates == nil {
-			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("%s featureGate is not enabled for the kubelet.", featureGate), workerTarget))
+			checkResults = append(checkResults, rule.PassedCheckResult("AllAlpha featureGate is not enabled for the kubelet.", workerTarget))
 			continue
 		}
 		if v, ok := worker.Kubernetes.Kubelet.FeatureGates[featureGate]; !ok {
-			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("%s featureGate is not enabled for the kubelet.", featureGate), workerTarget))
+			checkResults = append(checkResults, rule.PassedCheckResult("AllAlpha featureGate is not enabled for the kubelet.", workerTarget))
 		} else if v {
-			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("%s featureGate is enabled for the kubelet.", featureGate), workerTarget))
+			checkResults = append(checkResults, rule.FailedCheckResult("AllAlpha featureGate is enabled for the kubelet.", workerTarget))
 		} else {
-			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("%s featureGate is disabled for the kubelet.", featureGate), workerTarget))
+			checkResults = append(checkResults, rule.PassedCheckResult("AllAlpha featureGate is disabled for the kubelet.", workerTarget))
 		}
 	}
 
