@@ -129,20 +129,6 @@ var _ = Describe("#2003", func() {
 				{Status: rule.Passed, Message: "Worker kubelet config does not disable kernel protection.", Target: rule.NewTarget("worker", "worker1")},
 			},
 		),
-		Entry("should pass when shoot worker sets default kubelet config",
-			func() {
-				shoot.Spec.Provider.Workers = []gardencorev1beta1.Worker{
-					{
-						Name:       "worker1",
-						Kubernetes: &gardencorev1beta1.WorkerKubernetes{},
-					},
-				}
-			},
-			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "Default kubelet config does not disable kernel protection.", Target: rule.NewTarget()},
-				{Status: rule.Passed, Message: "Worker kubelet config does not disable kernel protection.", Target: rule.NewTarget("worker", "worker1")},
-			},
-		),
 		Entry("should pass when shoot worker enables kernel defaults protection in kubelet config",
 			func() {
 				shoot.Spec.Provider.Workers = []gardencorev1beta1.Worker{

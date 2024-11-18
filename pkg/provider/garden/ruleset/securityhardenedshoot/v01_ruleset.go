@@ -43,13 +43,11 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			ShootName:      r.args.ShootName,
 			ShootNamespace: r.args.ProjectNamespace,
 		},
-		rule.NewSkipRule(
-			"2002",
-			"Shoot clusters must not have Alpha APIs enabled for any Kubernetes component.",
-			"Not implemented.",
-			rule.NotImplemented,
-			rule.SkipRuleWithSeverity(rule.SeverityMedium),
-		),
+		&rules.Rule2002{
+			Client:         c,
+			ShootName:      r.args.ShootName,
+			ShootNamespace: r.args.ProjectNamespace,
+		},
 		&rules.Rule2003{
 			Client:         c,
 			ShootName:      r.args.ShootName,
