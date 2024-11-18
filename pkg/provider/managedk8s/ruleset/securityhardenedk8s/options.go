@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package securityhardenedcluster
+package securityhardenedk8s
 
 import (
 	"log/slog"

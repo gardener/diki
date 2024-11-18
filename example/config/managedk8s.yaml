@@ -170,7 +170,7 @@ providers:                   # contains information about known providers
     #       foo: bar
     #     nodeGroupByLabels:
     #     - foo
-  - id: security-hardened-k8s-cluster
+  - id: security-hardened-k8s
     name: Security Hardened Kubernetes Cluster
     version: v0.1.0
     ruleOptions:

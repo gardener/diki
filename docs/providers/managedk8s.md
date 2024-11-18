@@ -10,7 +10,7 @@ The `Managed Kubernetes` provider implements the following `rulesets`:
 - [DISA Kubernetes Security Technical Implementation Guide](../rulesets/disa-k8s-stig/ruleset.md)
     - v2r1
     - v1r11
-- [Security Hardened Shoot Cluster](../rulesets/security-hardened-k8s-cluster/ruleset.md)
+- [Security Hardened Kubernetes Cluster](../rulesets/security-hardened-k8s/ruleset.md)
     - v0.1.0
 
 ### Configuration

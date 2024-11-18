@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package securityhardenedcluster
+package securityhardenedk8s
 
 import (
 	"context"
@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	// RulesetID is a constant containing the id of a Security Hardened Kubernetes Cluster Ruleset
-	RulesetID = "security-hardened-k8s-cluster"
+	// RulesetID is a constant containing the id of the Security Hardened Kubernetes Cluster Ruleset.
+	RulesetID = "security-hardened-k8s"
 )
 
 var _ ruleset.Ruleset = &Ruleset{}

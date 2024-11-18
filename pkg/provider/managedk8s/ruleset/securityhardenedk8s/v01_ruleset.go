@@ -2,12 +2,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package securityhardenedcluster
+package securityhardenedk8s
 
 import (
 	"fmt"
 
-	gardenerk8s "github.com/gardener/gardener/pkg/client/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/config"
@@ -15,9 +14,7 @@ import (
 )
 
 func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
-	_, err := client.New(r.Config, client.Options{
-		Scheme: gardenerk8s.GardenScheme,
-	})
+	_, err := client.New(r.Config, client.Options{})
 	if err != nil {
 		return err
 	}
