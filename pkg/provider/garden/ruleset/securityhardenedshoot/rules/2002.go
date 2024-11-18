@@ -94,13 +94,16 @@ func (r *Rule2002) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	for _, worker := range shoot.Spec.Provider.Workers {
 		workerTarget := rule.NewTarget("worker", worker.Name)
-		switch {
-		case worker.Kubernetes == nil || worker.Kubernetes.Kubelet == nil || worker.Kubernetes.Kubelet.FeatureGates == nil:
+		if worker.Kubernetes == nil || worker.Kubernetes.Kubelet == nil || worker.Kubernetes.Kubelet.FeatureGates == nil {
 			checkResults = append(checkResults, rule.PassedCheckResult("AllAlpha featureGates are not enabled for the kubelet.", workerTarget))
-		case !worker.Kubernetes.Kubelet.FeatureGates[featureGate]:
-			checkResults = append(checkResults, rule.PassedCheckResult("AllAlpha featureGates are disabled for the kubelet.", workerTarget))
-		default:
+			continue
+		}
+		if v, ok := worker.Kubernetes.Kubelet.FeatureGates[featureGate]; !ok {
+			checkResults = append(checkResults, rule.PassedCheckResult("AllAlpha featureGates are not enabled for the kubelet.", workerTarget))
+		} else if v {
 			checkResults = append(checkResults, rule.FailedCheckResult("AllAlpha featureGates are enabled for the kubelet.", workerTarget))
+		} else {
+			checkResults = append(checkResults, rule.PassedCheckResult("AllAlpha featureGates are disabled for the kubelet.", workerTarget))
 		}
 	}
 

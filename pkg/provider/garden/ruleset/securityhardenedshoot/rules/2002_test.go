@@ -137,11 +137,11 @@ var _ = Describe("#2002", func() {
 		),
 		Entry("should pass when the AllAlpha flag is not present in the featureGates map for any of the components",
 			func() {
-				shoot.Spec.Kubernetes.KubeAPIServer = ptr.To(gardencorev1beta1.KubeAPIServerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{}}})
-				shoot.Spec.Kubernetes.KubeControllerManager = ptr.To(gardencorev1beta1.KubeControllerManagerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{}}})
-				shoot.Spec.Kubernetes.KubeScheduler = ptr.To(gardencorev1beta1.KubeSchedulerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{}}})
-				shoot.Spec.Kubernetes.KubeProxy = ptr.To(gardencorev1beta1.KubeProxyConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{}}})
-				shoot.Spec.Kubernetes.Kubelet = ptr.To(gardencorev1beta1.KubeletConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{}}})
+				shoot.Spec.Kubernetes.KubeAPIServer = ptr.To(gardencorev1beta1.KubeAPIServerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{"foo": true}}})
+				shoot.Spec.Kubernetes.KubeControllerManager = ptr.To(gardencorev1beta1.KubeControllerManagerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{"foo": true}}})
+				shoot.Spec.Kubernetes.KubeScheduler = ptr.To(gardencorev1beta1.KubeSchedulerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{"foo": true}}})
+				shoot.Spec.Kubernetes.KubeProxy = ptr.To(gardencorev1beta1.KubeProxyConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{"foo": true}}})
+				shoot.Spec.Kubernetes.Kubelet = ptr.To(gardencorev1beta1.KubeletConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{"foo": true}}})
 			},
 			[]rule.CheckResult{
 				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-apiserver.", Target: rule.NewTarget()},
@@ -211,7 +211,7 @@ var _ = Describe("#2002", func() {
 						Kubernetes: &gardencorev1beta1.WorkerKubernetes{
 							Kubelet: ptr.To(gardencorev1beta1.KubeletConfig{
 								KubernetesConfig: gardencorev1beta1.KubernetesConfig{
-									FeatureGates: map[string]bool{},
+									FeatureGates: map[string]bool{"foo": true},
 								},
 							}),
 						},
