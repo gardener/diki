@@ -1,18 +1,15 @@
-// SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+// SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package disak8sstig
+package securityhardenedk8s
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 
-	"github.com/google/uuid"
 	"k8s.io/client-go/rest"
-	"k8s.io/utils/ptr"
 
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/rule"
@@ -21,28 +18,19 @@ import (
 )
 
 const (
-	// RulesetID is a constant containing the id of the DISA Kubernetes STIG Ruleset.
-	RulesetID = "disa-kubernetes-stig"
+	// RulesetID is a constant containing the id of the Security Hardened Kubernetes Cluster Ruleset.
+	RulesetID = "security-hardened-k8s"
 )
 
 var _ ruleset.Ruleset = &Ruleset{}
 
-// Ruleset implements DISA Kubernetes STIG.
+// Ruleset implements Security Hardened Kubernetes Cluster.
 type Ruleset struct {
-	version                 string
-	rules                   map[string]rule.Rule
-	AdditionalOpsPodLabels  map[string]string
-	ShootConfig, SeedConfig *rest.Config
-	shootNamespace          string
-	numWorkers              int
-	args                    Args
-	instanceID              string
-	logger                  *slog.Logger
-}
-
-// Args are Ruleset specific arguments.
-type Args struct {
-	MaxRetries *int `json:"maxRetries" yaml:"maxRetries"`
+	version    string
+	rules      map[string]rule.Rule
+	Config     *rest.Config
+	numWorkers int
+	logger     *slog.Logger
 }
 
 // New creates a new Ruleset.
@@ -50,17 +38,12 @@ func New(options ...CreateOption) (*Ruleset, error) {
 	r := &Ruleset{
 		rules:      map[string]rule.Rule{},
 		numWorkers: 5,
-		args: Args{
-			MaxRetries: ptr.To(1),
-		},
-		instanceID: uuid.New().String(),
 	}
 
 	for _, o := range options {
 		o(r)
 	}
 
-	// TODO: add validation
 	return r, nil
 }
 
@@ -71,7 +54,7 @@ func (r *Ruleset) ID() string {
 
 // Name returns the name of the Ruleset.
 func (r *Ruleset) Name() string {
-	return "DISA Kubernetes Security Technical Implementation Guide"
+	return "Security Hardened Kubernetes Cluster"
 }
 
 // Version returns the version of the Ruleset.
@@ -80,25 +63,10 @@ func (r *Ruleset) Version() string {
 }
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
-func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabels map[string]string, shootConfig, seedConfig *rest.Config, shootNamespace string) (*Ruleset, error) {
-	rulesetArgsByte, err := json.Marshal(rulesetConfig.Args)
-	if err != nil {
-		return nil, err
-	}
-
-	var rulesetArgs Args
-	if err := json.Unmarshal(rulesetArgsByte, &rulesetArgs); err != nil {
-		return nil, err
-	}
-
-	// TODO: add all known rules and validate
+func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.Config) (*Ruleset, error) {
 	ruleset, err := New(
 		WithVersion(rulesetConfig.Version),
-		WithAdditionalOpsPodLabels(additionalOpsPodLabels),
-		WithShootConfig(shootConfig),
-		WithSeedConfig(seedConfig),
-		WithShootNamespace(shootNamespace),
-		WithArgs(rulesetArgs),
+		WithConfig(managedConfig),
 	)
 	if err != nil {
 		return nil, err
@@ -114,12 +82,8 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabel
 	}
 
 	switch rulesetConfig.Version {
-	case "v1r11":
-		if err := ruleset.registerV1R11Rules(ruleOptions); err != nil {
-			return nil, err
-		}
-	case "v2r1":
-		if err := ruleset.registerV2R1Rules(ruleOptions); err != nil {
+	case "v0.1.0":
+		if err := ruleset.registerV01Rules(ruleOptions); err != nil {
 			return nil, err
 		}
 	default:

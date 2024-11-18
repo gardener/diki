@@ -170,6 +170,14 @@ providers:                   # contains information about known providers
     #       foo: bar
     #     nodeGroupByLabels:
     #     - foo
+  - id: security-hardened-k8s
+    name: Security Hardened Kubernetes Cluster
+    version: v0.1.0
+    ruleOptions:
+    # - ruleID: "2000"
+    #   skip:
+    #     enabled: true
+    #     justification: "the whole rule is accepted for ... reasons"
 # metadata: # optional, additional metadata to be added to summary json report
 #   foo: bar
 #   bar:
