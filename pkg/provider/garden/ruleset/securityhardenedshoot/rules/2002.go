@@ -10,7 +10,6 @@ import (
 
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/rule"
@@ -46,60 +45,62 @@ func (r *Rule2002) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	var (
-		kubernetesSpec = shoot.Spec.Kubernetes
-		allAlpha       = "AllAlpha"
-		components     = []string{"kube apiserver", "kube controller manager", "kube scheduler", "kube proxy", "kubelet"}
+		kubernetesSpec    = shoot.Spec.Kubernetes
+		featureGate       = "AllAlpha"
+		components        = []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler", "kube-proxy", "kubelet"}
+		featureGateValues = make(map[string]bool)
 	)
 
-	allAlphaFeatureGatesValues := map[string]*bool{}
-
-	allAlphaFeatureGatesValues["kube apiserver"] = func() *bool {
-		if kubernetesSpec.KubeAPIServer != nil && kubernetesSpec.KubeAPIServer.FeatureGates != nil {
-			return ptr.To(kubernetesSpec.KubeAPIServer.FeatureGates[allAlpha])
+	if kubernetesSpec.KubeAPIServer != nil {
+		if v, ok := kubernetesSpec.KubeAPIServer.FeatureGates[featureGate]; ok {
+			featureGateValues["kube-apiserver"] = v
 		}
-		return nil
-	}()
+	}
 
-	allAlphaFeatureGatesValues["kube controller manager"] = func() *bool {
-		if kubernetesSpec.KubeControllerManager != nil && kubernetesSpec.KubeControllerManager.FeatureGates != nil {
-			return ptr.To(kubernetesSpec.KubeControllerManager.FeatureGates[allAlpha])
+	if kubernetesSpec.KubeControllerManager != nil {
+		if v, ok := kubernetesSpec.KubeControllerManager.FeatureGates[featureGate]; ok {
+			featureGateValues["kube-controller-manager"] = v
 		}
-		return nil
-	}()
+	}
 
-	allAlphaFeatureGatesValues["kube scheduler"] = func() *bool {
-		if kubernetesSpec.KubeScheduler != nil && kubernetesSpec.KubeScheduler.FeatureGates != nil {
-			return ptr.To(kubernetesSpec.KubeScheduler.FeatureGates[allAlpha])
+	if kubernetesSpec.KubeScheduler != nil {
+		if v, ok := kubernetesSpec.KubeScheduler.FeatureGates[featureGate]; ok {
+			featureGateValues["kube-scheduler"] = v
 		}
-		return nil
-	}()
+	}
 
-	allAlphaFeatureGatesValues["kube proxy"] = func() *bool {
-		if kubernetesSpec.KubeProxy != nil && kubernetesSpec.KubeProxy.FeatureGates != nil {
-			return ptr.To(kubernetesSpec.KubeProxy.FeatureGates[allAlpha])
+	if kubernetesSpec.KubeProxy != nil {
+		if v, ok := kubernetesSpec.KubeProxy.FeatureGates[featureGate]; ok {
+			featureGateValues["kube-proxy"] = v
 		}
-		return nil
-	}()
+	}
 
-	allAlphaFeatureGatesValues["kubelet"] = func() *bool {
-		if kubernetesSpec.Kubelet != nil && kubernetesSpec.Kubelet.FeatureGates != nil {
-			return ptr.To(kubernetesSpec.Kubelet.FeatureGates[allAlpha])
+	if kubernetesSpec.Kubelet != nil {
+		if v, ok := kubernetesSpec.Kubelet.FeatureGates[featureGate]; ok {
+			featureGateValues["kubelet"] = v
 		}
-		return nil
-	}()
+	}
 
 	var checkResults []rule.CheckResult
-
 	for _, component := range components {
-
-		if allAlphaFeatureGatesValues[component] == nil {
+		if v, ok := featureGateValues[component]; !ok {
 			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("AllAlpha featureGates are not enabled for the %s.", component), rule.NewTarget()))
+		} else if v {
+			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("AllAlpha featureGates are enabled for the %s.", component), rule.NewTarget()))
 		} else {
-			if *(allAlphaFeatureGatesValues[component]) {
-				checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("AllAlpha featureGates are enabled for the %s.", component), rule.NewTarget()))
-			} else {
-				checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("AllAlpha featureGates are disabled for the %s.", component), rule.NewTarget()))
-			}
+			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("AllAlpha featureGates are disabled for the %s.", component), rule.NewTarget()))
+		}
+	}
+
+	for _, worker := range shoot.Spec.Provider.Workers {
+		workerTarget := rule.NewTarget("worker", worker.Name)
+		switch {
+		case worker.Kubernetes == nil || worker.Kubernetes.Kubelet == nil || worker.Kubernetes.Kubelet.FeatureGates == nil:
+			checkResults = append(checkResults, rule.PassedCheckResult("AllAlpha featureGates are not enabled for the kubelet.", workerTarget))
+		case !worker.Kubernetes.Kubelet.FeatureGates[featureGate]:
+			checkResults = append(checkResults, rule.PassedCheckResult("AllAlpha featureGates are disabled for the kubelet.", workerTarget))
+		default:
+			checkResults = append(checkResults, rule.FailedCheckResult("AllAlpha featureGates are enabled for the kubelet.", workerTarget))
 		}
 	}
 

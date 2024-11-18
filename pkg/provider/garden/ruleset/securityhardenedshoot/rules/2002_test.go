@@ -33,6 +33,8 @@ var _ = Describe("#2002", func() {
 		ruleName = "Shoot clusters must not have Alpha APIs enabled for any Kubernetes component."
 		ruleID   = "2002"
 		severity = rule.SeverityMedium
+
+		featureGate = "AllAlpha"
 	)
 
 	BeforeEach(func() {
@@ -70,67 +72,194 @@ var _ = Describe("#2002", func() {
 		Entry("should pass when AllAlpha featureGates are set to default for all components",
 			func() {},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube apiserver.", Target: rule.NewTarget()},
-				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube controller manager.", Target: rule.NewTarget()},
-				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube scheduler.", Target: rule.NewTarget()},
-				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube proxy.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-apiserver.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-controller-manager.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-scheduler.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-proxy.", Target: rule.NewTarget()},
 				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kubelet.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should fail when AllAlpha featureGates are enabled for all components",
 			func() {
-				shoot.Spec.Kubernetes.KubeAPIServer = ptr.To(gardencorev1beta1.KubeAPIServerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{"AllAlpha": true}}})
-				shoot.Spec.Kubernetes.KubeControllerManager = ptr.To(gardencorev1beta1.KubeControllerManagerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{"AllAlpha": true}}})
-				shoot.Spec.Kubernetes.KubeScheduler = ptr.To(gardencorev1beta1.KubeSchedulerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{"AllAlpha": true}}})
-				shoot.Spec.Kubernetes.KubeProxy = ptr.To(gardencorev1beta1.KubeProxyConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{"AllAlpha": true}}})
-				shoot.Spec.Kubernetes.Kubelet = ptr.To(gardencorev1beta1.KubeletConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{"AllAlpha": true}}})
+				shoot.Spec.Kubernetes.KubeAPIServer = ptr.To(gardencorev1beta1.KubeAPIServerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{featureGate: true}}})
+				shoot.Spec.Kubernetes.KubeControllerManager = ptr.To(gardencorev1beta1.KubeControllerManagerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{featureGate: true}}})
+				shoot.Spec.Kubernetes.KubeScheduler = ptr.To(gardencorev1beta1.KubeSchedulerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{featureGate: true}}})
+				shoot.Spec.Kubernetes.KubeProxy = ptr.To(gardencorev1beta1.KubeProxyConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{featureGate: true}}})
+				shoot.Spec.Kubernetes.Kubelet = ptr.To(gardencorev1beta1.KubeletConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{featureGate: true}}})
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "AllAlpha featureGates are enabled for the kube apiserver.", Target: rule.NewTarget()},
-				{Status: rule.Failed, Message: "AllAlpha featureGates are enabled for the kube controller manager.", Target: rule.NewTarget()},
-				{Status: rule.Failed, Message: "AllAlpha featureGates are enabled for the kube scheduler.", Target: rule.NewTarget()},
-				{Status: rule.Failed, Message: "AllAlpha featureGates are enabled for the kube proxy.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "AllAlpha featureGates are enabled for the kube-apiserver.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "AllAlpha featureGates are enabled for the kube-controller-manager.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "AllAlpha featureGates are enabled for the kube-scheduler.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "AllAlpha featureGates are enabled for the kube-proxy.", Target: rule.NewTarget()},
 				{Status: rule.Failed, Message: "AllAlpha featureGates are enabled for the kubelet.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should pass when AllAlpha featureGates are disabled for all components",
 			func() {
-				shoot.Spec.Kubernetes.KubeAPIServer = ptr.To(gardencorev1beta1.KubeAPIServerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{"AllAlpha": false}}})
-				shoot.Spec.Kubernetes.KubeControllerManager = ptr.To(gardencorev1beta1.KubeControllerManagerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{"AllAlpha": false}}})
-				shoot.Spec.Kubernetes.KubeScheduler = ptr.To(gardencorev1beta1.KubeSchedulerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{"AllAlpha": false}}})
-				shoot.Spec.Kubernetes.KubeProxy = ptr.To(gardencorev1beta1.KubeProxyConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{"AllAlpha": false}}})
-				shoot.Spec.Kubernetes.Kubelet = ptr.To(gardencorev1beta1.KubeletConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{"AllAlpha": false}}})
+				shoot.Spec.Kubernetes.KubeAPIServer = ptr.To(gardencorev1beta1.KubeAPIServerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{featureGate: false}}})
+				shoot.Spec.Kubernetes.KubeControllerManager = ptr.To(gardencorev1beta1.KubeControllerManagerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{featureGate: false}}})
+				shoot.Spec.Kubernetes.KubeScheduler = ptr.To(gardencorev1beta1.KubeSchedulerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{featureGate: false}}})
+				shoot.Spec.Kubernetes.KubeProxy = ptr.To(gardencorev1beta1.KubeProxyConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{featureGate: false}}})
+				shoot.Spec.Kubernetes.Kubelet = ptr.To(gardencorev1beta1.KubeletConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{featureGate: false}}})
 			},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "AllAlpha featureGates are disabled for the kube apiserver.", Target: rule.NewTarget()},
-				{Status: rule.Passed, Message: "AllAlpha featureGates are disabled for the kube controller manager.", Target: rule.NewTarget()},
-				{Status: rule.Passed, Message: "AllAlpha featureGates are disabled for the kube scheduler.", Target: rule.NewTarget()},
-				{Status: rule.Passed, Message: "AllAlpha featureGates are disabled for the kube proxy.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are disabled for the kube-apiserver.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are disabled for the kube-controller-manager.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are disabled for the kube-scheduler.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are disabled for the kube-proxy.", Target: rule.NewTarget()},
 				{Status: rule.Passed, Message: "AllAlpha featureGates are disabled for the kubelet.", Target: rule.NewTarget()},
 			},
 		),
-		Entry("should pass when AllAlpha featureGates are disabled for the kube proxy component",
+		Entry("should pass when AllAlpha featureGates are disabled for the kube-proxy component",
 			func() {
-				shoot.Spec.Kubernetes.KubeProxy = ptr.To(gardencorev1beta1.KubeProxyConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{"AllAlpha": false}}})
+				shoot.Spec.Kubernetes.KubeProxy = ptr.To(gardencorev1beta1.KubeProxyConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{featureGate: false}}})
 			},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube apiserver.", Target: rule.NewTarget()},
-				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube controller manager.", Target: rule.NewTarget()},
-				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube scheduler.", Target: rule.NewTarget()},
-				{Status: rule.Passed, Message: "AllAlpha featureGates are disabled for the kube proxy.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-apiserver.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-controller-manager.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-scheduler.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are disabled for the kube-proxy.", Target: rule.NewTarget()},
 				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kubelet.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should fail when AllAlpha featureGates are disabled for the kubelet",
 			func() {
-				shoot.Spec.Kubernetes.Kubelet = ptr.To(gardencorev1beta1.KubeletConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{"AllAlpha": true}}})
+				shoot.Spec.Kubernetes.Kubelet = ptr.To(gardencorev1beta1.KubeletConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{featureGate: true}}})
 			},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube apiserver.", Target: rule.NewTarget()},
-				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube controller manager.", Target: rule.NewTarget()},
-				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube scheduler.", Target: rule.NewTarget()},
-				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube proxy.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-apiserver.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-controller-manager.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-scheduler.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-proxy.", Target: rule.NewTarget()},
 				{Status: rule.Failed, Message: "AllAlpha featureGates are enabled for the kubelet.", Target: rule.NewTarget()},
+			},
+		),
+		Entry("should pass when the AllAlpha flag is not present in the featureGates map for any of the components",
+			func() {
+				shoot.Spec.Kubernetes.KubeAPIServer = ptr.To(gardencorev1beta1.KubeAPIServerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{}}})
+				shoot.Spec.Kubernetes.KubeControllerManager = ptr.To(gardencorev1beta1.KubeControllerManagerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{}}})
+				shoot.Spec.Kubernetes.KubeScheduler = ptr.To(gardencorev1beta1.KubeSchedulerConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{}}})
+				shoot.Spec.Kubernetes.KubeProxy = ptr.To(gardencorev1beta1.KubeProxyConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{}}})
+				shoot.Spec.Kubernetes.Kubelet = ptr.To(gardencorev1beta1.KubeletConfig{KubernetesConfig: gardencorev1beta1.KubernetesConfig{FeatureGates: map[string]bool{}}})
+			},
+			[]rule.CheckResult{
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-apiserver.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-controller-manager.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-scheduler.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-proxy.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kubelet.", Target: rule.NewTarget()},
+			},
+		),
+		Entry("should pass when the AllAlpha featureGates are disabled for the worker node kubelet",
+			func() {
+				shoot.Spec.Provider.Workers = []gardencorev1beta1.Worker{
+					{
+						Name: "worker1",
+						Kubernetes: &gardencorev1beta1.WorkerKubernetes{
+							Kubelet: ptr.To(gardencorev1beta1.KubeletConfig{
+								KubernetesConfig: gardencorev1beta1.KubernetesConfig{
+									FeatureGates: map[string]bool{
+										featureGate: false,
+									},
+								},
+							}),
+						},
+					},
+				}
+			},
+			[]rule.CheckResult{
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-apiserver.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-controller-manager.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-scheduler.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-proxy.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kubelet.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are disabled for the kubelet.", Target: rule.NewTarget("worker", "worker1")},
+			},
+		),
+		Entry("should fail when the AllAlpha featureGates are enabled for the worker node kubelet",
+			func() {
+				shoot.Spec.Provider.Workers = []gardencorev1beta1.Worker{
+					{
+						Name: "worker1",
+						Kubernetes: &gardencorev1beta1.WorkerKubernetes{
+							Kubelet: ptr.To(gardencorev1beta1.KubeletConfig{
+								KubernetesConfig: gardencorev1beta1.KubernetesConfig{
+									FeatureGates: map[string]bool{
+										featureGate: true,
+									},
+								},
+							}),
+						},
+					},
+				}
+			},
+			[]rule.CheckResult{
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-apiserver.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-controller-manager.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-scheduler.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-proxy.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kubelet.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "AllAlpha featureGates are enabled for the kubelet.", Target: rule.NewTarget("worker", "worker1")},
+			},
+		),
+		Entry("should pass when the AllAlpha featureGates flag is not set in the worker node kubelet",
+			func() {
+				shoot.Spec.Provider.Workers = []gardencorev1beta1.Worker{
+					{
+						Name: "worker1",
+						Kubernetes: &gardencorev1beta1.WorkerKubernetes{
+							Kubelet: ptr.To(gardencorev1beta1.KubeletConfig{
+								KubernetesConfig: gardencorev1beta1.KubernetesConfig{
+									FeatureGates: map[string]bool{},
+								},
+							}),
+						},
+					},
+				}
+			},
+			[]rule.CheckResult{
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-apiserver.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-controller-manager.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-scheduler.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-proxy.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kubelet.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kubelet.", Target: rule.NewTarget("worker", "worker1")},
+			},
+		),
+		Entry("should pass when the shoot sets a default kubernetes config",
+			func() {
+				shoot.Spec.Provider.Workers = []gardencorev1beta1.Worker{
+					{
+						Name:       "worker1",
+						Kubernetes: &gardencorev1beta1.WorkerKubernetes{},
+					},
+				}
+			},
+			[]rule.CheckResult{
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-apiserver.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-controller-manager.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-scheduler.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-proxy.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kubelet.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kubelet.", Target: rule.NewTarget("worker", "worker1")},
+			},
+		),
+		Entry("should pass when the worker doesn't set a kubernetes config",
+			func() {
+				shoot.Spec.Provider.Workers = []gardencorev1beta1.Worker{
+					{
+						Name: "worker1",
+					},
+				}
+			},
+			[]rule.CheckResult{
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-apiserver.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-controller-manager.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-scheduler.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kube-proxy.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kubelet.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "AllAlpha featureGates are not enabled for the kubelet.", Target: rule.NewTarget("worker", "worker1")},
 			},
 		),
 	)
