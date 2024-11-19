@@ -41,7 +41,7 @@ func (r *Rule2005) Severity() rule.SeverityLevel {
 func (r *Rule2005) Run(ctx context.Context) (rule.RuleResult, error) {
 	shoot := &gardencorev1beta1.Shoot{ObjectMeta: metav1.ObjectMeta{Name: r.ShootName, Namespace: r.ShootNamespace}}
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(shoot), shoot); err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("name", r.ShootName, "namespace", r.ShootNamespace, "kind", "Shoot"))), nil
 	}
 
 	var checkResults = []rule.CheckResult{}

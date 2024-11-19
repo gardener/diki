@@ -60,7 +60,7 @@ var _ = Describe("#2005", func() {
 	},
 		Entry("should error when the shoot can't be found",
 			func() { shoot.Name = "notFoo" },
-			[]rule.CheckResult{{Status: rule.Errored, Message: "shoots.core.gardener.cloud \"foo\" not found", Target: rule.NewTarget()}},
+			[]rule.CheckResult{{Status: rule.Errored, Message: "shoots.core.gardener.cloud \"foo\" not found", Target: rule.NewTarget("name", "foo", "namespace", "bar", "kind", "Shoot")}},
 		),
 		Entry("should pass when the main kubelet has a default configuration",
 			func() {},
