@@ -66,17 +66,17 @@ var _ = Describe("#2004", func() {
 			func() {
 				shoot.Spec.Kubernetes.KubeAPIServer = &gardencorev1beta1.KubeAPIServerConfig{}
 			},
-			rule.CheckResult{Status: rule.Passed, Message: "The validating admission webhook is not disabled.", Target: rule.NewTarget()},
+			rule.CheckResult{Status: rule.Passed, Message: "The ValidatingAdmissionWebhook admission plugin is not disabled.", Target: rule.NewTarget()},
 		),
-		Entry("should pass when the kube-apiserver's admission plugins are set by default",
+		Entry("should pass when the kube-apiserver's ValidatingAdmissionWebhook admission plugin is set by default",
 			func() {
 				shoot.Spec.Kubernetes.KubeAPIServer = &gardencorev1beta1.KubeAPIServerConfig{
 					AdmissionPlugins: []gardencorev1beta1.AdmissionPlugin{},
 				}
 			},
-			rule.CheckResult{Status: rule.Passed, Message: "The validating admission webhook is not disabled.", Target: rule.NewTarget()},
+			rule.CheckResult{Status: rule.Passed, Message: "The ValidatingAdmissionWebhook admission plugin is not disabled.", Target: rule.NewTarget()},
 		),
-		Entry("should pass when the kube-apiserver's validating admission webhook is not set",
+		Entry("should pass when the kube-apiserver's ValidatingAdmissionWebhook admission plugin is not set",
 			func() {
 				shoot.Spec.Kubernetes.KubeAPIServer = &gardencorev1beta1.KubeAPIServerConfig{
 					AdmissionPlugins: []gardencorev1beta1.AdmissionPlugin{
@@ -86,9 +86,9 @@ var _ = Describe("#2004", func() {
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Passed, Message: "The validating admission webhook is not disabled.", Target: rule.NewTarget()},
+			rule.CheckResult{Status: rule.Passed, Message: "The ValidatingAdmissionWebhook admission plugin is not disabled.", Target: rule.NewTarget()},
 		),
-		Entry("should pass when the kube-apiserver's validating admission webhook is enabled explicitly",
+		Entry("should pass when the kube-apiserver's ValidatingAdmissionWebhook admission plugin is disabled explicitly",
 			func() {
 				shoot.Spec.Kubernetes.KubeAPIServer = &gardencorev1beta1.KubeAPIServerConfig{
 					AdmissionPlugins: []gardencorev1beta1.AdmissionPlugin{
@@ -99,9 +99,9 @@ var _ = Describe("#2004", func() {
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Passed, Message: "The validating admission webhook is enabled.", Target: rule.NewTarget()},
+			rule.CheckResult{Status: rule.Passed, Message: "The ValidatingAdmissionWebhook admission plugin is enabled.", Target: rule.NewTarget()},
 		),
-		Entry("should fail when the kube-apiserver's validating admission webhook is enabled explicitly",
+		Entry("should fail when the kube-apiserver's ValidatingAdmissionWebhook admission plugin is enabled explicitly",
 			func() {
 				shoot.Spec.Kubernetes.KubeAPIServer = &gardencorev1beta1.KubeAPIServerConfig{
 					AdmissionPlugins: []gardencorev1beta1.AdmissionPlugin{
@@ -112,7 +112,7 @@ var _ = Describe("#2004", func() {
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Failed, Message: "The validating admission webhook is disabled.", Target: rule.NewTarget()},
+			rule.CheckResult{Status: rule.Failed, Message: "The ValidatingAdmissionWebhook admission plugin is disabled.", Target: rule.NewTarget()},
 		),
 	)
 })
