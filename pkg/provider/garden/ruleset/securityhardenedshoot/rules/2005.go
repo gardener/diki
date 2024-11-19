@@ -45,7 +45,7 @@ func (r *Rule2005) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	var (
-		checkResults            = []rule.CheckResult{}
+		checkResults            []rule.CheckResult
 		evaluateTimeoutDuration = func(timeoutDuration metav1.Duration, target rule.Target) rule.CheckResult {
 			switch {
 			case timeoutDuration.Duration < 5*time.Minute:
