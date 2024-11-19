@@ -37,11 +37,12 @@ var _ = Describe("podutils", func() {
 					},
 				},
 				Spec: corev1.PodSpec{
+					ActiveDeadlineSeconds: ptr.To[int64](300),
 					Containers: []corev1.Container{
 						{
 							Name:    "container",
 							Image:   image,
-							Command: []string{"chroot", "/host", "/bin/bash", "-c", "nsenter -m -t $(pgrep -xo systemd) sleep 600"},
+							Command: []string{"chroot", "/host", "/bin/bash", "-c", "nsenter -m -t $(pgrep -xo systemd) sleep 300"},
 							SecurityContext: &corev1.SecurityContext{
 								Privileged: ptr.To(true),
 							},
