@@ -48,21 +48,18 @@ func (r *Rule2004) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.PassedCheckResult("The validating admission webhook is not disabled.", rule.NewTarget())), nil
 	}
 
-	var (
-		admissionPlugins               = shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins
-		validatingAdmissionWebhookName = "ValidatingAdmissionWebhook"
-	)
+	var admissionPlugins = shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins
 
-	validatingAdmissionWebhookIdx := slices.IndexFunc(admissionPlugins, func(plugin gardencorev1beta1.AdmissionPlugin) bool {
-		return plugin.Name == validatingAdmissionWebhookName
+	targetPluginIdx := slices.IndexFunc(admissionPlugins, func(plugin gardencorev1beta1.AdmissionPlugin) bool {
+		return plugin.Name == "ValidatingAdmissionWebhook"
 	})
-	if validatingAdmissionWebhookIdx < 0 {
+	if targetPluginIdx < 0 {
 		return rule.Result(r, rule.PassedCheckResult("The validating admission webhook is not disabled.", rule.NewTarget())), nil
 	}
-	if admissionPlugins[validatingAdmissionWebhookIdx].Disabled == nil {
+	if admissionPlugins[targetPluginIdx].Disabled == nil {
 		return rule.Result(r, rule.PassedCheckResult("The validating admission webhook is not disabled.", rule.NewTarget())), nil
 	}
-	if !(*admissionPlugins[validatingAdmissionWebhookIdx].Disabled) {
+	if !(*admissionPlugins[targetPluginIdx].Disabled) {
 		return rule.Result(r, rule.PassedCheckResult("The validating admission webhook is enabled.", rule.NewTarget())), nil
 	}
 	return rule.Result(r, rule.FailedCheckResult("The validating admission webhook is disabled.", rule.NewTarget())), nil

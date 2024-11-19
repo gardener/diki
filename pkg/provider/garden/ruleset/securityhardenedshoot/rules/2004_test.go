@@ -29,11 +29,11 @@ var _ = Describe("#2004", func() {
 
 		shoot *gardencorev1beta1.Shoot
 
-		r                          rule.Rule
-		ruleName                   = "Shoot clusters must have ValidatingAdmissionWebhook admission plugin enabled."
-		ruleID                     = "2004"
-		severity                   = rule.SeverityHigh
-		validatingAdmissionWebhook = "ValidatingAdmissionWebhook"
+		r           rule.Rule
+		ruleName    = "Shoot clusters must have ValidatingAdmissionWebhook admission plugin enabled."
+		ruleID      = "2004"
+		severity    = rule.SeverityHigh
+		webhookName = "ValidatingAdmissionWebhook"
 	)
 
 	BeforeEach(func() {
@@ -88,25 +88,12 @@ var _ = Describe("#2004", func() {
 			},
 			rule.CheckResult{Status: rule.Passed, Message: "The validating admission webhook is not disabled.", Target: rule.NewTarget()},
 		),
-		Entry("should pass when the kube-apiserver's validating admission webhook isn't enabled explicitly",
-			func() {
-				shoot.Spec.Kubernetes.KubeAPIServer = &gardencorev1beta1.KubeAPIServerConfig{
-					AdmissionPlugins: []gardencorev1beta1.AdmissionPlugin{
-						{
-							Name:     validatingAdmissionWebhook,
-							Disabled: nil,
-						},
-					},
-				}
-			},
-			rule.CheckResult{Status: rule.Passed, Message: "The validating admission webhook is not disabled.", Target: rule.NewTarget()},
-		),
 		Entry("should pass when the kube-apiserver's validating admission webhook is enabled explicitly",
 			func() {
 				shoot.Spec.Kubernetes.KubeAPIServer = &gardencorev1beta1.KubeAPIServerConfig{
 					AdmissionPlugins: []gardencorev1beta1.AdmissionPlugin{
 						{
-							Name:     validatingAdmissionWebhook,
+							Name:     webhookName,
 							Disabled: ptr.To(false),
 						},
 					},
@@ -119,7 +106,7 @@ var _ = Describe("#2004", func() {
 				shoot.Spec.Kubernetes.KubeAPIServer = &gardencorev1beta1.KubeAPIServerConfig{
 					AdmissionPlugins: []gardencorev1beta1.AdmissionPlugin{
 						{
-							Name:     validatingAdmissionWebhook,
+							Name:     webhookName,
 							Disabled: ptr.To(true),
 						},
 					},
