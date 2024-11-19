@@ -55,11 +55,10 @@ func (r *Rule2005) Run(ctx context.Context) (rule.RuleResult, error) {
 			case timeoutDuration.Duration <= 4*time.Hour:
 				return rule.PassedCheckResult("The connection timeout is set to an allowed, but not recommended value (should be 5m).", target)
 			default:
-				return rule.FailedCheckResult("The connection timeout is not set to an allowed value (> 4h).", target)
+				return rule.FailedCheckResult("The connection timeout is set to a not an allowed value (> 4h).", target)
 			}
 		}
 	)
-
 	if shoot.Spec.Kubernetes.Kubelet == nil || shoot.Spec.Kubernetes.Kubelet.StreamingConnectionIdleTimeout == nil {
 		checkResults = append(checkResults, rule.PassedCheckResult("The connection timeout is not set and therefore will be defaulted to the recommended value (5m).", rule.NewTarget()))
 	} else {
