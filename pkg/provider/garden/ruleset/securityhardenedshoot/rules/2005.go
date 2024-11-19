@@ -6,6 +6,7 @@ package rules
 
 import (
 	"context"
+	"time"
 
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,39 +47,34 @@ func (r *Rule2005) Run(ctx context.Context) (rule.RuleResult, error) {
 	var checkResults = []rule.CheckResult{}
 
 	if shoot.Spec.Kubernetes.Kubelet == nil || shoot.Spec.Kubernetes.Kubelet.StreamingConnectionIdleTimeout == nil {
-		checkResults = append(checkResults, rule.PassedCheckResult("The connection timeout is set to the reccomended value (5m).", rule.NewTarget()))
+		checkResults = append(checkResults, rule.PassedCheckResult("The connection timeout is not set and therefore will be defaulted to the recommended value (5m).", rule.NewTarget()))
 	} else {
 		timeoutDuration := *shoot.Spec.Kubernetes.Kubelet.StreamingConnectionIdleTimeout
-		switch {
-		case timeoutDuration.Minutes() < 5:
-			checkResults = append(checkResults, rule.FailedCheckResult("The connection timeout is not set to a valid value (< 5m).", rule.NewTarget()))
-		case timeoutDuration.Minutes() == 5:
-			checkResults = append(checkResults, rule.PassedCheckResult("The connection timeout is set to the reccomended value (5m).", rule.NewTarget()))
-		case timeoutDuration.Hours() <= 4:
-			checkResults = append(checkResults, rule.PassedCheckResult("The connection timeout is set to a valid value ([5m; 4h]).", rule.NewTarget()))
-		default:
-			checkResults = append(checkResults, rule.FailedCheckResult("The connection timeout is not set to a valid value (> 4h).", rule.NewTarget()))
-		}
+		checkResults = append(checkResults, evaluateTimeoutDuration(timeoutDuration, rule.NewTarget()))
 	}
 
 	for _, worker := range shoot.Spec.Provider.Workers {
 		workerTarget := rule.NewTarget("worker", worker.Name)
 		if worker.Kubernetes == nil || worker.Kubernetes.Kubelet == nil || worker.Kubernetes.Kubelet.StreamingConnectionIdleTimeout == nil {
-			checkResults = append(checkResults, rule.PassedCheckResult("The connection timeout is set to the reccomended value (5m).", workerTarget))
+			checkResults = append(checkResults, rule.PassedCheckResult("The connection timeout is not set and therefore will be defaulted to the recommended value (5m).", workerTarget))
 		} else {
 			timeoutDuration := *worker.Kubernetes.Kubelet.StreamingConnectionIdleTimeout
-			switch {
-			case timeoutDuration.Minutes() < 5:
-				checkResults = append(checkResults, rule.FailedCheckResult("The connection timeout is not set to a valid value (< 5m).", workerTarget))
-			case timeoutDuration.Minutes() == 5:
-				checkResults = append(checkResults, rule.PassedCheckResult("The connection timeout is set to the reccomended value (5m).", workerTarget))
-			case timeoutDuration.Hours() <= 4:
-				checkResults = append(checkResults, rule.PassedCheckResult("The connection timeout is set to a valid value ([5m; 4h]).", workerTarget))
-			default:
-				checkResults = append(checkResults, rule.FailedCheckResult("The connection timeout is not set to a valid value (> 4h).", workerTarget))
-			}
+			checkResults = append(checkResults, evaluateTimeoutDuration(timeoutDuration, workerTarget))
 		}
 	}
 
 	return rule.Result(r, checkResults...), nil
+}
+
+func evaluateTimeoutDuration(timeoutDuration metav1.Duration, target rule.Target) rule.CheckResult {
+	switch {
+	case timeoutDuration.Duration < 5*time.Minute:
+		return rule.FailedCheckResult("The connection timeout is set to a not allowed value (< 5m).", target)
+	case timeoutDuration.Duration == 5*time.Minute:
+		return rule.PassedCheckResult("The connection timeout is set to the reccomended value (5m).", target)
+	case timeoutDuration.Duration <= 4*time.Hour:
+		return rule.PassedCheckResult("The connection timeout is set to an allowed, but not recommended value (should be 5m).", target)
+	default:
+		return rule.FailedCheckResult("The connection timeout is not set to a valid value (> 4h).", target)
+	}
 }

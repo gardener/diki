@@ -64,13 +64,13 @@ var _ = Describe("#2005", func() {
 		),
 		Entry("should pass when the main kubelet has a default configuration",
 			func() {},
-			[]rule.CheckResult{{Status: rule.Passed, Message: "The connection timeout is set to the reccomended value (5m).", Target: rule.NewTarget()}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "The connection timeout is not set and therefore will be defaulted to the recommended value (5m).", Target: rule.NewTarget()}},
 		),
 		Entry("should pass when the main kubelet has a default connection timeout",
 			func() {
 				shoot.Spec.Kubernetes.Kubelet = ptr.To(gardencorev1beta1.KubeletConfig{})
 			},
-			[]rule.CheckResult{{Status: rule.Passed, Message: "The connection timeout is set to the reccomended value (5m).", Target: rule.NewTarget()}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "The connection timeout is not set and therefore will be defaulted to the recommended value (5m).", Target: rule.NewTarget()}},
 		),
 		Entry("should pass when the main kubelet has a connection timeout set to 5m",
 			func() {
@@ -96,7 +96,7 @@ var _ = Describe("#2005", func() {
 					},
 				})
 			},
-			[]rule.CheckResult{{Status: rule.Passed, Message: "The connection timeout is set to a valid value ([5m; 4h]).", Target: rule.NewTarget()}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "The connection timeout is set to an allowed, but not recommended value (should be 5m).", Target: rule.NewTarget()}},
 		),
 		Entry("should fail when the main kubelet has a connection timeout set below 5m",
 			func() {
@@ -109,7 +109,7 @@ var _ = Describe("#2005", func() {
 					},
 				})
 			},
-			[]rule.CheckResult{{Status: rule.Failed, Message: "The connection timeout is not set to a valid value (< 5m).", Target: rule.NewTarget()}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "The connection timeout is set to a not allowed value (< 5m).", Target: rule.NewTarget()}},
 		),
 		Entry("should fail when the main kubelet has a connection timeout set above 4h",
 			func() {
@@ -126,7 +126,7 @@ var _ = Describe("#2005", func() {
 		),
 		Entry("should return appropriate check results for varying worker node configurations",
 			func() {
-				reccomendedDuration, err := time.ParseDuration("5m")
+				recommendedDuration, err := time.ParseDuration("5m")
 				Expect(err).To(BeNil())
 				belowValidDuration, err := time.ParseDuration("19s")
 				Expect(err).To(BeNil())
@@ -151,7 +151,7 @@ var _ = Describe("#2005", func() {
 						Kubernetes: &gardencorev1beta1.WorkerKubernetes{
 							Kubelet: &gardencorev1beta1.KubeletConfig{
 								StreamingConnectionIdleTimeout: &metav1.Duration{
-									Duration: reccomendedDuration,
+									Duration: recommendedDuration,
 								},
 							},
 						},
@@ -189,12 +189,12 @@ var _ = Describe("#2005", func() {
 				}
 			},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "The connection timeout is set to the reccomended value (5m).", Target: rule.NewTarget()},
-				{Status: rule.Passed, Message: "The connection timeout is set to the reccomended value (5m).", Target: rule.NewTarget("worker", "worker1")},
-				{Status: rule.Passed, Message: "The connection timeout is set to the reccomended value (5m).", Target: rule.NewTarget("worker", "worker2")},
+				{Status: rule.Passed, Message: "The connection timeout is not set and therefore will be defaulted to the recommended value (5m).", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "The connection timeout is not set and therefore will be defaulted to the recommended value (5m).", Target: rule.NewTarget("worker", "worker1")},
+				{Status: rule.Passed, Message: "The connection timeout is not set and therefore will be defaulted to the recommended value (5m).", Target: rule.NewTarget("worker", "worker2")},
 				{Status: rule.Passed, Message: "The connection timeout is set to the reccomended value (5m).", Target: rule.NewTarget("worker", "worker3")},
-				{Status: rule.Failed, Message: "The connection timeout is not set to a valid value (< 5m).", Target: rule.NewTarget("worker", "worker4")},
-				{Status: rule.Passed, Message: "The connection timeout is set to a valid value ([5m; 4h]).", Target: rule.NewTarget("worker", "worker5")},
+				{Status: rule.Failed, Message: "The connection timeout is set to a not allowed value (< 5m).", Target: rule.NewTarget("worker", "worker4")},
+				{Status: rule.Passed, Message: "The connection timeout is set to an allowed, but not recommended value (should be 5m).", Target: rule.NewTarget("worker", "worker5")},
 				{Status: rule.Failed, Message: "The connection timeout is not set to a valid value (> 4h).", Target: rule.NewTarget("worker", "worker6")},
 			},
 		),
