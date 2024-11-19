@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.23.3
 
 require (
-	github.com/Masterminds/semver/v3 v3.3.0
+	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/distribution/reference v0.6.0
 	github.com/gardener/gardener v1.108.0
 	github.com/google/uuid v1.6.0
