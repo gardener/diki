@@ -58,13 +58,11 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			rule.NotImplemented,
 			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
-		rule.NewSkipRule(
-			"2005",
-			"Shoot clusters must not disable timeouts for Kubelet.",
-			"Not implemented.",
-			rule.NotImplemented,
-			rule.SkipRuleWithSeverity(rule.SeverityMedium),
-		),
+		&rules.Rule2005{
+			Client:         c,
+			ShootName:      r.args.ShootName,
+			ShootNamespace: r.args.ProjectNamespace,
+		},
 		rule.NewSkipRule(
 			"2006",
 			"Shoot clusters must have static token kubeconfig disabled.",
