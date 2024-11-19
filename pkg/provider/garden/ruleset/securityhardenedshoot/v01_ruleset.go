@@ -31,13 +31,11 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			rule.NotImplemented,
 			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
-		rule.NewSkipRule(
-			"2000",
-			"Shoot clusters must have anonymous authentication disabled for the Kubernetes API server.",
-			"Not implemented.",
-			rule.NotImplemented,
-			rule.SkipRuleWithSeverity(rule.SeverityHigh),
-		),
+		&rules.Rule2000{
+			Client:         c,
+			ShootName:      r.args.ShootName,
+			ShootNamespace: r.args.ProjectNamespace,
+		},
 		&rules.Rule2001{
 			Client:         c,
 			ShootName:      r.args.ShootName,
