@@ -13,9 +13,9 @@ Diki is the Greek word for "trial".
 You can also memorise it as "Detective Investigation of Key Imperatives" or as GNU-style recursive acronym "Diki Investigates Key Imperatives".
 It's colloquially known as "Don't I Know It", which is a nice fit as well for what it does.
 
-**Important Note:** 
-This repository is in alpha stage.
-The API can change without any backwards compatibility.
+> [!IMPORTANT]
+> This repository is actively developing.
+> APIs can change without any backwards compatibility.
 
 ## Getting Started
 
