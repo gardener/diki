@@ -44,7 +44,21 @@ func (r *Rule2005) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("name", r.ShootName, "namespace", r.ShootNamespace, "kind", "Shoot"))), nil
 	}
 
-	var checkResults = []rule.CheckResult{}
+	var (
+		checkResults            = []rule.CheckResult{}
+		evaluateTimeoutDuration = func(timeoutDuration metav1.Duration, target rule.Target) rule.CheckResult {
+			switch {
+			case timeoutDuration.Duration < 5*time.Minute:
+				return rule.FailedCheckResult("The connection timeout is set to a not allowed value (< 5m).", target)
+			case timeoutDuration.Duration == 5*time.Minute:
+				return rule.PassedCheckResult("The connection timeout is set to the recommended value (5m).", target)
+			case timeoutDuration.Duration <= 4*time.Hour:
+				return rule.PassedCheckResult("The connection timeout is set to an allowed, but not recommended value (should be 5m).", target)
+			default:
+				return rule.FailedCheckResult("The connection timeout is not set to an allowed value (> 4h).", target)
+			}
+		}
+	)
 
 	if shoot.Spec.Kubernetes.Kubelet == nil || shoot.Spec.Kubernetes.Kubelet.StreamingConnectionIdleTimeout == nil {
 		checkResults = append(checkResults, rule.PassedCheckResult("The connection timeout is not set and therefore will be defaulted to the recommended value (5m).", rule.NewTarget()))
@@ -64,17 +78,4 @@ func (r *Rule2005) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	return rule.Result(r, checkResults...), nil
-}
-
-func evaluateTimeoutDuration(timeoutDuration metav1.Duration, target rule.Target) rule.CheckResult {
-	switch {
-	case timeoutDuration.Duration < 5*time.Minute:
-		return rule.FailedCheckResult("The connection timeout is set to a not allowed value (< 5m).", target)
-	case timeoutDuration.Duration == 5*time.Minute:
-		return rule.PassedCheckResult("The connection timeout is set to the reccomended value (5m).", target)
-	case timeoutDuration.Duration <= 4*time.Hour:
-		return rule.PassedCheckResult("The connection timeout is set to an allowed, but not recommended value (should be 5m).", target)
-	default:
-		return rule.FailedCheckResult("The connection timeout is not set to a valid value (> 4h).", target)
-	}
 }
