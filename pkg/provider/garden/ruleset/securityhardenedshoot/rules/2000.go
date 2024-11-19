@@ -47,8 +47,8 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 	case shoot.Spec.Kubernetes.KubeAPIServer == nil || shoot.Spec.Kubernetes.KubeAPIServer.EnableAnonymousAuthentication == nil:
 		return rule.Result(r, rule.PassedCheckResult("Anonymous authentication is not enabled.", rule.NewTarget())), nil
 	case *shoot.Spec.Kubernetes.KubeAPIServer.EnableAnonymousAuthentication:
-		return rule.Result(r, rule.FailedCheckResult("Anonymous authentication is enabled on the kube-apiserver.", rule.NewTarget())), nil
+		return rule.Result(r, rule.FailedCheckResult("Anonymous authentication is enabled for the kube-apiserver.", rule.NewTarget())), nil
 	default:
-		return rule.Result(r, rule.PassedCheckResult("Anonymous authentication is disabled on the kube-apiserver.", rule.NewTarget())), nil
+		return rule.Result(r, rule.PassedCheckResult("Anonymous authentication is disabled for the kube-apiserver.", rule.NewTarget())), nil
 	}
 }

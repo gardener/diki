@@ -86,7 +86,7 @@ var _ = Describe("#2000", func() {
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Passed, Message: "Anonymous authentication is disabled on the kube-apiserver.", Target: rule.NewTarget()},
+			rule.CheckResult{Status: rule.Passed, Message: "Anonymous authentication is disabled for the kube-apiserver.", Target: rule.NewTarget()},
 		),
 		Entry("should fail when anonymous authentication is enabled",
 			func() {
@@ -96,7 +96,7 @@ var _ = Describe("#2000", func() {
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Failed, Message: "Anonymous authentication is enabled on the kube-apiserver.", Target: rule.NewTarget()},
+			rule.CheckResult{Status: rule.Failed, Message: "Anonymous authentication is enabled for the kube-apiserver.", Target: rule.NewTarget()},
 		),
 	)
 })
