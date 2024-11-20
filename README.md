@@ -6,11 +6,16 @@
 [![license apache 2.0](https://badgen.net/badge/license/apache-2.0/8ab803)](https://opensource.org/licenses/Apache-2.0)
 
 
-Diki a "compliance checker" or sorts, a detective control framework with pluggable rule sets. It's part of the [Gardener](https://github.com/gardener) family, but can be used also on other Kubernetes distros or even on non-Kubernetes environments, e.g. to check compliance of your hyperscaler accounts.
+Diki a "compliance checker" or sorts, a detective control framework with pluggable rule sets.
+It's part of the [Gardener](https://github.com/gardener) family, but can be used also on other Kubernetes distros or even on non-Kubernetes environments, e.g. to check compliance of your hyperscaler accounts.
 
-Diki is the Greek word for "trial". You can also memorise it as "Detective Investigation of Key Imperatives" or as GNU-style recursive acronym "Diki Investigates Key Imperatives". It's colloquially known as "Don't I Know It", which is a nice fit as well for what it does.
+Diki is the Greek word for "trial".
+You can also memorise it as "Detective Investigation of Key Imperatives" or as GNU-style recursive acronym "Diki Investigates Key Imperatives".
+It's colloquially known as "Don't I Know It", which is a nice fit as well for what it does.
 
-**Important Note:** This repository is in alpha stage. The API can change without any backwards compatibility.
+> [!IMPORTANT]
+> This repository is actively developing.
+> APIs can change without any backwards compatibility.
 
 ## Getting Started
 
@@ -41,54 +46,86 @@ sudo mv "./diki-${os}-${arch}" /usr/local/bin/diki
 
 #### Run
 
-Most of Diki's `run` configurations are provided through its [config file](./example/config/). Options depend on the different providers and rulesets. Here are a couple of commands to get you started:
+Most of Diki's `run` configurations are provided through its [config file](./example/config/).
+Options depend on the different providers and rulesets.
+Here are a couple of commands to get you started:
 
 - Run all known rulesets for all known providers
 ```bash
-diki run --config=config.yaml --all
+diki run \
+    --config=config.yaml \
+    --all
 ```
 
 - Run all known rulesets for all known providers and create a summary json report file
 ```bash
-diki run --config=config.yaml --all --output=./report.json
+diki run \
+    --config=config.yaml \
+    --all \
+    --output=./report.json
 ```
 
 - Run a specific ruleset for a known provider
 ```bash
-diki run --config=config.yaml --provider=gardener --ruleset-id=disa-kubernetes-stig --ruleset-version=v2r1
+diki run \
+    --config=config.yaml \
+    --provider=gardener \
+    --ruleset-id=disa-kubernetes-stig \
+    --ruleset-version=v2r1
 ```
 
 - Run a specific rule defined in a ruleset for a known provider
 ```bash
-diki run --config=config.yaml --provider=gardener --ruleset-id=disa-kubernetes-stig --ruleset-version=v2r1 --rule-id=242414
+diki run \
+    --config=config.yaml \
+    --provider=gardener \
+    --ruleset-id=disa-kubernetes-stig \
+    --ruleset-version=v2r1 \
+    --rule-id=242414
 ```
 
 #### Report
 
-Diki can generate a human readable report from the output files of a `diki run` execution. Merged reports can be produced by setting the `distinct-by` flag. The value of this flag is a list of `key=value` pairs where the keys are the IDs of the providers we want to include in the merged report and the values are the unique metadata fields to be used as distinction values between different provider runs.
+Diki can generate a human readable report from the output files of a `diki run` execution.
+Merged reports can be produced by setting the `distinct-by` flag.
+The value of this flag is a list of `key=value` pairs where the keys are the IDs of the providers we want to include in the merged report and the values are the unique metadata fields to be used as distinction values between different provider runs.
 
 - Generate an html report
 ```bash
-diki report generate --output=report.html output.json
+diki report generate \
+    --output=report.html \
+    output.json
 ```
 
 - Generate merged html report
 ```bash
-diki report generate --distinct-by=gardener=id --output=report.html output1.json output2.json
+diki report generate \
+    --distinct-by=gardener=id \
+    --output=report.html \
+    output1.json output2.json
 ```
 
 #### Difference
 
-Diki can generate a json containing the difference between two output files of `diki run` executions. This can help to identify improvements (or regressions). A human readable html difference report can be generated from the difference reports.
+Diki can generate a json containing the difference between two output files of `diki run` executions.
+This can help to identify improvements (or regressions).
+A human readable html difference report can be generated from the difference reports.
 
 - Generate json difference between two reports
 ```bash
-diki report diff --title=Title --old=output1.json --new=output2.json --output=difference.json
+diki report diff \
+    --title=Title \
+    --old=output1.json \
+    --new=output2.json \
+    --output=difference.json
 ```
 
 - Combine one or more json difference reports to an html report.
 ```bash
-diki report generate diff --identity-attributes=gardener=id --output=difference.html difference1.json difference2.json
+diki report generate diff \
+    --identity-attributes=gardener=id \
+    --output=difference.html \
+    difference1.json difference2.json
 ```
 
 #### Unit Tests
