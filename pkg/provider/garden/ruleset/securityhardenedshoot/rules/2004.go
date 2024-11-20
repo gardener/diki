@@ -6,6 +6,7 @@ package rules
 
 import (
 	"context"
+	"slices"
 
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,26 +48,21 @@ func (r *Rule2004) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.PassedCheckResult("The ValidatingAdmissionWebhook admission plugin is not disabled.", rule.NewTarget())), nil
 	}
 
-	var (
-		admissionPlugins   = shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins
-		foundEnabledPlugin = false
-	)
+	var admissionPlugins = shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins
 
-	for _, admissionPlugin := range admissionPlugins {
-		if admissionPlugin.Name == "ValidatingAdmissionWebhook" {
-			if admissionPlugin.Disabled == nil {
-				continue
-			}
+	enabledIdx := slices.IndexFunc(admissionPlugins, func(plugin gardencorev1beta1.AdmissionPlugin) bool {
+		return plugin.Name == "ValidatingAdmissionWebhook" && plugin.Disabled != nil && !*plugin.Disabled
+	})
 
-			if *admissionPlugin.Disabled {
-				return rule.Result(r, rule.FailedCheckResult("The ValidatingAdmissionWebhook admission plugin is disabled.", rule.NewTarget())), nil
-			} else {
-				foundEnabledPlugin = true
-			}
-		}
+	disabledIdx := slices.IndexFunc(admissionPlugins, func(plugin gardencorev1beta1.AdmissionPlugin) bool {
+		return plugin.Name == "ValidatingAdmissionWebhook" && plugin.Disabled != nil && *plugin.Disabled
+	})
+
+	if disabledIdx >= 0 {
+		return rule.Result(r, rule.FailedCheckResult("The ValidatingAdmissionWebhook admission plugin is disabled.", rule.NewTarget())), nil
 	}
 
-	if foundEnabledPlugin {
+	if enabledIdx >= 0 {
 		return rule.Result(r, rule.PassedCheckResult("The ValidatingAdmissionWebhook admission plugin is enabled.", rule.NewTarget())), nil
 	}
 
