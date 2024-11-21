@@ -81,7 +81,7 @@ var _ = Describe("#2006", func() {
 					Version: "1.26.0",
 				}
 			},
-			rule.CheckResult{Status: rule.Passed, Message: "Static token kubeconfig is disabled for the shoot by default.", Target: rule.NewTarget()},
+			rule.CheckResult{Status: rule.Passed, Message: "Static token kubeconfig is not enabled for the shoot.", Target: rule.NewTarget()},
 		),
 		Entry("should pass when Static token kubeconfig is disabled",
 			func() {
