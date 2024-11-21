@@ -50,7 +50,7 @@ func (r *Rule2004) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	var admissionPlugins = shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins
 
-	// The ValidatingadmissionWebhook is required to be enabled by Kubernetes, and there isn't a known way to manually disable it.
+	// The ValidatingadmissionWebhook is required to be enabled by Gardener. ref: https://github.com/gardener/gardener/blob/834a3476ed4343225690cd0eaca32e03ab5b84f5/pkg/utils/validation/admissionplugins/admissionplugins.go#L71
 	// Therefore, this rule check is always expected to pass.
 	enabledIdx := slices.IndexFunc(admissionPlugins, func(plugin gardencorev1beta1.AdmissionPlugin) bool {
 		return plugin.Name == "ValidatingAdmissionWebhook" && plugin.Disabled != nil && !*plugin.Disabled
@@ -58,6 +58,7 @@ func (r *Rule2004) Run(ctx context.Context) (rule.RuleResult, error) {
 	disabledIdx := slices.IndexFunc(admissionPlugins, func(plugin gardencorev1beta1.AdmissionPlugin) bool {
 		return plugin.Name == "ValidatingAdmissionWebhook" && plugin.Disabled != nil && *plugin.Disabled
 	})
+
 	if disabledIdx >= 0 {
 		return rule.Result(r, rule.FailedCheckResult("The ValidatingAdmissionWebhook admission plugin is disabled.", rule.NewTarget())), nil
 	}
