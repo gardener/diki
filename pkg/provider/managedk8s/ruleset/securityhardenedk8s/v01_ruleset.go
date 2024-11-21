@@ -5,18 +5,26 @@
 package securityhardenedk8s
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/config"
+	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/securityhardenedk8s/rules"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
-	_, err := client.New(r.Config, client.Options{})
+	c, err := client.New(r.Config, client.Options{})
 	if err != nil {
 		return err
+	}
+
+	opts2008, err := getV01OptionOrNil[rules.Options2008](ruleOptions["2008"].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 242383 error: %s", err.Error())
 	}
 
 	rules := []rule.Rule{
@@ -76,13 +84,10 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			rule.NotImplemented,
 			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
-		rule.NewSkipRule(
-			"2008",
-			"Pods must not be allowed to mount host directories.",
-			"Not implemented.",
-			rule.NotImplemented,
-			rule.SkipRuleWithSeverity(rule.SeverityHigh),
-		),
+		&rules.Rule2008{
+			Client:  c,
+			Options: opts2008,
+		},
 	}
 
 	for i, r := range rules {
@@ -106,4 +111,31 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 	}
 
 	return r.AddRules(rules...)
+}
+
+func parseV01Options[O rules.RuleOption](options any) (*O, error) {
+	optionsByte, err := json.Marshal(options)
+	if err != nil {
+		return nil, err
+	}
+
+	var parsedOptions O
+	if err := json.Unmarshal(optionsByte, &parsedOptions); err != nil {
+		return nil, err
+	}
+
+	if val, ok := any(parsedOptions).(option.Option); ok {
+		if err := val.Validate().ToAggregate(); err != nil {
+			return nil, err
+		}
+	}
+
+	return &parsedOptions, nil
+}
+
+func getV01OptionOrNil[O rules.RuleOption](options any) (*O, error) {
+	if options == nil {
+		return nil, nil
+	}
+	return parseV01Options[O](options)
 }
