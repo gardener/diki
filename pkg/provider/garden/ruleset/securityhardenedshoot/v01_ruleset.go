@@ -63,13 +63,11 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			ShootName:      r.args.ShootName,
 			ShootNamespace: r.args.ProjectNamespace,
 		},
-		rule.NewSkipRule(
-			"2006",
-			"Shoot clusters must have static token kubeconfig disabled.",
-			"Not implemented.",
-			rule.NotImplemented,
-			rule.SkipRuleWithSeverity(rule.SeverityHigh),
-		),
+		&rules.Rule2006{
+			Client:         c,
+			ShootName:      r.args.ShootName,
+			ShootNamespace: r.args.ProjectNamespace,
+		},
 		rule.NewSkipRule(
 			"2007",
 			"Shoot clusters must have a PodSecurity admission plugin configured.",
