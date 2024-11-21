@@ -65,6 +65,5 @@ func (r *Rule2004) Run(ctx context.Context) (rule.RuleResult, error) {
 	if enabledIdx >= 0 {
 		return rule.Result(r, rule.PassedCheckResult("The ValidatingAdmissionWebhook admission plugin is enabled.", rule.NewTarget())), nil
 	}
-
 	return rule.Result(r, rule.PassedCheckResult("The ValidatingAdmissionWebhook admission plugin is not disabled.", rule.NewTarget())), nil
 }
