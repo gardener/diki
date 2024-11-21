@@ -51,14 +51,14 @@ func (r *Rule2006) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if versionutils.ConstraintK8sGreaterEqual127.Check(version) {
-		return rule.Result(r, rule.PassedCheckResult("Static token kubeconfig is locked to disabled for the shoot (Kubernetes version >= 1.27).", rule.NewTarget())), nil
+		return rule.Result(r, rule.PassedCheckResult("Static token kubeconfig is locked to disabled (Kubernetes version >= 1.27).", rule.NewTarget())), nil
 	}
 	if shoot.Spec.Kubernetes.EnableStaticTokenKubeconfig == nil {
-		return rule.Result(r, rule.PassedCheckResult("Static token kubeconfig is not enabled for the shoot.", rule.NewTarget())), nil
+		return rule.Result(r, rule.PassedCheckResult("Static token kubeconfig is not enabled.", rule.NewTarget())), nil
 	}
 	if !(*shoot.Spec.Kubernetes.EnableStaticTokenKubeconfig) {
-		return rule.Result(r, rule.PassedCheckResult("Static token kubeconfig is disabled for the shoot.", rule.NewTarget())), nil
+		return rule.Result(r, rule.PassedCheckResult("Static token kubeconfig is disabled.", rule.NewTarget())), nil
 	}
 
-	return rule.Result(r, rule.FailedCheckResult("Static token kubeconfig is enabled for the shoot.", rule.NewTarget())), nil
+	return rule.Result(r, rule.FailedCheckResult("Static token kubeconfig is enabled.", rule.NewTarget())), nil
 }

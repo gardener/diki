@@ -73,7 +73,7 @@ var _ = Describe("#2006", func() {
 					Version: "1.27.0",
 				}
 			},
-			rule.CheckResult{Status: rule.Passed, Message: "Static token kubeconfig is locked to disabled for the shoot (Kubernetes version >= 1.27).", Target: rule.NewTarget()},
+			rule.CheckResult{Status: rule.Passed, Message: "Static token kubeconfig is locked to disabled (Kubernetes version >= 1.27).", Target: rule.NewTarget()},
 		),
 		Entry("should pass when Static token kubeconfig is default",
 			func() {
@@ -81,7 +81,7 @@ var _ = Describe("#2006", func() {
 					Version: "1.26.0",
 				}
 			},
-			rule.CheckResult{Status: rule.Passed, Message: "Static token kubeconfig is not enabled for the shoot.", Target: rule.NewTarget()},
+			rule.CheckResult{Status: rule.Passed, Message: "Static token kubeconfig is not enabled.", Target: rule.NewTarget()},
 		),
 		Entry("should pass when Static token kubeconfig is disabled",
 			func() {
@@ -90,7 +90,7 @@ var _ = Describe("#2006", func() {
 					EnableStaticTokenKubeconfig: ptr.To(false),
 				}
 			},
-			rule.CheckResult{Status: rule.Passed, Message: "Static token kubeconfig is disabled for the shoot.", Target: rule.NewTarget()},
+			rule.CheckResult{Status: rule.Passed, Message: "Static token kubeconfig is disabled.", Target: rule.NewTarget()},
 		),
 		Entry("should fail when Static token kubeconfig is enabled",
 			func() {
@@ -99,7 +99,7 @@ var _ = Describe("#2006", func() {
 					EnableStaticTokenKubeconfig: ptr.To(true),
 				}
 			},
-			rule.CheckResult{Status: rule.Failed, Message: "Static token kubeconfig is enabled for the shoot.", Target: rule.NewTarget()},
+			rule.CheckResult{Status: rule.Failed, Message: "Static token kubeconfig is enabled.", Target: rule.NewTarget()},
 		),
 	)
 })
