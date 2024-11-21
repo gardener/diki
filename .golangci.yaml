@@ -25,6 +25,10 @@ issues:
       linters:
         - revive
       text: "exported: exported"
+    - path: 'pkg/provider/managedk8s/ruleset/securityhardenedk8s/rules/'
+      linters:
+        - revive
+      text: "exported: exported"
     - path: 'pkg/provider/virtualgarden/ruleset/disak8sstig/rules/'
       linters:
         - revive
