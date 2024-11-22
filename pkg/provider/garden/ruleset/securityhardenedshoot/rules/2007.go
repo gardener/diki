@@ -8,8 +8,6 @@ import (
 	"context"
 	"slices"
 
-	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -17,6 +15,9 @@ import (
 	"k8s.io/kubectl/pkg/scheme"
 	admissionapiv1 "k8s.io/pod-security-admission/admission/api/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var (
@@ -30,7 +31,7 @@ type Options2007 struct {
 }
 
 func (o *Options2007) Validate() field.ErrorList {
-	if slices.Contains([]string{"restricted", "baseline", "privileged"}, o.MinPodSecurityLevel) && len(o.MinPodSecurityLevel) > 0 {
+	if !slices.Contains([]string{"restricted", "baseline", "privileged"}, o.MinPodSecurityLevel) && len(o.MinPodSecurityLevel) > 0 {
 		return field.ErrorList{field.Invalid(field.NewPath("minPodSecurityLevel"), o.MinPodSecurityLevel, "must be one of 'restricted', 'baseline' or 'privileged'")}
 	}
 	return nil
@@ -129,6 +130,8 @@ func (r *Rule2007) Run(ctx context.Context) (rule.RuleResult, error) {
 			MinPodSecurityLevel: "baseline",
 		}
 	}
+
+	r.Options.Validate()
 
 	return rule.Result(r, evaluatePodSecurityConfigPrivileges(*podSecurityConfiguration)...), nil
 }

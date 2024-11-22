@@ -8,18 +8,20 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/gardener/diki/pkg/provider/garden/ruleset/securityhardenedshoot/rules"
-	"github.com/gardener/diki/pkg/rule"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/gardener/gardener/pkg/client/kubernetes"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	admissionapiv1 "k8s.io/pod-security-admission/admission/api/v1"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	"github.com/gardener/diki/pkg/provider/garden/ruleset/securityhardenedshoot/rules"
+	"github.com/gardener/diki/pkg/rule"
 )
 
 var _ = Describe("#2007", func() {
@@ -149,7 +151,6 @@ var _ = Describe("#2007", func() {
 		),
 		Entry("should fail when the PodSecurity admission plugin's privileges are set by default",
 			func() {
-
 				rawExtensionBytes, err := json.Marshal(&admissionapiv1.PodSecurityConfiguration{
 					Defaults: admissionapiv1.PodSecurityDefaults{},
 				})
@@ -260,4 +261,32 @@ var _ = Describe("#2007", func() {
 			},
 		),
 	)
+
+	Describe("#Validate", func() {
+		It("should not error when options are correct", func() {
+			options := &rules.Options2007{
+				MinPodSecurityLevel: "baseline",
+			}
+
+			result := options.Validate()
+
+			Expect(result).To(BeNil())
+		})
+		It("should return correct error when option is misconfigured", func() {
+			options := &rules.Options2007{
+				MinPodSecurityLevel: "foo",
+			}
+
+			result := options.Validate()
+
+			Expect(result).To(Equal(field.ErrorList{
+				{
+					Type:     field.ErrorTypeInvalid,
+					Field:    "minPodSecurityLevel",
+					BadValue: "foo",
+					Detail:   "must be one of 'restricted', 'baseline' or 'privileged'",
+				},
+			}))
+		})
+	})
 })
