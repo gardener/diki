@@ -6,6 +6,7 @@ package rules
 
 import (
 	"context"
+	"slices"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -21,6 +22,7 @@ import (
 var (
 	_ rule.Rule     = &Rule2008{}
 	_ rule.Severity = &Rule2008{}
+	_ option.Option = &Options2008{}
 )
 
 type Rule2008 struct {
@@ -31,8 +33,6 @@ type Rule2008 struct {
 type Options2008 struct {
 	AcceptedPods []AcceptedPods2008 `json:"acceptedPods" yaml:"acceptedPods"`
 }
-
-var _ option.Option = (*Options2008)(nil)
 
 type AcceptedPods2008 struct {
 	option.PodSelector
@@ -53,7 +53,7 @@ func (o Options2008) Validate() field.ErrorList {
 		}
 		for i, volumeName := range p.VolumeNames {
 			if len(volumeName) == 0 {
-				allErrs = append(allErrs, field.Invalid(rootPath.Child("volumeNames").Index(i), volumeName, "must not be empty string"))
+				allErrs = append(allErrs, field.Invalid(rootPath.Child("volumeNames").Index(i), volumeName, "must not be empty"))
 			}
 		}
 	}
@@ -65,7 +65,7 @@ func (r *Rule2008) ID() string {
 }
 
 func (r *Rule2008) Name() string {
-	return "Pods must not be allowed to mount host directories."
+	return "Pods must not mount host directories."
 }
 
 func (r *Rule2008) Severity() rule.SeverityLevel {
@@ -73,9 +73,7 @@ func (r *Rule2008) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule2008) Run(ctx context.Context) (rule.RuleResult, error) {
-	var (
-		checkResults []rule.CheckResult
-	)
+	var checkResults []rule.CheckResult
 
 	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
@@ -101,12 +99,12 @@ func (r *Rule2008) Run(ctx context.Context) (rule.RuleResult, error) {
 					}
 					checkResults = append(checkResults, rule.AcceptedCheckResult(msg, volumeTarget))
 				} else {
-					checkResults = append(checkResults, rule.FailedCheckResult("Pod may not use volume of type hostPath.", volumeTarget))
+					checkResults = append(checkResults, rule.FailedCheckResult("Pod must not use volumes of type hostPath.", volumeTarget))
 				}
 			}
 		}
 		if !uses {
-			checkResults = append(checkResults, rule.PassedCheckResult("Pod does not use volume of type hostPath.", podTarget))
+			checkResults = append(checkResults, rule.PassedCheckResult("Pod does not use volumes of type hostPath.", podTarget))
 		}
 	}
 
@@ -121,10 +119,8 @@ func (r *Rule2008) accepted(pod corev1.Pod, namespace corev1.Namespace, volumeNa
 	for _, acceptedPod := range r.Options.AcceptedPods {
 		if utils.MatchLabels(pod.Labels, acceptedPod.PodMatchLabels) &&
 			utils.MatchLabels(namespace.Labels, acceptedPod.NamespaceMatchLabels) {
-			for _, acceptedVolumeName := range acceptedPod.VolumeNames {
-				if acceptedVolumeName == volumeName {
-					return true, acceptedPod.Justification
-				}
+			if slices.Contains(acceptedPod.VolumeNames, volumeName) {
+				return true, acceptedPod.Justification
 			}
 		}
 	}

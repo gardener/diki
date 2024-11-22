@@ -84,12 +84,12 @@ var _ = Describe("#2008", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Passed,
-				Message: "Pod does not use volume of type hostPath.",
+				Message: "Pod does not use volumes of type hostPath.",
 				Target:  rule.NewTarget("name", "pod1", "namespace", "foo", "kind", "pod"),
 			},
 			{
 				Status:  rule.Passed,
-				Message: "Pod does not use volume of type hostPath.",
+				Message: "Pod does not use volumes of type hostPath.",
 				Target:  rule.NewTarget("name", "pod2", "namespace", "foo", "kind", "pod"),
 			},
 		}
@@ -121,12 +121,12 @@ var _ = Describe("#2008", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Passed,
-				Message: "Pod does not use volume of type hostPath.",
+				Message: "Pod does not use volumes of type hostPath.",
 				Target:  rule.NewTarget("name", "pod1", "namespace", "foo", "kind", "pod"),
 			},
 			{
 				Status:  rule.Failed,
-				Message: "Pod may not use volume of type hostPath.",
+				Message: "Pod must not use volumes of type hostPath.",
 				Target:  rule.NewTarget("name", "pod2", "namespace", "foo", "kind", "pod", "volume", "foo"),
 			},
 		}
@@ -194,7 +194,7 @@ var _ = Describe("#2008", func() {
 			},
 			{
 				Status:  rule.Failed,
-				Message: "Pod may not use volume of type hostPath.",
+				Message: "Pod must not use volumes of type hostPath.",
 				Target:  rule.NewTarget("name", "not-accepted-shoot-pod", "namespace", "foo", "kind", "pod", "volume", "bar"),
 			},
 		}
@@ -253,7 +253,7 @@ var _ = Describe("#2008", func() {
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("acceptedPods.volumeNames[0]"),
 					"BadValue": Equal(""),
-					"Detail":   Equal("must not be empty string"),
+					"Detail":   Equal("must not be empty"),
 				})),
 			))
 		})

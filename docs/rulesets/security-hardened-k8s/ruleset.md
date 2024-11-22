@@ -120,7 +120,7 @@ Remove the use of wildcards `*` in `RBAC` verbs.
 
 ---
 
-### 2008 - Pods must not be allowed to mount host directories.
+### 2008 - Pods must not mount host directories.
 
 #### Description
 This rule follows the requirements from Kyverno pod security policy [Disallow hostPath](https://github.com/kyverno/policies/tree/release-1.12/pod-security/baseline/disallow-host-path/disallow-host-path.yaml).

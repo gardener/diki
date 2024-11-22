@@ -186,7 +186,7 @@ providers:                   # contains information about known providers
     #       namespaceMatchLabels:
     #         foo: bar
     #       justification: "justification"
-    #       VolumeNames:
+    #       volumeNames:
     #       - foo-bar
 # metadata: # optional, additional metadata to be added to summary json report
 #   foo: bar

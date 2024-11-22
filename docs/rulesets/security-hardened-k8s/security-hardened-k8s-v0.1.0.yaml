@@ -40,6 +40,6 @@ rules:
   description: "This rule follows the requirements from Kyverno policy [Restrict Wildcard in Verbs](https://github.com/kyverno/policies/tree/release-1.12/other/restrict-wildcard-verbs/restrict-wildcard-verbs.yaml)."
   severity: "MEDIUM"
 - id: 2008
-  name: "Pods must not be allowed to mount host directories."
+  name: "Pods must not mount host directories."
   description: "This rule follows the requirements from Kyverno pod security policy [Disallow hostPath](https://github.com/kyverno/policies/tree/release-1.12/pod-security/baseline/disallow-host-path/disallow-host-path.yaml)."
   severity: "HIGH"
