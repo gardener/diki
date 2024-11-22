@@ -30,7 +30,7 @@ type Options2007 struct {
 	MinPodSecurityLevel string `json:"minPodSecurityLevel" yaml:"minPodSecurityLevel"`
 }
 
-func (o *Options2007) Validate() field.ErrorList {
+func (o Options2007) Validate() field.ErrorList {
 	if !slices.Contains([]string{"restricted", "baseline", "privileged"}, o.MinPodSecurityLevel) && len(o.MinPodSecurityLevel) > 0 {
 		return field.ErrorList{field.Invalid(field.NewPath("minPodSecurityLevel"), o.MinPodSecurityLevel, "must be one of 'restricted', 'baseline' or 'privileged'")}
 	}
