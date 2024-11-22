@@ -22,6 +22,10 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 		return err
 	}
 
+	opts2001, err := getV01OptionOrNil[rules.Options2001](ruleOptions["2001"].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 2001 error: %s", err.Error())
+	}
 	opts2008, err := getV01OptionOrNil[rules.Options2008](ruleOptions["2008"].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 2008 error: %s", err.Error())
@@ -35,13 +39,10 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			rule.NotImplemented,
 			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
-		rule.NewSkipRule(
-			"2001",
-			"Containers must be forbidden to escalate privileges.",
-			"Not implemented.",
-			rule.NotImplemented,
-			rule.SkipRuleWithSeverity(rule.SeverityHigh),
-		),
+		&rules.Rule2001{
+			Client:  c,
+			Options: opts2001,
+		},
 		rule.NewSkipRule(
 			"2002",
 			"Storage Classes should have a \"Delete\" reclaim policy.",
