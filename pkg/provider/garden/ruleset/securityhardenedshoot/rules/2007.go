@@ -65,13 +65,13 @@ func (r *Rule2007) Run(ctx context.Context) (rule.RuleResult, error) {
 	var podSecurityPlugin = "PodSecurity"
 
 	if shoot.Spec.Kubernetes.KubeAPIServer == nil || shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins == nil {
-		return rule.Result(r, rule.FailedCheckResult("The PodSecurity admission plugin is not configured.", rule.NewTarget())), nil
+		return rule.Result(r, rule.FailedCheckResult("PodSecurity admission plugin is not configured.", rule.NewTarget())), nil
 	}
 
 	if slices.ContainsFunc(shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins, func(admissionPlugin gardencorev1beta1.AdmissionPlugin) bool {
 		return admissionPlugin.Name == podSecurityPlugin && admissionPlugin.Disabled != nil && *admissionPlugin.Disabled
 	}) {
-		return rule.Result(r, rule.FailedCheckResult("The PodSecurity admission plugin is disabled.", rule.NewTarget())), nil
+		return rule.Result(r, rule.FailedCheckResult("PodSecurity admission plugin is disabled.", rule.NewTarget())), nil
 	}
 
 	enabledPodSecurityPluginIdx := slices.IndexFunc(shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins, func(admissionPlugin gardencorev1beta1.AdmissionPlugin) bool {
@@ -79,7 +79,7 @@ func (r *Rule2007) Run(ctx context.Context) (rule.RuleResult, error) {
 	})
 
 	if enabledPodSecurityPluginIdx < 0 {
-		return rule.Result(r, rule.FailedCheckResult("The PodSecurity admission plugin is not configured.", rule.NewTarget())), nil
+		return rule.Result(r, rule.FailedCheckResult("PodSecurity admission plugin is not configured.", rule.NewTarget())), nil
 	}
 
 	var (
@@ -117,7 +117,7 @@ func (r *Rule2007) Run(ctx context.Context) (rule.RuleResult, error) {
 	)
 
 	if pluginConfiguration == nil {
-		return rule.Result(r, rule.FailedCheckResult("The PodSecurity admission plugin has a default security configuration.", rule.NewTarget())), nil
+		return rule.Result(r, rule.FailedCheckResult("PodSecurity admission plugin has a default security configuration.", rule.NewTarget())), nil
 	}
 
 	podSecurityConfiguration := &admissionapiv1.PodSecurityConfiguration{}

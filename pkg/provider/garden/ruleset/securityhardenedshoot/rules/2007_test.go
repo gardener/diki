@@ -70,13 +70,13 @@ var _ = Describe("#2007", func() {
 				{Status: rule.Errored, Message: "shoots.core.gardener.cloud \"foo\" not found", Target: rule.NewTarget("name", "foo", "namespace", "bar", "kind", "Shoot")},
 			},
 		),
-		Entry("should fail when the kubeapiserver is configured by default",
+		Entry("should fail when the kubeapiserver has a default configuration",
 			func() {
 				shoot.Spec.Kubernetes.KubeAPIServer = &gardencorev1beta1.KubeAPIServerConfig{}
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "The PodSecurity admission plugin is not configured.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "PodSecurity admission plugin is not configured.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should fail when the PodSecurity admission plugin is not present",
@@ -94,7 +94,7 @@ var _ = Describe("#2007", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "The PodSecurity admission plugin is not configured.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "PodSecurity admission plugin is not configured.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should fail when the PodSecurity admission plugin is disabled",
@@ -110,7 +110,7 @@ var _ = Describe("#2007", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "The PodSecurity admission plugin is disabled.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "PodSecurity admission plugin is disabled.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should fail when the PodSecurity admission plugin is both enabled and disabled",
@@ -130,10 +130,10 @@ var _ = Describe("#2007", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "The PodSecurity admission plugin is disabled.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "PodSecurity admission plugin is disabled.", Target: rule.NewTarget()},
 			},
 		),
-		Entry("should fail when the PodSecurity admission plugin's configuration is default",
+		Entry("should fail when the PodSecurity admission plugin has a default configuration",
 			func() {
 				shoot.Spec.Kubernetes.KubeAPIServer = &gardencorev1beta1.KubeAPIServerConfig{
 					AdmissionPlugins: []gardencorev1beta1.AdmissionPlugin{
@@ -146,10 +146,10 @@ var _ = Describe("#2007", func() {
 			},
 			&standardOptions,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "The PodSecurity admission plugin has a default security configuration.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "PodSecurity admission plugin has a default security configuration.", Target: rule.NewTarget()},
 			},
 		),
-		Entry("should fail when the PodSecurity admission plugin's privileges are set by default",
+		Entry("should fail when the PodSecurity admission plugin's privileges are default",
 			func() {
 				rawExtensionBytes, err := json.Marshal(&admissionapiv1.PodSecurityConfiguration{
 					Defaults: admissionapiv1.PodSecurityDefaults{},
@@ -175,7 +175,7 @@ var _ = Describe("#2007", func() {
 				{Status: rule.Failed, Message: "Audit level is lower than the minimum pod security level allowed.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
 			},
 		),
-		Entry("should pass when PodSecurity admission plugin's privileges are exceeding the minimal privilege",
+		Entry("should pass when PodSecurity admission plugin's restrictions are exceeding the maximal restriction",
 			func() {
 
 				rawExtensionBytes, err := json.Marshal(&admissionapiv1.PodSecurityConfiguration{
@@ -204,7 +204,7 @@ var _ = Describe("#2007", func() {
 				{Status: rule.Passed, Message: "PodSecurity admission plugin is configured correctly.", Target: rule.NewTarget()},
 			},
 		),
-		Entry("should fail only on PodSecurity defaults that are not exceeding the the minimal privilege",
+		Entry("should fail only on PodSecurity defaults that are exceeding the the maximal restriction",
 			func() {
 				rawExtensionBytes, err := json.Marshal(&admissionapiv1.PodSecurityConfiguration{
 					Defaults: admissionapiv1.PodSecurityDefaults{
@@ -232,7 +232,7 @@ var _ = Describe("#2007", func() {
 				{Status: rule.Failed, Message: "Audit level is lower than the minimum pod security level allowed.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
 			},
 		),
-		Entry("should evaluate PodSecurity privileges correctly when the minimal privilege is set by default",
+		Entry("should evaluate PodSecurity privileges correctly when the maximal restriction is default",
 			func() {
 				rawExtensionBytes, err := json.Marshal(&admissionapiv1.PodSecurityConfiguration{
 					Defaults: admissionapiv1.PodSecurityDefaults{
