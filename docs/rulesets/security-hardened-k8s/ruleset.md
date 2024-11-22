@@ -37,12 +37,12 @@ spec:
 This rule follows the requirements from Kyverno pod security policy [Disallow Privilege Escalation](https://github.com/kyverno/policies/tree/release-1.12/pod-security/restricted/disallow-privilege-escalation/disallow-privilege-escalation.yaml).
 
 #### Fix
-Do not set `Pod` container fields `securityContext.allowPrivilegeEscalation` as it defaults to `false` or set it explicitly to `false`.
+Set the `Pod` container fields `securityContext.allowPrivilegeEscalation` explicitly to `false`. There is an [open issue in Kubernetes](https://github.com/kubernetes/kubernetes/issues/118822) about this configuration being `true` by default.
 
 > [!WARNING]  
 > `securityContext.allowPrivilegeEscalation` is set to `true` in the following exceptions:
 > - container is running as `privileged`
-> - `CAP_SYS_ADMIN` is added to the container
+> - `CAP_SYS_ADMIN/SYS_ADMIN` is added to the container. More information can be found [here](https://github.com/kubernetes/kubernetes/issues/119568).
 
 ``` yaml
 apiVersion: v1
