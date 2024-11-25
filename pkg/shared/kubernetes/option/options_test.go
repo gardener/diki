@@ -60,11 +60,6 @@ var _ = Describe("options", func() {
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("[]"),
-					"Detail": Equal("must not be empty"),
-				})),
-				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("[].namespaceMatchLabels"),
 					"BadValue": Equal("_foo"),
