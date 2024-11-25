@@ -95,7 +95,7 @@ providers:             # contains information about known providers
           # groups: "group1,group2,group3"
     - ruleID: "254800"
       args:
-        minPodSecurityLevel: "baseline"
+        minPodSecurityStandardsProfile: "baseline"
 # metadata: # optional, additional metadata to be added to summary json report
 #   foo: bar
 #   bar:

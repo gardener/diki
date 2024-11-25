@@ -21,6 +21,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/internal/utils"
+	intkubeutils "github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
@@ -40,14 +41,14 @@ type Rule254800 struct {
 }
 
 type Options254800 struct {
-	MinPodSecurityLevel string `json:"minPodSecurityLevel" yaml:"minPodSecurityLevel"`
+	MinPodSecurityStandardsProfile utils.PodSecurityStandardProfile `json:"minPodSecurityStandardsProfile" yaml:"minPodSecurityStandardsProfile"`
 }
 
 var _ option.Option = (*Options254800)(nil)
 
 func (o Options254800) Validate() field.ErrorList {
-	if !slices.Contains([]string{"restricted", "baseline", "privileged"}, o.MinPodSecurityLevel) && len(o.MinPodSecurityLevel) > 0 {
-		return field.ErrorList{field.Invalid(field.NewPath("minPodSecurityLevel"), o.MinPodSecurityLevel, "must be one of 'restricted', 'baseline' or 'privileged'")}
+	if !slices.Contains([]utils.PodSecurityStandardProfile{utils.PSSProfileBaseline, utils.PSSProfilePrivileged, utils.PSSProfileRestricted}, o.MinPodSecurityStandardsProfile) {
+		return field.ErrorList{field.Invalid(field.NewPath("minPodSecurityStandardsProfile"), o.MinPodSecurityStandardsProfile, "must be one of 'restricted', 'baseline' or 'privileged'")}
 	}
 	return nil
 }
@@ -113,16 +114,18 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
-	if r.Options == nil {
-		r.Options = &Options254800{
-			MinPodSecurityLevel: "baseline",
+	var options = r.Options
+
+	if options == nil {
+		options = &Options254800{
+			MinPodSecurityStandardsProfile: "baseline",
 		}
 	}
 
 	for _, plugin := range admissionConfig.Plugins {
 		if plugin.Name == "PodSecurity" {
 			if plugin.Configuration != nil {
-				return rule.Result(r, r.checkPodSecurityConfiguration(plugin.Configuration)...), nil
+				return rule.Result(r, r.checkPodSecurityConfiguration(plugin.Configuration, options)...), nil
 			}
 			if strings.TrimSpace(plugin.Path) != "" {
 				pluginAdmissionConfigByteSlice, err := kubeutils.GetVolumeConfigByteSliceByMountPath(ctx, r.Client, kubeAPIDeployment, "kube-apiserver", plugin.Path)
@@ -136,7 +139,7 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 					return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 				}
 
-				return rule.Result(r, r.checkPrivilegeLevel(pluginConfig)...), nil
+				return rule.Result(r, r.checkPrivilegeLevel(pluginConfig, options)...), nil
 			}
 		}
 	}
@@ -144,26 +147,26 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 	return rule.Result(r, rule.FailedCheckResult("PodSecurity is not configured", rule.NewTarget())), nil
 }
 
-func (r *Rule254800) checkPodSecurityConfiguration(pluginConfig *runtime.Unknown) []rule.CheckResult {
+func (r *Rule254800) checkPodSecurityConfiguration(pluginConfig *runtime.Unknown, options *Options254800) []rule.CheckResult {
 	podSecurityConfig := admissionapiv1.PodSecurityConfiguration{}
 	if _, _, err := serializer.NewCodecFactory(scheme.Scheme).UniversalDeserializer().Decode(pluginConfig.Raw, nil, &podSecurityConfig); err != nil {
 		return []rule.CheckResult{rule.FailedCheckResult(err.Error(), rule.NewTarget())}
 	}
 
-	return r.checkPrivilegeLevel(podSecurityConfig)
+	return r.checkPrivilegeLevel(podSecurityConfig, options)
 }
 
-func (r *Rule254800) checkPrivilegeLevel(podSecurityConfig admissionapiv1.PodSecurityConfiguration) []rule.CheckResult {
+func (r *Rule254800) checkPrivilegeLevel(podSecurityConfig admissionapiv1.PodSecurityConfiguration, options *Options254800) []rule.CheckResult {
 	var checkResults []rule.CheckResult
 	target := rule.NewTarget("kind", "PodSecurityConfiguration")
-	if utils.PrivilegeLevel(podSecurityConfig.Defaults.Enforce) < utils.PrivilegeLevel(r.Options.MinPodSecurityLevel) {
-		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Enforce level is lower than the minimum pod security level allowed: %s", r.Options.MinPodSecurityLevel), target))
+	if intkubeutils.PodSecurityStandardProfile(podSecurityConfig.Defaults.Enforce).LessRestrictive(options.MinPodSecurityStandardsProfile) {
+		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Enforce level is lower than the minimum pod security level allowed: %s", options.MinPodSecurityStandardsProfile), target))
 	}
-	if utils.PrivilegeLevel(podSecurityConfig.Defaults.Audit) < utils.PrivilegeLevel(r.Options.MinPodSecurityLevel) {
-		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Audit level is lower than the minimum pod security level allowed: %s", r.Options.MinPodSecurityLevel), target))
+	if intkubeutils.PodSecurityStandardProfile(podSecurityConfig.Defaults.Audit).LessRestrictive(options.MinPodSecurityStandardsProfile) {
+		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Audit level is lower than the minimum pod security level allowed: %s", options.MinPodSecurityStandardsProfile), target))
 	}
-	if utils.PrivilegeLevel(podSecurityConfig.Defaults.Warn) < utils.PrivilegeLevel(r.Options.MinPodSecurityLevel) {
-		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Warn level is lower than the minimum pod security level allowed: %s", r.Options.MinPodSecurityLevel), target))
+	if intkubeutils.PodSecurityStandardProfile(podSecurityConfig.Defaults.Warn).LessRestrictive(options.MinPodSecurityStandardsProfile) {
+		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Warn level is lower than the minimum pod security level allowed: %s", options.MinPodSecurityStandardsProfile), target))
 	}
 	if len(checkResults) == 0 {
 		checkResults = append(checkResults, rule.PassedCheckResult("PodSecurity is properly configured", target))

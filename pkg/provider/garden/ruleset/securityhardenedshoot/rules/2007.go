@@ -6,6 +6,7 @@ package rules
 
 import (
 	"context"
+	"fmt"
 	"slices"
 
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
@@ -17,6 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/internal/utils"
+	intkubeutils "github.com/gardener/diki/pkg/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
@@ -28,12 +30,12 @@ var (
 )
 
 type Options2007 struct {
-	MinPodSecurityLevel string `json:"minPodSecurityLevel" yaml:"minPodSecurityLevel"`
+	MinPodSecurityStandardsProfile utils.PodSecurityStandardProfile `json:"minPodSecurityStandardsProfile" yaml:"minPodSecurityStandardsProfile"`
 }
 
 func (o Options2007) Validate() field.ErrorList {
-	if !slices.Contains([]string{"restricted", "baseline", "privileged"}, o.MinPodSecurityLevel) && len(o.MinPodSecurityLevel) > 0 {
-		return field.ErrorList{field.Invalid(field.NewPath("minPodSecurityLevel"), o.MinPodSecurityLevel, "must be one of 'restricted', 'baseline' or 'privileged'")}
+	if !slices.Contains([]utils.PodSecurityStandardProfile{utils.PSSProfileBaseline, utils.PSSProfilePrivileged, utils.PSSProfileRestricted}, o.MinPodSecurityStandardsProfile) {
+		return field.ErrorList{field.Invalid(field.NewPath("minPodSecurityStandardsProfile"), o.MinPodSecurityStandardsProfile, "must be one of 'restricted', 'baseline' or 'privileged'")}
 	}
 	return nil
 }
@@ -63,20 +65,18 @@ func (r *Rule2007) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("name", r.ShootName, "namespace", r.ShootNamespace, "kind", "Shoot"))), nil
 	}
 
-	var plugin = "PodSecurity"
-
 	if shoot.Spec.Kubernetes.KubeAPIServer == nil || shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins == nil {
 		return rule.Result(r, rule.FailedCheckResult("PodSecurity admission plugin is not configured.", rule.NewTarget())), nil
 	}
 
 	if slices.ContainsFunc(shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins, func(admissionPlugin gardencorev1beta1.AdmissionPlugin) bool {
-		return admissionPlugin.Name == plugin && admissionPlugin.Disabled != nil && *admissionPlugin.Disabled
+		return admissionPlugin.Name == "PodSecurity" && admissionPlugin.Disabled != nil && *admissionPlugin.Disabled
 	}) {
 		return rule.Result(r, rule.FailedCheckResult("PodSecurity admission plugin is disabled.", rule.NewTarget())), nil
 	}
 
 	pluginIdx := slices.IndexFunc(shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins, func(admissionPlugin gardencorev1beta1.AdmissionPlugin) bool {
-		return admissionPlugin.Name == plugin
+		return admissionPlugin.Name == "PodSecurity"
 	})
 
 	if pluginIdx < 0 || shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins[pluginIdx].Config == nil {
@@ -84,35 +84,36 @@ func (r *Rule2007) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	var (
-		pluginConfiguration = shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins[pluginIdx].Config
+		pluginConfiguration      = shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins[pluginIdx].Config
+		podSecurityConfiguration = &admissionapiv1.PodSecurityConfiguration{}
+		options                  = r.Options
 	)
 
-	podSecurityConfiguration := &admissionapiv1.PodSecurityConfiguration{}
 	if _, _, err := serializer.NewCodecFactory(scheme.Scheme).UniversalDeserializer().Decode(pluginConfiguration.Raw, nil, podSecurityConfiguration); err != nil {
 		return rule.Result(r, rule.FailedCheckResult(err.Error(), rule.NewTarget())), nil
 	}
 
-	if r.Options == nil {
-		r.Options = &Options2007{
-			MinPodSecurityLevel: "baseline",
+	if options == nil {
+		options = &Options2007{
+			MinPodSecurityStandardsProfile: "baseline",
 		}
 	}
 
-	return rule.Result(r, r.evaluatePodSecurityConfigPrivileges(*podSecurityConfiguration)...), nil
+	return rule.Result(r, r.evaluatePodSecurityConfigPrivileges(*podSecurityConfiguration, options)...), nil
 }
 
-func (r *Rule2007) evaluatePodSecurityConfigPrivileges(configuration admissionapiv1.PodSecurityConfiguration) []rule.CheckResult {
-	var checkResults = []rule.CheckResult{}
+func (r *Rule2007) evaluatePodSecurityConfigPrivileges(configuration admissionapiv1.PodSecurityConfiguration, options *Options2007) []rule.CheckResult {
+	var checkResults []rule.CheckResult
 	target := rule.NewTarget("kind", "PodSecurityConfiguration")
 
-	if utils.PrivilegeLevel(configuration.Defaults.Enforce) < utils.PrivilegeLevel(r.Options.MinPodSecurityLevel) {
-		checkResults = append(checkResults, rule.FailedCheckResult("Enforce level is lower than the minimum pod security level allowed.", target))
+	if intkubeutils.PodSecurityStandardProfile(configuration.Defaults.Enforce).LessRestrictive(options.MinPodSecurityStandardsProfile) {
+		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Enforce level is lower than the minimum pod security level allowed: %s.", options.MinPodSecurityStandardsProfile), target))
 	}
-	if utils.PrivilegeLevel(configuration.Defaults.Warn) < utils.PrivilegeLevel(r.Options.MinPodSecurityLevel) {
-		checkResults = append(checkResults, rule.FailedCheckResult("Warn level is lower than the minimum pod security level allowed.", target))
+	if intkubeutils.PodSecurityStandardProfile(configuration.Defaults.Warn).LessRestrictive(options.MinPodSecurityStandardsProfile) {
+		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Warn level is lower than the minimum pod security level allowed: %s.", options.MinPodSecurityStandardsProfile), target))
 	}
-	if utils.PrivilegeLevel(configuration.Defaults.Audit) < utils.PrivilegeLevel(r.Options.MinPodSecurityLevel) {
-		checkResults = append(checkResults, rule.FailedCheckResult("Audit level is lower than the minimum pod security level allowed.", target))
+	if intkubeutils.PodSecurityStandardProfile(configuration.Defaults.Audit).LessRestrictive(options.MinPodSecurityStandardsProfile) {
+		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Audit level is lower than the minimum pod security level allowed: %s.", options.MinPodSecurityStandardsProfile), target))
 	}
 
 	if len(checkResults) == 0 {

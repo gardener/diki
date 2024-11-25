@@ -20,6 +20,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
+	"github.com/gardener/diki/pkg/internal/utils"
 	"github.com/gardener/diki/pkg/provider/garden/ruleset/securityhardenedshoot/rules"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -38,7 +39,7 @@ var _ = Describe("#2007", func() {
 		ruleName        = "Shoot clusters must have a PodSecurity admission plugin configured."
 		severity        = rule.SeverityHigh
 		podSecurity     = "PodSecurity"
-		standardOptions = rules.Options2007{MinPodSecurityLevel: "baseline"}
+		standardOptions = rules.Options2007{MinPodSecurityStandardsProfile: "baseline"}
 	)
 
 	BeforeEach(func() {
@@ -64,7 +65,7 @@ var _ = Describe("#2007", func() {
 		Entry("should error when the shoot can't be found",
 			func() { shoot.Name = "notFoo" },
 			&rules.Options2007{
-				MinPodSecurityLevel: "baseline",
+				MinPodSecurityStandardsProfile: "baseline",
 			},
 			[]rule.CheckResult{
 				{Status: rule.Errored, Message: "shoots.core.gardener.cloud \"foo\" not found", Target: rule.NewTarget("name", "foo", "namespace", "bar", "kind", "Shoot")},
@@ -170,9 +171,9 @@ var _ = Describe("#2007", func() {
 			},
 			&standardOptions,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Enforce level is lower than the minimum pod security level allowed.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
-				{Status: rule.Failed, Message: "Warn level is lower than the minimum pod security level allowed.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
-				{Status: rule.Failed, Message: "Audit level is lower than the minimum pod security level allowed.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
+				{Status: rule.Failed, Message: "Enforce level is lower than the minimum pod security level allowed: baseline.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
+				{Status: rule.Failed, Message: "Warn level is lower than the minimum pod security level allowed: baseline.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
+				{Status: rule.Failed, Message: "Audit level is lower than the minimum pod security level allowed: baseline.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
 			},
 		),
 		Entry("should pass when PodSecurity admission plugin's restrictions are exceeding the maximal restriction",
@@ -228,8 +229,8 @@ var _ = Describe("#2007", func() {
 			},
 			&standardOptions,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Warn level is lower than the minimum pod security level allowed.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
-				{Status: rule.Failed, Message: "Audit level is lower than the minimum pod security level allowed.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
+				{Status: rule.Failed, Message: "Warn level is lower than the minimum pod security level allowed: baseline.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
+				{Status: rule.Failed, Message: "Audit level is lower than the minimum pod security level allowed: baseline.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
 			},
 		),
 		Entry("should evaluate PodSecurity privileges correctly when the maximal restriction is default",
@@ -257,7 +258,7 @@ var _ = Describe("#2007", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Audit level is lower than the minimum pod security level allowed.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
+				{Status: rule.Failed, Message: "Audit level is lower than the minimum pod security level allowed: baseline.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
 			},
 		),
 	)
@@ -265,7 +266,7 @@ var _ = Describe("#2007", func() {
 	Describe("#Validate", func() {
 		It("should not error when options are correct", func() {
 			options := &rules.Options2007{
-				MinPodSecurityLevel: "baseline",
+				MinPodSecurityStandardsProfile: "baseline",
 			}
 
 			result := options.Validate()
@@ -274,7 +275,7 @@ var _ = Describe("#2007", func() {
 		})
 		It("should return correct error when option is misconfigured", func() {
 			options := &rules.Options2007{
-				MinPodSecurityLevel: "foo",
+				MinPodSecurityStandardsProfile: "foo",
 			}
 
 			result := options.Validate()
@@ -282,8 +283,8 @@ var _ = Describe("#2007", func() {
 			Expect(result).To(Equal(field.ErrorList{
 				{
 					Type:     field.ErrorTypeInvalid,
-					Field:    "minPodSecurityLevel",
-					BadValue: "foo",
+					Field:    "minPodSecurityStandardsProfile",
+					BadValue: utils.PodSecurityStandardProfile("foo"),
 					Detail:   "must be one of 'restricted', 'baseline' or 'privileged'",
 				},
 			}))
