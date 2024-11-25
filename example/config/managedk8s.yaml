@@ -206,6 +206,10 @@ providers:                   # contains information about known providers
     #     - matchLabels:
     #         foo: bar
     #       justification: "justification"
+    # - ruleID: "2005"
+    #   args:
+    #     allowedRepositories:
+    #     - prefix: "repository.prefix"
     # - ruleID: "2008"
     #   args:
     #     acceptedPods:
