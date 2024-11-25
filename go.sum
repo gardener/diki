@@ -105,8 +105,8 @@ github.com/gardener/cert-management v0.16.0 h1:OlE8nnPgqUii5jBknwASy5EtQlJ3Udy2f
 github.com/gardener/cert-management v0.16.0/go.mod h1:09sH/cxbK3o4xdwCjM7HE9gGX2wq2lLhhVIqiMpmZy4=
 github.com/gardener/etcd-druid v0.24.1 h1:BfFQXOevuJ5oOvM3rkQSJ5XITMJzY/a2j54e7XcBIos=
 github.com/gardener/etcd-druid v0.24.1/go.mod h1:6C0eyfdlw6CowLm/l4ZiKwrvkc+5NHrnc/rY2wCUwys=
-github.com/gardener/gardener v1.108.0 h1:XJNLWRucboac4LYGqLpzIt8XaLxymFBsz7nHxfVF1gw=
-github.com/gardener/gardener v1.108.0/go.mod h1:dmgxecs+i3vWlitYftNuCGVRu0ZWYTlKLBFE6iV+dBk=
+github.com/gardener/gardener v1.108.1 h1:31H+L42LCAvAyIbs8LBFbkf8uw06D1GkyyGoo9SDHUk=
+github.com/gardener/gardener v1.108.1/go.mod h1:dmgxecs+i3vWlitYftNuCGVRu0ZWYTlKLBFE6iV+dBk=
 github.com/gardener/hvpa-controller/api v0.17.0 h1:1mNeP+xsnjPH6GhewugU5srslXiTCJgYIFCMuRXwI7w=
 github.com/gardener/hvpa-controller/api v0.17.0/go.mod h1:eKrL7j6/YX8PaoP80xxi3+UFmQgHVf/QCPsGwNnmDeE=
 github.com/gardener/machine-controller-manager v0.54.0 h1:V7EOODiaBO9VesskdCgxMvo5vgMAmtmUTdb9Y9Nwp50=
@@ -653,8 +653,8 @@ k8s.io/utils v0.0.0-20200729134348-d5654de09c73/go.mod h1:jPW/WVKK9YHAvNhRxK0md/
 k8s.io/utils v0.0.0-20241104163129-6fe5fd82f078 h1:jGnCPejIetjiy2gqaJ5V0NLwTpF4wbQ6cZIItJCSHno=
 k8s.io/utils v0.0.0-20241104163129-6fe5fd82f078/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
-sigs.k8s.io/controller-runtime v0.19.1 h1:Son+Q40+Be3QWb+niBXAg2vFiYWolDjjRfO8hn/cxOk=
-sigs.k8s.io/controller-runtime v0.19.1/go.mod h1:iRmWllt8IlaLjvTTDLhRBXIEtkCK6hwVBJJsYS9Ajf4=
+sigs.k8s.io/controller-runtime v0.19.2 h1:3sPrF58XQEPzbE8T81TN6selQIMGbtYwuaJ6eDssDF8=
+sigs.k8s.io/controller-runtime v0.19.2/go.mod h1:iRmWllt8IlaLjvTTDLhRBXIEtkCK6hwVBJJsYS9Ajf4=
 sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20231015215740-bf15e44028f9 h1:O27fSMHw4u0h+Rj8bNzcZk5jY0iZCO0J8/mCpigpnbw=
 sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20231015215740-bf15e44028f9/go.mod h1:TF/lVLWS+JNNaVqJuDDictY2hZSXSsIHCx4FClMvqFg=
 sigs.k8s.io/controller-tools v0.16.5 h1:5k9FNRqziBPwqr17AMEPPV/En39ZBplLAdOwwQHruP4=

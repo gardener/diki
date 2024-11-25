@@ -178,6 +178,16 @@ providers:                   # contains information about known providers
     #   skip:
     #     enabled: true
     #     justification: "the whole rule is accepted for ... reasons"
+    # - ruleID: "2008"
+    #   args:
+    #     acceptedPods:
+    #     - podMatchLabels:
+    #         foo: bar
+    #       namespaceMatchLabels:
+    #         foo: bar
+    #       justification: "justification"
+    #       volumeNames:
+    #       - foo-bar
 # metadata: # optional, additional metadata to be added to summary json report
 #   foo: bar
 #   bar:

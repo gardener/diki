@@ -7,7 +7,7 @@ toolchain go1.23.3
 require (
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/distribution/reference v0.6.0
-	github.com/gardener/gardener v1.108.0
+	github.com/gardener/gardener v1.108.1
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo/v2 v2.22.0
 	github.com/onsi/gomega v1.35.1
@@ -21,7 +21,7 @@ require (
 	k8s.io/kubectl v0.31.2
 	k8s.io/pod-security-admission v0.31.2
 	k8s.io/utils v0.0.0-20241104163129-6fe5fd82f078
-	sigs.k8s.io/controller-runtime v0.19.1
+	sigs.k8s.io/controller-runtime v0.19.2
 )
 
 require (
