@@ -127,6 +127,91 @@ var _ = Describe("options", func() {
 				}))))
 		})
 	})
+	Describe("#ValidateServiceSelector", func() {
+		It("should correctly validate labels", func() {
+			serviceAttributes := []option.ServiceSelector{
+				{
+					NamespaceMatchLabels: map[string]string{"_foo": "bar"},
+					ServiceMatchLabels:   map[string]string{"foo": "bar."},
+				},
+				{
+					NamespaceMatchLabels: map[string]string{"fo?o": "bar"},
+					ServiceMatchLabels:   map[string]string{"foo": "bar"},
+				},
+				{
+					NamespaceMatchLabels: map[string]string{"foo": "bar"},
+					ServiceMatchLabels:   map[string]string{"at_ta": "bar"},
+				},
+				{
+					NamespaceMatchLabels: map[string]string{"this": "is_a"},
+					ServiceMatchLabels:   map[string]string{"Valid": "label-pair"},
+				},
+				{
+					NamespaceMatchLabels: map[string]string{"foo": "ba/r"},
+					ServiceMatchLabels:   map[string]string{"at$a": "bar"},
+				},
+				{
+					NamespaceMatchLabels: map[string]string{"label": "value"},
+				},
+				{
+					ServiceMatchLabels: map[string]string{"label": "value"},
+				},
+				{
+					NamespaceMatchLabels: map[string]string{},
+					ServiceMatchLabels:   map[string]string{"at_ta": "bar"},
+				},
+				{
+					NamespaceMatchLabels: map[string]string{"foo": "bar"},
+					ServiceMatchLabels:   map[string]string{},
+				},
+			}
+
+			var result field.ErrorList
+			for _, p := range serviceAttributes {
+				result = append(result, p.Validate()...)
+			}
+
+			Expect(result).To(ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("[].namespaceMatchLabels"),
+					"BadValue": Equal("_foo"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("[].serviceMatchLabels"),
+					"BadValue": Equal("bar."),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("[].namespaceMatchLabels"),
+					"BadValue": Equal("fo?o"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("[].namespaceMatchLabels"),
+					"BadValue": Equal("ba/r"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("[].serviceMatchLabels"),
+					"BadValue": Equal("at$a"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("[].namespaceMatchLabels"),
+					"Detail": Equal("must not be empty"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("[].namespaceMatchLabels"),
+					"Detail": Equal("must not be empty"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("[].serviceMatchLabels"),
+					"Detail": Equal("must not be empty"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("[].serviceMatchLabels"),
+					"Detail": Equal("must not be empty"),
+				}))))
+		})
+	})
 	Describe("#ValidateOptions242414", func() {
 		It("should correctly validate options", func() {
 			options := option.Options242414{

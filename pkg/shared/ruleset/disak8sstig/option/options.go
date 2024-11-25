@@ -46,6 +46,34 @@ func (e PodSelector) Validate() field.ErrorList {
 	return allErrs
 }
 
+// ServiceSelector contains generalized options for matching entities by their attribute labels
+type ServiceSelector struct {
+	ServiceMatchLabels   map[string]string `json:"serviceMatchLabels" yaml:"serviceMatchLabels"`
+	NamespaceMatchLabels map[string]string `json:"namespaceMatchLabels" yaml:"namespaceMatchLabels"`
+}
+
+var _ Option = (*ServiceSelector)(nil)
+
+// Validate validates that option configurations are correctly defined
+func (e ServiceSelector) Validate() field.ErrorList {
+	var (
+		allErrs  field.ErrorList
+		rootPath = field.NewPath("")
+	)
+
+	if len(e.NamespaceMatchLabels) == 0 {
+		allErrs = append(allErrs, field.Required(rootPath.Child("namespaceMatchLabels"), "must not be empty"))
+	}
+
+	if len(e.ServiceMatchLabels) == 0 {
+		allErrs = append(allErrs, field.Required(rootPath.Child("serviceMatchLabels"), "must not be empty"))
+	}
+
+	allErrs = append(allErrs, metav1validation.ValidateLabels(e.NamespaceMatchLabels, rootPath.Child("namespaceMatchLabels"))...)
+	allErrs = append(allErrs, metav1validation.ValidateLabels(e.ServiceMatchLabels, rootPath.Child("serviceMatchLabels"))...)
+	return allErrs
+}
+
 // FileOwnerOptions contains expected user and group owners for files
 type FileOwnerOptions struct {
 	ExpectedFileOwner ExpectedOwner `json:"expectedFileOwner" yaml:"expectedFileOwner"`
