@@ -368,6 +368,78 @@ var _ = Describe("utils", func() {
 
 	})
 
+	Describe("#GetServices", func() {
+		var (
+			fakeClient       client.Client
+			ctx              = context.TODO()
+			namespaceFoo     = "foo"
+			namespaceDefault = "default"
+		)
+
+		BeforeEach(func() {
+			fakeClient = fakeclient.NewClientBuilder().Build()
+			for i := 0; i < 10; i++ {
+				service := &corev1.Service{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      strconv.Itoa(i),
+						Namespace: namespaceDefault,
+					},
+				}
+				Expect(fakeClient.Create(ctx, service)).To(Succeed())
+			}
+			for i := 10; i < 12; i++ {
+				service := &corev1.Service{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      strconv.Itoa(i),
+						Namespace: namespaceDefault,
+						Labels: map[string]string{
+							"foo": "bar",
+						},
+					},
+				}
+				Expect(fakeClient.Create(ctx, service)).To(Succeed())
+			}
+			for i := 0; i < 6; i++ {
+				service := &corev1.Service{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      strconv.Itoa(i),
+						Namespace: namespaceFoo,
+					},
+				}
+				Expect(fakeClient.Create(ctx, service)).To(Succeed())
+			}
+		})
+
+		It("should return correct number of services in default namespace", func() {
+			services, err := utils.GetServices(ctx, fakeClient, namespaceDefault, labels.NewSelector(), 2)
+
+			Expect(len(services)).To(Equal(12))
+			Expect(err).To(BeNil())
+		})
+
+		It("should return correct number of services in foo namespace", func() {
+			services, err := utils.GetServices(ctx, fakeClient, namespaceFoo, labels.NewSelector(), 2)
+
+			Expect(len(services)).To(Equal(6))
+			Expect(err).To(BeNil())
+		})
+
+		It("should return correct number of services in all namespaces", func() {
+			services, err := utils.GetServices(ctx, fakeClient, "", labels.NewSelector(), 2)
+
+			Expect(len(services)).To(Equal(18))
+			Expect(err).To(BeNil())
+		})
+
+		It("should return correct number of labeled services in default namespace", func() {
+			services, err := utils.GetServices(ctx, fakeClient, namespaceDefault, labels.SelectorFromSet(labels.Set{"foo": "bar"}), 2)
+
+			Expect(len(services)).To(Equal(2))
+			Expect(err).To(BeNil())
+		})
+
+	})
+
 	Describe("#GetReplicaSets", func() {
 		var (
 			fakeClient       client.Client
