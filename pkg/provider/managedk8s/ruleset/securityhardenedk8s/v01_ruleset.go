@@ -30,6 +30,10 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 	if err != nil {
 		return fmt.Errorf("rule option 2004 error: %s", err.Error())
 	}
+	opts2005, err := getV01OptionOrNil[rules.Options2005](ruleOptions["2005"].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 2005 error: %s", err.Error())
+	}
 	opts2006, err := getV01OptionOrNil[rules.Options2006](ruleOptions["2006"].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 2006 error: %s", err.Error())
@@ -69,13 +73,10 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			Client:  c,
 			Options: opts2004,
 		},
-		rule.NewSkipRule(
-			"2005",
-			"Container images must come from trusted repositories.",
-			"Not implemented.",
-			rule.NotImplemented,
-			rule.SkipRuleWithSeverity(rule.SeverityHigh),
-		),
+		&rules.Rule2005{
+			Client:  c,
+			Options: opts2005,
+		},
 		&rules.Rule2006{
 			Client:  c,
 			Options: opts2006,
