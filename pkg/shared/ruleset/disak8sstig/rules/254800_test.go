@@ -18,6 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
+	intkubeutils "github.com/gardener/diki/pkg/internal/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
@@ -174,29 +175,29 @@ kind: PodSecurityConfiguration`
 			BeNil()),
 		Entry("should return passed when options are set to baseline",
 			[]string{"--admission-control-config-file=/foo/bar/fileName.yaml"},
-			map[string]string{fileName: admissionConfig}, &rules.Options254800{MinPodSecurityLevel: "baseline"},
+			map[string]string{fileName: admissionConfig}, &rules.Options254800{MinPodSecurityStandardsProfile: "baseline"},
 			[]rule.CheckResult{{Status: rule.Passed, Message: "PodSecurity is properly configured", Target: podSecurityTarget}},
 			BeNil()),
 		Entry("should return failed when PodSecurity is not configured",
 			[]string{"--admission-control-config-file=/foo/bar/fileName.yaml"},
-			map[string]string{fileName: admissionConfigWithoutPlugins}, &rules.Options254800{MinPodSecurityLevel: "baseline"},
+			map[string]string{fileName: admissionConfigWithoutPlugins}, &rules.Options254800{MinPodSecurityStandardsProfile: "baseline"},
 			[]rule.CheckResult{{Status: rule.Failed, Message: "PodSecurity is not configured", Target: genericTarget}},
 			BeNil()),
 		Entry("should return correct checkResults when config missing and path present",
 			[]string{"--admission-control-config-file=/foo/bar/fileName.yaml"},
-			map[string]string{fileName: admissionConfigWithPath, "podsecurity.yaml": podSecurityBaseline}, &rules.Options254800{MinPodSecurityLevel: "baseline"},
+			map[string]string{fileName: admissionConfigWithPath, "podsecurity.yaml": podSecurityBaseline}, &rules.Options254800{MinPodSecurityStandardsProfile: "baseline"},
 			[]rule.CheckResult{{Status: rule.Passed, Message: "PodSecurity is properly configured", Target: podSecurityTarget}},
 			BeNil()),
 		Entry("should return faild checkResults when using baseline and expected is restricted",
 			[]string{"--admission-control-config-file=/foo/bar/fileName.yaml"},
-			map[string]string{fileName: admissionConfigWithPath, "podsecurity.yaml": podSecurityBaseline}, &rules.Options254800{MinPodSecurityLevel: "restricted"},
-			[]rule.CheckResult{{Status: rule.Failed, Message: "Enforce level is lower than the minimum pod security level allowed: restricted", Target: podSecurityTarget},
-				{Status: rule.Failed, Message: "Audit level is lower than the minimum pod security level allowed: restricted", Target: podSecurityTarget},
-				{Status: rule.Failed, Message: "Warn level is lower than the minimum pod security level allowed: restricted", Target: podSecurityTarget}},
+			map[string]string{fileName: admissionConfigWithPath, "podsecurity.yaml": podSecurityBaseline}, &rules.Options254800{MinPodSecurityStandardsProfile: "restricted"},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Enforce mode profile is less restrictive than the minimum Pod Security Standards profile allowed: restricted", Target: podSecurityTarget},
+				{Status: rule.Failed, Message: "Audit mode profile is less restrictive than the minimum Pod Security Standards profile allowed: restricted", Target: podSecurityTarget},
+				{Status: rule.Failed, Message: "Warn mode profile is less restrictive than the minimum Pod Security Standards profile allowed: restricted", Target: podSecurityTarget}},
 			BeNil()),
 		Entry("should return passed checkResults when using privileged and expected is privileged",
 			[]string{"--admission-control-config-file=/foo/bar/fileName.yaml"},
-			map[string]string{fileName: admissionConfigWithPath, "podsecurity.yaml": podSecurityPrivileged}, &rules.Options254800{MinPodSecurityLevel: "privileged"},
+			map[string]string{fileName: admissionConfigWithPath, "podsecurity.yaml": podSecurityPrivileged}, &rules.Options254800{MinPodSecurityStandardsProfile: "privileged"},
 			[]rule.CheckResult{{Status: rule.Passed, Message: "PodSecurity is properly configured", Target: podSecurityTarget}},
 			BeNil()),
 	)
@@ -204,7 +205,7 @@ kind: PodSecurityConfiguration`
 	Describe("#Validate", func() {
 		It("should not error when options are correct", func() {
 			options := &rules.Options254800{
-				MinPodSecurityLevel: "baseline",
+				MinPodSecurityStandardsProfile: "baseline",
 			}
 
 			result := options.Validate()
@@ -213,15 +214,15 @@ kind: PodSecurityConfiguration`
 		})
 		It("should return correct error when option is misconfigured", func() {
 			options := &rules.Options254800{
-				MinPodSecurityLevel: "foo",
+				MinPodSecurityStandardsProfile: "foo",
 			}
 
 			result := options.Validate()
 
 			Expect(result).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 				"Type":     Equal(field.ErrorTypeInvalid),
-				"Field":    Equal("minPodSecurityLevel"),
-				"BadValue": Equal("foo"),
+				"Field":    Equal("minPodSecurityStandardsProfile"),
+				"BadValue": Equal(intkubeutils.PodSecurityStandardProfile("foo")),
 				"Detail":   Equal("must be one of 'restricted', 'baseline' or 'privileged'"),
 			}))))
 		})
