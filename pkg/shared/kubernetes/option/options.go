@@ -17,7 +17,8 @@ type NamespacedObjectSelector struct {
 	NamespaceMatchLabels map[string]string `json:"namespaceMatchLabels" yaml:"namespaceMatchLabels"`
 }
 
-var _ option.Option = &NamespacedObjectSelector{}
+// TODO: Implement new Option interface in this package with Validate method, which recieves field.Path.
+var _ option.Option = (*NamespacedObjectSelector)(nil)
 
 // Validate validates that option configurations are correctly defined.
 func (s *NamespacedObjectSelector) Validate() field.ErrorList {
@@ -25,10 +26,6 @@ func (s *NamespacedObjectSelector) Validate() field.ErrorList {
 		allErrs  field.ErrorList
 		rootPath = field.NewPath("")
 	)
-
-	if s == nil {
-		return field.ErrorList{field.Required(rootPath, "must not be empty")}
-	}
 
 	if len(s.NamespaceMatchLabels) == 0 {
 		allErrs = append(allErrs, field.Required(rootPath.Child("namespaceMatchLabels"), "must not be empty"))

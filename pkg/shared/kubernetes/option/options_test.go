@@ -16,8 +16,7 @@ import (
 var _ = Describe("options", func() {
 	Describe("#ValidateNamespacedObjectSelector", func() {
 		It("should correctly validate labels", func() {
-			attributes := []*option.NamespacedObjectSelector{
-				nil,
+			attributes := []option.NamespacedObjectSelector{
 				{
 					NamespaceMatchLabels: map[string]string{"_foo": "bar"},
 					MatchLabels:          map[string]string{"foo": "bar."},
