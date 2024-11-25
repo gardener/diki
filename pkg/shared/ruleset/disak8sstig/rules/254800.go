@@ -160,13 +160,13 @@ func (r *Rule254800) checkPrivilegeLevel(podSecurityConfig admissionapiv1.PodSec
 	var checkResults []rule.CheckResult
 	target := rule.NewTarget("kind", "PodSecurityConfiguration")
 	if intkubeutils.PodSecurityStandardProfile(podSecurityConfig.Defaults.Enforce).LessRestrictive(options.MinPodSecurityStandardsProfile) {
-		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Enforce level is lower than the minimum pod security level allowed: %s", options.MinPodSecurityStandardsProfile), target))
+		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Enforce mode profile is less restrictive than the minimum Pod Security Standards profile allowed: %s", options.MinPodSecurityStandardsProfile), target))
 	}
 	if intkubeutils.PodSecurityStandardProfile(podSecurityConfig.Defaults.Audit).LessRestrictive(options.MinPodSecurityStandardsProfile) {
-		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Audit level is lower than the minimum pod security level allowed: %s", options.MinPodSecurityStandardsProfile), target))
+		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Audit mode profile is less restrictive than the minimum Pod Security Standards profile allowed: %s", options.MinPodSecurityStandardsProfile), target))
 	}
 	if intkubeutils.PodSecurityStandardProfile(podSecurityConfig.Defaults.Warn).LessRestrictive(options.MinPodSecurityStandardsProfile) {
-		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Warn level is lower than the minimum pod security level allowed: %s", options.MinPodSecurityStandardsProfile), target))
+		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Warn mode profile is less restrictive than the minimum Pod Security Standards profile allowed: %s", options.MinPodSecurityStandardsProfile), target))
 	}
 	if len(checkResults) == 0 {
 		checkResults = append(checkResults, rule.PassedCheckResult("PodSecurity is properly configured", target))

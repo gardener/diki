@@ -171,9 +171,9 @@ var _ = Describe("#2007", func() {
 			},
 			&standardOptions,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Enforce level is lower than the minimum pod security level allowed: baseline.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
-				{Status: rule.Failed, Message: "Warn level is lower than the minimum pod security level allowed: baseline.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
-				{Status: rule.Failed, Message: "Audit level is lower than the minimum pod security level allowed: baseline.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
+				{Status: rule.Failed, Message: "Enforce mode profile is less restrictive than the minimum Pod Security Standards profile allowed: baseline.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
+				{Status: rule.Failed, Message: "Warn mode profile is less restrictive than the minimum Pod Security Standards profile allowed: baseline.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
+				{Status: rule.Failed, Message: "Audit mode profile is less restrictive than the minimum Pod Security Standards profile allowed: baseline.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
 			},
 		),
 		Entry("should pass when PodSecurity admission plugin's restrictions are exceeding the maximal restriction",
@@ -229,8 +229,8 @@ var _ = Describe("#2007", func() {
 			},
 			&standardOptions,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Warn level is lower than the minimum pod security level allowed: baseline.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
-				{Status: rule.Failed, Message: "Audit level is lower than the minimum pod security level allowed: baseline.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
+				{Status: rule.Failed, Message: "Warn mode profile is less restrictive than the minimum Pod Security Standards profile allowed: baseline.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
+				{Status: rule.Failed, Message: "Audit mode profile is less restrictive than the minimum Pod Security Standards profile allowed: baseline.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
 			},
 		),
 		Entry("should evaluate PodSecurity privileges correctly when the maximal restriction is default",
@@ -258,7 +258,7 @@ var _ = Describe("#2007", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Audit level is lower than the minimum pod security level allowed: baseline.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
+				{Status: rule.Failed, Message: "Audit mode profile is less restrictive than the minimum Pod Security Standards profile allowed: baseline.", Target: rule.NewTarget("kind", "PodSecurityConfiguration")},
 			},
 		),
 	)
