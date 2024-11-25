@@ -16,7 +16,8 @@ import (
 var _ = Describe("options", func() {
 	Describe("#ValidateNamespacedObjectSelector", func() {
 		It("should correctly validate labels", func() {
-			attributes := []option.NamespacedObjectSelector{
+			attributes := []*option.NamespacedObjectSelector{
+				nil,
 				{
 					NamespaceMatchLabels: map[string]string{"_foo": "bar"},
 					MatchLabels:          map[string]string{"foo": "bar."},
@@ -59,6 +60,11 @@ var _ = Describe("options", func() {
 			}
 
 			Expect(result).To(ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("[]"),
+					"Detail": Equal("must not be empty"),
+				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("[].namespaceMatchLabels"),
