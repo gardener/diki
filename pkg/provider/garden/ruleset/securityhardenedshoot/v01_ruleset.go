@@ -5,6 +5,7 @@
 package securityhardenedshoot
 
 import (
+	"encoding/json"
 	"fmt"
 
 	gardenerk8s "github.com/gardener/gardener/pkg/client/kubernetes"
@@ -13,6 +14,7 @@ import (
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/provider/garden/ruleset/securityhardenedshoot/rules"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
@@ -21,6 +23,11 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 	})
 	if err != nil {
 		return err
+	}
+
+	opts2007, err := getV01OptionOrNil(ruleOptions["2007"].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 2007 error: %s", err.Error())
 	}
 
 	rules := []rule.Rule{
@@ -66,13 +73,12 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			ShootName:      r.args.ShootName,
 			ShootNamespace: r.args.ProjectNamespace,
 		},
-		rule.NewSkipRule(
-			"2007",
-			"Shoot clusters must have a PodSecurity admission plugin configured.",
-			"Not implemented.",
-			rule.NotImplemented,
-			rule.SkipRuleWithSeverity(rule.SeverityHigh),
-		),
+		&rules.Rule2007{
+			Client:         c,
+			Options:        opts2007,
+			ShootName:      r.args.ShootName,
+			ShootNamespace: r.args.ProjectNamespace,
+		},
 	}
 
 	for i, r := range rules {
@@ -96,4 +102,31 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 	}
 
 	return r.AddRules(rules...)
+}
+
+func parseV01Options[O rules.RuleOption](options any) (*O, error) {
+	optionsByte, err := json.Marshal(options)
+	if err != nil {
+		return nil, err
+	}
+
+	var parsedOptions O
+	if err := json.Unmarshal(optionsByte, &parsedOptions); err != nil {
+		return nil, err
+	}
+
+	if val, ok := any(parsedOptions).(option.Option); ok {
+		if err := val.Validate().ToAggregate(); err != nil {
+			return nil, err
+		}
+	}
+
+	return &parsedOptions, nil
+}
+
+func getV01OptionOrNil[O rules.RuleOption](options any) (*O, error) {
+	if options == nil {
+		return nil, nil
+	}
+	return parseV01Options[O](options)
 }

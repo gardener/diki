@@ -178,10 +178,26 @@ providers:                   # contains information about known providers
     #   skip:
     #     enabled: true
     #     justification: "the whole rule is accepted for ... reasons"
+    # - ruleID: "2001"
+    #   args:
+    #     acceptedPods:
+    #     - matchLabels:
+    #         foo: bar
+    #       namespaceMatchLabels:
+    #         foo: bar
+    #       justification: "justification"
+    # - ruleID: "2004"
+    #   args:
+    #     acceptedServices:
+    #     - matchLabels:
+    #         foo: bar
+    #       namespaceMatchLabels:
+    #         foo: bar
+    #       justification: "justification"
     # - ruleID: "2008"
     #   args:
     #     acceptedPods:
-    #     - podMatchLabels:
+    #     - matchLabels:
     #         foo: bar
     #       namespaceMatchLabels:
     #         foo: bar

@@ -17,6 +17,9 @@ providers:       # contains information about known providers
     #   skip:
     #     enabled: true
     #     justification: "the whole rule is accepted for ... reasons"
+    # - ruleID: "2007"
+    #   args:
+    #     minPodSecurityStandardsProfile: baseline # if set it will indicate the min Pod Security Standards profile that is allowed. Possible values are "privileged", "baseline" and "restricted".  
 # metadata: # optional, additional metadata to be added to summary json report
 #   foo: bar
 #   bar:
