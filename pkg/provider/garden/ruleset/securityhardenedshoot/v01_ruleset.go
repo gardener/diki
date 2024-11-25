@@ -31,13 +31,11 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 	}
 
 	rules := []rule.Rule{
-		rule.NewSkipRule(
-			"1000",
-			"Shoot clusters should enable required extensions.",
-			"Not implemented.",
-			rule.NotImplemented,
-			rule.SkipRuleWithSeverity(rule.SeverityMedium),
-		),
+		&rules.Rule1000{
+			Client:         c,
+			ShootName:      r.args.ShootName,
+			ShootNamespace: r.args.ProjectNamespace,
+		},
 		&rules.Rule2000{
 			Client:         c,
 			ShootName:      r.args.ShootName,
