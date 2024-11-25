@@ -329,7 +329,7 @@ const (
 	PSSProfileRestricted PodSecurityStandardProfile = "restricted"
 )
 
-// Level defines the order of restrictiveness of the differente PodSecurityStandardProfile values. Higher number indicates less restrictions.
+// Level defines the order of restrictiveness of the differente PodSecurityStandardProfile values. Higher number indicates more restrictions.
 func (profile PodSecurityStandardProfile) Level() int {
 	switch profile {
 	case PSSProfilePrivileged:
