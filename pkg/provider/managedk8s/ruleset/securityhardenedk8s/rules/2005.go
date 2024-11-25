@@ -9,7 +9,6 @@ import (
 	"slices"
 	"strings"
 
-	imageref "github.com/distribution/reference"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -17,11 +16,13 @@ import (
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	disaoptions "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var (
-	_ rule.Rule     = &Rule2005{}
-	_ rule.Severity = &Rule2005{}
+	_ rule.Rule          = &Rule2005{}
+	_ rule.Severity      = &Rule2005{}
+	_ disaoptions.Option = &Options2005{}
 )
 
 type Rule2005 struct {
@@ -30,27 +31,27 @@ type Rule2005 struct {
 }
 
 type Options2005 struct {
-	AllowedRepositories []AllowedRepository `json:"allowedRepositories" yaml:"allowedRepositories"`
+	AllowedImages []AllowedImage `json:"allowedImages" yaml:"allowedImages"`
 }
 
-type AllowedRepository struct {
+type AllowedImage struct {
 	Prefix string `json:"prefix" yaml:"prefix"`
 }
 
 // Validate validates that option configurations are correctly defined
 func (o Options2005) Validate() field.ErrorList {
 	var (
-		allErrs       field.ErrorList
-		allowRepoPath = field.NewPath("allowedRepositories")
+		allErrs      field.ErrorList
+		allowImgPath = field.NewPath("allowedImages")
 	)
 
-	if len(o.AllowedRepositories) == 0 {
-		return field.ErrorList{field.Required(allowRepoPath, "must not be empty")}
+	if len(o.AllowedImages) == 0 {
+		return field.ErrorList{field.Required(allowImgPath, "must not be empty")}
 	}
 
-	for i, r := range o.AllowedRepositories {
+	for i, r := range o.AllowedImages {
 		if len(r.Prefix) == 0 {
-			allErrs = append(allErrs, field.Required(allowRepoPath.Index(i).Child("prefix"), "must not be empty"))
+			allErrs = append(allErrs, field.Required(allowImgPath.Index(i).Child("prefix"), "must not be empty"))
 		}
 	}
 
@@ -74,12 +75,12 @@ func (r *Rule2005) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult("rule options are missing, but required", nil)), nil
 	}
 
-	var checkResults []rule.CheckResult
-
 	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
 	}
+
+	var checkResults []rule.CheckResult
 
 	for _, pod := range pods {
 		podTarget := rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
@@ -95,20 +96,17 @@ func (r *Rule2005) Run(ctx context.Context) (rule.RuleResult, error) {
 				continue
 			}
 
-			imageRef := pod.Status.ContainerStatuses[containerStatusIdx].ImageID
-			named, err := imageref.ParseNormalizedNamed(imageRef)
-			if err != nil {
-				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), containerTarget.With("imageRef", imageRef)))
-				continue
-			}
-			imageBase := named.Name()
+			var (
+				imageRef       = pod.Status.ContainerStatuses[containerStatusIdx].ImageID
+				imageRefTarget = containerTarget.With("imageRef", imageRef)
+			)
 
-			if slices.ContainsFunc(r.Options.AllowedRepositories, func(allowedRepository AllowedRepository) bool {
-				return strings.HasPrefix(imageBase, allowedRepository.Prefix)
+			if slices.ContainsFunc(r.Options.AllowedImages, func(allowedImage AllowedImage) bool {
+				return strings.HasPrefix(imageRef, allowedImage.Prefix)
 			}) {
-				checkResults = append(checkResults, rule.PassedCheckResult("Image comes from allowed repository.", containerTarget.With("imageBase", imageBase)))
+				checkResults = append(checkResults, rule.PassedCheckResult("Image has allowed prefix.", imageRefTarget))
 			} else {
-				checkResults = append(checkResults, rule.FailedCheckResult("Image comes from not allowed repository.", containerTarget.With("imageBase", imageBase)))
+				checkResults = append(checkResults, rule.FailedCheckResult("Image has not allowed prefix.", imageRefTarget))
 			}
 		}
 	}

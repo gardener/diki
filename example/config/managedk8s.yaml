@@ -208,7 +208,7 @@ providers:                   # contains information about known providers
     #       justification: "justification"
     # - ruleID: "2005"
     #   args:
-    #     allowedRepositories:
+    #     allowedImages:
     #     - prefix: "repository.prefix"
     # - ruleID: "2008"
     #   args:

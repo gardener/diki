@@ -64,7 +64,7 @@ var _ = Describe("#2005", func() {
 			},
 		}
 		option = rules.Options2005{
-			AllowedRepositories: []rules.AllowedRepository{},
+			AllowedImages: []rules.AllowedImage{},
 		}
 	})
 
@@ -82,7 +82,7 @@ var _ = Describe("#2005", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 	It("should fail when images are not from allowed list", func() {
-		option.AllowedRepositories = append(option.AllowedRepositories, rules.AllowedRepository{
+		option.AllowedImages = append(option.AllowedImages, rules.AllowedImage{
 			Prefix: "foo",
 		})
 		r := &rules.Rule2005{Client: client, Options: &option}
@@ -92,14 +92,14 @@ var _ = Describe("#2005", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Image comes from not allowed repository.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "foo", "imageBase", "eu.gcr.io/image")),
-			rule.FailedCheckResult("Image comes from not allowed repository.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "bar", "imageBase", "eu.gcr.io/foo/image")),
+			rule.FailedCheckResult("Image has not allowed prefix.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "foo", "imageRef", "eu.gcr.io/image@sha256:"+digest)),
+			rule.FailedCheckResult("Image has not allowed prefix.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "bar", "imageRef", "eu.gcr.io/foo/image@sha256:"+digest)),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 	It("should pass when images are from allowed list", func() {
-		option.AllowedRepositories = append(option.AllowedRepositories, rules.AllowedRepository{
+		option.AllowedImages = append(option.AllowedImages, rules.AllowedImage{
 			Prefix: "eu.gcr.io/",
 		})
 		r := &rules.Rule2005{Client: client, Options: &option}
@@ -109,14 +109,14 @@ var _ = Describe("#2005", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("Image comes from allowed repository.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "foo", "imageBase", "eu.gcr.io/image")),
-			rule.PassedCheckResult("Image comes from allowed repository.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "bar", "imageBase", "eu.gcr.io/foo/image")),
+			rule.PassedCheckResult("Image has allowed prefix.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "foo", "imageRef", "eu.gcr.io/image@sha256:"+digest)),
+			rule.PassedCheckResult("Image has allowed prefix.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "bar", "imageRef", "eu.gcr.io/foo/image@sha256:"+digest)),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 	It("should return correct results when not all images pass", func() {
-		option.AllowedRepositories = append(option.AllowedRepositories, rules.AllowedRepository{
+		option.AllowedImages = append(option.AllowedImages, rules.AllowedImage{
 			Prefix: "eu.gcr.io/foo",
 		})
 		r := &rules.Rule2005{Client: client, Options: &option}
@@ -126,15 +126,15 @@ var _ = Describe("#2005", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Image comes from not allowed repository.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "foo", "imageBase", "eu.gcr.io/image")),
-			rule.PassedCheckResult("Image comes from allowed repository.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "bar", "imageBase", "eu.gcr.io/foo/image")),
+			rule.FailedCheckResult("Image has not allowed prefix.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "foo", "imageRef", "eu.gcr.io/image@sha256:"+digest)),
+			rule.PassedCheckResult("Image has allowed prefix.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "bar", "imageRef", "eu.gcr.io/foo/image@sha256:"+digest)),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 
 	Describe("#ValidateOptions2005", func() {
-		It("should deny empty allowed repositories list", func() {
+		It("should deny empty allowed images list", func() {
 			options := rules.Options2005{}
 
 			result := options.Validate()
@@ -142,7 +142,7 @@ var _ = Describe("#2005", func() {
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("allowedRepositories"),
+					"Field":  Equal("allowedImages"),
 					"Detail": Equal("must not be empty"),
 				})),
 			))
@@ -150,7 +150,7 @@ var _ = Describe("#2005", func() {
 
 		It("should correctly validate options", func() {
 			options := rules.Options2005{
-				AllowedRepositories: []rules.AllowedRepository{
+				AllowedImages: []rules.AllowedImage{
 					{
 						Prefix: "foo",
 					},
@@ -168,7 +168,7 @@ var _ = Describe("#2005", func() {
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("allowedRepositories[1].prefix"),
+					"Field":  Equal("allowedImages[1].prefix"),
 					"Detail": Equal("must not be empty"),
 				})),
 			))
