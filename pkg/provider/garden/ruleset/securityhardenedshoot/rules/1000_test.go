@@ -12,6 +12,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -184,4 +185,43 @@ var _ = Describe("#1000", func() {
 			},
 		),
 	)
+
+	Describe("#ValidateOptions", func() {
+		It("should not error when options are correct", func() {
+			options := rules.Options1000{
+				Extensions: []rules.Extension1000{
+					{
+						Type: "foo",
+					},
+					{
+						Type: "bar",
+					},
+				},
+			}
+
+			result := options.Validate()
+			Expect(result).To(BeEmpty())
+		})
+		It("should error when options are incorrect", func() {
+			options := rules.Options1000{
+				Extensions: []rules.Extension1000{
+					{
+						Type: "foo",
+					},
+					{
+						Type: "",
+					},
+				},
+			}
+			result := options.Validate()
+			Expect(result).To(Equal(field.ErrorList{
+				{
+					Type:     field.ErrorTypeRequired,
+					Field:    "extensions.type",
+					BadValue: "",
+					Detail:   "must not be empty",
+				},
+			}))
+		})
+	})
 })
