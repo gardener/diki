@@ -16,6 +16,7 @@ import (
 	admissionapiv1 "k8s.io/pod-security-admission/admission/api/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/gardener/diki/pkg/internal/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
@@ -62,63 +63,29 @@ func (r *Rule2007) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("name", r.ShootName, "namespace", r.ShootNamespace, "kind", "Shoot"))), nil
 	}
 
-	var podSecurityPlugin = "PodSecurity"
+	var plugin = "PodSecurity"
 
 	if shoot.Spec.Kubernetes.KubeAPIServer == nil || shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins == nil {
 		return rule.Result(r, rule.FailedCheckResult("PodSecurity admission plugin is not configured.", rule.NewTarget())), nil
 	}
 
 	if slices.ContainsFunc(shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins, func(admissionPlugin gardencorev1beta1.AdmissionPlugin) bool {
-		return admissionPlugin.Name == podSecurityPlugin && admissionPlugin.Disabled != nil && *admissionPlugin.Disabled
+		return admissionPlugin.Name == plugin && admissionPlugin.Disabled != nil && *admissionPlugin.Disabled
 	}) {
 		return rule.Result(r, rule.FailedCheckResult("PodSecurity admission plugin is disabled.", rule.NewTarget())), nil
 	}
 
-	enabledPodSecurityPluginIdx := slices.IndexFunc(shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins, func(admissionPlugin gardencorev1beta1.AdmissionPlugin) bool {
-		return admissionPlugin.Name == podSecurityPlugin
+	pluginIdx := slices.IndexFunc(shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins, func(admissionPlugin gardencorev1beta1.AdmissionPlugin) bool {
+		return admissionPlugin.Name == plugin
 	})
 
-	if enabledPodSecurityPluginIdx < 0 {
+	if pluginIdx < 0 || shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins[pluginIdx].Config == nil {
 		return rule.Result(r, rule.FailedCheckResult("PodSecurity admission plugin is not configured.", rule.NewTarget())), nil
 	}
 
 	var (
-		pluginConfiguration = shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins[enabledPodSecurityPluginIdx].Config
-		privilegeLevel      = func(privilege string) int {
-			switch {
-			case privilege == "privileged" || privilege == "":
-				return 1
-			case privilege == "baseline":
-				return 2
-			default:
-				return 3
-			}
-		}
-		evaluatePodSecurityConfigPrivileges = func(configuration admissionapiv1.PodSecurityConfiguration) []rule.CheckResult {
-			var checkResults = []rule.CheckResult{}
-			target := rule.NewTarget("kind", "PodSecurityConfiguration")
-
-			if privilegeLevel(configuration.Defaults.Enforce) < privilegeLevel(r.Options.MinPodSecurityLevel) {
-				checkResults = append(checkResults, rule.FailedCheckResult("Enforce level is lower than the minimum pod security level allowed.", target))
-			}
-			if privilegeLevel(configuration.Defaults.Warn) < privilegeLevel(r.Options.MinPodSecurityLevel) {
-				checkResults = append(checkResults, rule.FailedCheckResult("Warn level is lower than the minimum pod security level allowed.", target))
-			}
-			if privilegeLevel(configuration.Defaults.Audit) < privilegeLevel(r.Options.MinPodSecurityLevel) {
-				checkResults = append(checkResults, rule.FailedCheckResult("Audit level is lower than the minimum pod security level allowed.", target))
-			}
-
-			if len(checkResults) == 0 {
-				checkResults = append(checkResults, rule.PassedCheckResult("PodSecurity admission plugin is configured correctly.", rule.NewTarget()))
-			}
-
-			return checkResults
-		}
+		pluginConfiguration = shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins[pluginIdx].Config
 	)
-
-	if pluginConfiguration == nil {
-		return rule.Result(r, rule.FailedCheckResult("PodSecurity admission plugin has a default security configuration.", rule.NewTarget())), nil
-	}
 
 	podSecurityConfiguration := &admissionapiv1.PodSecurityConfiguration{}
 	if _, _, err := serializer.NewCodecFactory(scheme.Scheme).UniversalDeserializer().Decode(pluginConfiguration.Raw, nil, podSecurityConfiguration); err != nil {
@@ -131,7 +98,26 @@ func (r *Rule2007) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 	}
 
-	r.Options.Validate()
+	return rule.Result(r, r.evaluatePodSecurityConfigPrivileges(*podSecurityConfiguration)...), nil
+}
 
-	return rule.Result(r, evaluatePodSecurityConfigPrivileges(*podSecurityConfiguration)...), nil
+func (r *Rule2007) evaluatePodSecurityConfigPrivileges(configuration admissionapiv1.PodSecurityConfiguration) []rule.CheckResult {
+	var checkResults = []rule.CheckResult{}
+	target := rule.NewTarget("kind", "PodSecurityConfiguration")
+
+	if utils.PrivilegeLevel(configuration.Defaults.Enforce) < utils.PrivilegeLevel(r.Options.MinPodSecurityLevel) {
+		checkResults = append(checkResults, rule.FailedCheckResult("Enforce level is lower than the minimum pod security level allowed.", target))
+	}
+	if utils.PrivilegeLevel(configuration.Defaults.Warn) < utils.PrivilegeLevel(r.Options.MinPodSecurityLevel) {
+		checkResults = append(checkResults, rule.FailedCheckResult("Warn level is lower than the minimum pod security level allowed.", target))
+	}
+	if utils.PrivilegeLevel(configuration.Defaults.Audit) < utils.PrivilegeLevel(r.Options.MinPodSecurityLevel) {
+		checkResults = append(checkResults, rule.FailedCheckResult("Audit level is lower than the minimum pod security level allowed.", target))
+	}
+
+	if len(checkResults) == 0 {
+		checkResults = append(checkResults, rule.PassedCheckResult("PodSecurity admission plugin is configured correctly.", rule.NewTarget()))
+	}
+
+	return checkResults
 }

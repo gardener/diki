@@ -20,6 +20,7 @@ import (
 	admissionapiv1 "k8s.io/pod-security-admission/admission/api/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
@@ -143,17 +144,6 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 	return rule.Result(r, rule.FailedCheckResult("PodSecurity is not configured", rule.NewTarget())), nil
 }
 
-func privilegeLevel(privilege string) int {
-	switch privilege {
-	case "restricted":
-		return 3
-	case "baseline":
-		return 2
-	default:
-		return 1
-	}
-}
-
 func (r *Rule254800) checkPodSecurityConfiguration(pluginConfig *runtime.Unknown) []rule.CheckResult {
 	podSecurityConfig := admissionapiv1.PodSecurityConfiguration{}
 	if _, _, err := serializer.NewCodecFactory(scheme.Scheme).UniversalDeserializer().Decode(pluginConfig.Raw, nil, &podSecurityConfig); err != nil {
@@ -166,13 +156,13 @@ func (r *Rule254800) checkPodSecurityConfiguration(pluginConfig *runtime.Unknown
 func (r *Rule254800) checkPrivilegeLevel(podSecurityConfig admissionapiv1.PodSecurityConfiguration) []rule.CheckResult {
 	var checkResults []rule.CheckResult
 	target := rule.NewTarget("kind", "PodSecurityConfiguration")
-	if privilegeLevel(podSecurityConfig.Defaults.Enforce) < privilegeLevel(r.Options.MinPodSecurityLevel) {
+	if utils.PrivilegeLevel(podSecurityConfig.Defaults.Enforce) < utils.PrivilegeLevel(r.Options.MinPodSecurityLevel) {
 		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Enforce level is lower than the minimum pod security level allowed: %s", r.Options.MinPodSecurityLevel), target))
 	}
-	if privilegeLevel(podSecurityConfig.Defaults.Audit) < privilegeLevel(r.Options.MinPodSecurityLevel) {
+	if utils.PrivilegeLevel(podSecurityConfig.Defaults.Audit) < utils.PrivilegeLevel(r.Options.MinPodSecurityLevel) {
 		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Audit level is lower than the minimum pod security level allowed: %s", r.Options.MinPodSecurityLevel), target))
 	}
-	if privilegeLevel(podSecurityConfig.Defaults.Warn) < privilegeLevel(r.Options.MinPodSecurityLevel) {
+	if utils.PrivilegeLevel(podSecurityConfig.Defaults.Warn) < utils.PrivilegeLevel(r.Options.MinPodSecurityLevel) {
 		checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Warn level is lower than the minimum pod security level allowed: %s", r.Options.MinPodSecurityLevel), target))
 	}
 	if len(checkResults) == 0 {

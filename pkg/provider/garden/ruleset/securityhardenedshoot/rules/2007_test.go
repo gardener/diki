@@ -146,7 +146,7 @@ var _ = Describe("#2007", func() {
 			},
 			&standardOptions,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "PodSecurity admission plugin has a default security configuration.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "PodSecurity admission plugin is not configured.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should fail when the PodSecurity admission plugin's privileges are default",

@@ -27,7 +27,7 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 
 	opts2007, err := getV01OptionOrNil(ruleOptions["2007"].Args)
 	if err != nil {
-		return err
+		return fmt.Errorf("rule option 2007 error: %s", err.Error())
 	}
 
 	rules := []rule.Rule{

@@ -317,6 +317,20 @@ func ExceedFilePermissions(filePermissions, filePermissionsMax string) (bool, er
 	return fileModePermission&^fileModePermissionsMax != 0, nil
 }
 
+// PrivilegeLevel returns a numerical value for a given privilege name.
+func PrivilegeLevel(privilege string) int {
+	switch privilege {
+	case "restricted":
+		return 3
+	case "baseline":
+		return 2
+	case "":
+		return 1
+	default:
+		return 1
+	}
+}
+
 // MatchFileOwnersCases returns []rule.CheckResult for a given file and its owners for a select expected values.
 func MatchFileOwnersCases(
 	fileStats FileStats,
