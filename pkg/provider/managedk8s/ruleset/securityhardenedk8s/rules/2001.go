@@ -67,7 +67,7 @@ func (r *Rule2001) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
 		checkResults              []rule.CheckResult
 		allowsPrivilegeEscalation = func(securityContext corev1.SecurityContext) bool {
-			var addsCapSysAdmin = false
+			addsCapSysAdmin := false
 
 			if securityContext.Capabilities != nil {
 				// CAP_SYS_ADMIN only works on CRI-O. ref: https://github.com/kubernetes/kubernetes/issues/119568
@@ -80,9 +80,11 @@ func (r *Rule2001) Run(ctx context.Context) (rule.RuleResult, error) {
 			// AllowPrivilegeEscalation is defaulted to true. ref: https://github.com/kubernetes/kubernetes/issues/118822
 			// Valiadated with `ubuntu` container, to check if AllowPrivilegeEscalation is
 			// enabled the `cat /proc/self/status | grep NoNewPrivs` command can be used.
-			return securityContext.AllowPrivilegeEscalation == nil || *securityContext.AllowPrivilegeEscalation ||
-				(securityContext.Privileged != nil && *securityContext.Privileged) ||
-				addsCapSysAdmin
+			var (
+				allowsPrivilegeEscalation = securityContext.AllowPrivilegeEscalation == nil || *securityContext.AllowPrivilegeEscalation
+				hasPrivilegedContext      = securityContext.Privileged != nil && *securityContext.Privileged
+			)
+			return allowsPrivilegeEscalation || hasPrivilegedContext || addsCapSysAdmin
 		}
 	)
 

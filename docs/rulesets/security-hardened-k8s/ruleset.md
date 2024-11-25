@@ -42,7 +42,7 @@ Set the `Pod` container fields `securityContext.allowPrivilegeEscalation` explic
 > [!WARNING]  
 > `securityContext.allowPrivilegeEscalation` is set to `true` in the following exceptions:
 > - container is running as `privileged`
-> - `CAP_SYS_ADMIN/SYS_ADMIN` is added to the container. More information can be found [here](https://github.com/kubernetes/kubernetes/issues/119568).
+> - `CAP_SYS_ADMIN` or `SYS_ADMIN` is added to the container. More information can be found in [this issue](https://github.com/kubernetes/kubernetes/issues/119568).
 
 ``` yaml
 apiVersion: v1
