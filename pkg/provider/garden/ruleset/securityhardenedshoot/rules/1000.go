@@ -73,7 +73,11 @@ func (r *Rule1000) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if r.Options == nil || len(r.Options.Extensions) == 0 {
-		return rule.Result(r, rule.PassedCheckResult("The shoot cluster has all required extensions enabled.", rule.NewTarget())), nil
+		return rule.Result(r, rule.PassedCheckResult("There are no configured extensions to be evaluated.", rule.NewTarget())), nil
+	}
+
+	if shoot.Spec.Extensions == nil {
+		return rule.Result(r, rule.FailedCheckResult("There are no configured extensions available on the shoot cluster.", rule.NewTarget())), nil
 	}
 
 	var checkResults = []rule.CheckResult{}

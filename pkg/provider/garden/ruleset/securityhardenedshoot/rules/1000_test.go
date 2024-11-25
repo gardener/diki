@@ -69,7 +69,7 @@ var _ = Describe("#1000", func() {
 			func() {},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "The shoot cluster has all required extensions enabled.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "There are no configured extensions to be evaluated.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should return a passed check result if there are no expected extensions to check",
@@ -78,7 +78,21 @@ var _ = Describe("#1000", func() {
 				[]rules.Extension1000{},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "The shoot cluster has all required extensions enabled.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "There are no configured extensions to be evaluated.", Target: rule.NewTarget()},
+			},
+		),
+		Entry("should fail when no extensions are configured on the shoot spec",
+			func() {
+				shoot.Spec.Extensions = nil
+			},
+			&rules.Options1000{Extensions: []rules.Extension1000{
+				{
+					Type: "not-foo",
+				},
+			},
+			},
+			[]rule.CheckResult{
+				{Status: rule.Failed, Message: "There are no configured extensions available on the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should fail when a listed extension cannot be found",
