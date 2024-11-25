@@ -20,7 +20,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/internal/utils"
+	intkubeutils "github.com/gardener/diki/pkg/internal/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/garden/ruleset/securityhardenedshoot/rules"
 	"github.com/gardener/diki/pkg/rule"
 )
@@ -284,7 +284,7 @@ var _ = Describe("#2007", func() {
 				{
 					Type:     field.ErrorTypeInvalid,
 					Field:    "minPodSecurityStandardsProfile",
-					BadValue: utils.PodSecurityStandardProfile("foo"),
+					BadValue: intkubeutils.PodSecurityStandardProfile("foo"),
 					Detail:   "must be one of 'restricted', 'baseline' or 'privileged'",
 				},
 			}))

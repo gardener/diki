@@ -5,6 +5,7 @@
 package rules
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"slices"
@@ -17,8 +18,7 @@ import (
 	admissionapiv1 "k8s.io/pod-security-admission/admission/api/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/gardener/diki/pkg/internal/utils"
-	intkubeutils "github.com/gardener/diki/pkg/internal/utils"
+	intkubeutils "github.com/gardener/diki/pkg/internal/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
@@ -30,11 +30,11 @@ var (
 )
 
 type Options2007 struct {
-	MinPodSecurityStandardsProfile utils.PodSecurityStandardProfile `json:"minPodSecurityStandardsProfile" yaml:"minPodSecurityStandardsProfile"`
+	MinPodSecurityStandardsProfile intkubeutils.PodSecurityStandardProfile `json:"minPodSecurityStandardsProfile" yaml:"minPodSecurityStandardsProfile"`
 }
 
 func (o Options2007) Validate() field.ErrorList {
-	if !slices.Contains([]utils.PodSecurityStandardProfile{utils.PSSProfileBaseline, utils.PSSProfilePrivileged, utils.PSSProfileRestricted}, o.MinPodSecurityStandardsProfile) {
+	if !slices.Contains([]intkubeutils.PodSecurityStandardProfile{intkubeutils.PSSProfileBaseline, intkubeutils.PSSProfilePrivileged, intkubeutils.PSSProfileRestricted}, o.MinPodSecurityStandardsProfile) {
 		return field.ErrorList{field.Invalid(field.NewPath("minPodSecurityStandardsProfile"), o.MinPodSecurityStandardsProfile, "must be one of 'restricted', 'baseline' or 'privileged'")}
 	}
 	return nil
@@ -86,18 +86,13 @@ func (r *Rule2007) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
 		pluginConfiguration      = shoot.Spec.Kubernetes.KubeAPIServer.AdmissionPlugins[pluginIdx].Config
 		podSecurityConfiguration = &admissionapiv1.PodSecurityConfiguration{}
-		options                  = r.Options
 	)
 
 	if _, _, err := serializer.NewCodecFactory(scheme.Scheme).UniversalDeserializer().Decode(pluginConfiguration.Raw, nil, podSecurityConfiguration); err != nil {
 		return rule.Result(r, rule.FailedCheckResult(err.Error(), rule.NewTarget())), nil
 	}
 
-	if options == nil {
-		options = &Options2007{
-			MinPodSecurityStandardsProfile: "baseline",
-		}
-	}
+	options := cmp.Or(r.Options, &Options2007{MinPodSecurityStandardsProfile: "baseline"})
 
 	return rule.Result(r, r.evaluatePodSecurityConfigPrivileges(*podSecurityConfiguration, options)...), nil
 }

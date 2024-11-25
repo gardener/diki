@@ -5,6 +5,7 @@
 package rules
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"slices"
@@ -20,8 +21,7 @@ import (
 	admissionapiv1 "k8s.io/pod-security-admission/admission/api/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/gardener/diki/pkg/internal/utils"
-	intkubeutils "github.com/gardener/diki/pkg/internal/utils"
+	intkubeutils "github.com/gardener/diki/pkg/internal/kubernetes/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
@@ -41,13 +41,13 @@ type Rule254800 struct {
 }
 
 type Options254800 struct {
-	MinPodSecurityStandardsProfile utils.PodSecurityStandardProfile `json:"minPodSecurityStandardsProfile" yaml:"minPodSecurityStandardsProfile"`
+	MinPodSecurityStandardsProfile intkubeutils.PodSecurityStandardProfile `json:"minPodSecurityStandardsProfile" yaml:"minPodSecurityStandardsProfile"`
 }
 
 var _ option.Option = (*Options254800)(nil)
 
 func (o Options254800) Validate() field.ErrorList {
-	if !slices.Contains([]utils.PodSecurityStandardProfile{utils.PSSProfileBaseline, utils.PSSProfilePrivileged, utils.PSSProfileRestricted}, o.MinPodSecurityStandardsProfile) {
+	if !slices.Contains([]intkubeutils.PodSecurityStandardProfile{intkubeutils.PSSProfileBaseline, intkubeutils.PSSProfilePrivileged, intkubeutils.PSSProfileRestricted}, o.MinPodSecurityStandardsProfile) {
 		return field.ErrorList{field.Invalid(field.NewPath("minPodSecurityStandardsProfile"), o.MinPodSecurityStandardsProfile, "must be one of 'restricted', 'baseline' or 'privileged'")}
 	}
 	return nil
@@ -114,13 +114,7 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
-	var options = r.Options
-
-	if options == nil {
-		options = &Options254800{
-			MinPodSecurityStandardsProfile: "baseline",
-		}
-	}
+	options := cmp.Or(r.Options, &Options254800{MinPodSecurityStandardsProfile: "baseline"})
 
 	for _, plugin := range admissionConfig.Plugins {
 		if plugin.Name == "PodSecurity" {

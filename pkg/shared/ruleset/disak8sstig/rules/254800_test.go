@@ -18,7 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/diki/pkg/internal/utils"
+	intkubeutils "github.com/gardener/diki/pkg/internal/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
@@ -222,7 +222,7 @@ kind: PodSecurityConfiguration`
 			Expect(result).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 				"Type":     Equal(field.ErrorTypeInvalid),
 				"Field":    Equal("minPodSecurityStandardsProfile"),
-				"BadValue": Equal(utils.PodSecurityStandardProfile("foo")),
+				"BadValue": Equal(intkubeutils.PodSecurityStandardProfile("foo")),
 				"Detail":   Equal("must be one of 'restricted', 'baseline' or 'privileged'"),
 			}))))
 		})
