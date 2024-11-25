@@ -109,8 +109,10 @@ func GetPods(ctx context.Context, c client.Client, namespace string, selector la
 // GetServices returns all services for a given namespace, or all namespaces if it's set to empty string "".
 // It retrieves services by portions set by limit.
 func GetServices(ctx context.Context, c client.Client, namespace string, selector labels.Selector, limit int64) ([]corev1.Service, error) {
-	serviceList := &corev1.ServiceList{}
-	var services []corev1.Service
+	var (
+		services    []corev1.Service
+		serviceList = &corev1.ServiceList{}
+	)
 
 	for {
 		if err := c.List(ctx, serviceList, client.InNamespace(namespace), client.Limit(limit), client.MatchingLabelsSelector{Selector: selector}, client.Continue(serviceList.Continue)); err != nil {

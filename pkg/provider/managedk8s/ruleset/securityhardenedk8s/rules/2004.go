@@ -15,13 +15,14 @@ import (
 	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	disaoptions "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var (
-	_ rule.Rule     = &Rule2004{}
-	_ rule.Severity = &Rule2004{}
-	_ option.Option = &Options2004{}
+	_ rule.Rule          = &Rule2004{}
+	_ rule.Severity      = &Rule2004{}
+	_ disaoptions.Option = &Options2004{}
 )
 
 type Rule2004 struct {
@@ -34,17 +35,16 @@ type Options2004 struct {
 }
 
 type AcceptedServices2004 struct {
-	option.ServiceSelector
-	VolumeNames   []string `json:"volumeNames" yaml:"volumeNames"`
-	Justification string   `json:"justification" yaml:"justification"`
+	option.NamespacedObjectSelector
+	Justification string `json:"justification" yaml:"justification"`
 }
 
 // Validate validates that option configurations are correctly defined
 func (o Options2004) Validate() field.ErrorList {
 	var allErrs field.ErrorList
 
-	for _, p := range o.AcceptedServices {
-		allErrs = append(allErrs, p.Validate()...)
+	for _, s := range o.AcceptedServices {
+		allErrs = append(allErrs, s.Validate()...)
 	}
 
 	return allErrs
@@ -80,16 +80,16 @@ func (r *Rule2004) Run(ctx context.Context) (rule.RuleResult, error) {
 
 		if service.Spec.Type == corev1.ServiceTypeNodePort {
 			if accepted, justification := r.accepted(service, namespaces[service.Namespace]); accepted {
-				msg := "Service accepted to be of type nodePort."
+				msg := "Service accepted to be of type NodePort."
 				if justification != "" {
 					msg = justification
 				}
 				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, serviceTarget))
 			} else {
-				checkResults = append(checkResults, rule.FailedCheckResult("Service should not be of type nodePort.", serviceTarget))
+				checkResults = append(checkResults, rule.FailedCheckResult("Service should not be of type NodePort.", serviceTarget))
 			}
 		} else {
-			checkResults = append(checkResults, rule.PassedCheckResult("Service is not of type nodePort.", serviceTarget))
+			checkResults = append(checkResults, rule.PassedCheckResult("Service is not of type NodePort.", serviceTarget))
 		}
 	}
 
@@ -102,7 +102,7 @@ func (r *Rule2004) accepted(service corev1.Service, namespace corev1.Namespace) 
 	}
 
 	for _, acceptedService := range r.Options.AcceptedServices {
-		if utils.MatchLabels(service.Labels, acceptedService.ServiceMatchLabels) &&
+		if utils.MatchLabels(service.Labels, acceptedService.MatchLabels) &&
 			utils.MatchLabels(namespace.Labels, acceptedService.NamespaceMatchLabels) {
 			return true, acceptedService.Justification
 		}

@@ -16,7 +16,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/securityhardenedk8s/rules"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 )
 
 var _ = Describe("#2004", func() {
@@ -64,23 +64,23 @@ var _ = Describe("#2004", func() {
 
 		Entry("should pass when serviceSpec is not set",
 			corev1.ServiceSpec{}, rules.Options2004{},
-			rule.CheckResult{Status: rule.Passed, Message: "Service is not of type nodePort.", Target: rule.NewTarget("kind", "service", "name", "foo", "namespace", "foo")},
+			rule.CheckResult{Status: rule.Passed, Message: "Service is not of type NodePort.", Target: rule.NewTarget("kind", "service", "name", "foo", "namespace", "foo")},
 		),
 		Entry("should fail when service is of type NodePort",
 			corev1.ServiceSpec{Type: "NodePort"}, rules.Options2004{},
-			rule.CheckResult{Status: rule.Failed, Message: "Service should not be of type nodePort.", Target: rule.NewTarget("kind", "service", "name", "foo", "namespace", "foo")},
+			rule.CheckResult{Status: rule.Failed, Message: "Service should not be of type NodePort.", Target: rule.NewTarget("kind", "service", "name", "foo", "namespace", "foo")},
 		),
 		Entry("should pass when service is not of type NodePort",
 			corev1.ServiceSpec{Type: "ClusterIP"}, rules.Options2004{},
-			rule.CheckResult{Status: rule.Passed, Message: "Service is not of type nodePort.", Target: rule.NewTarget("kind", "service", "name", "foo", "namespace", "foo")},
+			rule.CheckResult{Status: rule.Passed, Message: "Service is not of type NodePort.", Target: rule.NewTarget("kind", "service", "name", "foo", "namespace", "foo")},
 		),
 		Entry("should pass when options are set",
 			corev1.ServiceSpec{Type: "NodePort"},
 			rules.Options2004{
 				AcceptedServices: []rules.AcceptedServices2004{
 					{
-						ServiceSelector: option.ServiceSelector{
-							ServiceMatchLabels:   map[string]string{"foo": "bar"},
+						NamespacedObjectSelector: option.NamespacedObjectSelector{
+							MatchLabels:          map[string]string{"foo": "bar"},
 							NamespaceMatchLabels: map[string]string{"foo": "bar"},
 						},
 						Justification: "foo justify",
