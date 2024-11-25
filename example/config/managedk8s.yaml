@@ -181,7 +181,7 @@ providers:                   # contains information about known providers
     # - ruleID: "2001"
     #   args:
     #     acceptedPods:
-    #     - podMatchLabels:
+    #     - matchLabels:
     #         foo: bar
     #       namespaceMatchLabels:
     #         foo: bar
@@ -197,7 +197,7 @@ providers:                   # contains information about known providers
     # - ruleID: "2008"
     #   args:
     #     acceptedPods:
-    #     - podMatchLabels:
+    #     - matchLabels:
     #         foo: bar
     #       namespaceMatchLabels:
     #         foo: bar

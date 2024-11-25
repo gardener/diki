@@ -18,7 +18,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/securityhardenedk8s/rules"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 )
 
 var _ = Describe("#2008", func() {
@@ -138,15 +138,15 @@ var _ = Describe("#2008", func() {
 		options = rules.Options2008{
 			AcceptedPods: []rules.AcceptedPods2008{
 				{
-					PodSelector: option.PodSelector{
-						PodMatchLabels:       map[string]string{"foo": "bar"},
+					NamespacedObjectSelector: option.NamespacedObjectSelector{
+						MatchLabels:          map[string]string{"foo": "bar"},
 						NamespaceMatchLabels: map[string]string{"foo": "not-bar"},
 					},
 					VolumeNames: []string{"bar"},
 				},
 				{
-					PodSelector: option.PodSelector{
-						PodMatchLabels:       map[string]string{"foo": "bar"},
+					NamespacedObjectSelector: option.NamespacedObjectSelector{
+						MatchLabels:          map[string]string{"foo": "bar"},
 						NamespaceMatchLabels: map[string]string{"foo": "bar"},
 					},
 					Justification: "foo justify",
@@ -207,8 +207,8 @@ var _ = Describe("#2008", func() {
 			options := rules.Options2008{
 				AcceptedPods: []rules.AcceptedPods2008{
 					{
-						PodSelector: option.PodSelector{
-							PodMatchLabels: map[string]string{
+						NamespacedObjectSelector: option.NamespacedObjectSelector{
+							MatchLabels: map[string]string{
 								"foo": "bar",
 							},
 							NamespaceMatchLabels: map[string]string{
@@ -217,8 +217,8 @@ var _ = Describe("#2008", func() {
 						},
 					},
 					{
-						PodSelector: option.PodSelector{
-							PodMatchLabels: map[string]string{
+						NamespacedObjectSelector: option.NamespacedObjectSelector{
+							MatchLabels: map[string]string{
 								"foo": "bar",
 							},
 							NamespaceMatchLabels: map[string]string{
@@ -228,8 +228,8 @@ var _ = Describe("#2008", func() {
 						VolumeNames: []string{"foo"},
 					},
 					{
-						PodSelector: option.PodSelector{
-							PodMatchLabels: map[string]string{
+						NamespacedObjectSelector: option.NamespacedObjectSelector{
+							MatchLabels: map[string]string{
 								"foo": "bar",
 							},
 							NamespaceMatchLabels: map[string]string{

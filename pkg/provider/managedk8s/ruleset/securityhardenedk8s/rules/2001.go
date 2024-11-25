@@ -17,13 +17,14 @@ import (
 	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	disaoptions "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var (
-	_ rule.Rule     = &Rule2001{}
-	_ rule.Severity = &Rule2001{}
-	_ option.Option = &Options2001{}
+	_ rule.Rule          = &Rule2001{}
+	_ rule.Severity      = &Rule2001{}
+	_ disaoptions.Option = &Options2001{}
 )
 
 type Rule2001 struct {
@@ -36,7 +37,7 @@ type Options2001 struct {
 }
 
 type AcceptedPods2001 struct {
-	option.PodSelector
+	option.NamespacedObjectSelector
 	Justification string `json:"justification" yaml:"justification"`
 }
 
@@ -131,7 +132,7 @@ func (r *Rule2001) accepted(pod corev1.Pod, namespace corev1.Namespace) (bool, s
 	}
 
 	for _, acceptedPod := range r.Options.AcceptedPods {
-		if utils.MatchLabels(pod.Labels, acceptedPod.PodMatchLabels) &&
+		if utils.MatchLabels(pod.Labels, acceptedPod.MatchLabels) &&
 			utils.MatchLabels(namespace.Labels, acceptedPod.NamespaceMatchLabels) {
 			return true, acceptedPod.Justification
 		}
