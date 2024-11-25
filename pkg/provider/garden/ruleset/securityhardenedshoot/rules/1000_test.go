@@ -65,9 +65,18 @@ var _ = Describe("#1000", func() {
 				{Status: rule.Errored, Message: "shoots.core.gardener.cloud \"foo\" not found", Target: rule.NewTarget("name", "foo", "namespace", "bar", "kind", "Shoot")},
 			},
 		),
-		Entry("should return a passed check result if there are no expected extensions to check",
+		Entry("should return a passed check result if a provided option configuration is not present",
 			func() {},
 			nil,
+			[]rule.CheckResult{
+				{Status: rule.Passed, Message: "The shoot cluster has all required extensions enabled.", Target: rule.NewTarget()},
+			},
+		),
+		Entry("should return a passed check result if there are no expected extensions to check",
+			func() {},
+			&rules.Options1000{
+				[]rules.Extension1000{},
+			},
 			[]rule.CheckResult{
 				{Status: rule.Passed, Message: "The shoot cluster has all required extensions enabled.", Target: rule.NewTarget()},
 			},

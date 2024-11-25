@@ -72,7 +72,7 @@ func (r *Rule1000) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("name", r.ShootName, "namespace", r.ShootNamespace, "kind", "Shoot"))), nil
 	}
 
-	if r.Options == nil {
+	if r.Options == nil || len(r.Options.Extensions) == 0 {
 		return rule.Result(r, rule.PassedCheckResult("The shoot cluster has all required extensions enabled.", rule.NewTarget())), nil
 	}
 
