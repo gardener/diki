@@ -5,5 +5,5 @@
 package rules
 
 type RuleOption interface {
-	Options2007
+	Options1000 | Options2007
 }
