@@ -26,6 +26,10 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 	if err != nil {
 		return fmt.Errorf("rule option 2001 error: %s", err.Error())
 	}
+	opts2004, err := getV01OptionOrNil[rules.Options2004](ruleOptions["2004"].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 2004 error: %s", err.Error())
+	}
 	opts2008, err := getV01OptionOrNil[rules.Options2008](ruleOptions["2008"].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 2008 error: %s", err.Error())
@@ -57,13 +61,10 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			rule.NotImplemented,
 			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
-		rule.NewSkipRule(
-			"2004",
-			"Limit the Services of type NodePort.",
-			"Not implemented.",
-			rule.NotImplemented,
-			rule.SkipRuleWithSeverity(rule.SeverityMedium),
-		),
+		&rules.Rule2004{
+			Client:  c,
+			Options: opts2004,
+		},
 		rule.NewSkipRule(
 			"2005",
 			"Container images must come from trusted repositories.",

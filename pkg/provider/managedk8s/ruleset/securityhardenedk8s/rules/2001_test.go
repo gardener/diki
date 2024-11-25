@@ -17,7 +17,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/securityhardenedk8s/rules"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 )
 
 var _ = Describe("#2001", func() {
@@ -105,8 +105,8 @@ var _ = Describe("#2001", func() {
 			rules.Options2001{
 				AcceptedPods: []rules.AcceptedPods2001{
 					{
-						PodSelector: option.PodSelector{
-							PodMatchLabels:       map[string]string{"foo": "bar"},
+						NamespacedObjectSelector: option.NamespacedObjectSelector{
+							MatchLabels:          map[string]string{"foo": "bar"},
 							NamespaceMatchLabels: map[string]string{"foo": "bar"},
 						},
 						Justification: "foo justify",

@@ -6,5 +6,6 @@ package rules
 
 type RuleOption interface {
 	Options2001 |
+		Options2004 |
 		Options2008
 }

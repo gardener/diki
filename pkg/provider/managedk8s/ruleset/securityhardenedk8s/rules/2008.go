@@ -16,13 +16,14 @@ import (
 	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	disaoptions "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var (
-	_ rule.Rule     = &Rule2008{}
-	_ rule.Severity = &Rule2008{}
-	_ option.Option = &Options2008{}
+	_ rule.Rule          = &Rule2008{}
+	_ rule.Severity      = &Rule2008{}
+	_ disaoptions.Option = &Options2008{}
 )
 
 type Rule2008 struct {
@@ -35,7 +36,7 @@ type Options2008 struct {
 }
 
 type AcceptedPods2008 struct {
-	option.PodSelector
+	option.NamespacedObjectSelector
 	VolumeNames   []string `json:"volumeNames" yaml:"volumeNames"`
 	Justification string   `json:"justification" yaml:"justification"`
 }
@@ -117,7 +118,7 @@ func (r *Rule2008) accepted(pod corev1.Pod, namespace corev1.Namespace, volumeNa
 	}
 
 	for _, acceptedPod := range r.Options.AcceptedPods {
-		if utils.MatchLabels(pod.Labels, acceptedPod.PodMatchLabels) &&
+		if utils.MatchLabels(pod.Labels, acceptedPod.MatchLabels) &&
 			utils.MatchLabels(namespace.Labels, acceptedPod.NamespaceMatchLabels) {
 			if slices.Contains(acceptedPod.VolumeNames, volumeName) {
 				return true, acceptedPod.Justification
