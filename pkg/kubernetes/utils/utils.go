@@ -22,6 +22,7 @@ import (
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -123,6 +124,48 @@ func GetServices(ctx context.Context, c client.Client, namespace string, selecto
 
 		if len(serviceList.Continue) == 0 {
 			return services, nil
+		}
+	}
+}
+
+// GetRoles returns all roles for a given namespace, or all namespaces if it's set to empty string "".
+// It retrieves roles by portions set by limit.
+func GetRoles(ctx context.Context, c client.Client, namespace string, selector labels.Selector, limit int64) ([]rbacv1.Role, error) {
+	var (
+		roles    []rbacv1.Role
+		roleList = &rbacv1.RoleList{}
+	)
+
+	for {
+		if err := c.List(ctx, roleList, client.InNamespace(namespace), client.Limit(limit), client.MatchingLabelsSelector{Selector: selector}, client.Continue(roleList.Continue)); err != nil {
+			return nil, err
+		}
+
+		roles = append(roles, roleList.Items...)
+
+		if len(roleList.Continue) == 0 {
+			return roles, nil
+		}
+	}
+}
+
+// GetClusterRoles returns all clusterRoles.
+// It retrieves clusterRoles by portions set by limit.
+func GetClusterRoles(ctx context.Context, c client.Client, selector labels.Selector, limit int64) ([]rbacv1.ClusterRole, error) {
+	var (
+		clusterRoles    []rbacv1.ClusterRole
+		clusterRoleList = &rbacv1.ClusterRoleList{}
+	)
+
+	for {
+		if err := c.List(ctx, clusterRoleList, client.Limit(limit), client.MatchingLabelsSelector{Selector: selector}, client.Continue(clusterRoleList.Continue)); err != nil {
+			return nil, err
+		}
+
+		clusterRoles = append(clusterRoles, clusterRoleList.Items...)
+
+		if len(clusterRoleList.Continue) == 0 {
+			return clusterRoles, nil
 		}
 	}
 }
