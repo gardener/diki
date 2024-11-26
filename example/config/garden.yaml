@@ -14,6 +14,10 @@ providers:       # contains information about known providers
       shootName: foo                        # name of shoot resource to be tested
     ruleOptions:
     # - ruleID: "1000"
+    #   args:
+    #     - type: extension-type-1
+    #     - type: extension-type-2
+    # - ruleID: "2000"
     #   skip:
     #     enabled: true
     #     justification: "the whole rule is accepted for ... reasons"
