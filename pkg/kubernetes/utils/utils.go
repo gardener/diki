@@ -22,6 +22,7 @@ import (
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -185,6 +186,27 @@ func GetReplicaSets(ctx context.Context, c client.Client, namespace string, sele
 
 		if len(replicaSetList.Continue) == 0 {
 			return replicaSets, nil
+		}
+	}
+}
+
+// GetNetworkPolicies returns all networkPolicies for a given namespace, or all namespaces if it's set to empty string "".
+// It retrieves networkPolicies by portions set by limit.
+func GetNetworkPolicies(ctx context.Context, c client.Client, namespace string, selector labels.Selector, limit int64) ([]networkingv1.NetworkPolicy, error) {
+	var (
+		networkPolicies   []networkingv1.NetworkPolicy
+		networkPolicyList = &networkingv1.NetworkPolicyList{}
+	)
+
+	for {
+		if err := c.List(ctx, networkPolicyList, client.InNamespace(namespace), client.Limit(limit), client.MatchingLabelsSelector{Selector: selector}, client.Continue(networkPolicyList.Continue)); err != nil {
+			return nil, err
+		}
+
+		networkPolicies = append(networkPolicies, networkPolicyList.Items...)
+
+		if len(networkPolicyList.Continue) == 0 {
+			return networkPolicies, nil
 		}
 	}
 }
