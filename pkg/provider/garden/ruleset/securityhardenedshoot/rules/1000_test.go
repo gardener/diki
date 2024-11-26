@@ -69,30 +69,30 @@ var _ = Describe("#1000", func() {
 			func() {},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "There are no configured extensions to be evaluated.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "There are no required extensions.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should return a passed check result if there are no expected extensions to check",
 			func() {},
 			&rules.Options1000{
-				[]rules.Extension1000{},
+				[]rules.Extension{},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "There are no configured extensions to be evaluated.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "There are no required extensions.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should fail when no extensions are configured on the shoot spec",
 			func() {
 				shoot.Spec.Extensions = nil
 			},
-			&rules.Options1000{Extensions: []rules.Extension1000{
+			&rules.Options1000{Extensions: []rules.Extension{
 				{
 					Type: "not-foo",
 				},
 			},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "There are no configured extensions available on the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "There are no configured extensions on the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should fail when a listed extension cannot be found",
@@ -103,14 +103,14 @@ var _ = Describe("#1000", func() {
 					},
 				}
 			},
-			&rules.Options1000{Extensions: []rules.Extension1000{
+			&rules.Options1000{Extensions: []rules.Extension{
 				{
 					Type: "not-foo",
 				},
 			},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Extension not-foo is not configured for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "Extension type not-foo is not configured for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should fail when a listed extension is explicitly disabled",
@@ -122,17 +122,17 @@ var _ = Describe("#1000", func() {
 					},
 				}
 			},
-			&rules.Options1000{Extensions: []rules.Extension1000{
+			&rules.Options1000{Extensions: []rules.Extension{
 				{
 					Type: "foo",
 				},
 			},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Extension foo is disabled for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "Extension type foo is disabled for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
-		Entry("should pass when a listed extension has default disabling",
+		Entry("should pass when a listed extension is enabled by default",
 			func() {
 				shoot.Spec.Extensions = []gardencorev1beta1.Extension{
 					{
@@ -140,17 +140,17 @@ var _ = Describe("#1000", func() {
 					},
 				}
 			},
-			&rules.Options1000{Extensions: []rules.Extension1000{
+			&rules.Options1000{Extensions: []rules.Extension{
 				{
 					Type: "foo",
 				},
 			},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "Extension foo is enabled for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "Extension type foo is enabled for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
-		Entry("should pass when a listed extension has default disabling",
+		Entry("should pass when a listed extension is explicitly enabled",
 			func() {
 				shoot.Spec.Extensions = []gardencorev1beta1.Extension{
 					{
@@ -159,14 +159,14 @@ var _ = Describe("#1000", func() {
 					},
 				}
 			},
-			&rules.Options1000{Extensions: []rules.Extension1000{
+			&rules.Options1000{Extensions: []rules.Extension{
 				{
 					Type: "foo",
 				},
 			},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "Extension foo is enabled for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "Extension type foo is enabled for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should create a check result for each provided extension in the configuration",
@@ -185,7 +185,7 @@ var _ = Describe("#1000", func() {
 					},
 				}
 			},
-			&rules.Options1000{Extensions: []rules.Extension1000{
+			&rules.Options1000{Extensions: []rules.Extension{
 				{
 					Type: "one",
 				},
@@ -201,10 +201,10 @@ var _ = Describe("#1000", func() {
 			},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "Extension one is enabled for the shoot cluster.", Target: rule.NewTarget()},
-				{Status: rule.Passed, Message: "Extension two is enabled for the shoot cluster.", Target: rule.NewTarget()},
-				{Status: rule.Failed, Message: "Extension three is disabled for the shoot cluster.", Target: rule.NewTarget()},
-				{Status: rule.Failed, Message: "Extension four is not configured for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "Extension type one is enabled for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "Extension type two is enabled for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "Extension type three is disabled for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "Extension type four is not configured for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
 	)
@@ -212,7 +212,7 @@ var _ = Describe("#1000", func() {
 	Describe("#ValidateOptions", func() {
 		It("should not error when options are correct", func() {
 			options := rules.Options1000{
-				Extensions: []rules.Extension1000{
+				Extensions: []rules.Extension{
 					{
 						Type: "foo",
 					},
@@ -227,7 +227,7 @@ var _ = Describe("#1000", func() {
 		})
 		It("should error when options are incorrect", func() {
 			options := rules.Options1000{
-				Extensions: []rules.Extension1000{
+				Extensions: []rules.Extension{
 					{
 						Type: "foo",
 					},

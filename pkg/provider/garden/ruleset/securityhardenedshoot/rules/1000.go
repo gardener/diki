@@ -24,12 +24,12 @@ var (
 	_ option.Option = &Options1000{}
 )
 
-type Extension1000 struct {
-	Type string `json:"type" yaml:"type"`
+type Options1000 struct {
+	Extensions []Extension `json:"extensions" yaml:"extensions"`
 }
 
-type Options1000 struct {
-	Extensions []Extension1000 `json:"extensions" yaml:"extensions"`
+type Extension struct {
+	Type string `json:"type" yaml:"type"`
 }
 
 func (o Options1000) Validate() field.ErrorList {
@@ -66,35 +66,33 @@ func (r *Rule1000) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule1000) Run(ctx context.Context) (rule.RuleResult, error) {
-
 	shoot := &gardencorev1beta1.Shoot{ObjectMeta: v1.ObjectMeta{Name: r.ShootName, Namespace: r.ShootNamespace}}
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(shoot), shoot); err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("name", r.ShootName, "namespace", r.ShootNamespace, "kind", "Shoot"))), nil
 	}
 
 	if r.Options == nil || len(r.Options.Extensions) == 0 {
-		return rule.Result(r, rule.PassedCheckResult("There are no configured extensions to be evaluated.", rule.NewTarget())), nil
+		return rule.Result(r, rule.PassedCheckResult("There are no required extensions.", rule.NewTarget())), nil
 	}
 
 	if shoot.Spec.Extensions == nil {
-		return rule.Result(r, rule.FailedCheckResult("There are no configured extensions available on the shoot cluster.", rule.NewTarget())), nil
+		return rule.Result(r, rule.FailedCheckResult("There are no configured extensions on the shoot cluster.", rule.NewTarget())), nil
 	}
 
-	var checkResults = []rule.CheckResult{}
+	var checkResults []rule.CheckResult
 
-	for _, extensionTypeFromOption := range r.Options.Extensions {
-		extensionTypeIndex := slices.IndexFunc(shoot.Spec.Extensions, func(extension gardencorev1beta1.Extension) bool {
-			return extension.Type == extensionTypeFromOption.Type
+	for _, extension := range r.Options.Extensions {
+		extensionTypeIndex := slices.IndexFunc(shoot.Spec.Extensions, func(shootSpecExtension gardencorev1beta1.Extension) bool {
+			return shootSpecExtension.Type == extension.Type
 		})
 
-		if extensionTypeIndex < 0 {
-			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Extension %s is not configured for the shoot cluster.", extensionTypeFromOption.Type), rule.NewTarget()))
-		} else {
-			if shoot.Spec.Extensions[extensionTypeIndex].Disabled == nil || !*(shoot.Spec.Extensions[extensionTypeIndex].Disabled) {
-				checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Extension %s is enabled for the shoot cluster.", extensionTypeFromOption.Type), rule.NewTarget()))
-			} else {
-				checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Extension %s is disabled for the shoot cluster.", extensionTypeFromOption.Type), rule.NewTarget()))
-			}
+		switch {
+		case extensionTypeIndex < 0:
+			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Extension type %s is not configured for the shoot cluster.", extension.Type), rule.NewTarget()))
+		case shoot.Spec.Extensions[extensionTypeIndex].Disabled == nil || !*(shoot.Spec.Extensions[extensionTypeIndex].Disabled):
+			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Extension type %s is enabled for the shoot cluster.", extension.Type), rule.NewTarget()))
+		default:
+			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Extension type %s is disabled for the shoot cluster.", extension.Type), rule.NewTarget()))
 		}
 	}
 
