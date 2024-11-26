@@ -33,12 +33,7 @@ type Rule2001 struct {
 }
 
 type Options2001 struct {
-	AcceptedPods []AcceptedPods2001 `json:"acceptedPods" yaml:"acceptedPods"`
-}
-
-type AcceptedPods2001 struct {
-	option.NamespacedObjectSelector
-	Justification string `json:"justification" yaml:"justification"`
+	AcceptedPods []option.AcceptedNamespacedObject `json:"acceptedPods" yaml:"acceptedPods"`
 }
 
 // Validate validates that option configurations are correctly defined

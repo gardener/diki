@@ -30,6 +30,10 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 	if err != nil {
 		return fmt.Errorf("rule option 2004 error: %s", err.Error())
 	}
+	opts2006, err := getV01OptionOrNil[rules.Options2006](ruleOptions["2006"].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 2006 error: %s", err.Error())
+	}
 	opts2008, err := getV01OptionOrNil[rules.Options2008](ruleOptions["2008"].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 2008 error: %s", err.Error())
@@ -73,7 +77,8 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 		&rules.Rule2006{
-			Client: c,
+			Client:  c,
+			Options: opts2006,
 		},
 		rule.NewSkipRule(
 			"2007",

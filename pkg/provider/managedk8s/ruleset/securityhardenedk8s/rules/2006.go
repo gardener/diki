@@ -8,12 +8,16 @@ import (
 	"context"
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 )
 
 var (
@@ -22,7 +26,28 @@ var (
 )
 
 type Rule2006 struct {
-	Client client.Client
+	Client  client.Client
+	Options *Options2006
+}
+
+type Options2006 struct {
+	AcceptedRoles        []option.AcceptedNamespacedObject `json:"acceptedRoles" yaml:"acceptedRoles"`
+	AcceptedClusterRoles []option.AcceptedObject           `json:"acceptedClusterRoles" yaml:"acceptedClusterRoles"`
+}
+
+// Validate validates that option configurations are correctly defined
+func (o Options2006) Validate() field.ErrorList {
+	var allErrs field.ErrorList
+
+	for _, r := range o.AcceptedRoles {
+		allErrs = append(allErrs, r.Validate()...)
+	}
+
+	for _, c := range o.AcceptedClusterRoles {
+		allErrs = append(allErrs, c.Validate()...)
+	}
+
+	return allErrs
 }
 
 func (r *Rule2006) ID() string {
@@ -48,29 +73,76 @@ func (r *Rule2006) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "clusterRolesList"))), nil
 	}
 
+	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil
+	}
+
 	var (
 		checkResults []rule.CheckResult
-		checkRules   = func(policyRules []rbacv1.PolicyRule, target rule.Target) rule.CheckResult {
+		checkRules   = func(policyRules []rbacv1.PolicyRule, accepted bool, justification string, target rule.Target) rule.CheckResult {
+			msg := "RBAC Role accepted to use \"*\" in policyRule resources."
+			if len(justification) > 0 {
+				msg = justification
+			}
+
 			for _, policyRule := range policyRules {
 				for _, resource := range policyRule.Resources {
 					if strings.Contains(resource, "*") {
-						return rule.FailedCheckResult("Found \"*\" in policyRule resources.", target)
+						if accepted {
+							return rule.AcceptedCheckResult(msg, target)
+						} else {
+							return rule.FailedCheckResult("RBAC Role uses \"*\" in policyRule resources.", target)
+						}
 					}
 				}
 			}
-			return rule.PassedCheckResult("Did not find \"*\" in policyRule resources.", target)
+			return rule.PassedCheckResult("RBAC Role does not use \"*\" in policyRule resources.", target)
 		}
 	)
 
 	for _, role := range roles {
 		target := rule.NewTarget("kind", "role", "name", role.Name, "namespace", role.Namespace)
-		checkResults = append(checkResults, checkRules(role.Rules, target))
+
+		accepted, justification := r.acceptedRole(role, namespaces[role.Namespace])
+		checkResults = append(checkResults, checkRules(role.Rules, accepted, justification, target))
 	}
 
 	for _, clusterRole := range clusterRoles {
 		target := rule.NewTarget("kind", "clusterRole", "name", clusterRole.Name)
-		checkResults = append(checkResults, checkRules(clusterRole.Rules, target))
+
+		accepted, justification := r.acceptedClusterRole(clusterRole)
+		checkResults = append(checkResults, checkRules(clusterRole.Rules, accepted, justification, target))
 	}
 
 	return rule.Result(r, checkResults...), nil
+}
+
+func (r *Rule2006) acceptedRole(role rbacv1.Role, namespace corev1.Namespace) (bool, string) {
+	if r.Options == nil {
+		return false, ""
+	}
+
+	for _, acceptedRole := range r.Options.AcceptedRoles {
+		if utils.MatchLabels(role.Labels, acceptedRole.MatchLabels) &&
+			utils.MatchLabels(namespace.Labels, acceptedRole.NamespaceMatchLabels) {
+			return true, acceptedRole.Justification
+		}
+	}
+
+	return false, ""
+}
+
+func (r *Rule2006) acceptedClusterRole(clusterRole rbacv1.ClusterRole) (bool, string) {
+	if r.Options == nil {
+		return false, ""
+	}
+
+	for _, acceptedClusterRoles := range r.Options.AcceptedClusterRoles {
+		if utils.MatchLabels(clusterRole.Labels, acceptedClusterRoles.MatchLabels) {
+			return true, acceptedClusterRoles.Justification
+		}
+	}
+
+	return false, ""
 }
