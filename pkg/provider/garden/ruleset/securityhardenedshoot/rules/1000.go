@@ -34,7 +34,7 @@ type Extension struct {
 
 func (o Options1000) Validate() field.ErrorList {
 	var (
-		allErrs  = field.ErrorList{}
+		allErrs  field.ErrorList
 		rootPath = field.NewPath("extensions")
 	)
 
@@ -58,7 +58,7 @@ func (r *Rule1000) ID() string {
 }
 
 func (r *Rule1000) Name() string {
-	return "Shoot clusters should enable required extensions. This rule can be configured as per organisation's requirements in order to check if required extensions are enabled for the shoot cluster."
+	return "Shoot clusters should enable required extensions."
 }
 
 func (r *Rule1000) Severity() rule.SeverityLevel {
@@ -75,8 +75,8 @@ func (r *Rule1000) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.PassedCheckResult("There are no required extensions.", rule.NewTarget())), nil
 	}
 
-	if shoot.Spec.Extensions == nil {
-		return rule.Result(r, rule.FailedCheckResult("There are no configured extensions on the shoot cluster.", rule.NewTarget())), nil
+	if len(shoot.Spec.Extensions) == 0 {
+		return rule.Result(r, rule.FailedCheckResult("There are no configured extensions for the shoot cluster.", rule.NewTarget())), nil
 	}
 
 	var checkResults []rule.CheckResult

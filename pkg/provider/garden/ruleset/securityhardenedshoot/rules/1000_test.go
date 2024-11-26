@@ -33,7 +33,7 @@ var _ = Describe("#1000", func() {
 
 		r        rule.Rule
 		ruleID   = "1000"
-		ruleName = "Shoot clusters should enable required extensions. This rule can be configured as per organisation's requirements in order to check if required extensions are enabled for the shoot cluster."
+		ruleName = "Shoot clusters should enable required extensions."
 		severity = rule.SeverityMedium
 	)
 
@@ -92,7 +92,7 @@ var _ = Describe("#1000", func() {
 			},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "There are no configured extensions on the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "There are no configured extensions for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should fail when a listed extension cannot be found",
