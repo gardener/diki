@@ -72,13 +72,9 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			rule.NotImplemented,
 			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
-		rule.NewSkipRule(
-			"2006",
-			"Limit the use of wildcards in RBAC resources.",
-			"Not implemented.",
-			rule.NotImplemented,
-			rule.SkipRuleWithSeverity(rule.SeverityMedium),
-		),
+		&rules.Rule2006{
+			Client: c,
+		},
 		rule.NewSkipRule(
 			"2007",
 			"Limit the use of wildcards in RBAC verbs.",
