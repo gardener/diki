@@ -12,7 +12,7 @@ The guide features two providers - `managedk8s` and `garden`, both of which impl
 
 The `managedk8s` provider assumes that the user running the ruleset does not have access to the environment (the seed in this particular case), in which the control plane components reside.
 
-The `garden` provider is used for accessing the control plane component configurations of the shoot spec, which is retrieved from the garden cluster.
+The `garden` provider is used for accessing the`Garden` cluster, in which the `Shoot` resource can be found.
 
 In order to run the ruleset for both providers, it is required to configure them with their required parameters, as specified in the following sections.
 
@@ -20,7 +20,7 @@ In order to run the ruleset for both providers, it is required to configure them
 
 Make sure you have [diki installed](../../README.md#Installation) and have a running Gardener shoot cluster.
 
-We will be using the sample [Partial DISA K8s STIG for Shoots configuration file](../../example/guides/partial-disa-k8s-stig-shoot.yaml) for this run.
+We will be using the sample [DISA K8s STIG for Shoots configuration file](../../example/guides/disa-k8s-stig-shoot.yaml) for this run.
 
 #### Configuration for the `managedk8s` provider
 
