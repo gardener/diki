@@ -89,7 +89,7 @@ func (r *Rule1000) Run(ctx context.Context) (rule.RuleResult, error) {
 		switch {
 		case extensionTypeIndex < 0:
 			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Extension type %s is not configured for the shoot cluster.", extension.Type), rule.NewTarget()))
-		case shoot.Spec.Extensions[extensionTypeIndex].Disabled == nil || !*(shoot.Spec.Extensions[extensionTypeIndex].Disabled):
+		case shoot.Spec.Extensions[extensionTypeIndex].Disabled == nil || !*shoot.Spec.Extensions[extensionTypeIndex].Disabled:
 			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Extension type %s is enabled for the shoot cluster.", extension.Type), rule.NewTarget()))
 		default:
 			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Extension type %s is disabled for the shoot cluster.", extension.Type), rule.NewTarget()))

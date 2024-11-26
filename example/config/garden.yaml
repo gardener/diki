@@ -15,6 +15,7 @@ providers:       # contains information about known providers
     ruleOptions:
     # - ruleID: "1000"
     #   args:
+    #     extensions:
     #     - type: extension-type-1
     #     - type: extension-type-2
     # - ruleID: "2000"
