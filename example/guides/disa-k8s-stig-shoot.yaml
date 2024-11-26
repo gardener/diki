@@ -88,5 +88,25 @@ providers:
       args:
         nodeGroupByLabels:
         - worker.gardener.cloud/pool
+- id: garden
+  name: "Garden"
+  metadata:
+    foo: bar
+  args:
+    kubeconfigPath: /tmp/garden.config  # path to garden cluster kubeconfig
+  rulesets:
+  - id: security-hardened-shoot-cluster
+    name: Security Hardened Shoot Cluster
+    version: v0.1.0
+    args:
+      projectNamespace: garden-project-name # name of project namespace containing the shoot resource to be tested
+      shootName: foo                        # name of shoot resource to be tested
+    ruleOptions:
+    - ruleID: "2007"
+      args:
+        # Diki will evaluate the shoot spec's PodSecurity profiles by comparing them to this value. The PodSecurityStandards profile must be one of the following: [restricted, baseline, privileged]
+        # Skip this argument if you want to compare the shoot spec's PodSecurity profiles with the baseline PodSecurity profile
+        minPodSecurityStandardsProfile: baseline 
 output:
+  path: /tmp/test-output.json # optional, path to summary json report. If --output flag is set this configuration is ignored
   minStatus: Passed
