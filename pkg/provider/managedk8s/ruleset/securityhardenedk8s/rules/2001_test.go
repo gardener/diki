@@ -103,7 +103,7 @@ var _ = Describe("#2001", func() {
 		Entry("should pass when options are set",
 			&corev1.SecurityContext{AllowPrivilegeEscalation: ptr.To(true)},
 			rules.Options2001{
-				AcceptedPods: []rules.AcceptedPods2001{
+				AcceptedPods: []option.AcceptedNamespacedObject{
 					{
 						NamespacedObjectSelector: option.NamespacedObjectSelector{
 							MatchLabels:          map[string]string{"foo": "bar"},

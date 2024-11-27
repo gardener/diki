@@ -77,7 +77,7 @@ var _ = Describe("#2004", func() {
 		Entry("should pass when options are set",
 			corev1.ServiceSpec{Type: "NodePort"},
 			rules.Options2004{
-				AcceptedServices: []rules.AcceptedServices2004{
+				AcceptedServices: []option.AcceptedNamespacedObject{
 					{
 						NamespacedObjectSelector: option.NamespacedObjectSelector{
 							MatchLabels:          map[string]string{"foo": "bar"},

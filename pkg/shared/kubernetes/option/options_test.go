@@ -14,6 +14,53 @@ import (
 )
 
 var _ = Describe("options", func() {
+	Describe("#ValidateObjectSelector", func() {
+		It("should correctly validate labels", func() {
+			attributes := []option.ClusterObjectSelector{
+				{
+					MatchLabels: map[string]string{"foo": "bar."},
+				},
+				{
+					MatchLabels: map[string]string{"at_ta": "bar"},
+				},
+				{
+					MatchLabels: map[string]string{"Valid": "label-pair"},
+				},
+				{
+					MatchLabels: map[string]string{"at$a": "bar"},
+				},
+				{},
+				{
+					MatchLabels: map[string]string{},
+				},
+			}
+
+			var result field.ErrorList
+			for _, p := range attributes {
+				result = append(result, p.Validate()...)
+			}
+
+			Expect(result).To(ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("[].matchLabels"),
+					"BadValue": Equal("bar."),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("[].matchLabels"),
+					"BadValue": Equal("at$a"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("[].matchLabels"),
+					"Detail": Equal("must not be empty"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("[].matchLabels"),
+					"Detail": Equal("must not be empty"),
+				}))))
+		})
+	})
+
 	Describe("#ValidateNamespacedObjectSelector", func() {
 		It("should correctly validate labels", func() {
 			attributes := []option.NamespacedObjectSelector{

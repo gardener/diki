@@ -17,6 +17,7 @@ import (
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -435,6 +436,123 @@ var _ = Describe("utils", func() {
 			services, err := utils.GetServices(ctx, fakeClient, namespaceDefault, labels.SelectorFromSet(labels.Set{"foo": "bar"}), 2)
 
 			Expect(len(services)).To(Equal(2))
+			Expect(err).To(BeNil())
+		})
+
+	})
+
+	Describe("#GetRoles", func() {
+		var (
+			fakeClient       client.Client
+			ctx              = context.TODO()
+			namespaceFoo     = "foo"
+			namespaceDefault = "default"
+		)
+
+		BeforeEach(func() {
+			fakeClient = fakeclient.NewClientBuilder().Build()
+			for i := 0; i < 10; i++ {
+				role := &rbacv1.Role{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      strconv.Itoa(i),
+						Namespace: namespaceDefault,
+					},
+				}
+				Expect(fakeClient.Create(ctx, role)).To(Succeed())
+			}
+			for i := 10; i < 12; i++ {
+				role := &rbacv1.Role{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      strconv.Itoa(i),
+						Namespace: namespaceDefault,
+						Labels: map[string]string{
+							"foo": "bar",
+						},
+					},
+				}
+				Expect(fakeClient.Create(ctx, role)).To(Succeed())
+			}
+			for i := 0; i < 6; i++ {
+				role := &rbacv1.Role{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      strconv.Itoa(i),
+						Namespace: namespaceFoo,
+					},
+				}
+				Expect(fakeClient.Create(ctx, role)).To(Succeed())
+			}
+		})
+
+		It("should return correct number of roles in default namespace", func() {
+			roles, err := utils.GetRoles(ctx, fakeClient, namespaceDefault, labels.NewSelector(), 2)
+
+			Expect(len(roles)).To(Equal(12))
+			Expect(err).To(BeNil())
+		})
+
+		It("should return correct number of roles in foo namespace", func() {
+			roles, err := utils.GetRoles(ctx, fakeClient, namespaceFoo, labels.NewSelector(), 2)
+
+			Expect(len(roles)).To(Equal(6))
+			Expect(err).To(BeNil())
+		})
+
+		It("should return correct number of roles in all namespaces", func() {
+			roles, err := utils.GetRoles(ctx, fakeClient, "", labels.NewSelector(), 2)
+
+			Expect(len(roles)).To(Equal(18))
+			Expect(err).To(BeNil())
+		})
+
+		It("should return correct number of labeled roles in default namespace", func() {
+			roles, err := utils.GetRoles(ctx, fakeClient, namespaceDefault, labels.SelectorFromSet(labels.Set{"foo": "bar"}), 2)
+
+			Expect(len(roles)).To(Equal(2))
+			Expect(err).To(BeNil())
+		})
+
+	})
+
+	Describe("#GetClusterRoles", func() {
+		var (
+			fakeClient client.Client
+			ctx        = context.TODO()
+		)
+
+		BeforeEach(func() {
+			fakeClient = fakeclient.NewClientBuilder().Build()
+			for i := 0; i < 10; i++ {
+				clusterRole := &rbacv1.ClusterRole{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: strconv.Itoa(i),
+					},
+				}
+				Expect(fakeClient.Create(ctx, clusterRole)).To(Succeed())
+			}
+			for i := 10; i < 12; i++ {
+				clusterRole := &rbacv1.ClusterRole{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: strconv.Itoa(i),
+						Labels: map[string]string{
+							"foo": "bar",
+						},
+					},
+				}
+				Expect(fakeClient.Create(ctx, clusterRole)).To(Succeed())
+			}
+		})
+
+		It("should return correct number of clusterRoles", func() {
+			clusterRoles, err := utils.GetClusterRoles(ctx, fakeClient, labels.NewSelector(), 2)
+
+			Expect(len(clusterRoles)).To(Equal(12))
+			Expect(err).To(BeNil())
+		})
+
+		It("should return correct number of labeled clusterRoles", func() {
+			clusterRoles, err := utils.GetClusterRoles(ctx, fakeClient, labels.SelectorFromSet(labels.Set{"foo": "bar"}), 2)
+
+			Expect(len(clusterRoles)).To(Equal(2))
 			Expect(err).To(BeNil())
 		})
 

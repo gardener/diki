@@ -31,12 +31,7 @@ type Rule2004 struct {
 }
 
 type Options2004 struct {
-	AcceptedServices []AcceptedServices2004 `json:"acceptedServices" yaml:"acceptedServices"`
-}
-
-type AcceptedServices2004 struct {
-	option.NamespacedObjectSelector
-	Justification string `json:"justification" yaml:"justification"`
+	AcceptedServices []option.AcceptedNamespacedObject `json:"acceptedServices" yaml:"acceptedServices"`
 }
 
 // Validate validates that option configurations are correctly defined
