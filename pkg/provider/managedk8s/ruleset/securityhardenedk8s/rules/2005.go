@@ -1,0 +1,115 @@
+// SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
+package rules
+
+import (
+	"context"
+	"slices"
+	"strings"
+
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
+	"github.com/gardener/diki/pkg/rule"
+	disaoptions "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+)
+
+var (
+	_ rule.Rule          = &Rule2005{}
+	_ rule.Severity      = &Rule2005{}
+	_ disaoptions.Option = &Options2005{}
+)
+
+type Rule2005 struct {
+	Client  client.Client
+	Options *Options2005
+}
+
+type Options2005 struct {
+	AllowedImages []AllowedImage `json:"allowedImages" yaml:"allowedImages"`
+}
+
+type AllowedImage struct {
+	Prefix string `json:"prefix" yaml:"prefix"`
+}
+
+// Validate validates that option configurations are correctly defined
+func (o Options2005) Validate() field.ErrorList {
+	var (
+		allErrs      field.ErrorList
+		allowImgPath = field.NewPath("allowedImages")
+	)
+
+	if len(o.AllowedImages) == 0 {
+		return field.ErrorList{field.Required(allowImgPath, "must not be empty")}
+	}
+
+	for i, r := range o.AllowedImages {
+		if len(r.Prefix) == 0 {
+			allErrs = append(allErrs, field.Required(allowImgPath.Index(i).Child("prefix"), "must not be empty"))
+		}
+	}
+
+	return allErrs
+}
+
+func (r *Rule2005) ID() string {
+	return "2005"
+}
+
+func (r *Rule2005) Name() string {
+	return "Container images must come from trusted repositories."
+}
+
+func (r *Rule2005) Severity() rule.SeverityLevel {
+	return rule.SeverityHigh
+}
+
+func (r *Rule2005) Run(ctx context.Context) (rule.RuleResult, error) {
+	if r.Options == nil {
+		return rule.Result(r, rule.FailedCheckResult("There are no allowed images in rule options.", nil)), nil
+	}
+
+	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+	}
+
+	var checkResults []rule.CheckResult
+
+	for _, pod := range pods {
+		podTarget := rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
+		for _, container := range pod.Spec.Containers {
+			containerTarget := podTarget.With("container", container.Name)
+
+			containerStatusIdx := slices.IndexFunc(pod.Status.ContainerStatuses, func(containerStatus corev1.ContainerStatus) bool {
+				return containerStatus.Name == container.Name
+			})
+
+			if containerStatusIdx < 0 {
+				checkResults = append(checkResults, rule.ErroredCheckResult("containerStatus not found for container", containerTarget))
+				continue
+			}
+
+			var (
+				imageRef       = pod.Status.ContainerStatuses[containerStatusIdx].ImageID
+				imageRefTarget = containerTarget.With("imageRef", imageRef)
+			)
+
+			if slices.ContainsFunc(r.Options.AllowedImages, func(allowedImage AllowedImage) bool {
+				return strings.HasPrefix(imageRef, allowedImage.Prefix)
+			}) {
+				checkResults = append(checkResults, rule.PassedCheckResult("Image has allowed prefix.", imageRefTarget))
+			} else {
+				checkResults = append(checkResults, rule.FailedCheckResult("Image has not allowed prefix.", imageRefTarget))
+			}
+		}
+	}
+
+	return rule.Result(r, checkResults...), nil
+}
