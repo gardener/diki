@@ -130,32 +130,37 @@ var _ = Describe("#2000", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Passed,
-				Message: "Ingress and egress traffic denied by default.",
-				Target:  rule.NewTarget("namespace", "default"),
+				Message: "Ingress traffic is denied by default.",
+				Target:  rule.NewTarget("namespace", "default", "kind", "networkPolicy", "name", "deny-all"),
 			},
 			{
 				Status:  rule.Passed,
-				Message: "Ingress traffic denied by default.",
-				Target:  rule.NewTarget("namespace", "kube-system"),
+				Message: "Egress traffic is denied by default.",
+				Target:  rule.NewTarget("namespace", "default", "kind", "networkPolicy", "name", "deny-all"),
+			},
+			{
+				Status:  rule.Passed,
+				Message: "Ingress traffic is denied by default.",
+				Target:  rule.NewTarget("namespace", "kube-system", "kind", "networkPolicy", "name", "deny-ingress"),
 			},
 			{
 				Status:  rule.Failed,
-				Message: "Egress traffic not denied by default.",
+				Message: "Egress traffic is not denied by default.",
 				Target:  rule.NewTarget("namespace", "kube-system"),
 			},
 			{
 				Status:  rule.Passed,
-				Message: "Egress traffic denied by default.",
+				Message: "Egress traffic is denied by default.",
+				Target:  rule.NewTarget("namespace", "kube-public", "kind", "networkPolicy", "name", "deny-egress"),
+			},
+			{
+				Status:  rule.Failed,
+				Message: "Ingress traffic is not denied by default.",
 				Target:  rule.NewTarget("namespace", "kube-public"),
 			},
 			{
 				Status:  rule.Failed,
-				Message: "Ingress traffic not denied by default.",
-				Target:  rule.NewTarget("namespace", "kube-public"),
-			},
-			{
-				Status:  rule.Failed,
-				Message: "Ingress and egress traffic not denied by default.",
+				Message: "Ingress and egress traffic is not denied by default.",
 				Target:  rule.NewTarget("namespace", "kube-node-lease"),
 			},
 		}

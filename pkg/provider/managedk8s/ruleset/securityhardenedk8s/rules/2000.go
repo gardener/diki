@@ -38,8 +38,6 @@ func (r *Rule2000) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
-	var checkResults []rule.CheckResult
-
 	networkPolicies, err := kubeutils.GetNetworkPolicies(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "serviceList"))), nil
@@ -56,11 +54,14 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 		groupedNetworkPolicies[np.Namespace] = append(groupedNetworkPolicies[np.Namespace], np)
 	}
 
+	var checkResults []rule.CheckResult
+
 	for _, namespace := range namespaces {
 		var (
-			deniesIngress bool
-			deniesEgress  bool
-			target        = rule.NewTarget("namespace", namespace.Name)
+			deniesIngress, deniesEgress bool
+			target                      = rule.NewTarget("namespace", namespace.Name)
+			deniesIngressTarget         = target
+			deniesEgressTarget          = target
 		)
 
 		for _, networkPolicy := range groupedNetworkPolicies[namespace.Name] {
@@ -69,28 +70,35 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 				continue
 			}
 
-			if len(networkPolicy.Spec.Ingress) == 0 &&
+			if !deniesIngress && len(networkPolicy.Spec.Ingress) == 0 &&
 				slices.Contains(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeIngress) {
+				deniesIngressTarget = deniesIngressTarget.With("kind", "networkPolicy", "name", networkPolicy.Name)
 				deniesIngress = true
 			}
 
-			if len(networkPolicy.Spec.Egress) == 0 &&
+			if !deniesEgress && len(networkPolicy.Spec.Egress) == 0 &&
 				slices.Contains(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeEgress) {
+				deniesEgressTarget = deniesEgressTarget.With("kind", "networkPolicy", "name", networkPolicy.Name)
 				deniesEgress = true
+			}
+
+			if deniesIngress && deniesEgress {
+				break
 			}
 		}
 
 		switch {
 		case deniesIngress && deniesEgress:
-			checkResults = append(checkResults, rule.PassedCheckResult("Ingress and egress traffic denied by default.", target))
+			checkResults = append(checkResults, rule.PassedCheckResult("Ingress traffic is denied by default.", deniesIngressTarget),
+				rule.PassedCheckResult("Egress traffic is denied by default.", deniesEgressTarget))
 		case !deniesIngress && !deniesEgress:
-			checkResults = append(checkResults, rule.FailedCheckResult("Ingress and egress traffic not denied by default.", target))
+			checkResults = append(checkResults, rule.FailedCheckResult("Ingress and egress traffic is not denied by default.", target))
 		case deniesIngress:
-			checkResults = append(checkResults, rule.PassedCheckResult("Ingress traffic denied by default.", target),
-				rule.FailedCheckResult("Egress traffic not denied by default.", target))
+			checkResults = append(checkResults, rule.PassedCheckResult("Ingress traffic is denied by default.", deniesIngressTarget),
+				rule.FailedCheckResult("Egress traffic is not denied by default.", target))
 		default:
-			checkResults = append(checkResults, rule.PassedCheckResult("Egress traffic denied by default.", target),
-				rule.FailedCheckResult("Ingress traffic not denied by default.", target))
+			checkResults = append(checkResults, rule.PassedCheckResult("Egress traffic is denied by default.", deniesEgressTarget),
+				rule.FailedCheckResult("Ingress traffic is not denied by default.", target))
 		}
 	}
 
