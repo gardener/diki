@@ -44,13 +44,9 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 	}
 
 	rules := []rule.Rule{
-		rule.NewSkipRule(
-			"2000",
-			"Ingress and egress traffic must be restricted by default.",
-			"Not implemented.",
-			rule.NotImplemented,
-			rule.SkipRuleWithSeverity(rule.SeverityHigh),
-		),
+		&rules.Rule2000{
+			Client: c,
+		},
 		&rules.Rule2001{
 			Client:  c,
 			Options: opts2001,

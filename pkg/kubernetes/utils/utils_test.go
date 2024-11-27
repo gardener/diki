@@ -17,6 +17,7 @@ import (
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -658,6 +659,77 @@ var _ = Describe("utils", func() {
 			replicaSets, err := utils.GetReplicaSets(ctx, fakeClient, namespaceDefault, labels.SelectorFromSet(labels.Set{"foo": "bar"}), 2)
 
 			Expect(len(replicaSets)).To(Equal(2))
+			Expect(err).To(BeNil())
+		})
+	})
+
+	Describe("#GetNetworkPolicies", func() {
+		var (
+			fakeClient       client.Client
+			ctx              = context.TODO()
+			namespaceFoo     = "foo"
+			namespaceDefault = "default"
+		)
+
+		BeforeEach(func() {
+			fakeClient = fakeclient.NewClientBuilder().Build()
+			for i := 0; i < 10; i++ {
+				networkPolicy := &networkingv1.NetworkPolicy{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      strconv.Itoa(i),
+						Namespace: namespaceDefault,
+					},
+				}
+				Expect(fakeClient.Create(ctx, networkPolicy)).To(Succeed())
+			}
+			for i := 10; i < 12; i++ {
+				networkPolicy := &networkingv1.NetworkPolicy{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      strconv.Itoa(i),
+						Namespace: namespaceDefault,
+						Labels: map[string]string{
+							"foo": "bar",
+						},
+					},
+				}
+				Expect(fakeClient.Create(ctx, networkPolicy)).To(Succeed())
+			}
+			for i := 0; i < 6; i++ {
+				networkPolicy := &networkingv1.NetworkPolicy{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      strconv.Itoa(i),
+						Namespace: namespaceFoo,
+					},
+				}
+				Expect(fakeClient.Create(ctx, networkPolicy)).To(Succeed())
+			}
+		})
+
+		It("should return correct number of networkPolicies in default namespace", func() {
+			networkPolicies, err := utils.GetNetworkPolicies(ctx, fakeClient, namespaceDefault, labels.NewSelector(), 2)
+
+			Expect(len(networkPolicies)).To(Equal(12))
+			Expect(err).To(BeNil())
+		})
+
+		It("should return correct number of networkPolicies in foo namespace", func() {
+			networkPolicies, err := utils.GetNetworkPolicies(ctx, fakeClient, namespaceFoo, labels.NewSelector(), 2)
+
+			Expect(len(networkPolicies)).To(Equal(6))
+			Expect(err).To(BeNil())
+		})
+
+		It("should return correct number of networkPolicies in all namespaces", func() {
+			networkPolicies, err := utils.GetNetworkPolicies(ctx, fakeClient, "", labels.NewSelector(), 2)
+
+			Expect(len(networkPolicies)).To(Equal(18))
+			Expect(err).To(BeNil())
+		})
+
+		It("should return correct number of labeled networkPolicies in default namespace", func() {
+			networkPolicies, err := utils.GetNetworkPolicies(ctx, fakeClient, namespaceDefault, labels.SelectorFromSet(labels.Set{"foo": "bar"}), 2)
+
+			Expect(len(networkPolicies)).To(Equal(2))
 			Expect(err).To(BeNil())
 		})
 	})
