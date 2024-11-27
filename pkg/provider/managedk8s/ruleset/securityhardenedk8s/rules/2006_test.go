@@ -81,12 +81,12 @@ var _ = Describe("#2006", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Passed,
-				Message: "RBAC Role does not use \"*\" in policyRule resources.",
+				Message: "RBAC Role does not use \"*\" in policy rule resources.",
 				Target:  rule.NewTarget("kind", "role", "name", "foo", "namespace", "foo"),
 			},
 			{
 				Status:  rule.Passed,
-				Message: "RBAC Role does not use \"*\" in policyRule resources.",
+				Message: "RBAC Role does not use \"*\" in policy rule resources.",
 				Target:  rule.NewTarget("kind", "clusterRole", "name", "bar"),
 			},
 		}
@@ -115,12 +115,12 @@ var _ = Describe("#2006", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Failed,
-				Message: "RBAC Role uses \"*\" in policyRule resources.",
+				Message: "RBAC Role uses \"*\" in policy rule resources.",
 				Target:  rule.NewTarget("kind", "role", "name", "foo", "namespace", "foo"),
 			},
 			{
 				Status:  rule.Failed,
-				Message: "RBAC Role uses \"*\" in policyRule resources.",
+				Message: "RBAC Role uses \"*\" in policy rule resources.",
 				Target:  rule.NewTarget("kind", "clusterRole", "name", "bar"),
 			},
 		}
@@ -149,12 +149,12 @@ var _ = Describe("#2006", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Passed,
-				Message: "RBAC Role does not use \"*\" in policyRule resources.",
+				Message: "RBAC Role does not use \"*\" in policy rule resources.",
 				Target:  rule.NewTarget("kind", "role", "name", "foo", "namespace", "foo"),
 			},
 			{
 				Status:  rule.Failed,
-				Message: "RBAC Role uses \"*\" in policyRule resources.",
+				Message: "RBAC Role uses \"*\" in policy rule resources.",
 				Target:  rule.NewTarget("kind", "clusterRole", "name", "bar"),
 			},
 		}
@@ -176,9 +176,9 @@ var _ = Describe("#2006", func() {
 					},
 				},
 			},
-			AcceptedClusterRoles: []option.AcceptedObject{
+			AcceptedClusterRoles: []option.AcceptedClusterObject{
 				{
-					ObjectSelector: option.ObjectSelector{
+					ClusterObjectSelector: option.ClusterObjectSelector{
 						MatchLabels: map[string]string{
 							"bar": "foo",
 						},
@@ -208,7 +208,7 @@ var _ = Describe("#2006", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Accepted,
-				Message: "RBAC Role accepted to use \"*\" in policyRule resources.",
+				Message: "RBAC Role is accepted to use \"*\" in policy rule resources.",
 				Target:  rule.NewTarget("kind", "role", "name", "foo", "namespace", "foo"),
 			},
 			{

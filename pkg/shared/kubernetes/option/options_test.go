@@ -16,7 +16,7 @@ import (
 var _ = Describe("options", func() {
 	Describe("#ValidateObjectSelector", func() {
 		It("should correctly validate labels", func() {
-			attributes := []option.ObjectSelector{
+			attributes := []option.ClusterObjectSelector{
 				{
 					MatchLabels: map[string]string{"foo": "bar."},
 				},

@@ -18,11 +18,13 @@ import (
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	disaoptions "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var (
-	_ rule.Rule     = &Rule2006{}
-	_ rule.Severity = &Rule2006{}
+	_ rule.Rule          = &Rule2006{}
+	_ rule.Severity      = &Rule2006{}
+	_ disaoptions.Option = &Options2006{}
 )
 
 type Rule2006 struct {
@@ -32,10 +34,10 @@ type Rule2006 struct {
 
 type Options2006 struct {
 	AcceptedRoles        []option.AcceptedNamespacedObject `json:"acceptedRoles" yaml:"acceptedRoles"`
-	AcceptedClusterRoles []option.AcceptedObject           `json:"acceptedClusterRoles" yaml:"acceptedClusterRoles"`
+	AcceptedClusterRoles []option.AcceptedClusterObject    `json:"acceptedClusterRoles" yaml:"acceptedClusterRoles"`
 }
 
-// Validate validates that option configurations are correctly defined
+// Validate validates that option configurations are correctly defined.
 func (o Options2006) Validate() field.ErrorList {
 	var allErrs field.ErrorList
 
@@ -81,7 +83,7 @@ func (r *Rule2006) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
 		checkResults []rule.CheckResult
 		checkRules   = func(policyRules []rbacv1.PolicyRule, accepted bool, justification string, target rule.Target) rule.CheckResult {
-			msg := "RBAC Role accepted to use \"*\" in policyRule resources."
+			msg := "RBAC Role is accepted to use \"*\" in policy rule resources."
 			if len(justification) > 0 {
 				msg = justification
 			}
@@ -92,12 +94,12 @@ func (r *Rule2006) Run(ctx context.Context) (rule.RuleResult, error) {
 						if accepted {
 							return rule.AcceptedCheckResult(msg, target)
 						} else {
-							return rule.FailedCheckResult("RBAC Role uses \"*\" in policyRule resources.", target)
+							return rule.FailedCheckResult("RBAC Role uses \"*\" in policy rule resources.", target)
 						}
 					}
 				}
 			}
-			return rule.PassedCheckResult("RBAC Role does not use \"*\" in policyRule resources.", target)
+			return rule.PassedCheckResult("RBAC Role does not use \"*\" in policy rule resources.", target)
 		}
 	)
 

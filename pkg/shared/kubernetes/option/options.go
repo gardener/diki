@@ -11,16 +11,16 @@ import (
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
-// ObjectSelector contains generalized options for matching entities by their attribute labels.
-type ObjectSelector struct {
+// ClusterObjectSelector contains generalized options for matching entities by their attribute labels.
+type ClusterObjectSelector struct {
 	MatchLabels map[string]string `json:"matchLabels" yaml:"matchLabels"`
 }
 
 // TODO: Implement new Option interface in this package with Validate method, which recieves field.Path.
-var _ option.Option = (*ObjectSelector)(nil)
+var _ option.Option = (*ClusterObjectSelector)(nil)
 
 // Validate validates that option configurations are correctly defined.
-func (s *ObjectSelector) Validate() field.ErrorList {
+func (s *ClusterObjectSelector) Validate() field.ErrorList {
 	var (
 		allErrs  field.ErrorList
 		rootPath = field.NewPath("")
@@ -64,9 +64,9 @@ func (s *NamespacedObjectSelector) Validate() field.ErrorList {
 	return allErrs
 }
 
-// AcceptedObject contains generalized properties for accepting object.
-type AcceptedObject struct {
-	ObjectSelector
+// AcceptedClusterObject contains generalized properties for accepting object.
+type AcceptedClusterObject struct {
+	ClusterObjectSelector
 	Justification string `json:"justification" yaml:"justification"`
 }
 
