@@ -160,7 +160,12 @@ var _ = Describe("#2000", func() {
 			},
 			{
 				Status:  rule.Failed,
-				Message: "Ingress and egress traffic is not denied by default.",
+				Message: "Ingress traffic is not denied by default.",
+				Target:  rule.NewTarget("namespace", "kube-node-lease"),
+			},
+			{
+				Status:  rule.Failed,
+				Message: "Egress traffic is not denied by default.",
 				Target:  rule.NewTarget("namespace", "kube-node-lease"),
 			},
 		}

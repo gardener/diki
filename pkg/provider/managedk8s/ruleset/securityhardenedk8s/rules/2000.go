@@ -87,18 +87,16 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 			}
 		}
 
-		switch {
-		case deniesIngress && deniesEgress:
-			checkResults = append(checkResults, rule.PassedCheckResult("Ingress traffic is denied by default.", deniesIngressTarget),
-				rule.PassedCheckResult("Egress traffic is denied by default.", deniesEgressTarget))
-		case !deniesIngress && !deniesEgress:
-			checkResults = append(checkResults, rule.FailedCheckResult("Ingress and egress traffic is not denied by default.", target))
-		case deniesIngress:
-			checkResults = append(checkResults, rule.PassedCheckResult("Ingress traffic is denied by default.", deniesIngressTarget),
-				rule.FailedCheckResult("Egress traffic is not denied by default.", target))
-		default:
-			checkResults = append(checkResults, rule.PassedCheckResult("Egress traffic is denied by default.", deniesEgressTarget),
-				rule.FailedCheckResult("Ingress traffic is not denied by default.", target))
+		if deniesIngress {
+			checkResults = append(checkResults, rule.PassedCheckResult("Ingress traffic is denied by default.", deniesIngressTarget))
+		} else {
+			checkResults = append(checkResults, rule.FailedCheckResult("Ingress traffic is not denied by default.", target))
+		}
+
+		if deniesEgress {
+			checkResults = append(checkResults, rule.PassedCheckResult("Egress traffic is denied by default.", deniesEgressTarget))
+		} else {
+			checkResults = append(checkResults, rule.FailedCheckResult("Egress traffic is not denied by default.", target))
 		}
 	}
 
