@@ -68,7 +68,7 @@ var _ = Describe("#2005", func() {
 		}
 	})
 
-	It("should error when rule options are missing", func() {
+	It("should fail when rule options are missing", func() {
 		Expect(client.Create(ctx, pod)).To(Succeed())
 
 		r := &rules.Rule2005{Client: client}
@@ -76,7 +76,7 @@ var _ = Describe("#2005", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.ErroredCheckResult("rule options are missing, but required", nil),
+			rule.FailedCheckResult("There are no allowed images in rule options.", nil),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))

@@ -209,7 +209,7 @@ providers:                   # contains information about known providers
     # - ruleID: "2005"
     #   args:
     #     allowedImages:
-    #     - prefix: "repository.prefix"
+    #     - prefix: "example.foo.repository/organisation/releases/"
     # - ruleID: "2008"
     #   args:
     #     acceptedPods:

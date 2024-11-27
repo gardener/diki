@@ -72,7 +72,7 @@ func (r *Rule2005) Severity() rule.SeverityLevel {
 
 func (r *Rule2005) Run(ctx context.Context) (rule.RuleResult, error) {
 	if r.Options == nil {
-		return rule.Result(r, rule.ErroredCheckResult("rule options are missing, but required", nil)), nil
+		return rule.Result(r, rule.FailedCheckResult("There are no allowed images in rule options.", nil)), nil
 	}
 
 	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
