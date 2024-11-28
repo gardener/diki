@@ -19,6 +19,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -730,6 +731,47 @@ var _ = Describe("utils", func() {
 			networkPolicies, err := utils.GetNetworkPolicies(ctx, fakeClient, namespaceDefault, labels.SelectorFromSet(labels.Set{"foo": "bar"}), 2)
 
 			Expect(len(networkPolicies)).To(Equal(2))
+			Expect(err).To(BeNil())
+		})
+	})
+
+	Describe("#GetStorageClasses", func() {
+		var (
+			fakeClient client.Client
+			ctx        = context.TODO()
+		)
+
+		BeforeEach(func() {
+			fakeClient = fakeclient.NewClientBuilder().Build()
+			for i := 0; i < 4; i++ {
+				storageClass := storagev1.StorageClass{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: strconv.Itoa(i),
+					},
+				}
+				Expect(fakeClient.Create(ctx, &storageClass)).To(BeNil())
+			}
+			for i := 4; i < 6; i++ {
+				storageClass := storagev1.StorageClass{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: strconv.Itoa(i),
+						Labels: map[string]string{
+							"foo": "bar",
+						},
+					},
+				}
+				Expect(fakeClient.Create(ctx, &storageClass)).To(BeNil())
+			}
+		})
+
+		It("should return correct number of storageClasses", func() {
+			storageClasses, err := utils.GetStorageClasses(ctx, fakeClient, labels.NewSelector(), 4)
+			Expect(len(storageClasses)).To(Equal(6))
+			Expect(err).To(BeNil())
+		})
+		It("should return correct number of labeled storageClasses", func() {
+			storageClasses, err := utils.GetStorageClasses(ctx, fakeClient, labels.SelectorFromSet(labels.Set{"foo": "bar"}), 4)
+			Expect(len(storageClasses)).To(Equal(2))
 			Expect(err).To(BeNil())
 		})
 	})
