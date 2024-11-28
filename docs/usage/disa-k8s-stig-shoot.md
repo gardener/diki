@@ -14,8 +14,8 @@ The `garden` provider is used for accessing the`Garden` cluster, in which the `S
 
 > [!IMPORTANT]
 > Since the two providers that we are going to use in this guide do not leverage access to the Shoot cluster controlplane,
-> they only implement checks that concern configurations that users can change/modify by themselves.
-> Compliance for configurations that cannot be influenced by users is ensured by Gardener.
+> they only implement checks that concern configurations that cluster owners can change/modify by themselves.
+> Compliance for configurations that cannot be influenced by cluster owners shall be ensured by the team that operates the concrete Gardener installation.
 
 ### Prerequisites
 
