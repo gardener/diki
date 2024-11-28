@@ -24,6 +24,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -207,6 +208,27 @@ func GetNetworkPolicies(ctx context.Context, c client.Client, namespace string, 
 
 		if len(networkPolicyList.Continue) == 0 {
 			return networkPolicies, nil
+		}
+	}
+}
+
+// GetStorageClasses returns all storageClasses of the cluster.
+// It retrieves storageClasses by portions set by limit.
+func GetStorageClasses(ctx context.Context, c client.Client, selector labels.Selector, limit int64) ([]storagev1.StorageClass, error) {
+	var (
+		storageClasses   []storagev1.StorageClass
+		storageClassList = &storagev1.StorageClassList{}
+	)
+
+	for {
+		if err := c.List(ctx, storageClassList, client.Limit(limit), client.MatchingLabelsSelector{Selector: selector}, client.Continue(storageClassList.Continue)); err != nil {
+			return nil, err
+		}
+
+		storageClasses = append(storageClasses, storageClassList.Items...)
+
+		if len(storageClassList.Continue) == 0 {
+			return storageClasses, nil
 		}
 	}
 }

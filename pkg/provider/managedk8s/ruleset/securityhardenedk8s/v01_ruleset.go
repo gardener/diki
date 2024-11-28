@@ -51,13 +51,9 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			Client:  c,
 			Options: opts2001,
 		},
-		rule.NewSkipRule(
-			"2002",
-			"Storage Classes should have a \"Delete\" reclaim policy.",
-			"Not implemented.",
-			rule.NotImplemented,
-			rule.SkipRuleWithSeverity(rule.SeverityMedium),
-		),
+		&rules.Rule2002{
+			Client: c,
+		},
 		rule.NewSkipRule(
 			"2003",
 			"Pods should use only allowed volume types.",
