@@ -51,8 +51,6 @@ func (r *Rule2002) Run(ctx context.Context) (rule.RuleResult, error) {
 	for _, storageClass := range storageClasses {
 		target := rule.NewTarget("kind", "storageClass", "name", storageClass.Name)
 		switch {
-		case storageClass.ReclaimPolicy == nil:
-			checkResults = append(checkResults, rule.FailedCheckResult("StorageClass does not have a configured ReclaimPolicy.", target))
 		case storageClass.ReclaimPolicy != nil && *storageClass.ReclaimPolicy == corev1.PersistentVolumeReclaimDelete:
 			checkResults = append(checkResults, rule.PassedCheckResult("StorageClass has a Delete ReclaimPolicy set.", target))
 		default:
