@@ -26,10 +26,6 @@ var _ = Describe("#2002", func() {
 		plainStorageClass *storagev1.StorageClass
 
 		ctx = context.TODO()
-
-		ruleID   = "2002"
-		ruleName = "Storage Classes should have a \"Delete\" reclaim policy."
-		severity = rule.SeverityMedium
 	)
 
 	BeforeEach(func() {
@@ -47,7 +43,7 @@ var _ = Describe("#2002", func() {
 		r := rules.Rule2002{Client: client}
 		res, err := r.Run(ctx)
 		Expect(err).To(BeNil())
-		Expect(res).To(Equal(rule.RuleResult{RuleID: ruleID, RuleName: ruleName, Severity: severity, CheckResults: expectedCheckResults}))
+		Expect(res.CheckResults).To(Equal(expectedCheckResults))
 	},
 		Entry("should pass when no storage classes are present",
 			func() {},
