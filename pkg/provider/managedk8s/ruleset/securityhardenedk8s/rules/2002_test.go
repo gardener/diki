@@ -26,6 +26,9 @@ var _ = Describe("#2002", func() {
 		plainStorageClass *storagev1.StorageClass
 
 		ctx = context.TODO()
+
+		deleteReclaimPolicy    corev1.PersistentVolumeReclaimPolicy = "Delete"
+		notDeleteReclaimPolicy corev1.PersistentVolumeReclaimPolicy = "NotDelete"
 	)
 
 	BeforeEach(func() {
@@ -48,7 +51,7 @@ var _ = Describe("#2002", func() {
 		Entry("should pass when no storage classes are present",
 			func() {},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "The cluster doesn't have any StorageClasses.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "The cluster does not have any StorageClasses.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should pass when a storage class's reclaim policy is default",
@@ -56,25 +59,25 @@ var _ = Describe("#2002", func() {
 				Expect(client.Create(ctx, plainStorageClass)).To(Succeed())
 			},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "The StorageClass has a Delete ReclaimPolicy set.", Target: rule.NewTarget("kind", "storageClass", "name", "default")},
+				{Status: rule.Passed, Message: "StorageClass defaults to Delete ReclaimPolicy.", Target: rule.NewTarget("kind", "storageClass", "name", "default")},
 			},
 		),
 		Entry("should pass when a storage class's reclaim policy is explicitly set to delete",
 			func() {
-				plainStorageClass.ReclaimPolicy = ptr.To(corev1.PersistentVolumeReclaimDelete)
+				plainStorageClass.ReclaimPolicy = ptr.To(deleteReclaimPolicy)
 				Expect(client.Create(ctx, plainStorageClass)).To(Succeed())
 			},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "The StorageClass has a Delete ReclaimPolicy set.", Target: rule.NewTarget("kind", "storageClass", "name", "default")},
+				{Status: rule.Passed, Message: "StorageClass has a Delete ReclaimPolicy set.", Target: rule.NewTarget("kind", "storageClass", "name", "default")},
 			},
 		),
 		Entry("should fail when a storage class's reclaim policy is set to a non-delete value",
 			func() {
-				plainStorageClass.ReclaimPolicy = ptr.To(corev1.PersistentVolumeReclaimRecycle)
+				plainStorageClass.ReclaimPolicy = ptr.To(notDeleteReclaimPolicy)
 				Expect(client.Create(ctx, plainStorageClass)).To(Succeed())
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "The StorageClass has a Recycle ReclaimPolicy set.", Target: rule.NewTarget("kind", "storageClass", "name", "default")},
+				{Status: rule.Failed, Message: "StorageClass does not have a Delete ReclaimPolicy set.", Target: rule.NewTarget("kind", "storageClass", "name", "default")},
 			},
 		),
 		Entry("should return multiple check results when multiple storage classes are configured",
@@ -85,18 +88,18 @@ var _ = Describe("#2002", func() {
 
 				storageClassDeletePolicy := plainStorageClass.DeepCopy()
 				storageClassDeletePolicy.Name = "storageClassDeletePolicyPolicy"
-				storageClassDeletePolicy.ReclaimPolicy = ptr.To(corev1.PersistentVolumeReclaimDelete)
+				storageClassDeletePolicy.ReclaimPolicy = ptr.To(deleteReclaimPolicy)
 				Expect(client.Create(ctx, storageClassDeletePolicy)).To(Succeed())
 
 				storageClassRetainPolicy := plainStorageClass.DeepCopy()
 				storageClassRetainPolicy.Name = "storageClassRetainPolicyPolicy"
-				storageClassRetainPolicy.ReclaimPolicy = ptr.To(corev1.PersistentVolumeReclaimRetain)
+				storageClassRetainPolicy.ReclaimPolicy = ptr.To(notDeleteReclaimPolicy)
 				Expect(client.Create(ctx, storageClassRetainPolicy)).To(Succeed())
 			},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "The StorageClass has a Delete ReclaimPolicy set.", Target: rule.NewTarget("kind", "storageClass", "name", "storageClassDefault")},
-				{Status: rule.Passed, Message: "The StorageClass has a Delete ReclaimPolicy set.", Target: rule.NewTarget("kind", "storageClass", "name", "storageClassDeletePolicyPolicy")},
-				{Status: rule.Failed, Message: "The StorageClass has a Retain ReclaimPolicy set.", Target: rule.NewTarget("kind", "storageClass", "name", "storageClassRetainPolicyPolicy")},
+				{Status: rule.Passed, Message: "StorageClass defaults to Delete ReclaimPolicy.", Target: rule.NewTarget("kind", "storageClass", "name", "storageClassDefault")},
+				{Status: rule.Passed, Message: "StorageClass has a Delete ReclaimPolicy set.", Target: rule.NewTarget("kind", "storageClass", "name", "storageClassDeletePolicyPolicy")},
+				{Status: rule.Failed, Message: "StorageClass does not have a Delete ReclaimPolicy set.", Target: rule.NewTarget("kind", "storageClass", "name", "storageClassRetainPolicyPolicy")},
 			},
 		),
 	)

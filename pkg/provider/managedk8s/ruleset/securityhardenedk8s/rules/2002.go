@@ -6,7 +6,6 @@ package rules
 
 import (
 	"context"
-	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -44,17 +43,19 @@ func (r *Rule2002) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if len(storageClasses) == 0 {
-		return rule.Result(r, rule.PassedCheckResult("The cluster doesn't have any StorageClasses.", rule.NewTarget())), nil
+		return rule.Result(r, rule.PassedCheckResult("The cluster does not have any StorageClasses.", rule.NewTarget())), nil
 	}
 
 	var checkResults []rule.CheckResult
 
 	for _, storageClass := range storageClasses {
 		switch {
-		case storageClass.ReclaimPolicy == nil || *storageClass.ReclaimPolicy == corev1.PersistentVolumeReclaimDelete:
-			checkResults = append(checkResults, rule.PassedCheckResult("The StorageClass has a Delete ReclaimPolicy set.", rule.NewTarget("kind", "storageClass", "name", storageClass.Name)))
+		case storageClass.ReclaimPolicy == nil:
+			checkResults = append(checkResults, rule.PassedCheckResult("StorageClass defaults to Delete ReclaimPolicy.", rule.NewTarget("kind", "storageClass", "name", storageClass.Name)))
+		case *storageClass.ReclaimPolicy == corev1.PersistentVolumeReclaimDelete:
+			checkResults = append(checkResults, rule.PassedCheckResult("StorageClass has a Delete ReclaimPolicy set.", rule.NewTarget("kind", "storageClass", "name", storageClass.Name)))
 		default:
-			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("The StorageClass has a %v ReclaimPolicy set.", *storageClass.ReclaimPolicy), rule.NewTarget("kind", "storageClass", "name", storageClass.Name)))
+			checkResults = append(checkResults, rule.FailedCheckResult("StorageClass does not have a Delete ReclaimPolicy set.", rule.NewTarget("kind", "storageClass", "name", storageClass.Name)))
 		}
 	}
 
