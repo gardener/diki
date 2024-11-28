@@ -66,12 +66,12 @@ var _ = Describe("#2007", func() {
 		r := &rules.Rule2007{Client: client}
 
 		role.Rules = append(role.Rules, rbacv1.PolicyRule{
-			Verbs: []string{"pods", "secret"},
+			Verbs: []string{"get", "watch"},
 		})
 		Expect(client.Create(ctx, role)).To(Succeed())
 
 		clusterRole.Rules = append(clusterRole.Rules, rbacv1.PolicyRule{
-			Verbs: []string{"configmaps"},
+			Verbs: []string{"update"},
 		})
 		Expect(client.Create(ctx, clusterRole)).To(Succeed())
 
@@ -98,14 +98,14 @@ var _ = Describe("#2007", func() {
 		r := &rules.Rule2007{Client: client}
 
 		role.Rules = append(role.Rules, rbacv1.PolicyRule{
-			Verbs: []string{"pods", "*"},
+			Verbs: []string{"get", "*"},
 		})
 		Expect(client.Create(ctx, role)).To(Succeed())
 
 		clusterRole.Rules = append(clusterRole.Rules, rbacv1.PolicyRule{
-			Verbs: []string{"configmaps"},
+			Verbs: []string{"update"},
 		}, rbacv1.PolicyRule{
-			Verbs: []string{"config*"},
+			Verbs: []string{"patch*"},
 		})
 		Expect(client.Create(ctx, clusterRole)).To(Succeed())
 
@@ -132,12 +132,12 @@ var _ = Describe("#2007", func() {
 		r := &rules.Rule2007{Client: client}
 
 		role.Rules = append(role.Rules, rbacv1.PolicyRule{
-			Verbs: []string{"pods", "secrets"},
+			Verbs: []string{"get", "watch"},
 		})
 		Expect(client.Create(ctx, role)).To(Succeed())
 
 		clusterRole.Rules = append(clusterRole.Rules, rbacv1.PolicyRule{
-			Verbs: []string{"configmaps"},
+			Verbs: []string{"update"},
 		}, rbacv1.PolicyRule{
 			Verbs: []string{"*"},
 		})
@@ -191,14 +191,14 @@ var _ = Describe("#2007", func() {
 		Expect(client.Create(ctx, namespace)).To(Succeed())
 
 		role.Rules = append(role.Rules, rbacv1.PolicyRule{
-			Verbs: []string{"pods", "*"},
+			Verbs: []string{"get", "*"},
 		})
 		Expect(client.Create(ctx, role)).To(Succeed())
 
 		clusterRole.Rules = append(clusterRole.Rules, rbacv1.PolicyRule{
-			Verbs: []string{"configmaps"},
+			Verbs: []string{"update"},
 		}, rbacv1.PolicyRule{
-			Verbs: []string{"config*"},
+			Verbs: []string{"patch*"},
 		})
 		Expect(client.Create(ctx, clusterRole)).To(Succeed())
 
