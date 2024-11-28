@@ -7,7 +7,10 @@ package rules
 import (
 	"context"
 
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	"k8s.io/apimachinery/pkg/labels"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var (
@@ -16,6 +19,7 @@ var (
 )
 
 type Rule2003 struct {
+	Client client.Client
 }
 
 func (r *Rule2003) ID() string {
@@ -31,5 +35,29 @@ func (r *Rule2003) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
+	allNamespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil
+	}
 
+	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+	}
+
+	var checkResults []rule.CheckResult
+
+	for _, pod := range pods {
+		podTarget := rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
+		for _, volume := range pod.Spec.Volumes {
+			if volume.ConfigMap == nil && volume.CSI == nil && volume.DownwardAPI == nil &&
+				volume.EmptyDir == nil && volume.Ephemeral == nil && volume.PersistentVolumeClaim == nil && volume.Projected == nil && volume.Secret == nil {
+				checkResults = append(checkResults, rule.FailedCheckResult("Pod volume type is not within the accepted types.", podTarget.With("volume", volume.Name)))
+			} else {
+				checkResults = append(checkResults, rule.PassedCheckResult("Pod volume type is not within the accepted types.", podTarget.With("volume", volume.Name)))
+			}
+		}
+	}
+
+	return rule.Result(r, checkResults...), nil
 }
