@@ -26,6 +26,10 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 	if err != nil {
 		return fmt.Errorf("rule option 2001 error: %s", err.Error())
 	}
+	opts2003, err := getV01OptionOrNil[rules.Options2003](ruleOptions["2003"].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 2003 error: %s", err.Error())
+	}
 	opts2004, err := getV01OptionOrNil[rules.Options2004](ruleOptions["2004"].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 2004 error: %s", err.Error())
@@ -58,13 +62,10 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 		&rules.Rule2002{
 			Client: c,
 		},
-		rule.NewSkipRule(
-			"2003",
-			"Pods should use only allowed volume types.",
-			"Not implemented.",
-			rule.NotImplemented,
-			rule.SkipRuleWithSeverity(rule.SeverityMedium),
-		),
+		&rules.Rule2003{
+			Client:  c,
+			Options: opts2003,
+		},
 		&rules.Rule2004{
 			Client:  c,
 			Options: opts2004,

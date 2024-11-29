@@ -6,10 +6,13 @@ package rules
 
 import (
 	"context"
+	"slices"
 
+	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -25,9 +28,8 @@ type Options2003 struct {
 }
 
 type AcceptedPods2003 struct {
-	option.NamespacedObjectSelector
-	VolumeNames   []string `json:"volumeNames" yaml:"volumeNames"`
-	Justification string   `json:"justification" yaml:"justification"`
+	option.AcceptedNamespacedObject
+	VolumeNames []string `json:"volumeNames" yaml:"volumeNames"`
 }
 
 // Validate validates that option configurations are correctly defined
@@ -78,18 +80,45 @@ func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
 	}
 
-	var checkResults []rule.CheckResult
+	var (
+		checkResults []rule.CheckResult
+		accepted     = func(volume corev1.Volume, pod corev1.Pod, namespace corev1.Namespace) (bool, string) {
+			if r.Options == nil {
+				return false, ""
+			}
+			for _, acceptedPod := range r.Options.AcceptedPods {
+				if utils.MatchLabels(pod.Labels, acceptedPod.MatchLabels) && utils.MatchLabels(namespace.Labels, acceptedPod.NamespaceMatchLabels) {
+					if slices.Contains(acceptedPod.VolumeNames, volume.Name) {
+						return true, acceptedPod.Justification
+					}
+				}
+			}
+			return false, ""
+		}
+	)
 
 	for _, pod := range pods {
 		for _, volume := range pod.Spec.Volumes {
-			if volume.ConfigMap == nil && volume.CSI == nil && volume.DownwardAPI == nil &&
-				volume.EmptyDir == nil && volume.Ephemeral == nil && volume.PersistentVolumeClaim == nil && volume.Projected == nil && volume.Secret == nil {
-				checkResults = append(checkResults, rule.FailedCheckResult("Pod volume type is not within the accepted types.", podTarget.With("volume", volume.Name)))
+			volumeTarget := rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace, "volume", volume.Name)
+			if volume.ConfigMap == nil && volume.CSI == nil &&
+				volume.DownwardAPI == nil && volume.EmptyDir == nil &&
+				volume.Ephemeral == nil && volume.PersistentVolumeClaim == nil &&
+				volume.Projected == nil && volume.Secret == nil {
+				accepted, justification := accepted(volume, pod, allNamespaces[pod.Namespace])
+				if accepted {
+					checkResults = append(checkResults, rule.AcceptedCheckResult(justification, volumeTarget))
+				} else {
+					checkResults = append(checkResults, rule.FailedCheckResult("The Pod volume is not of an acceptable type.", volumeTarget))
+				}
+
 			} else {
-				checkResults = append(checkResults, rule.PassedCheckResult("Pod volume type is not within the accepted types.", podTarget.With("volume", volume.Name)))
+				checkResults = append(checkResults, rule.PassedCheckResult("The Pod volume is of an acceptable type.", volumeTarget))
 			}
 		}
 	}
 
+	if len(checkResults) == 0 {
+		return rule.Result(r, rule.PassedCheckResult("There are no pod volumes to be evaluated.", rule.NewTarget())), nil
+	}
 	return rule.Result(r, checkResults...), nil
 }
