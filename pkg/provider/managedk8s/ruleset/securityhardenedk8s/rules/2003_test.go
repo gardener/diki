@@ -275,7 +275,7 @@ var _ = Describe("#2003", func() {
 
 		Entry("should return appropriate check results for pods in multiple namespaces",
 			func() {
-				labeledNamespace := namespace.DeepCopy()
+				labeledNamespace := &corev1.Namespace{}
 				labeledNamespace.Name = "labeledNamespace"
 				labeledNamespace.Labels = map[string]string{
 					"label": "baz",
