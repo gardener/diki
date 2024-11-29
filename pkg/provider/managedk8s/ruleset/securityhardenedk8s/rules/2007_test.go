@@ -208,7 +208,7 @@ var _ = Describe("#2007", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Accepted,
-				Message: "RBAC Role is accepted to use \"*\" in policy rule verbs.",
+				Message: "Role is accepted to use \"*\" in policy rule verbs.",
 				Target:  rule.NewTarget("kind", "role", "name", "foo", "namespace", "foo"),
 			},
 			{

@@ -210,6 +210,34 @@ providers:                   # contains information about known providers
     #   args:
     #     allowedImages:
     #     - prefix: "example.foo.repository/organisation/releases/"
+    # - ruleID: "2006"
+    #   args:
+    #     acceptedRoles:
+    #     - matchLabels:
+    #         foo: bar
+    #       namespaceMatchLabels:
+    #         foo: bar
+    #       justification: "justification"
+    #     acceptedClusterRoles:
+    #     - matchLabels:
+    #         foo: bar
+    #       namespaceMatchLabels:
+    #         foo: bar
+    #       justification: "justification"
+    # - ruleID: "2007"
+    #   args:
+    #     acceptedRoles:
+    #     - matchLabels:
+    #         foo: bar
+    #       namespaceMatchLabels:
+    #         foo: bar
+    #       justification: "justification"
+    #     acceptedClusterRoles:
+    #     - matchLabels:
+    #         foo: bar
+    #       namespaceMatchLabels:
+    #         foo: bar
+    #       justification: "justification"
     # - ruleID: "2008"
     #   args:
     #     acceptedPods:

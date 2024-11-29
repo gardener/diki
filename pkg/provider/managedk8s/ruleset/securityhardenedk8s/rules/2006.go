@@ -83,7 +83,7 @@ func (r *Rule2006) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
 		checkResults []rule.CheckResult
 		checkRules   = func(policyRules []rbacv1.PolicyRule, accepted bool, justification string, target rule.Target) rule.CheckResult {
-			msg := "RBAC Role is accepted to use \"*\" in policy rule resources."
+			msg := "Role is accepted to use \"*\" in policy rule resources."
 			if len(justification) > 0 {
 				msg = justification
 			}
@@ -93,9 +93,8 @@ func (r *Rule2006) Run(ctx context.Context) (rule.RuleResult, error) {
 					if strings.Contains(resource, "*") {
 						if accepted {
 							return rule.AcceptedCheckResult(msg, target)
-						} else {
-							return rule.FailedCheckResult("RBAC Role uses \"*\" in policy rule resources.", target)
 						}
+						return rule.FailedCheckResult("RBAC Role uses \"*\" in policy rule resources.", target)
 					}
 				}
 			}
