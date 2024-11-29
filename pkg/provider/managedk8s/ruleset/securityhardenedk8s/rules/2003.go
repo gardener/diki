@@ -8,14 +8,15 @@ import (
 	"context"
 	"slices"
 
-	"github.com/gardener/diki/pkg/internal/utils"
-	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
-	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/gardener/diki/pkg/internal/utils"
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
+	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 )
 
 var (
@@ -118,7 +119,7 @@ func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if len(checkResults) == 0 {
-		return rule.Result(r, rule.PassedCheckResult("There are no pod volumes to be evaluated.", rule.NewTarget())), nil
+		return rule.Result(r, rule.PassedCheckResult("No pod volumes found for evaluation.", rule.NewTarget())), nil
 	}
 	return rule.Result(r, checkResults...), nil
 }
