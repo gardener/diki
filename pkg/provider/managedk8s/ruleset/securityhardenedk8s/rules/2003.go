@@ -9,7 +9,9 @@ import (
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -18,8 +20,39 @@ var (
 	_ rule.Severity = &Rule2003{}
 )
 
+type Options2003 struct {
+	AcceptedPods []AcceptedPods2003 `json:"acceptedPods" yaml:"acceptedPods"`
+}
+
+type AcceptedPods2003 struct {
+	option.NamespacedObjectSelector
+	VolumeNames   []string `json:"volumeNames" yaml:"volumeNames"`
+	Justification string   `json:"justification" yaml:"justification"`
+}
+
+// Validate validates that option configurations are correctly defined
+func (o Options2003) Validate() field.ErrorList {
+	var (
+		allErrs  field.ErrorList
+		rootPath = field.NewPath("acceptedPods")
+	)
+	for _, p := range o.AcceptedPods {
+		allErrs = append(allErrs, p.Validate()...)
+		if len(p.VolumeNames) == 0 {
+			allErrs = append(allErrs, field.Required(rootPath.Child("volumeNames"), "must not be empty"))
+		}
+		for i, volumeName := range p.VolumeNames {
+			if len(volumeName) == 0 {
+				allErrs = append(allErrs, field.Invalid(rootPath.Child("volumeNames").Index(i), volumeName, "must not be empty"))
+			}
+		}
+	}
+	return allErrs
+}
+
 type Rule2003 struct {
-	Client client.Client
+	Client  client.Client
+	Options *Options2003
 }
 
 func (r *Rule2003) ID() string {
@@ -48,7 +81,6 @@ func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 	var checkResults []rule.CheckResult
 
 	for _, pod := range pods {
-		podTarget := rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
 		for _, volume := range pod.Spec.Volumes {
 			if volume.ConfigMap == nil && volume.CSI == nil && volume.DownwardAPI == nil &&
 				volume.EmptyDir == nil && volume.Ephemeral == nil && volume.PersistentVolumeClaim == nil && volume.Projected == nil && volume.Secret == nil {
