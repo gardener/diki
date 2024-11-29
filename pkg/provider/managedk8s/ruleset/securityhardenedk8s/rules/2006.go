@@ -94,11 +94,11 @@ func (r *Rule2006) Run(ctx context.Context) (rule.RuleResult, error) {
 						if accepted {
 							return rule.AcceptedCheckResult(msg, target)
 						}
-						return rule.FailedCheckResult("RBAC Role uses \"*\" in policy rule resources.", target)
+						return rule.FailedCheckResult("Role uses \"*\" in policy rule resources.", target)
 					}
 				}
 			}
-			return rule.PassedCheckResult("RBAC Role does not use \"*\" in policy rule resources.", target)
+			return rule.PassedCheckResult("Role does not use \"*\" in policy rule resources.", target)
 		}
 	)
 

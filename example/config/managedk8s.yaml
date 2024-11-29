@@ -221,8 +221,6 @@ providers:                   # contains information about known providers
     #     acceptedClusterRoles:
     #     - matchLabels:
     #         foo: bar
-    #       namespaceMatchLabels:
-    #         foo: bar
     #       justification: "justification"
     # - ruleID: "2007"
     #   args:
@@ -234,8 +232,6 @@ providers:                   # contains information about known providers
     #       justification: "justification"
     #     acceptedClusterRoles:
     #     - matchLabels:
-    #         foo: bar
-    #       namespaceMatchLabels:
     #         foo: bar
     #       justification: "justification"
     # - ruleID: "2008"

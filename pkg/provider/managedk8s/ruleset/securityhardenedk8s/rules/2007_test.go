@@ -81,12 +81,12 @@ var _ = Describe("#2007", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Passed,
-				Message: "RBAC Role does not use \"*\" in policy rule verbs.",
+				Message: "Role does not use \"*\" in policy rule verbs.",
 				Target:  rule.NewTarget("kind", "role", "name", "foo", "namespace", "foo"),
 			},
 			{
 				Status:  rule.Passed,
-				Message: "RBAC Role does not use \"*\" in policy rule verbs.",
+				Message: "Role does not use \"*\" in policy rule verbs.",
 				Target:  rule.NewTarget("kind", "clusterRole", "name", "bar"),
 			},
 		}
@@ -115,12 +115,12 @@ var _ = Describe("#2007", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Failed,
-				Message: "RBAC Role uses \"*\" in policy rule verbs.",
+				Message: "Role uses \"*\" in policy rule verbs.",
 				Target:  rule.NewTarget("kind", "role", "name", "foo", "namespace", "foo"),
 			},
 			{
 				Status:  rule.Failed,
-				Message: "RBAC Role uses \"*\" in policy rule verbs.",
+				Message: "Role uses \"*\" in policy rule verbs.",
 				Target:  rule.NewTarget("kind", "clusterRole", "name", "bar"),
 			},
 		}
@@ -149,12 +149,12 @@ var _ = Describe("#2007", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Passed,
-				Message: "RBAC Role does not use \"*\" in policy rule verbs.",
+				Message: "Role does not use \"*\" in policy rule verbs.",
 				Target:  rule.NewTarget("kind", "role", "name", "foo", "namespace", "foo"),
 			},
 			{
 				Status:  rule.Failed,
-				Message: "RBAC Role uses \"*\" in policy rule verbs.",
+				Message: "Role uses \"*\" in policy rule verbs.",
 				Target:  rule.NewTarget("kind", "clusterRole", "name", "bar"),
 			},
 		}
