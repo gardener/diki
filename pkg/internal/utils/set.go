@@ -27,7 +27,7 @@ func Subset(s1, s2 []string) bool {
 	return true
 }
 
-// Subset checks if s1 and s2 intersect. Empty sets do not intersect.
+// Intersect checks if s1 and s2 intersect. Empty sets do not intersect.
 func Intersect(s1, s2 []string) bool {
 	for _, s1v := range s1 {
 		if slices.Contains(s2, s1v) {
