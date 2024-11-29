@@ -21,6 +21,7 @@ import (
 )
 
 var _ = Describe("#242418", func() {
+	const requiredCiphers = "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
 	var (
 		fakeClient client.Client
 		ctx        = context.TODO()
@@ -85,11 +86,19 @@ var _ = Describe("#242418", func() {
 			[]rule.CheckResult{{Status: rule.Warning, Message: "Option tls-cipher-suites has not been set.", Target: target}},
 			BeNil()),
 		Entry("should pass when tls-cipher-suites is set to allowed values",
-			corev1.Container{Name: "kube-apiserver", Command: []string{"--tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,foo,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,bar"}},
+			corev1.Container{Name: "kube-apiserver", Command: []string{"--tls-cipher-suites=TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256," + requiredCiphers}},
 			[]rule.CheckResult{{Status: rule.Passed, Message: "Option tls-cipher-suites set to allowed values.", Target: target}},
 			BeNil()),
-		Entry("should fail when tls-cipher-suites is set to not allowed values",
-			corev1.Container{Name: "kube-apiserver", Command: []string{"--tls-cipher-suites=foo,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,bar,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"}},
+		Entry("should fail when tls-cipher-suites does not contain all required ciphers",
+			corev1.Container{Name: "kube-apiserver", Command: []string{"--tls-cipher-suites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Option tls-cipher-suites set to not allowed values.", Target: target}},
+			BeNil()),
+		Entry("should fail when tls-cipher-suites contains hard-coded insecure ciphers",
+			corev1.Container{Name: "kube-apiserver", Command: []string{"--tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA," + requiredCiphers}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Option tls-cipher-suites set to not allowed values.", Target: target}},
+			BeNil()),
+		Entry("should fail when tls-cipher-suites contains insecure ciphers",
+			corev1.Container{Name: "kube-apiserver", Command: []string{"--tls-cipher-suites=TLS_RSA_WITH_RC4_128_SHA," + requiredCiphers}},
 			[]rule.CheckResult{{Status: rule.Failed, Message: "Option tls-cipher-suites set to not allowed values.", Target: target}},
 			BeNil()),
 		Entry("should warn when tls-cipher-suites is set more than once",
