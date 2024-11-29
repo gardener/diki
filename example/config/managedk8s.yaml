@@ -194,18 +194,6 @@ providers:                   # contains information about known providers
     #       namespaceMatchLabels:
     #         foo: bar
     #       justification: "justification"
-    # - ruleID: "2004"
-    #   args:
-    #     acceptedRoles:
-    #     - matchLabels:
-    #         foo: bar
-    #       namespaceMatchLabels:
-    #         foo: bar
-    #       justification: "justification"
-    #     acceptedClusterRoles:
-    #     - matchLabels:
-    #         foo: bar
-    #       justification: "justification"
     # - ruleID: "2005"
     #   args:
     #     allowedImages:
