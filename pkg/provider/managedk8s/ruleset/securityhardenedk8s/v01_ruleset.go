@@ -38,6 +38,10 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 	if err != nil {
 		return fmt.Errorf("rule option 2006 error: %s", err.Error())
 	}
+	opts2007, err := getV01OptionOrNil[rules.Options2007](ruleOptions["2007"].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 2007 error: %s", err.Error())
+	}
 	opts2008, err := getV01OptionOrNil[rules.Options2008](ruleOptions["2008"].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 2008 error: %s", err.Error())
@@ -73,13 +77,10 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			Client:  c,
 			Options: opts2006,
 		},
-		rule.NewSkipRule(
-			"2007",
-			"Limit the use of wildcards in RBAC verbs.",
-			"Not implemented.",
-			rule.NotImplemented,
-			rule.SkipRuleWithSeverity(rule.SeverityMedium),
-		),
+		&rules.Rule2007{
+			Client:  c,
+			Options: opts2007,
+		},
 		&rules.Rule2008{
 			Client:  c,
 			Options: opts2008,

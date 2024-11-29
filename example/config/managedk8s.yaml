@@ -194,7 +194,11 @@ providers:                   # contains information about known providers
     #       namespaceMatchLabels:
     #         foo: bar
     #       justification: "justification"
-    # - ruleID: "2004"
+    # - ruleID: "2005"
+    #   args:
+    #     allowedImages:
+    #     - prefix: "example.foo.repository/organisation/releases/"
+    # - ruleID: "2006"
     #   args:
     #     acceptedRoles:
     #     - matchLabels:
@@ -206,10 +210,18 @@ providers:                   # contains information about known providers
     #     - matchLabels:
     #         foo: bar
     #       justification: "justification"
-    # - ruleID: "2005"
+    # - ruleID: "2007"
     #   args:
-    #     allowedImages:
-    #     - prefix: "example.foo.repository/organisation/releases/"
+    #     acceptedRoles:
+    #     - matchLabels:
+    #         foo: bar
+    #       namespaceMatchLabels:
+    #         foo: bar
+    #       justification: "justification"
+    #     acceptedClusterRoles:
+    #     - matchLabels:
+    #         foo: bar
+    #       justification: "justification"
     # - ruleID: "2008"
     #   args:
     #     acceptedPods:

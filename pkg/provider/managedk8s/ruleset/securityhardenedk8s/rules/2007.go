@@ -22,23 +22,23 @@ import (
 )
 
 var (
-	_ rule.Rule          = &Rule2006{}
-	_ rule.Severity      = &Rule2006{}
-	_ disaoptions.Option = &Options2006{}
+	_ rule.Rule          = &Rule2007{}
+	_ rule.Severity      = &Rule2007{}
+	_ disaoptions.Option = &Options2007{}
 )
 
-type Rule2006 struct {
+type Rule2007 struct {
 	Client  client.Client
-	Options *Options2006
+	Options *Options2007
 }
 
-type Options2006 struct {
+type Options2007 struct {
 	AcceptedRoles        []option.AcceptedNamespacedObject `json:"acceptedRoles" yaml:"acceptedRoles"`
 	AcceptedClusterRoles []option.AcceptedClusterObject    `json:"acceptedClusterRoles" yaml:"acceptedClusterRoles"`
 }
 
 // Validate validates that option configurations are correctly defined.
-func (o Options2006) Validate() field.ErrorList {
+func (o Options2007) Validate() field.ErrorList {
 	var allErrs field.ErrorList
 
 	for _, r := range o.AcceptedRoles {
@@ -52,19 +52,19 @@ func (o Options2006) Validate() field.ErrorList {
 	return allErrs
 }
 
-func (r *Rule2006) ID() string {
-	return "2006"
+func (r *Rule2007) ID() string {
+	return "2007"
 }
 
-func (r *Rule2006) Name() string {
-	return "Limit the use of wildcards in RBAC resources."
+func (r *Rule2007) Name() string {
+	return "Limit the use of wildcards in RBAC verbs."
 }
 
-func (r *Rule2006) Severity() rule.SeverityLevel {
+func (r *Rule2007) Severity() rule.SeverityLevel {
 	return rule.SeverityMedium
 }
 
-func (r *Rule2006) Run(ctx context.Context) (rule.RuleResult, error) {
+func (r *Rule2007) Run(ctx context.Context) (rule.RuleResult, error) {
 	roles, err := kubeutils.GetRoles(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "rolesList"))), nil
@@ -83,22 +83,22 @@ func (r *Rule2006) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
 		checkResults []rule.CheckResult
 		checkRules   = func(policyRules []rbacv1.PolicyRule, accepted bool, justification string, target rule.Target) rule.CheckResult {
-			msg := "Role is accepted to use \"*\" in policy rule resources."
+			msg := "Role is accepted to use \"*\" in policy rule verbs."
 			if len(justification) > 0 {
 				msg = justification
 			}
 
 			for _, policyRule := range policyRules {
-				for _, resource := range policyRule.Resources {
-					if strings.Contains(resource, "*") {
+				for _, verb := range policyRule.Verbs {
+					if strings.Contains(verb, "*") {
 						if accepted {
 							return rule.AcceptedCheckResult(msg, target)
 						}
-						return rule.FailedCheckResult("Role uses \"*\" in policy rule resources.", target)
+						return rule.FailedCheckResult("Role uses \"*\" in policy rule verbs.", target)
 					}
 				}
 			}
-			return rule.PassedCheckResult("Role does not use \"*\" in policy rule resources.", target)
+			return rule.PassedCheckResult("Role does not use \"*\" in policy rule verbs.", target)
 		}
 	)
 
@@ -119,7 +119,7 @@ func (r *Rule2006) Run(ctx context.Context) (rule.RuleResult, error) {
 	return rule.Result(r, checkResults...), nil
 }
 
-func (r *Rule2006) acceptedRole(role rbacv1.Role, namespace corev1.Namespace) (bool, string) {
+func (r *Rule2007) acceptedRole(role rbacv1.Role, namespace corev1.Namespace) (bool, string) {
 	if r.Options == nil {
 		return false, ""
 	}
@@ -134,7 +134,7 @@ func (r *Rule2006) acceptedRole(role rbacv1.Role, namespace corev1.Namespace) (b
 	return false, ""
 }
 
-func (r *Rule2006) acceptedClusterRole(clusterRole rbacv1.ClusterRole) (bool, string) {
+func (r *Rule2007) acceptedClusterRole(clusterRole rbacv1.ClusterRole) (bool, string) {
 	if r.Options == nil {
 		return false, ""
 	}
