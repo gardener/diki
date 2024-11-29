@@ -17,11 +17,13 @@ import (
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	disaoptions "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var (
-	_ rule.Rule     = &Rule2003{}
-	_ rule.Severity = &Rule2003{}
+	_ rule.Rule          = &Rule2003{}
+	_ rule.Severity      = &Rule2003{}
+	_ disaoptions.Option = &Options2003{}
 )
 
 type Options2003 struct {
@@ -101,10 +103,9 @@ func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 	for _, pod := range pods {
 		for _, volume := range pod.Spec.Volumes {
 			volumeTarget := rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace, "volume", volume.Name)
-			if volume.ConfigMap == nil && volume.CSI == nil &&
-				volume.DownwardAPI == nil && volume.EmptyDir == nil &&
-				volume.Ephemeral == nil && volume.PersistentVolumeClaim == nil &&
-				volume.Projected == nil && volume.Secret == nil {
+			if volume.ConfigMap == nil && volume.CSI == nil && volume.DownwardAPI == nil && volume.EmptyDir == nil &&
+				volume.Ephemeral == nil && volume.PersistentVolumeClaim == nil && volume.Projected == nil && volume.Secret == nil {
+
 				accepted, justification := accepted(volume, pod, allNamespaces[pod.Namespace])
 				if accepted {
 					checkResults = append(checkResults, rule.AcceptedCheckResult(justification, volumeTarget))

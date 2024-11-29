@@ -9,8 +9,10 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -25,7 +27,7 @@ var _ = Describe("#2003", func() {
 		fakeClient    client.Client
 		plainPod      *corev1.Pod
 		ctx           = context.TODO()
-		namespaceName = "namespaceFOO"
+		namespaceName = "plainNamespace"
 		namespace     *corev1.Namespace
 		r             rules.Rule2003
 	)
@@ -95,9 +97,9 @@ var _ = Describe("#2003", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "The Pod volume is of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "podWithPermittedVolumes", "namespace", "namespaceFOO", "volume", "configMapVolume")},
-				{Status: rule.Passed, Message: "The Pod volume is of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "podWithPermittedVolumes", "namespace", "namespaceFOO", "volume", "emptyDirVolume")},
-				{Status: rule.Passed, Message: "The Pod volume is of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "podWithPermittedVolumes", "namespace", "namespaceFOO", "volume", "projectedVolume")},
+				{Status: rule.Passed, Message: "The Pod volume is of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "podWithPermittedVolumes", "namespace", "plainNamespace", "volume", "configMapVolume")},
+				{Status: rule.Passed, Message: "The Pod volume is of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "podWithPermittedVolumes", "namespace", "plainNamespace", "volume", "emptyDirVolume")},
+				{Status: rule.Passed, Message: "The Pod volume is of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "podWithPermittedVolumes", "namespace", "plainNamespace", "volume", "projectedVolume")},
 			},
 		),
 		Entry("should fail when a pod volume is not of an accepted type",
@@ -122,8 +124,8 @@ var _ = Describe("#2003", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "The Pod volume is of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "podWithPermittedVolumes", "namespace", "namespaceFOO", "volume", "emptyDirVolume")},
-				{Status: rule.Failed, Message: "The Pod volume is not of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "podWithPermittedVolumes", "namespace", "namespaceFOO", "volume", "projectedVolume")},
+				{Status: rule.Passed, Message: "The Pod volume is of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "podWithPermittedVolumes", "namespace", "plainNamespace", "volume", "emptyDirVolume")},
+				{Status: rule.Failed, Message: "The Pod volume is not of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "podWithPermittedVolumes", "namespace", "plainNamespace", "volume", "projectedVolume")},
 			},
 		),
 		Entry("should accept a volume when it is specified in the options configuration",
@@ -172,8 +174,8 @@ var _ = Describe("#2003", func() {
 				},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Accepted, Message: "justification 1", Target: rule.NewTarget("kind", "pod", "name", "acceptedPod", "namespace", "namespaceFOO", "volume", "acceptedVolume1")},
-				{Status: rule.Passed, Message: "The Pod volume is of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "acceptedPod", "namespace", "namespaceFOO", "volume", "permittedVolume1")},
+				{Status: rule.Accepted, Message: "justification 1", Target: rule.NewTarget("kind", "pod", "name", "acceptedPod", "namespace", "plainNamespace", "volume", "acceptedVolume1")},
+				{Status: rule.Passed, Message: "The Pod volume is of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "acceptedPod", "namespace", "plainNamespace", "volume", "permittedVolume1")},
 			},
 		),
 		Entry("should return appropriate check results for multiple pods",
@@ -261,14 +263,135 @@ var _ = Describe("#2003", func() {
 				},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Accepted, Message: "justification 1", Target: rule.NewTarget("kind", "pod", "name", "acceptedPod", "namespace", "namespaceFOO", "volume", "acceptedVolume1")},
-				{Status: rule.Passed, Message: "The Pod volume is of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "acceptedPod", "namespace", "namespaceFOO", "volume", "permittedVolume1")},
-				{Status: rule.Passed, Message: "The Pod volume is of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "acceptedPod", "namespace", "namespaceFOO", "volume", "permittedVolume2")},
-				{Status: rule.Failed, Message: "The Pod volume is not of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "acceptedPod", "namespace", "namespaceFOO", "volume", "forbiddenVolume1")},
-				{Status: rule.Failed, Message: "The Pod volume is not of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "regularPod", "namespace", "namespaceFOO", "volume", "acceptedVolume1")},
-				{Status: rule.Passed, Message: "The Pod volume is of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "regularPod", "namespace", "namespaceFOO", "volume", "permittedVolume1")},
-				{Status: rule.Failed, Message: "The Pod volume is not of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "regularPod", "namespace", "namespaceFOO", "volume", "forbiddenVolume1")},
+				{Status: rule.Accepted, Message: "justification 1", Target: rule.NewTarget("kind", "pod", "name", "acceptedPod", "namespace", "plainNamespace", "volume", "acceptedVolume1")},
+				{Status: rule.Passed, Message: "The Pod volume is of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "acceptedPod", "namespace", "plainNamespace", "volume", "permittedVolume1")},
+				{Status: rule.Passed, Message: "The Pod volume is of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "acceptedPod", "namespace", "plainNamespace", "volume", "permittedVolume2")},
+				{Status: rule.Failed, Message: "The Pod volume is not of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "acceptedPod", "namespace", "plainNamespace", "volume", "forbiddenVolume1")},
+				{Status: rule.Failed, Message: "The Pod volume is not of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "regularPod", "namespace", "plainNamespace", "volume", "acceptedVolume1")},
+				{Status: rule.Passed, Message: "The Pod volume is of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "regularPod", "namespace", "plainNamespace", "volume", "permittedVolume1")},
+				{Status: rule.Failed, Message: "The Pod volume is not of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "regularPod", "namespace", "plainNamespace", "volume", "forbiddenVolume1")},
+			},
+		),
+
+		Entry("should return appropriate check results for pods in multiple namespaces",
+			func() {
+				labeledNamespace := namespace.DeepCopy()
+				labeledNamespace.Name = "labeledNamespace"
+				labeledNamespace.Labels = map[string]string{
+					"label": "baz",
+				}
+				Expect(fakeClient.Create(ctx, labeledNamespace)).To(Succeed())
+
+				labeledNamespacePod := plainPod.DeepCopy()
+				labeledNamespacePod.Name = "labeledNamespacePod"
+				labeledNamespacePod.Namespace = labeledNamespace.Name
+				labeledNamespacePod.Spec.Volumes = []corev1.Volume{
+					{
+						Name: "acceptedVolume1",
+						VolumeSource: corev1.VolumeSource{
+							Cinder: &corev1.CinderVolumeSource{},
+						},
+					},
+				}
+				Expect(fakeClient.Create(ctx, labeledNamespacePod)).To(Succeed())
+
+				plainNamespacePod := plainPod.DeepCopy()
+				plainNamespacePod.Name = "plainNamespacePod"
+				plainNamespacePod.Labels = map[string]string{"podFoo": "podBar"}
+				plainNamespacePod.Namespace = namespaceName
+				plainNamespacePod.Spec.Volumes = []corev1.Volume{
+					{
+						Name: "forbiddenVolume1",
+						VolumeSource: corev1.VolumeSource{
+							Cinder: &corev1.CinderVolumeSource{},
+						},
+					},
+				}
+				Expect(fakeClient.Create(ctx, plainNamespacePod)).To(Succeed())
+			},
+			&rules.Options2003{
+				AcceptedPods: []rules.AcceptedPods2003{
+					{
+						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+							NamespacedObjectSelector: option.NamespacedObjectSelector{
+								NamespaceMatchLabels: map[string]string{
+									"label": "baz",
+								},
+								MatchLabels: map[string]string{
+									"podFoo": "podBar",
+								},
+							},
+							Justification: "justification 1",
+						},
+						VolumeNames: []string{"acceptedVolume1"},
+					},
+					{
+						AcceptedNamespacedObject: option.AcceptedNamespacedObject{},
+						VolumeNames:              []string{"acceptedVolume1"},
+					},
+				},
+			},
+			[]rule.CheckResult{
+				{Status: rule.Failed, Message: "The Pod volume is not of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "plainNamespacePod", "namespace", "plainNamespace", "volume", "forbiddenVolume1")},
+				{Status: rule.Accepted, Message: "justification 1", Target: rule.NewTarget("kind", "pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "acceptedVolume1")},
 			},
 		),
 	)
+
+	Describe("#ValidateOptions2003", func() {
+		It("should correctly validate options", func() {
+			options := rules.Options2008{
+				AcceptedPods: []rules.AcceptedPods2008{
+					{
+						NamespacedObjectSelector: option.NamespacedObjectSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
+							NamespaceMatchLabels: map[string]string{
+								"foo": "bar",
+							},
+						},
+					},
+					{
+						NamespacedObjectSelector: option.NamespacedObjectSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
+							NamespaceMatchLabels: map[string]string{
+								"foo": "bar",
+							},
+						},
+						VolumeNames: []string{"foo"},
+					},
+					{
+						NamespacedObjectSelector: option.NamespacedObjectSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
+							NamespaceMatchLabels: map[string]string{
+								"foo": "bar",
+							},
+						},
+						VolumeNames: []string{""},
+					},
+				},
+			}
+
+			result := options.Validate()
+
+			Expect(result).To(ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("acceptedPods.volumeNames"),
+					"Detail": Equal("must not be empty"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("acceptedPods.volumeNames[0]"),
+					"BadValue": Equal(""),
+					"Detail":   Equal("must not be empty"),
+				})),
+			))
+		})
+	})
 })
