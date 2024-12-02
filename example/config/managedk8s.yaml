@@ -186,6 +186,17 @@ providers:                   # contains information about known providers
     #       namespaceMatchLabels:
     #         foo: bar
     #       justification: "justification"
+    # - ruleID: "2003"
+    #   args:
+    #     acceptedPods:
+    #     - matchLabels:
+    #         foo: bar
+    #       namespaceMatchLabels:
+    #         nFoo: bar
+    #       justification: "justification"
+    #       volumeNames:
+    #       - "volumeFoo"
+    #       - "volumeBar"
     # - ruleID: "2004"
     #   args:
     #     acceptedServices:

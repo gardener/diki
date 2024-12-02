@@ -85,42 +85,41 @@ func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	var (
 		checkResults []rule.CheckResult
-		accepted     = func(volume corev1.Volume, pod corev1.Pod, namespace corev1.Namespace) (bool, string) {
-			if r.Options == nil {
-				return false, ""
-			}
-			for _, acceptedPod := range r.Options.AcceptedPods {
-				if utils.MatchLabels(pod.Labels, acceptedPod.MatchLabels) && utils.MatchLabels(namespace.Labels, acceptedPod.NamespaceMatchLabels) {
-					if slices.Contains(acceptedPod.VolumeNames, volume.Name) {
-						return true, acceptedPod.Justification
-					}
-				}
-			}
-			return false, ""
-		}
 	)
 
 	for _, pod := range pods {
+		uses := false
+		podTarget := rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
 		for _, volume := range pod.Spec.Volumes {
-			volumeTarget := rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace, "volume", volume.Name)
+			volumeTarget := podTarget.With("volume", volume.Name)
 			if volume.ConfigMap == nil && volume.CSI == nil && volume.DownwardAPI == nil && volume.EmptyDir == nil &&
 				volume.Ephemeral == nil && volume.PersistentVolumeClaim == nil && volume.Projected == nil && volume.Secret == nil {
-
-				accepted, justification := accepted(volume, pod, allNamespaces[pod.Namespace])
+				uses = true
+				accepted, justification := r.accepted(volume, pod, allNamespaces[pod.Namespace])
 				if accepted {
 					checkResults = append(checkResults, rule.AcceptedCheckResult(justification, volumeTarget))
 				} else {
-					checkResults = append(checkResults, rule.FailedCheckResult("The Pod volume is not of an acceptable type.", volumeTarget))
+					checkResults = append(checkResults, rule.FailedCheckResult("Pod uses not allowed volume type.", volumeTarget))
 				}
+			}
+		}
+		if !uses {
+			checkResults = append(checkResults, rule.PassedCheckResult("Pod does not use not allowed volume types.", podTarget))
+		}
+	}
+	return rule.Result(r, checkResults...), nil
+}
 
-			} else {
-				checkResults = append(checkResults, rule.PassedCheckResult("The Pod volume is of an acceptable type.", volumeTarget))
+func (r *Rule2003) accepted(volume corev1.Volume, pod corev1.Pod, namespace corev1.Namespace) (bool, string) {
+	if r.Options == nil {
+		return false, ""
+	}
+	for _, acceptedPod := range r.Options.AcceptedPods {
+		if utils.MatchLabels(pod.Labels, acceptedPod.MatchLabels) && utils.MatchLabels(namespace.Labels, acceptedPod.NamespaceMatchLabels) {
+			if slices.Contains(acceptedPod.VolumeNames, volume.Name) {
+				return true, acceptedPod.Justification
 			}
 		}
 	}
-
-	if len(checkResults) == 0 {
-		return rule.Result(r, rule.PassedCheckResult("No pod volumes found for evaluation.", rule.NewTarget())), nil
-	}
-	return rule.Result(r, checkResults...), nil
+	return false, ""
 }
