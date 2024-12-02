@@ -284,6 +284,7 @@ var _ = Describe("#2003", func() {
 
 				labeledNamespacePod := plainPod.DeepCopy()
 				labeledNamespacePod.Name = "labeledNamespacePod"
+				labeledNamespacePod.Labels = map[string]string{"podFoo": "podBar"}
 				labeledNamespacePod.Namespace = labeledNamespace.Name
 				labeledNamespacePod.Spec.Volumes = []corev1.Volume{
 					{
@@ -332,8 +333,8 @@ var _ = Describe("#2003", func() {
 				},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "The Pod volume is not of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "plainNamespacePod", "namespace", "plainNamespace", "volume", "forbiddenVolume1")},
 				{Status: rule.Accepted, Message: "justification 1", Target: rule.NewTarget("kind", "pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "acceptedVolume1")},
+				{Status: rule.Failed, Message: "The Pod volume is not of an acceptable type.", Target: rule.NewTarget("kind", "pod", "name", "plainNamespacePod", "namespace", "plainNamespace", "volume", "forbiddenVolume1")},
 			},
 		),
 	)
