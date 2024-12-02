@@ -78,7 +78,7 @@ func (r *Rule242418) Run(ctx context.Context) (rule.RuleResult, error) {
 			"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
 			"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
 		}
-		insecureCiphers = []string{
+		unallowedCiphers = []string{
 			"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
 			"TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
 			"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
@@ -87,10 +87,10 @@ func (r *Rule242418) Run(ctx context.Context) (rule.RuleResult, error) {
 	)
 
 	for _, suite := range tls.InsecureCipherSuites() {
-		insecureCiphers = append(insecureCiphers, suite.Name)
+		unallowedCiphers = append(unallowedCiphers, suite.Name)
 	}
 
-	if utils.Subset(requiredCiphers, ciphers) && !utils.Intersect(insecureCiphers, ciphers) {
+	if utils.Subset(requiredCiphers, ciphers) && !utils.Intersect(unallowedCiphers, ciphers) {
 		return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed values.", option), target)), nil
 	}
 
