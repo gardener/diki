@@ -6,6 +6,7 @@ package rules
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"strings"
 
@@ -41,9 +42,11 @@ func (r *Rule242418) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule242418) Run(ctx context.Context) (rule.RuleResult, error) {
-	const option = "tls-cipher-suites"
-	deploymentName := "kube-apiserver"
-	containerName := "kube-apiserver"
+	var (
+		option         = "tls-cipher-suites"
+		deploymentName = "kube-apiserver"
+		containerName  = "kube-apiserver"
+	)
 
 	if r.DeploymentName != "" {
 		deploymentName = r.DeploymentName
@@ -67,15 +70,27 @@ func (r *Rule242418) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", option), target)), nil
 	}
 
-	ciphers := strings.Split(optSlice[0], ",")
-	requiredCiphers := []string{
-		"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
-		"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
-		"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
-		"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+	var (
+		ciphers         = strings.Split(optSlice[0], ",")
+		requiredCiphers = []string{
+			"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+			"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+			"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+			"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+		}
+		unallowedCiphers = []string{
+			"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+			"TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+			"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+			"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+		}
+	)
+
+	for _, suite := range tls.InsecureCipherSuites() {
+		unallowedCiphers = append(unallowedCiphers, suite.Name)
 	}
 
-	if utils.Subset(requiredCiphers, ciphers) {
+	if utils.Subset(requiredCiphers, ciphers) && !utils.Intersect(unallowedCiphers, ciphers) {
 		return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed values.", option), target)), nil
 	}
 

@@ -42,6 +42,22 @@ var _ = Describe("utils", func() {
 			[]string{"foo", "bar", "foo-bar"}, []string{"foo", "bar"}, false),
 	)
 
+	DescribeTable("#Intersect",
+		func(s1, s2 []string, expectedResult bool) {
+			result := utils.Intersect(s1, s2)
+
+			Expect(result).To(Equal(expectedResult))
+		},
+		Entry("should return false when s1 is empty",
+			[]string{}, []string{"foo", "bar"}, false),
+		Entry("should return false when both s1 and s2 are empty",
+			[]string{}, []string{}, false),
+		Entry("should return true when s1 and s2 intersect",
+			[]string{"bar", "foo", "baz"}, []string{"foo", "bar", "foo-bar"}, true),
+		Entry("should return false when s1 and s2 do not intersect",
+			[]string{"baz", "foo-bar", "qux"}, []string{"foo", "bar", "test"}, false),
+	)
+
 	DescribeTable("#InitialSegment",
 		func(s1, s2 []string, expectedResult bool) {
 			result := utils.StartsWith(s1, s2...)
