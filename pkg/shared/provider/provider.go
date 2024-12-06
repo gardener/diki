@@ -41,7 +41,7 @@ func RunAll(ctx context.Context, p provider.Provider, rulesets map[string]rulese
 		default:
 			log.Info("starting ruleset run", "ruleset", rs.ID(), "version", rs.Version())
 			if res, err := rs.Run(ctx); err != nil {
-				errAgg = errors.Join(errAgg, fmt.Errorf("ruleset with id %s and version %s errored: %w", res.RulesetID, res.RulesetVersion, err))
+				errAgg = errors.Join(errAgg, fmt.Errorf("ruleset with id %s and version %s errored: %w", rs.ID(), rs.Version(), err))
 				log.Error(finishMsg, "ruleset", rs.ID(), "version", rs.Version(), "error", err)
 			} else {
 				result.RulesetResults = append(result.RulesetResults, res)
