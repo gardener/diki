@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"time"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -98,7 +99,10 @@ func (r *Rule242407) Run(ctx context.Context) (rule.RuleResult, error) {
 		podName := fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
 		execPodTarget := rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
 		defer func() {
-			if err := r.PodContext.Delete(ctx, podName, "kube-system"); err != nil {
+			timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+			defer cancel()
+
+			if err := r.PodContext.Delete(timeoutCtx, podName, "kube-system"); err != nil {
 				r.Logger.Error(err.Error())
 			}
 		}()

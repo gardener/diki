@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/Masterminds/semver/v3"
 	corev1 "k8s.io/api/core/v1"
@@ -128,7 +129,10 @@ func (r *Rule242396) checkKubectl(
 	)
 
 	defer func() {
-		if err := r.PodContext.Delete(ctx, podName, "kube-system"); err != nil {
+		timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+		defer cancel()
+
+		if err := r.PodContext.Delete(timeoutCtx, podName, "kube-system"); err != nil {
 			r.Logger.Error(err.Error())
 		}
 	}()

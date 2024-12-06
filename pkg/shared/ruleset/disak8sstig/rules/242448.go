@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -125,7 +126,10 @@ func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
 		execPodTarget := target.With("name", podName, "namespace", "kube-system", "kind", "pod")
 
 		defer func() {
-			if err := r.PodContext.Delete(ctx, podName, "kube-system"); err != nil {
+			timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+			defer cancel()
+
+			if err := r.PodContext.Delete(timeoutCtx, podName, "kube-system"); err != nil {
 				r.Logger.Error(err.Error())
 			}
 		}()
