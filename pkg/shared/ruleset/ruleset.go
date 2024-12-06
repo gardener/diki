@@ -85,7 +85,6 @@ func Run(
 	}()
 
 	var err error
-
 	resultCount := 0
 	for run := range resultCh {
 		resultCount++
