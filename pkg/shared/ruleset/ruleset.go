@@ -46,7 +46,6 @@ func Run(
 
 	rulesCh := make(chan rule.Rule)
 	resultCh := make(chan run)
-	var cancelledErr error
 
 	wg := sync.WaitGroup{}
 	log.Info("starting ruleset run", "number_of_rules", len(rules), "number_of_workers", workers)
@@ -54,29 +53,26 @@ func Run(
 		wg.Add(1)
 		go func() {
 			for rule := range rulesCh {
-				select {
-				default:
-					log.Info("starting rule run", "rule_id", rule.ID())
-					res, err := rule.Run(ctx)
-					res.RuleID = rule.ID()
-					res.RuleName = rule.Name()
-					resultCh <- run{result: res, err: err}
-				case <-ctx.Done():
-					cancelledErr = ctx.Err()
-					log.Info(fmt.Sprintf("terminating worker routine - %s", ctx.Err()), "routine_id", i)
-					wg.Done()
-					return
-				}
+				log.Info("starting rule run", "rule_id", rule.ID())
+				res, err := rule.Run(ctx)
+				res.RuleID = rule.ID()
+				res.RuleName = rule.Name()
+				resultCh <- run{result: res, err: err}
 			}
 			wg.Done()
 		}()
 	}
 
 	go func() {
+		defer close(rulesCh)
 		for _, r := range rules {
-			rulesCh <- r
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				rulesCh <- r
+			}
 		}
-		close(rulesCh)
 	}()
 
 	go func() {
@@ -99,8 +95,8 @@ func Run(
 		}
 	}
 
-	if cancelledErr != nil {
-		return ruleset.RulesetResult{}, cancelledErr
+	if err := ctx.Err(); err != nil {
+		return ruleset.RulesetResult{}, err
 	}
 
 	// TODO: maybe return both result and err

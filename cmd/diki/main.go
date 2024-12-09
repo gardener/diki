@@ -15,7 +15,6 @@ import (
 )
 
 func main() {
-
 	cmd := app.NewDikiCommand(map[string]provider.ProviderFromConfigFunc{
 		"garden":        builder.GardenProviderFromConfig,
 		"gardener":      builder.GardenerProviderFromConfig,

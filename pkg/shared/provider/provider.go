@@ -38,6 +38,8 @@ func RunAll(ctx context.Context, p provider.Provider, rulesets map[string]rulese
 	finishMsg := "finished ruleset run"
 	for _, rs := range rulesets {
 		select {
+		case <-ctx.Done():
+			return provider.ProviderResult{}, ctx.Err()
 		default:
 			log.Info("starting ruleset run", "ruleset", rs.ID(), "version", rs.Version())
 			if res, err := rs.Run(ctx); err != nil {
@@ -47,8 +49,6 @@ func RunAll(ctx context.Context, p provider.Provider, rulesets map[string]rulese
 				result.RulesetResults = append(result.RulesetResults, res)
 				log.Info(finishMsg, "ruleset", rs.ID(), "version", rs.Version())
 			}
-		case <-ctx.Done():
-			return provider.ProviderResult{}, ctx.Err()
 		}
 	}
 	log.Info("finished provider run")
