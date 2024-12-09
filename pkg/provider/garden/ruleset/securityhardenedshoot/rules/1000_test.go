@@ -81,20 +81,6 @@ var _ = Describe("#1000", func() {
 				{Status: rule.Passed, Message: "There are no required extensions.", Target: rule.NewTarget()},
 			},
 		),
-		Entry("should fail when no extensions are configured on the shoot spec",
-			func() {
-				shoot.Spec.Extensions = nil
-			},
-			&rules.Options1000{Extensions: []rules.Extension{
-				{
-					Type: "not-foo",
-				},
-			},
-			},
-			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "There are no configured extensions for the shoot cluster.", Target: rule.NewTarget()},
-			},
-		),
 		Entry("should fail when a listed extension cannot be found",
 			func() {
 				shoot.Spec.Extensions = []gardencorev1beta1.Extension{
@@ -105,21 +91,18 @@ var _ = Describe("#1000", func() {
 			},
 			&rules.Options1000{Extensions: []rules.Extension{
 				{
-					Type: "not-foo",
+					Type: "foo",
 				},
 			},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Extension type not-foo is not configured for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "Extension type foo is not configured for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
-		Entry("should fail when a listed extension is explicitly disabled",
+		Entry("should pass when a listed extension is enabled by default",
 			func() {
-				shoot.Spec.Extensions = []gardencorev1beta1.Extension{
-					{
-						Type:     "foo",
-						Disabled: ptr.To(true),
-					},
+				shoot.Labels = map[string]string{
+					"extensions.extensions.gardener.cloud/foo": "true",
 				}
 			},
 			&rules.Options1000{Extensions: []rules.Extension{
@@ -129,11 +112,14 @@ var _ = Describe("#1000", func() {
 			},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Extension type foo is disabled for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "Extension type foo is enabled for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
-		Entry("should pass when a listed extension is enabled by default",
+		Entry("should pass when a listed extension is added to the extension list in the shoot spec",
 			func() {
+				shoot.Labels = map[string]string{
+					"extensions.extensions.gardener.cloud/foo": "true",
+				}
 				shoot.Spec.Extensions = []gardencorev1beta1.Extension{
 					{
 						Type: "foo",
@@ -150,8 +136,11 @@ var _ = Describe("#1000", func() {
 				{Status: rule.Passed, Message: "Extension type foo is enabled for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
-		Entry("should pass when a listed extension is explicitly enabled",
+		Entry("should pass when a listed extension is added to the extension list in the shoot spec and explicitly enabled",
 			func() {
+				shoot.Labels = map[string]string{
+					"extensions.extensions.gardener.cloud/foo": "true",
+				}
 				shoot.Spec.Extensions = []gardencorev1beta1.Extension{
 					{
 						Type:     "foo",
@@ -169,8 +158,55 @@ var _ = Describe("#1000", func() {
 				{Status: rule.Passed, Message: "Extension type foo is enabled for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
+		Entry("should fail when a listed extension is enabled in the shoot labels and disabled in the shoot spec",
+			func() {
+				shoot.Labels = map[string]string{
+					"extensions.extensions.gardener.cloud/foo": "true",
+				}
+				shoot.Spec.Extensions = []gardencorev1beta1.Extension{
+					{
+						Type:     "foo",
+						Disabled: ptr.To(true),
+					},
+				}
+			},
+			&rules.Options1000{Extensions: []rules.Extension{
+				{
+					Type: "foo",
+				},
+			},
+			},
+			[]rule.CheckResult{
+				{Status: rule.Failed, Message: "Extension type foo is disabled is the shoot spec and enabled in labels.", Target: rule.NewTarget()},
+			},
+		),
+		Entry("should fail when a listed extension has unecpected value in the shoot labels",
+			func() {
+				shoot.Labels = map[string]string{
+					"extensions.extensions.gardener.cloud/foo": "false",
+				}
+				shoot.Spec.Extensions = []gardencorev1beta1.Extension{
+					{
+						Type: "foo",
+					},
+				}
+			},
+			&rules.Options1000{Extensions: []rules.Extension{
+				{
+					Type: "foo",
+				},
+			},
+			},
+			[]rule.CheckResult{
+				{Status: rule.Failed, Message: "Extension type foo has unexpected label value: false.", Target: rule.NewTarget()},
+			},
+		),
 		Entry("should create a check result for each provided extension in the configuration",
 			func() {
+				shoot.Labels = map[string]string{
+					"extensions.extensions.gardener.cloud/one": "true",
+					"extensions.extensions.gardener.cloud/two": "true",
+				}
 				shoot.Spec.Extensions = []gardencorev1beta1.Extension{
 					{
 						Type: "one",
@@ -203,7 +239,7 @@ var _ = Describe("#1000", func() {
 			[]rule.CheckResult{
 				{Status: rule.Passed, Message: "Extension type one is enabled for the shoot cluster.", Target: rule.NewTarget()},
 				{Status: rule.Passed, Message: "Extension type two is enabled for the shoot cluster.", Target: rule.NewTarget()},
-				{Status: rule.Failed, Message: "Extension type three is disabled for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "Extension type three is not configured for the shoot cluster.", Target: rule.NewTarget()},
 				{Status: rule.Failed, Message: "Extension type four is not configured for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),

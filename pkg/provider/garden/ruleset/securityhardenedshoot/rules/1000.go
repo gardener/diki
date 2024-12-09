@@ -75,10 +75,6 @@ func (r *Rule1000) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.PassedCheckResult("There are no required extensions.", rule.NewTarget())), nil
 	}
 
-	if len(shoot.Spec.Extensions) == 0 {
-		return rule.Result(r, rule.FailedCheckResult("There are no configured extensions for the shoot cluster.", rule.NewTarget())), nil
-	}
-
 	var checkResults []rule.CheckResult
 
 	for _, extension := range r.Options.Extensions {
@@ -86,13 +82,21 @@ func (r *Rule1000) Run(ctx context.Context) (rule.RuleResult, error) {
 			return shootSpecExtension.Type == extension.Type
 		})
 
+		var (
+			extensionTypeDisabled       = extensionTypeIndex >= 0 && shoot.Spec.Extensions[extensionTypeIndex].Disabled != nil && *shoot.Spec.Extensions[extensionTypeIndex].Disabled
+			extensionTypeLabelKey       = fmt.Sprintf("extensions.extensions.gardener.cloud/%s", extension.Type)
+			extensionTypeLabelValue, ok = shoot.Labels[extensionTypeLabelKey]
+		)
+
 		switch {
-		case extensionTypeIndex < 0:
+		case !ok:
 			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Extension type %s is not configured for the shoot cluster.", extension.Type), rule.NewTarget()))
-		case shoot.Spec.Extensions[extensionTypeIndex].Disabled == nil || !*shoot.Spec.Extensions[extensionTypeIndex].Disabled:
+		case extensionTypeLabelValue == "true" && !extensionTypeDisabled:
 			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Extension type %s is enabled for the shoot cluster.", extension.Type), rule.NewTarget()))
+		case extensionTypeLabelValue == "true" && extensionTypeDisabled:
+			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Extension type %s is disabled is the shoot spec and enabled in labels.", extension.Type), rule.NewTarget()))
 		default:
-			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Extension type %s is disabled for the shoot cluster.", extension.Type), rule.NewTarget()))
+			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Extension type %s has unexpected label value: %s.", extension.Type, extensionTypeLabelValue), rule.NewTarget()))
 		}
 	}
 
