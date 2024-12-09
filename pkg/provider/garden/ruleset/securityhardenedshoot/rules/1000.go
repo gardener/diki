@@ -75,24 +75,26 @@ func (r *Rule1000) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.PassedCheckResult("There are no required extensions.", rule.NewTarget())), nil
 	}
 
-	if len(shoot.Spec.Extensions) == 0 {
-		return rule.Result(r, rule.FailedCheckResult("There are no configured extensions for the shoot cluster.", rule.NewTarget())), nil
-	}
-
 	var checkResults []rule.CheckResult
 
 	for _, extension := range r.Options.Extensions {
-		extensionTypeIndex := slices.IndexFunc(shoot.Spec.Extensions, func(shootSpecExtension gardencorev1beta1.Extension) bool {
-			return shootSpecExtension.Type == extension.Type
-		})
+		var (
+			extensionIndex = slices.IndexFunc(shoot.Spec.Extensions, func(shootSpecExtension gardencorev1beta1.Extension) bool {
+				return shootSpecExtension.Type == extension.Type
+			})
+			extensionDisabled                         = extensionIndex >= 0 && shoot.Spec.Extensions[extensionIndex].Disabled != nil && *shoot.Spec.Extensions[extensionIndex].Disabled
+			extensionLabelValue, extensionLabelExists = shoot.Labels["extensions.extensions.gardener.cloud/"+extension.Type]
+		)
 
 		switch {
-		case extensionTypeIndex < 0:
-			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Extension type %s is not configured for the shoot cluster.", extension.Type), rule.NewTarget()))
-		case shoot.Spec.Extensions[extensionTypeIndex].Disabled == nil || !*shoot.Spec.Extensions[extensionTypeIndex].Disabled:
-			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Extension type %s is enabled for the shoot cluster.", extension.Type), rule.NewTarget()))
+		case !extensionLabelExists:
+			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Extension %s is not configured for the shoot cluster.", extension.Type), rule.NewTarget()))
+		case extensionLabelValue == "true" && !extensionDisabled:
+			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Extension %s is enabled for the shoot cluster.", extension.Type), rule.NewTarget()))
+		case extensionLabelValue == "true" && extensionDisabled:
+			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Extension %s is disabled in the shoot spec and enabled in labels.", extension.Type), rule.NewTarget()))
 		default:
-			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Extension type %s is disabled for the shoot cluster.", extension.Type), rule.NewTarget()))
+			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Extension %s has unexpected label value: %s.", extension.Type, extensionLabelValue), rule.NewTarget()))
 		}
 	}
 
