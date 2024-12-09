@@ -987,12 +987,15 @@ var _ = Describe("utils", func() {
 					Kind: "ReplicaSet",
 				},
 			}
+			pod4 := basicPod.DeepCopy()
+			pod4.Name = "foo4"
 			Expect(fakeClient.Create(ctx, deployment)).To(Succeed())
 			Expect(fakeClient.Create(ctx, replicaSet1)).To(Succeed())
 			Expect(fakeClient.Create(ctx, replicaSet2)).To(Succeed())
 			Expect(fakeClient.Create(ctx, pod1)).To(Succeed())
 			Expect(fakeClient.Create(ctx, pod2)).To(Succeed())
 			Expect(fakeClient.Create(ctx, pod3)).To(Succeed())
+			Expect(fakeClient.Create(ctx, pod4)).To(Succeed())
 
 			pods, err := utils.GetDeploymentPods(ctx, fakeClient, "foo", namespace)
 
