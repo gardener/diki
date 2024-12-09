@@ -262,7 +262,7 @@ func GetDeploymentPods(ctx context.Context, c client.Client, name, namespace str
 		ownerRef := replicaSet.OwnerReferences[0]
 		if ownerRef.UID == deployment.UID && ownerRef.Kind == "Deployment" && (replicaSet.Spec.Replicas == nil || *replicaSet.Spec.Replicas > 0) {
 			for _, pod := range allPods {
-				if pod.OwnerReferences[0].UID == replicaSet.UID {
+				if len(pod.OwnerReferences) > 0 && pod.OwnerReferences[0].UID == replicaSet.UID {
 					pods = append(pods, pod)
 				}
 			}
