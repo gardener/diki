@@ -5,8 +5,9 @@
 package main
 
 import (
-	"context"
 	"log"
+
+	controllerruntime "sigs.k8s.io/controller-runtime"
 
 	"github.com/gardener/diki/cmd/diki/app"
 	"github.com/gardener/diki/pkg/provider"
@@ -14,14 +15,14 @@ import (
 )
 
 func main() {
-	cmd := app.NewDikiCommand(context.Background(), map[string]provider.ProviderFromConfigFunc{
+	cmd := app.NewDikiCommand(map[string]provider.ProviderFromConfigFunc{
 		"garden":        builder.GardenProviderFromConfig,
 		"gardener":      builder.GardenerProviderFromConfig,
 		"managedk8s":    builder.ManagedK8SProviderFromConfig,
 		"virtualgarden": builder.VirtualGardenProviderFromConfig,
 	})
 
-	if err := cmd.Execute(); err != nil {
+	if err := cmd.ExecuteContext(controllerruntime.SetupSignalHandler()); err != nil {
 		log.Fatal(err)
 	}
 }

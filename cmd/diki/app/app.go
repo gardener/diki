@@ -26,7 +26,7 @@ import (
 )
 
 // NewDikiCommand creates a new command that is used to start Diki.
-func NewDikiCommand(ctx context.Context, providerCreateFuncs map[string]provider.ProviderFromConfigFunc) *cobra.Command {
+func NewDikiCommand(providerCreateFuncs map[string]provider.ProviderFromConfigFunc) *cobra.Command {
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
 	logger := slog.New(handler)
 	slog.SetDefault(logger)
@@ -64,8 +64,8 @@ e.g. to check compliance of your hyperscaler accounts.`,
 		Use:   "run",
 		Short: "Run some rulesets and rules.",
 		Long:  "Run allows running rulesets and rules for the given provider(s).",
-		RunE: func(_ *cobra.Command, _ []string) error {
-			return runCmd(ctx, providerCreateFuncs, opts)
+		RunE: func(c *cobra.Command, _ []string) error {
+			return runCmd(c.Context(), providerCreateFuncs, opts)
 		},
 	}
 

@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -104,7 +105,10 @@ func (r *Rule242404) checkNode(ctx context.Context, node corev1.Node, privPodIma
 	podTarget := rule.NewTarget("kind", "pod", "namespace", "kube-system", "name", podName)
 
 	defer func() {
-		if err := r.PodContext.Delete(ctx, podName, "kube-system"); err != nil {
+		timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+		defer cancel()
+
+		if err := r.PodContext.Delete(timeoutCtx, podName, "kube-system"); err != nil {
 			r.Logger.Error(err.Error())
 		}
 	}()
