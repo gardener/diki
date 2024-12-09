@@ -186,6 +186,17 @@ providers:                   # contains information about known providers
     #       namespaceMatchLabels:
     #         foo: bar
     #       justification: "justification"
+    # - ruleID: "2003"
+    #   args:
+    #     acceptedPods:
+    #     - matchLabels:
+    #         foo: bar
+    #       namespaceMatchLabels:
+    #         foo: bar
+    #       justification: "justification"
+    #       volumeNames:
+    #       - "volume-a"
+    #       - "volume-b"
     # - ruleID: "2004"
     #   args:
     #     acceptedServices:
@@ -231,7 +242,8 @@ providers:                   # contains information about known providers
     #         foo: bar
     #       justification: "justification"
     #       volumeNames:
-    #       - foo-bar
+    #       - "volume-a"
+    #       - "volume-b"
 # metadata: # optional, additional metadata to be added to summary json report
 #   foo: bar
 #   bar:
