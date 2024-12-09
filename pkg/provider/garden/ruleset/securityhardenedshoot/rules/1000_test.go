@@ -96,7 +96,7 @@ var _ = Describe("#1000", func() {
 			},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Extension type foo is not configured for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "Extension foo is not configured for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should pass when a listed extension is enabled by default",
@@ -112,7 +112,7 @@ var _ = Describe("#1000", func() {
 			},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "Extension type foo is enabled for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "Extension foo is enabled for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should pass when a listed extension is added to the extension list in the shoot spec",
@@ -133,7 +133,7 @@ var _ = Describe("#1000", func() {
 			},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "Extension type foo is enabled for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "Extension foo is enabled for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should pass when a listed extension is added to the extension list in the shoot spec and explicitly enabled",
@@ -155,7 +155,7 @@ var _ = Describe("#1000", func() {
 			},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "Extension type foo is enabled for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "Extension foo is enabled for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should fail when a listed extension is enabled in the shoot labels and disabled in the shoot spec",
@@ -177,7 +177,7 @@ var _ = Describe("#1000", func() {
 			},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Extension type foo is disabled is the shoot spec and enabled in labels.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "Extension foo is disabled in the shoot spec and enabled in labels.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should fail when a listed extension has unecpected value in the shoot labels",
@@ -198,7 +198,7 @@ var _ = Describe("#1000", func() {
 			},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Extension type foo has unexpected label value: false.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "Extension foo has unexpected label value: false.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should create a check result for each provided extension in the configuration",
@@ -237,10 +237,10 @@ var _ = Describe("#1000", func() {
 			},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "Extension type one is enabled for the shoot cluster.", Target: rule.NewTarget()},
-				{Status: rule.Passed, Message: "Extension type two is enabled for the shoot cluster.", Target: rule.NewTarget()},
-				{Status: rule.Failed, Message: "Extension type three is not configured for the shoot cluster.", Target: rule.NewTarget()},
-				{Status: rule.Failed, Message: "Extension type four is not configured for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "Extension one is enabled for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "Extension two is enabled for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "Extension three is not configured for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "Extension four is not configured for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
 	)
