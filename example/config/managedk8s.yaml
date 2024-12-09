@@ -192,11 +192,11 @@ providers:                   # contains information about known providers
     #     - matchLabels:
     #         foo: bar
     #       namespaceMatchLabels:
-    #         nFoo: bar
+    #         foo: bar
     #       justification: "justification"
     #       volumeNames:
-    #       - "volumeFoo"
-    #       - "volumeBar"
+    #       - "volume-a"
+    #       - "volume-b"
     # - ruleID: "2004"
     #   args:
     #     acceptedServices:
@@ -242,7 +242,8 @@ providers:                   # contains information about known providers
     #         foo: bar
     #       justification: "justification"
     #       volumeNames:
-    #       - foo-bar
+    #       - "volume-a"
+    #       - "volume-b"
 # metadata: # optional, additional metadata to be added to summary json report
 #   foo: bar
 #   bar:

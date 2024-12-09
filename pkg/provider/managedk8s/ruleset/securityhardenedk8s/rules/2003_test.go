@@ -62,7 +62,7 @@ var _ = Describe("#2003", func() {
 		Expect(err).To(BeNil())
 		Expect(result.CheckResults).To(Equal(expectedCheckResults))
 	},
-		Entry("should pass when all pod volumes are of an accepted type",
+		Entry("should pass when all pod volumes are of an allowed type",
 			func() {
 				podWithPermittedVolumes := plainPod.DeepCopy()
 				podWithPermittedVolumes.Name = "podWithPermittedVolumes"
@@ -90,10 +90,10 @@ var _ = Describe("#2003", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "Pod does not use not allowed volume types.", Target: rule.NewTarget("kind", "pod", "name", "podWithPermittedVolumes", "namespace", "plainNamespace")},
+				{Status: rule.Passed, Message: "Pod uses only allowed volume types.", Target: rule.NewTarget("kind", "pod", "name", "podWithPermittedVolumes", "namespace", "plainNamespace")},
 			},
 		),
-		Entry("should fail when a pod volume is not of an accepted type",
+		Entry("should fail when a pod volume is not of an allowed type",
 			func() {
 				podWithPermittedVolumes := plainPod.DeepCopy()
 				podWithPermittedVolumes.Name = "podWithPermittedVolumes"

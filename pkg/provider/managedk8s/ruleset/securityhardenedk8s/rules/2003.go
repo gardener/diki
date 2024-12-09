@@ -83,17 +83,20 @@ func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
 	}
 
-	var (
-		checkResults []rule.CheckResult
-	)
-
+	var checkResults []rule.CheckResult
 	for _, pod := range pods {
 		uses := false
 		podTarget := rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
 		for _, volume := range pod.Spec.Volumes {
 			volumeTarget := podTarget.With("volume", volume.Name)
-			if volume.ConfigMap == nil && volume.CSI == nil && volume.DownwardAPI == nil && volume.EmptyDir == nil &&
-				volume.Ephemeral == nil && volume.PersistentVolumeClaim == nil && volume.Projected == nil && volume.Secret == nil {
+			if volume.ConfigMap == nil &&
+				volume.CSI == nil &&
+				volume.DownwardAPI == nil &&
+				volume.EmptyDir == nil &&
+				volume.Ephemeral == nil &&
+				volume.PersistentVolumeClaim == nil &&
+				volume.Projected == nil &&
+				volume.Secret == nil {
 				uses = true
 				accepted, justification := r.accepted(volume, pod, allNamespaces[pod.Namespace])
 				if accepted {
@@ -104,7 +107,7 @@ func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 			}
 		}
 		if !uses {
-			checkResults = append(checkResults, rule.PassedCheckResult("Pod does not use not allowed volume types.", podTarget))
+			checkResults = append(checkResults, rule.PassedCheckResult("Pod uses only allowed volume types.", podTarget))
 		}
 	}
 	return rule.Result(r, checkResults...), nil
@@ -114,6 +117,7 @@ func (r *Rule2003) accepted(volume corev1.Volume, pod corev1.Pod, namespace core
 	if r.Options == nil {
 		return false, ""
 	}
+
 	for _, acceptedPod := range r.Options.AcceptedPods {
 		if utils.MatchLabels(pod.Labels, acceptedPod.MatchLabels) && utils.MatchLabels(namespace.Labels, acceptedPod.NamespaceMatchLabels) {
 			if slices.Contains(acceptedPod.VolumeNames, volume.Name) {
@@ -121,5 +125,6 @@ func (r *Rule2003) accepted(volume corev1.Volume, pod corev1.Pod, namespace core
 			}
 		}
 	}
+
 	return false, ""
 }
