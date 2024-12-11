@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -256,7 +257,10 @@ func (r *Rule242451) checkPods(
 	)
 
 	defer func() {
-		if err := pc.Delete(ctx, podName, "kube-system"); err != nil {
+		timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+		defer cancel()
+
+		if err := pc.Delete(timeoutCtx, podName, "kube-system"); err != nil {
 			r.Logger.Error(err.Error())
 		}
 	}()
@@ -355,7 +359,10 @@ func (r *Rule242451) checkKubelet(
 	)
 
 	defer func() {
-		if err := r.ClusterPodContext.Delete(ctx, podName, "kube-system"); err != nil {
+		timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+		defer cancel()
+
+		if err := r.ClusterPodContext.Delete(timeoutCtx, podName, "kube-system"); err != nil {
 			r.Logger.Error(err.Error())
 		}
 	}()

@@ -46,6 +46,7 @@ func Run(
 
 	rulesCh := make(chan rule.Rule)
 	resultCh := make(chan run)
+
 	wg := sync.WaitGroup{}
 	log.Info("starting ruleset run", "number_of_rules", len(rules), "number_of_workers", workers)
 	for i := 0; i < workers; i++ {
@@ -63,10 +64,15 @@ func Run(
 	}
 
 	go func() {
+		defer close(rulesCh)
 		for _, r := range rules {
-			rulesCh <- r
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				rulesCh <- r
+			}
 		}
-		close(rulesCh)
 	}()
 
 	go func() {
@@ -88,6 +94,11 @@ func Run(
 			result.RuleResults = append(result.RuleResults, run.result)
 		}
 	}
+
+	if err := ctx.Err(); err != nil {
+		return ruleset.RulesetResult{}, err
+	}
+
 	// TODO: maybe return both result and err
 	if err != nil {
 		return ruleset.RulesetResult{}, err

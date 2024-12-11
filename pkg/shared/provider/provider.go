@@ -37,13 +37,18 @@ func RunAll(ctx context.Context, p provider.Provider, rulesets map[string]rulese
 	log.Info("starting provider run", "number_of_rulesets", len(rulesets))
 	finishMsg := "finished ruleset run"
 	for _, rs := range rulesets {
-		log.Info("starting ruleset run", "ruleset", rs.ID(), "version", rs.Version())
-		if res, err := rs.Run(ctx); err != nil {
-			errAgg = errors.Join(errAgg, fmt.Errorf("ruleset with id %s and version %s errored: %w", res.RulesetID, res.RulesetVersion, err))
-			log.Error(finishMsg, "ruleset", rs.ID(), "version", rs.Version(), "error", err)
-		} else {
-			result.RulesetResults = append(result.RulesetResults, res)
-			log.Info(finishMsg, "ruleset", rs.ID(), "version", rs.Version())
+		select {
+		case <-ctx.Done():
+			return provider.ProviderResult{}, ctx.Err()
+		default:
+			log.Info("starting ruleset run", "ruleset", rs.ID(), "version", rs.Version())
+			if res, err := rs.Run(ctx); err != nil {
+				errAgg = errors.Join(errAgg, fmt.Errorf("ruleset with id %s and version %s errored: %w", rs.ID(), rs.Version(), err))
+				log.Error(finishMsg, "ruleset", rs.ID(), "version", rs.Version(), "error", err)
+			} else {
+				result.RulesetResults = append(result.RulesetResults, res)
+				log.Info(finishMsg, "ruleset", rs.ID(), "version", rs.Version())
+			}
 		}
 	}
 	log.Info("finished provider run")
