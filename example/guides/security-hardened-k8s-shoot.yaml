@@ -4,16 +4,12 @@ providers:
   metadata:
     shootName: shoot-abcd
   args:
-    kubeconfigPath: .kube/shoot.config  # path to shoot admin kubeconfig
+    kubeconfigPath: /shoot-abcd-access/kubeconfig  # path to shoot admin kubeconfig
   rulesets:
   - id: security-hardened-k8s
     name: Security Hardened Kubernetes Cluster
     version: v0.1.0
     ruleOptions:
-    - ruleID: "2000"
-      skip:
-        enabled: true
-        justification: "System namespaces are allowed to have Ingress and Egress traffic configured"
     - ruleID: "2003"
       args:
         acceptedPods:
@@ -116,10 +112,6 @@ providers:
           justification: "Gardener managed resources are allowed to use a wider range of volume types"
           volumeNames:
           - "xtables-lock"
-    - ruleID: "2005"
-      skip:
-        enabled: true
-        justification: "There is no specific list of required images present"
     - ruleID: "2006"
       args:
         acceptedRoles:
