@@ -1,0 +1,256 @@
+providers:
+- id: managedk8s
+  name: "Managed Kubernetes"
+  metadata:
+    shootName: shoot-abcd
+  args:
+    kubeconfigPath: .kube/shoot.config  # path to shoot admin kubeconfig
+  rulesets:
+  - id: security-hardened-k8s
+    name: Security Hardened Kubernetes Cluster
+    version: v0.1.0
+    ruleOptions:
+    - ruleID: "2000"
+      skip:
+        enabled: true
+        justification: "System namespaces are allowed to have Ingress and Egress traffic configured"
+    - ruleID: "2003"
+      args:
+        acceptedPods:
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+            gardener.cloud/role: system-component
+            k8s-app: calico-node
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          volumeNames:
+          - "lib-modules"
+          - "var-run-calico"
+          - "var-lib-calico"
+          - "xtables-lock"
+          - "cni-bin-dir"
+          - "cni-net-dit"
+          - "cni-log-dir"
+          - "policysync"
+          - "cni-net-dir"
+        - matchLabels:
+            app: kubernetes
+            origin: gardener
+            gardener.cloud/role: system-component
+            resources.gardener.cloud/managed-by: gardener
+            role: proxy
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          volumeNames:
+          - "ssl-certs-hosts"
+          - "systembussocket"
+          - "kernel-modules"
+          - "kube-proxy-dir"
+          - "kube-proxy-mode"
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+            app: node-problem-detector
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          volumeNames:
+          - "log"
+          - "kmsg"
+          - "localtime"
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+            component: node-exporter
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          volumeNames:
+          - "host"
+          - "textfile"
+          - "log"
+          - "kmsg"
+          - "localtime"
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+            app: vpn-shoot
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          volumeNames:
+          - "dev-net-tun"
+        - matchLabels:
+            app: csi
+            resources.gardener.cloud/managed-by: gardener
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          volumeNames:
+          - "kubelet-dir"
+          - "plugin-dir"
+          - "registration-dir"
+          - "device-dir"
+        - matchLabels:
+            k8s-app: egress-filter-applier
+            gardener.cloud/role: system-component
+            resources.gardener.cloud/managed-by: gardener
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          volumeNames:
+          - "xtables-lock"
+        - matchLabels:
+            gardener.cloud/role: network-problem-detector
+            resources.gardener.cloud/managed-by: gardener
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          volumeNames:
+          - "output"
+          - "log"
+        - matchLabels:
+            k8s-app: node-local-dns
+            resources.gardener.cloud/managed-by: gardener
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          volumeNames:
+          - "xtables-lock"
+    - ruleID: "2005"
+      skip:
+        enabled: true
+        justification: "There is no specific list of required images present"
+    - ruleID: "2006"
+      args:
+        acceptedRoles:
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Roles managed by Gardener are allowed to use wildcards in RBAC resources"
+        acceptedClusterRoles:
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "ClusterRoles managed by Gardener are allowed to use wildcards in RBAC resources"
+        - matchLabels:
+             kubernetes.io/bootstrapping: rbac-defaults
+          justification: "ClusterRoles managed by Gardener are allowed to use wildcards in RBAC verbs"
+    - ruleID: "2007"
+      args:
+        acceptedRoles:
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "ClusterRoles managed by Gardener are allowed to use wildcards in RBAC verbs"
+        acceptedClusterRoles:
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "ClusterRoles managed by Gardener are allowed to use wildcards in RBAC verbs"
+        - matchLabels:
+             kubernetes.io/bootstrapping: rbac-defaults
+          justification: "ClusterRoles managed by Gardener are allowed to use wildcards in RBAC verbs"
+    - ruleID: "2008"
+      args:
+        acceptedPods:
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+            gardener.cloud/role: system-component
+            k8s-app: calico-node
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          volumeNames:
+          - "lib-modules"
+          - "var-run-calico"
+          - "var-lib-calico"
+          - "xtables-lock"
+          - "cni-bin-dir"
+          - "cni-net-dit"
+          - "cni-log-dir"
+          - "policysync"
+          - "cni-net-dir"
+        - matchLabels:
+            app: kubernetes
+            origin: gardener
+            gardener.cloud/role: system-component
+            resources.gardener.cloud/managed-by: gardener
+            role: proxy
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          volumeNames:
+          - "ssl-certs-hosts"
+          - "systembussocket"
+          - "kernel-modules"
+          - "kube-proxy-dir"
+          - "kube-proxy-mode"
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+            app: node-problem-detector
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          volumeNames:
+          - "log"
+          - "kmsg"
+          - "localtime"
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+            component: node-exporter
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          volumeNames:
+          - "host"
+          - "textfile"
+          - "log"
+          - "kmsg"
+          - "localtime"
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+            app: vpn-shoot
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          volumeNames:
+          - "dev-net-tun"
+        - matchLabels:
+            app: csi
+            resources.gardener.cloud/managed-by: gardener
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          volumeNames:
+          - "kubelet-dir"
+          - "plugin-dir"
+          - "registration-dir"
+          - "device-dir"
+        - matchLabels:
+            k8s-app: egress-filter-applier
+            gardener.cloud/role: system-component
+            resources.gardener.cloud/managed-by: gardener
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          volumeNames:
+          - "xtables-lock"
+        - matchLabels:
+            gardener.cloud/role: network-problem-detector
+            resources.gardener.cloud/managed-by: gardener
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          volumeNames:
+          - "output"
+          - "log"
+        - matchLabels:
+            k8s-app: node-local-dns
+            resources.gardener.cloud/managed-by: gardener
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          volumeNames:
+          - "xtables-lock"
+output:
+  minStatus: Passed
