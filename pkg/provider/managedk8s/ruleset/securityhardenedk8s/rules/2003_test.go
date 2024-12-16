@@ -323,6 +323,70 @@ var _ = Describe("#2003", func() {
 				{Status: rule.Failed, Message: "Pod uses not allowed volume type.", Target: rule.NewTarget("kind", "pod", "name", "plainNamespacePod", "namespace", "plainNamespace", "volume", "forbiddenVolume1")},
 			},
 		),
+		Entry("should accept all volume when a wildcard accepted pod is matched", func() {
+			labeledNamespace := &corev1.Namespace{}
+			labeledNamespace.Name = "labeledNamespace"
+			labeledNamespace.Labels = map[string]string{
+				"namespace": "foo",
+			}
+			Expect(fakeClient.Create(ctx, labeledNamespace)).To(Succeed())
+
+			labeledNamespacePod := plainPod.DeepCopy()
+			labeledNamespacePod.Name = "labeledNamespacePod"
+			labeledNamespacePod.Labels = map[string]string{"pod": "bar"}
+			labeledNamespacePod.Namespace = labeledNamespace.Name
+			labeledNamespacePod.Spec.Volumes = []corev1.Volume{
+				{
+					Name: "volume1",
+					VolumeSource: corev1.VolumeSource{
+						Cinder: &corev1.CinderVolumeSource{},
+					},
+				},
+				{
+					Name: "volume2",
+					VolumeSource: corev1.VolumeSource{
+						StorageOS: &corev1.StorageOSVolumeSource{},
+					},
+				},
+				{
+					Name: "volume3",
+					VolumeSource: corev1.VolumeSource{
+						AWSElasticBlockStore: &corev1.AWSElasticBlockStoreVolumeSource{},
+					},
+				},
+				{
+					Name: "permittedVolume",
+					VolumeSource: corev1.VolumeSource{
+						ConfigMap: &corev1.ConfigMapVolumeSource{},
+					},
+				},
+			}
+			Expect(fakeClient.Create(ctx, labeledNamespacePod)).To(Succeed())
+		},
+			&rules.Options2003{
+				AcceptedPods: []rules.AcceptedPods2003{
+					{
+						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+							NamespacedObjectSelector: option.NamespacedObjectSelector{
+								NamespaceMatchLabels: map[string]string{
+									"namespace": "foo",
+								},
+								MatchLabels: map[string]string{
+									"pod": "bar",
+								},
+							},
+							Justification: "accepted wildcard",
+						},
+						VolumeNames: []string{"*"},
+					},
+				},
+			},
+			[]rule.CheckResult{
+				{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume1")},
+				{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume2")},
+				{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume3")},
+			},
+		),
 	)
 
 	Describe("#ValidateOptions2003", func() {
