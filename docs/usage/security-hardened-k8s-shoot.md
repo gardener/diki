@@ -12,7 +12,7 @@ The `managedk8s` provider assumes that the user running the ruleset does not hav
 
 Make sure you have [diki installed](../../README.md#Installation) and have a running Gardener shoot cluster.
 
-We will be using the sample [Security Hardened Kubernetes Guide for Shoots configuration file](../../example/guides/security-hardened-k8s.md) for this run.
+We will be using the sample [Security Hardened Kubernetes Guide for Shoots configuration file](../../example/guides/security-hardened-k8s-shoot.yaml) for this run.
 
 ### Configuration
 
