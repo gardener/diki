@@ -197,6 +197,13 @@ providers:                   # contains information about known providers
     #       volumeNames:
     #       - "volume-a"
     #       - "volume-b"
+    #     - matchLabels:
+    #         foo: baz
+    #       namespaceMatchLabels:
+    #         foo: baz
+    #       justification: "justification"
+    #       volumeNames:
+    #       - "*" # a wildcard can be used to match against all volumes in an accepted pod
     # - ruleID: "2004"
     #   args:
     #     acceptedServices:
@@ -244,6 +251,13 @@ providers:                   # contains information about known providers
     #       volumeNames:
     #       - "volume-a"
     #       - "volume-b"
+    #     - matchLabels:
+    #         foo: baz
+    #       namespaceMatchLabels:
+    #         foo: baz
+    #       justification: "justification"
+    #       volumeNames:
+    #       - "*" # a wildcard can be used to match against all volumes in an accepted pod
 # metadata: # optional, additional metadata to be added to summary json report
 #   foo: bar
 #   bar:
