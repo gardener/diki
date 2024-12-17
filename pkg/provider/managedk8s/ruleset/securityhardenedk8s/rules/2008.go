@@ -120,7 +120,7 @@ func (r *Rule2008) accepted(pod corev1.Pod, namespace corev1.Namespace, volumeNa
 	for _, acceptedPod := range r.Options.AcceptedPods {
 		if utils.MatchLabels(pod.Labels, acceptedPod.MatchLabels) &&
 			utils.MatchLabels(namespace.Labels, acceptedPod.NamespaceMatchLabels) {
-			if slices.Contains(acceptedPod.VolumeNames, volumeName) {
+			if slices.Contains(acceptedPod.VolumeNames, "*") || slices.Contains(acceptedPod.VolumeNames, volumeName) {
 				return true, acceptedPod.Justification
 			}
 		}
