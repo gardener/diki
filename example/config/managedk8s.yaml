@@ -6,7 +6,7 @@ providers:                   # contains information about known providers
   args:
     # additionalOpsPodLabels: # pod labels that will be added to diki ops pods
     #   foo: bar
-    kubeconfigPath: diki-gcp-admin-kubeconfig.yaml  # path to cluster admin kubeconfig
+    kubeconfigPath: /tmp/kubeconfig.config  # path to cluster admin kubeconfig
   rulesets:
   - id: disa-kubernetes-stig
     name: DISA Kubernetes Security Technical Implementation Guide
