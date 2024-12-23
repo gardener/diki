@@ -67,7 +67,7 @@ var _ = Describe("#2003", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "There are no resources for evaluation", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "There are no pods for evaluation.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should pass when all pod volumes are of an allowed type",
