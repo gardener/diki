@@ -110,6 +110,10 @@ func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 			checkResults = append(checkResults, rule.PassedCheckResult("Pod uses only allowed volume types.", podTarget))
 		}
 	}
+	if len(checkResults) == 0 {
+		checkResults = append(checkResults, rule.PassedCheckResult("There are no resources for evaluation", rule.NewTarget()))
+	}
+
 	return rule.Result(r, checkResults...), nil
 }
 

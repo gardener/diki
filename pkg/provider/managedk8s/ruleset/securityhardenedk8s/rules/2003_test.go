@@ -62,6 +62,14 @@ var _ = Describe("#2003", func() {
 		Expect(err).To(BeNil())
 		Expect(result.CheckResults).To(Equal(expectedCheckResults))
 	},
+		Entry("should pass when no pods are present in the target",
+			func() {
+			},
+			nil,
+			[]rule.CheckResult{
+				{Status: rule.Passed, Message: "There are no resources for evaluation", Target: rule.NewTarget()},
+			},
+		),
 		Entry("should pass when all pod volumes are of an allowed type",
 			func() {
 				podWithPermittedVolumes := plainPod.DeepCopy()
