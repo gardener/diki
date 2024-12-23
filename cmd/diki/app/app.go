@@ -21,6 +21,7 @@ import (
 
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/provider"
+	"github.com/gardener/diki/pkg/provider/builder"
 	"github.com/gardener/diki/pkg/report"
 	"github.com/gardener/diki/pkg/ruleset"
 )
@@ -124,6 +125,28 @@ e.g. to check compliance of your hyperscaler accounts.`,
 	addReportGenerateDiffFlags(generateDiffCmd, &generateDiffOpts)
 	generateCmd.AddCommand(generateDiffCmd)
 
+	showCmd := &cobra.Command{
+		Use:   "show",
+		Short: "Show metadata of the providers that the current diki binary supports.",
+		Long:  "Show metadata of the providers that the current diki binary supports.",
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return errors.New("show subcommand not selected")
+		},
+	}
+
+	rootCmd.AddCommand(showCmd)
+
+	showProviderCmd := &cobra.Command{
+		Use:   "provider",
+		Short: "",
+		Long:  "",
+		RunE: func(_ *cobra.Command, args []string) error {
+			return showProviderCmd(args, providerCreateFuncs)
+		},
+	}
+
+	showCmd.AddCommand(showProviderCmd)
+
 	return rootCmd
 }
 
@@ -154,6 +177,105 @@ func addReportDiffFlags(cmd *cobra.Command, opts *diffOptions) {
 
 func addReportGenerateDiffFlags(cmd *cobra.Command, opts *generateDiffOptions) {
 	cmd.PersistentFlags().Var(cliflag.NewMapStringString(&opts.identityAttributes), "identity-attributes", "The keys are the IDs of the providers that will be present in the generated difference report and the values are metadata attributes to be used as identifiers.")
+}
+
+func showProviderCmd(args []string, providerCreateFuncs map[string]provider.ProviderFromConfigFunc) error {
+	type Version struct {
+		Version string `json:"version"`
+		Latest  bool   `json:"latest"`
+	}
+	type RulesetMetadata struct {
+		RulesetID   string    `json:"rulesetID"`
+		RulesetName string    `json:"rulesetName"`
+		Versions    []Version `json:"versions"`
+	}
+	type ProviderMetadata struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	}
+	type Provider struct {
+		ID       string            `json:"id"`
+		Name     string            `json:"name"`
+		Rulesets []RulesetMetadata `json:"rulesets"`
+	}
+
+	if len(args) > 1 {
+		return fmt.Errorf("show provider accepts at most one provider")
+	}
+
+	dikiConfigs := map[string]config.DikiConfig{}
+	for providerName := range providerCreateFuncs {
+		dikiConfig, err := readConfig(fmt.Sprintf("example/config/%s.yaml", providerName))
+		dikiConfigs[providerName] = *dikiConfig
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(args) == 0 {
+		var providersMetadata = []ProviderMetadata{}
+		for provider, config := range dikiConfigs {
+			providersMetadata = append(providersMetadata, ProviderMetadata{ID: provider, Name: config.Providers[0].Name})
+		}
+		if bytes, err := json.Marshal(providersMetadata); err != nil {
+			return err
+		} else {
+			fmt.Println(string(bytes))
+		}
+	} else {
+		var (
+			providerID      = args[0]
+			providerData    = Provider{}
+			providerFuncMap = map[string]func(string) []string{
+				"gardener":      builder.GardenerGetSupportedVersions,
+				"garden":        builder.GardenGetSupportedVersions,
+				"managedk8s":    builder.ManagedK8SGetSupportedVersions,
+				"virtualgarden": builder.VirtualGardenGetSupportedVersions,
+			}
+			GetSupportedVersionsByProviderAndRuleset = func(provider, ruleset string) ([]string, error) {
+				getSupportedVersionsByRuleset, ok := providerFuncMap[provider]
+				if !ok {
+					return nil, fmt.Errorf("provider %s is not registered for versioning", provider)
+				}
+				var result = getSupportedVersionsByRuleset(ruleset)
+				if result == nil {
+					return nil, fmt.Errorf("ruleset %s of provider %s is not registered for versioning", ruleset, provider)
+				}
+				return result, nil
+			}
+		)
+		config, ok := dikiConfigs[providerID]
+		if !ok {
+			return fmt.Errorf("provider %s not found", providerID)
+		}
+		providerData.ID = providerID
+		providerData.Name = config.Providers[0].Name
+
+		for _, ruleset := range config.Providers[0].Rulesets {
+			var (
+				rulesetMetadata = RulesetMetadata{RulesetID: ruleset.ID, RulesetName: ruleset.Name}
+				latestVersion   = ruleset.Version
+			)
+			rulesetMetadata.Versions = append(rulesetMetadata.Versions, Version{Version: latestVersion, Latest: true})
+			supportedVersions, err := GetSupportedVersionsByProviderAndRuleset(providerID, ruleset.ID)
+			if err != nil {
+				return err
+			}
+			for _, version := range supportedVersions {
+				if version != latestVersion {
+					rulesetMetadata.Versions = append(rulesetMetadata.Versions, Version{Version: version, Latest: false})
+				}
+			}
+			providerData.Rulesets = append(providerData.Rulesets, rulesetMetadata)
+		}
+
+		if bytes, err := json.Marshal(providerData); err != nil {
+			return err
+		} else {
+			fmt.Println(string(bytes))
+		}
+	}
+	return nil
 }
 
 func generateDiffCmd(args []string, generateDiffOpts generateDiffOptions, rootOpts reportOptions, logger *slog.Logger) error {
