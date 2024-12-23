@@ -68,6 +68,18 @@ var _ = Describe("#2008", func() {
 		}
 	})
 
+	It("should pass when no pods are deployed", func() {
+		r := &rules.Rule2008{Client: client, Options: &options}
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+
+		expectedCheckResults := []rule.CheckResult{
+			rule.PassedCheckResult("There are no pods for evaluation.", rule.NewTarget()),
+		}
+
+		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+	})
+
 	It("should return correct results when all pods pass", func() {
 		r := &rules.Rule2008{Client: client, Options: &options}
 		pod1 := plainPod.DeepCopy()
