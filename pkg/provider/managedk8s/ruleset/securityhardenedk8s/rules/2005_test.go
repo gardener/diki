@@ -98,6 +98,42 @@ var _ = Describe("#2005", func() {
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
+
+	It("should pass when no pods are found for evaluation", func() {
+		option.AllowedImages = append(option.AllowedImages, rules.AllowedImage{
+			Prefix: "foo",
+		})
+		r := &rules.Rule2005{Client: client, Options: &option}
+
+		pod.Spec.Containers = nil
+		Expect(client.Create(ctx, pod)).To(Succeed())
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+
+		expectedCheckResults := []rule.CheckResult{
+			rule.PassedCheckResult("Pod has no containers for evaluation.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar")),
+		}
+
+		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+	})
+
+	It("should pass when the pods have no containers", func() {
+		option.AllowedImages = append(option.AllowedImages, rules.AllowedImage{
+			Prefix: "foo",
+		})
+		r := &rules.Rule2005{Client: client, Options: &option}
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+
+		expectedCheckResults := []rule.CheckResult{
+			rule.PassedCheckResult("There are no pods for evaluation.", rule.NewTarget()),
+		}
+
+		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+	})
+
 	It("should pass when images are from allowed list", func() {
 		option.AllowedImages = append(option.AllowedImages, rules.AllowedImage{
 			Prefix: "eu.gcr.io/",
@@ -115,6 +151,7 @@ var _ = Describe("#2005", func() {
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
+
 	It("should return correct results when not all images pass", func() {
 		option.AllowedImages = append(option.AllowedImages, rules.AllowedImage{
 			Prefix: "eu.gcr.io/foo",
