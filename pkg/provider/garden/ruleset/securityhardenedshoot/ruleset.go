@@ -23,7 +23,10 @@ const (
 	RulesetID = "security-hardened-shoot-cluster"
 )
 
-var _ ruleset.Ruleset = &Ruleset{}
+var (
+	_                 ruleset.Ruleset = &Ruleset{}
+	SupportedVersions                 = []string{"v0.1.0"}
+)
 
 // Ruleset implements Security Hardened Shoot Cluster.
 type Ruleset struct {

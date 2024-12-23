@@ -25,7 +25,10 @@ const (
 	RulesetID = "disa-kubernetes-stig"
 )
 
-var _ ruleset.Ruleset = &Ruleset{}
+var (
+	_                 ruleset.Ruleset = &Ruleset{}
+	SupportedVersions                 = []string{"v2r1", "v1r11"}
+)
 
 // Ruleset implements DISA Kubernetes STIG.
 type Ruleset struct {

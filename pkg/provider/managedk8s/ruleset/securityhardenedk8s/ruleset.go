@@ -22,7 +22,10 @@ const (
 	RulesetID = "security-hardened-k8s"
 )
 
-var _ ruleset.Ruleset = &Ruleset{}
+var (
+	_                 ruleset.Ruleset = &Ruleset{}
+	SupportedVersions                 = []string{"v0.1.0"}
+)
 
 // Ruleset implements Security Hardened Kubernetes Cluster.
 type Ruleset struct {
