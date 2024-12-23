@@ -57,3 +57,14 @@ func ManagedK8SProviderFromConfig(conf config.ProviderConfig) (provider.Provider
 
 	return p, nil
 }
+
+func ManagedK8SGetSupportedVersions(ruleset string) []string {
+	switch ruleset {
+	case securityhardenedk8s.RulesetID:
+		return securityhardenedk8s.SupportedVersions
+	case disak8sstig.RulesetID:
+		return disak8sstig.SupportedVersions
+	default:
+		return nil
+	}
+}

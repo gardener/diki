@@ -61,3 +61,12 @@ func setConfigDefaults(config *rest.Config) {
 		config.Burst = 40
 	}
 }
+
+func GardenerGetSupportedVersions(ruleset string) []string {
+	switch ruleset {
+	case disak8sstig.RulesetID:
+		return disak8sstig.SupportedVersions
+	default:
+		return nil
+	}
+}

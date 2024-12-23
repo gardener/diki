@@ -48,3 +48,12 @@ func GardenProviderFromConfig(conf config.ProviderConfig) (provider.Provider, er
 
 	return p, nil
 }
+
+func GardenGetSupportedVersions(ruleset string) []string {
+	switch ruleset {
+	case securityhardenedshoot.RulesetID:
+		return securityhardenedshoot.SupportedVersions
+	default:
+		return nil
+	}
+}

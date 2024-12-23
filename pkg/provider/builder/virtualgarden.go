@@ -48,3 +48,12 @@ func VirtualGardenProviderFromConfig(conf config.ProviderConfig) (provider.Provi
 
 	return p, nil
 }
+
+func VirtualGardenGetSupportedVersions(ruleset string) []string {
+	switch ruleset {
+	case disak8sstig.RulesetID:
+		return disak8sstig.SupportedVersions
+	default:
+		return nil
+	}
+}
