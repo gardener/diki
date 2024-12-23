@@ -61,6 +61,23 @@ var _ = Describe("#242415", func() {
 		options = &option.Options242415{}
 	})
 
+	It("should pass when no pods are deployed", func() {
+		r := &rules.Rule242415{Client: fakeClient, Options: options}
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+
+		expectedCheckResults := []rule.CheckResult{
+			{
+				Status:  rule.Passed,
+				Message: "There are no pods to be evaluated.",
+				Target:  rule.NewTarget(),
+			},
+		}
+
+		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+	})
+
 	It("should return correct results when all pods pass", func() {
 		r := &rules.Rule242415{Client: fakeClient, Options: options}
 		Expect(fakeClient.Create(ctx, pod)).To(Succeed())
