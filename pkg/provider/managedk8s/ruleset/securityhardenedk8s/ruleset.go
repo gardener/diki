@@ -23,8 +23,9 @@ const (
 )
 
 var (
-	_                 ruleset.Ruleset = &Ruleset{}
-	SupportedVersions                 = []string{"v0.1.0"}
+	_ ruleset.Ruleset = &Ruleset{}
+	// SupportedVersions is a list of available versions for the Security Hardened Kubernetes Cluster Ruleset.
+	SupportedVersions = []string{"v0.1.0"}
 )
 
 // Ruleset implements Security Hardened Kubernetes Cluster.

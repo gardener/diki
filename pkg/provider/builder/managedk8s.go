@@ -58,6 +58,7 @@ func ManagedK8SProviderFromConfig(conf config.ProviderConfig) (provider.Provider
 	return p, nil
 }
 
+// ManagedK8SGetSupportedVersions returns the supported versions of a specific ruleset that is supported by the Managed K8S provider.
 func ManagedK8SGetSupportedVersions(ruleset string) []string {
 	switch ruleset {
 	case securityhardenedk8s.RulesetID:

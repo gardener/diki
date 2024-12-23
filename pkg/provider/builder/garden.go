@@ -49,6 +49,7 @@ func GardenProviderFromConfig(conf config.ProviderConfig) (provider.Provider, er
 	return p, nil
 }
 
+// GardenGetSupportedVersions returns the Supported Versions of a specific ruleset that is supported by the Garden provider.
 func GardenGetSupportedVersions(ruleset string) []string {
 	switch ruleset {
 	case securityhardenedshoot.RulesetID:

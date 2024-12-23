@@ -49,6 +49,7 @@ func VirtualGardenProviderFromConfig(conf config.ProviderConfig) (provider.Provi
 	return p, nil
 }
 
+// VirtualGardenGetSupportedVersions returns the supported versions of a specific ruleset that is supported by the Virtual Garden provider.
 func VirtualGardenGetSupportedVersions(ruleset string) []string {
 	switch ruleset {
 	case disak8sstig.RulesetID:

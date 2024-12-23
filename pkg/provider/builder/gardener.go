@@ -62,6 +62,7 @@ func setConfigDefaults(config *rest.Config) {
 	}
 }
 
+// GardenerGetSupportedVersions returns the Supported Versions of a specific ruleset that is supported by the Gardener provider.
 func GardenerGetSupportedVersions(ruleset string) []string {
 	switch ruleset {
 	case disak8sstig.RulesetID:
