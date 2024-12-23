@@ -50,32 +50,52 @@ var _ = Describe("#2004", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(serviceSpec corev1.ServiceSpec, ruleOptions rules.Options2004, expectedResult rule.CheckResult) {
+		func(updateFn func(), ruleOptions rules.Options2004, expectedResult rule.CheckResult) {
+			updateFn()
+
 			r := &rules.Rule2004{Client: client, Options: &ruleOptions}
-			service.Spec = serviceSpec
-
-			Expect(client.Create(ctx, service)).To(Succeed())
-			Expect(client.Create(ctx, namespace)).To(Succeed())
-
 			ruleResult, err := r.Run(ctx)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{expectedResult}))
 		},
-
+		Entry("should pass when no services are set",
+			func() {}, rules.Options2004{},
+			rule.CheckResult{Status: rule.Passed, Message: "There are no services for evaluation.", Target: rule.NewTarget()},
+		),
 		Entry("should pass when serviceSpec is not set",
-			corev1.ServiceSpec{}, rules.Options2004{},
+			func() {
+				service.Spec = corev1.ServiceSpec{}
+				Expect(client.Create(ctx, service)).To(Succeed())
+				Expect(client.Create(ctx, namespace)).To(Succeed())
+
+			}, rules.Options2004{},
 			rule.CheckResult{Status: rule.Passed, Message: "Service is not of type NodePort.", Target: rule.NewTarget("kind", "service", "name", "foo", "namespace", "foo")},
 		),
 		Entry("should fail when service is of type NodePort",
-			corev1.ServiceSpec{Type: "NodePort"}, rules.Options2004{},
+			func() {
+				service.Spec = corev1.ServiceSpec{Type: "NodePort"}
+				Expect(client.Create(ctx, service)).To(Succeed())
+				Expect(client.Create(ctx, namespace)).To(Succeed())
+
+			}, rules.Options2004{},
 			rule.CheckResult{Status: rule.Failed, Message: "Service should not be of type NodePort.", Target: rule.NewTarget("kind", "service", "name", "foo", "namespace", "foo")},
 		),
 		Entry("should pass when service is not of type NodePort",
-			corev1.ServiceSpec{Type: "ClusterIP"}, rules.Options2004{},
+			func() {
+				service.Spec = corev1.ServiceSpec{Type: "ClusterIP"}
+				Expect(client.Create(ctx, service)).To(Succeed())
+				Expect(client.Create(ctx, namespace)).To(Succeed())
+
+			}, rules.Options2004{},
 			rule.CheckResult{Status: rule.Passed, Message: "Service is not of type NodePort.", Target: rule.NewTarget("kind", "service", "name", "foo", "namespace", "foo")},
 		),
 		Entry("should pass when options are set",
-			corev1.ServiceSpec{Type: "NodePort"},
+			func() {
+				service.Spec = corev1.ServiceSpec{Type: "NodePort"}
+				Expect(client.Create(ctx, service)).To(Succeed())
+				Expect(client.Create(ctx, namespace)).To(Succeed())
+
+			},
 			rules.Options2004{
 				AcceptedServices: []option.AcceptedNamespacedObject{
 					{
