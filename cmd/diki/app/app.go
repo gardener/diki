@@ -211,7 +211,7 @@ func showProviderCmd(args []string) error {
 
 		metadataFunc, ok := providerFuncMap[providerArg]
 		if !ok {
-			return fmt.Errorf("provider %s does not exist in the current Diki binary", providerArg)
+			return fmt.Errorf("provider %s does not exist in the current diki binary", providerArg)
 		}
 
 		providerMetadata := metadataFunc()
