@@ -22,7 +22,8 @@ import (
 
 const (
 	// RulesetID is a constant containing the id of the DISA Kubernetes STIG Ruleset.
-	RulesetID = "disa-kubernetes-stig"
+	RulesetID   = "disa-kubernetes-stig"
+	RulesetName = "DISA Kubernetes Security Technical Implementation Guide"
 )
 
 var (
@@ -73,7 +74,7 @@ func (r *Ruleset) ID() string {
 
 // Name returns the name of the Ruleset.
 func (r *Ruleset) Name() string {
-	return "DISA Kubernetes Security Technical Implementation Guide"
+	return RulesetName
 }
 
 // Version returns the version of the Ruleset.

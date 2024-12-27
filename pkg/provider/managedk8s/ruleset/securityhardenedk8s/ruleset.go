@@ -19,7 +19,8 @@ import (
 
 const (
 	// RulesetID is a constant containing the id of the Security Hardened Kubernetes Cluster Ruleset.
-	RulesetID = "security-hardened-k8s"
+	RulesetID   = "security-hardened-k8s"
+	RulesetName = "Security Hardened Kubernetes Cluster"
 )
 
 var (
@@ -58,7 +59,7 @@ func (r *Ruleset) ID() string {
 
 // Name returns the name of the Ruleset.
 func (r *Ruleset) Name() string {
-	return "Security Hardened Kubernetes Cluster"
+	return RulesetName
 }
 
 // Version returns the version of the Ruleset.

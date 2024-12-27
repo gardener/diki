@@ -20,7 +20,8 @@ import (
 
 const (
 	// RulesetID is a constant containing the id of the Security Hardened Shoot Cluster Ruleset.
-	RulesetID = "security-hardened-shoot-cluster"
+	RulesetID   = "security-hardened-shoot-cluster"
+	RulesetName = "Security Hardened Shoot Cluster"
 )
 
 var (
@@ -66,7 +67,7 @@ func (r *Ruleset) ID() string {
 
 // Name returns the name of the Ruleset.
 func (r *Ruleset) Name() string {
-	return "Security Hardened Shoot Cluster"
+	return RulesetName
 }
 
 // Version returns the version of the Ruleset.
