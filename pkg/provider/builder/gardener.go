@@ -11,6 +11,7 @@ import (
 	"k8s.io/client-go/rest"
 
 	"github.com/gardener/diki/pkg/config"
+	"github.com/gardener/diki/pkg/metadata"
 	"github.com/gardener/diki/pkg/provider"
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig"
@@ -62,12 +63,40 @@ func setConfigDefaults(config *rest.Config) {
 	}
 }
 
-// GardenerGetSupportedVersions returns the Supported Versions of a specific ruleset that is supported by the Gardener provider.
-func GardenerGetSupportedVersions(ruleset string) []string {
+// gardenerGetSupportedVersions returns the Supported Versions of a specific ruleset that is supported by the Gardener provider.
+func gardenerGetSupportedVersions(ruleset string) []string {
 	switch ruleset {
 	case disak8sstig.RulesetID:
 		return disak8sstig.SupportedVersions
 	default:
 		return nil
 	}
+}
+
+// GardenerProviderMetadata returns available metadata for the Gardener Provider and it's supported rulesets.
+func GardenerProviderMetadata() metadata.ProviderMetadata {
+	providerMetadata := metadata.ProviderMetadata{}
+	providerMetadata.ProviderID = "gardener"
+	providerMetadata.ProviderName = "Gardener"
+
+	var availableRulesets = map[string]string{
+		disak8sstig.RulesetID: disak8sstig.RulesetName,
+	}
+
+	for rulesetID, rulesetName := range availableRulesets {
+		rulesetMetadata := &metadata.RulesetMetadata{}
+		rulesetMetadata.RulesetID = rulesetID
+		rulesetMetadata.RulesetName = rulesetName
+		rulesetSupportedVersions := gardenerGetSupportedVersions(rulesetMetadata.RulesetID)
+		for index, supportedVersion := range rulesetSupportedVersions {
+			if index == 0 {
+				rulesetMetadata.Versions = append(rulesetMetadata.Versions, metadata.Version{Version: supportedVersion, Latest: true})
+			} else {
+				rulesetMetadata.Versions = append(rulesetMetadata.Versions, metadata.Version{Version: supportedVersion, Latest: false})
+			}
+		}
+		providerMetadata.ProviderRulesets = append(providerMetadata.ProviderRulesets, *rulesetMetadata)
+	}
+
+	return providerMetadata
 }

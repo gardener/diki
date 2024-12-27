@@ -9,6 +9,7 @@ import (
 	"log/slog"
 
 	"github.com/gardener/diki/pkg/config"
+	"github.com/gardener/diki/pkg/metadata"
 	"github.com/gardener/diki/pkg/provider"
 	"github.com/gardener/diki/pkg/provider/managedk8s"
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig"
@@ -58,8 +59,8 @@ func ManagedK8SProviderFromConfig(conf config.ProviderConfig) (provider.Provider
 	return p, nil
 }
 
-// ManagedK8SGetSupportedVersions returns the supported versions of a specific ruleset that is supported by the Managed K8S provider.
-func ManagedK8SGetSupportedVersions(ruleset string) []string {
+// managedK8SGetSupportedVersions returns the supported versions of a specific ruleset that is supported by the Managed K8S provider.
+func managedK8SGetSupportedVersions(ruleset string) []string {
 	switch ruleset {
 	case securityhardenedk8s.RulesetID:
 		return securityhardenedk8s.SupportedVersions
@@ -68,4 +69,32 @@ func ManagedK8SGetSupportedVersions(ruleset string) []string {
 	default:
 		return nil
 	}
+}
+
+// ManagedK8SProviderMetadata returns available metadata for the Managed Kubernetes Provider and it's supported rulesets.
+func ManagedK8SProviderMetadata() metadata.ProviderMetadata {
+	providerMetadata := metadata.ProviderMetadata{}
+	providerMetadata.ProviderID = "managedk8s"
+	providerMetadata.ProviderName = "Managed Kubernetes"
+
+	var availableRulesets = map[string]string{
+		securityhardenedk8s.RulesetID: securityhardenedk8s.RulesetName,
+		disak8sstig.RulesetID:         disak8sstig.RulesetName,
+	}
+
+	for rulesetID, rulesetName := range availableRulesets {
+		rulesetMetadata := &metadata.RulesetMetadata{}
+		rulesetMetadata.RulesetID = rulesetID
+		rulesetMetadata.RulesetName = rulesetName
+		rulesetSupportedVersions := managedK8SGetSupportedVersions(rulesetMetadata.RulesetID)
+		for index, supportedVersion := range rulesetSupportedVersions {
+			if index == 0 {
+				rulesetMetadata.Versions = append(rulesetMetadata.Versions, metadata.Version{Version: supportedVersion, Latest: true})
+			} else {
+				rulesetMetadata.Versions = append(rulesetMetadata.Versions, metadata.Version{Version: supportedVersion, Latest: false})
+			}
+		}
+		providerMetadata.ProviderRulesets = append(providerMetadata.ProviderRulesets, *rulesetMetadata)
+	}
+	return providerMetadata
 }
