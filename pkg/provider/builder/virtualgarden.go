@@ -75,6 +75,7 @@ func VirtualGardenProviderMetadata() metadata.ProviderMetadata {
 		rulesetMetadata.RulesetID = rulesetID
 		rulesetMetadata.RulesetName = rulesetName
 		rulesetSupportedVersions := virtualGardenGetSupportedVersions(rulesetMetadata.RulesetID)
+
 		for index, supportedVersion := range rulesetSupportedVersions {
 			if index == 0 {
 				rulesetMetadata.Versions = append(rulesetMetadata.Versions, metadata.Version{Version: supportedVersion, Latest: true})
