@@ -19,7 +19,8 @@ import (
 
 const (
 	// RulesetID is a constant containing the id of the Security Hardened Kubernetes Cluster Ruleset.
-	RulesetID   = "security-hardened-k8s"
+	RulesetID = "security-hardened-k8s"
+	// RulesetName is a constant containing the user-friendly name of the Security Hardened Kubernetes ruleset.
 	RulesetName = "Security Hardened Kubernetes Cluster"
 )
 

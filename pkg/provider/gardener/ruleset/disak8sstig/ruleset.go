@@ -22,7 +22,8 @@ import (
 
 const (
 	// RulesetID is a constant containing the id of the DISA Kubernetes STIG Ruleset.
-	RulesetID   = "disa-kubernetes-stig"
+	RulesetID = "disa-kubernetes-stig"
+	// RulesetName is a constant containing the user-friendly name of the DISA Kubernetes STIG ruleset.
 	RulesetName = "DISA Kubernetes Security Technical Implementation Guide"
 )
 

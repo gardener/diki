@@ -19,8 +19,9 @@ import (
 )
 
 const (
-	// RulesetID is a constant containing the id of the Security Hardened Shoot Cluster Ruleset.
-	RulesetID   = "security-hardened-shoot-cluster"
+	// RulesetID is a constant containing the id of the Security Hardened Shoot Cluster ruleset.
+	RulesetID = "security-hardened-shoot-cluster"
+	// RulesetName is a constant containing the user-friendly name of the Security Hardened Shoot Cluster ruleset.
 	RulesetName = "Security Hardened Shoot Cluster"
 )
 
