@@ -139,8 +139,8 @@ e.g. to check compliance of your hyperscaler accounts.`,
 
 	showProviderCmd := &cobra.Command{
 		Use:   "provider",
-		Short: "",
-		Long:  "",
+		Short: "Show detailed information for the given provider.",
+		Long:  "Show detailed information for the given provider.",
 		RunE: func(_ *cobra.Command, args []string) error {
 			return showProviderCmd(args)
 		},
@@ -186,7 +186,7 @@ func showProviderCmd(args []string) error {
 	}
 
 	var (
-		providerFuncMap = map[string]func() metadata.ProviderMetadata{
+		providerFuncMap = map[string]func() metadata.ProviderDetailed{
 			"gardener":      builder.GardenerProviderMetadata,
 			"garden":        builder.GardenProviderMetadata,
 			"managedk8s":    builder.ManagedK8SProviderMetadata,
@@ -198,7 +198,7 @@ func showProviderCmd(args []string) error {
 		providersMetadata := []metadata.Provider{}
 
 		for providerID := range providerFuncMap {
-			providersMetadata = append(providersMetadata, metadata.Provider{ProviderID: providerID, ProviderName: providerFuncMap[providerID]().ProviderName})
+			providersMetadata = append(providersMetadata, metadata.Provider{ID: providerID, Name: providerFuncMap[providerID]().Name})
 		}
 
 		if bytes, err := json.Marshal(providersMetadata); err != nil {
