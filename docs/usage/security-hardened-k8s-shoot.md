@@ -1,5 +1,5 @@
 ---
-	description: How can I check whether my shoot cluster fulfills the Security Hardened Kubernetes Cluster requirements?
+description: How can I check whether my shoot cluster fulfills the Security Hardened Kubernetes Cluster requirements?
 ---
 
 ## Show Security Hardened Kubernetes Compliance for a Gardener Shoot Cluster
