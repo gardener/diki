@@ -62,28 +62,32 @@ func gardenGetSupportedVersions(ruleset string) []string {
 
 // GardenProviderMetadata returns available metadata for the Garden Provider and it's supported rulesets.
 func GardenProviderMetadata() metadata.ProviderDetailed {
-	providerMetadata := metadata.ProviderDetailed{}
-	providerMetadata.ID = "garden"
-	providerMetadata.Name = "Garden"
-
-	var availableRulesets = map[string]string{
-		securityhardenedshoot.RulesetID: securityhardenedshoot.RulesetName,
+	providerMetadata := metadata.ProviderDetailed{
+		Provider: metadata.Provider{
+			ID:   "garden",
+			Name: "Garden",
+		},
+		Rulesets: []metadata.Ruleset{
+			{
+				ID:   securityhardenedshoot.RulesetID,
+				Name: securityhardenedshoot.RulesetName,
+			},
+		},
 	}
 
-	for rulesetID, rulesetName := range availableRulesets {
-		rulesetMetadata := &metadata.Ruleset{}
-		rulesetMetadata.ID = rulesetID
-		rulesetMetadata.Name = rulesetName
-		rulesetSupportedVersions := gardenGetSupportedVersions(rulesetMetadata.ID)
-
-		for index, supportedVersion := range rulesetSupportedVersions {
-			if index == 0 {
-				rulesetMetadata.Versions = append(rulesetMetadata.Versions, metadata.Version{Version: supportedVersion, Latest: true})
-			} else {
-				rulesetMetadata.Versions = append(rulesetMetadata.Versions, metadata.Version{Version: supportedVersion, Latest: false})
-			}
+	for i := range providerMetadata.Rulesets {
+		supportedVersions := gardenGetSupportedVersions(providerMetadata.Rulesets[i].ID)
+		for _, supportedVersion := range supportedVersions {
+			providerMetadata.Rulesets[i].Versions = append(
+				providerMetadata.Rulesets[i].Versions,
+				metadata.Version{Version: supportedVersion, Latest: false},
+			)
 		}
-		providerMetadata.Rulesets = append(providerMetadata.Rulesets, *rulesetMetadata)
+
+		// Mark the first version as latest as the versions are sorted from newest to oldest
+		if len(providerMetadata.Rulesets[i].Versions) > 0 {
+			providerMetadata.Rulesets[i].Versions[0].Latest = true
+		}
 	}
 
 	return providerMetadata

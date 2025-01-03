@@ -73,29 +73,37 @@ func managedK8SGetSupportedVersions(ruleset string) []string {
 
 // ManagedK8SProviderMetadata returns available metadata for the Managed Kubernetes Provider and it's supported rulesets.
 func ManagedK8SProviderMetadata() metadata.ProviderDetailed {
-	providerMetadata := metadata.ProviderDetailed{}
-	providerMetadata.ID = "managedk8s"
-	providerMetadata.Name = "Managed Kubernetes"
-
-	var availableRulesets = map[string]string{
-		securityhardenedk8s.RulesetID: securityhardenedk8s.RulesetName,
-		disak8sstig.RulesetID:         disak8sstig.RulesetName,
+	providerMetadata := metadata.ProviderDetailed{
+		Provider: metadata.Provider{
+			ID:   "managedk8s",
+			Name: "Managed Kubernetes",
+		},
+		Rulesets: []metadata.Ruleset{
+			{
+				ID:   securityhardenedk8s.RulesetID,
+				Name: securityhardenedk8s.RulesetName,
+			},
+			{
+				ID:   disak8sstig.RulesetID,
+				Name: disak8sstig.RulesetName,
+			},
+		},
 	}
 
-	for rulesetID, rulesetName := range availableRulesets {
-		rulesetMetadata := &metadata.Ruleset{}
-		rulesetMetadata.ID = rulesetID
-		rulesetMetadata.Name = rulesetName
-		rulesetSupportedVersions := managedK8SGetSupportedVersions(rulesetMetadata.ID)
-
-		for index, supportedVersion := range rulesetSupportedVersions {
-			if index == 0 {
-				rulesetMetadata.Versions = append(rulesetMetadata.Versions, metadata.Version{Version: supportedVersion, Latest: true})
-			} else {
-				rulesetMetadata.Versions = append(rulesetMetadata.Versions, metadata.Version{Version: supportedVersion, Latest: false})
-			}
+	for i := range providerMetadata.Rulesets {
+		supportedVersions := gardenerGetSupportedVersions(providerMetadata.Rulesets[i].ID)
+		for _, supportedVersion := range supportedVersions {
+			providerMetadata.Rulesets[i].Versions = append(
+				providerMetadata.Rulesets[i].Versions,
+				metadata.Version{Version: supportedVersion, Latest: false},
+			)
 		}
-		providerMetadata.Rulesets = append(providerMetadata.Rulesets, *rulesetMetadata)
+
+		// Mark the first version as latest as the versions are sorted from newest to oldest
+		if len(providerMetadata.Rulesets[i].Versions) > 0 {
+			providerMetadata.Rulesets[i].Versions[0].Latest = true
+		}
 	}
+
 	return providerMetadata
 }
