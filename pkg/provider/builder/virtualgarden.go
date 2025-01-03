@@ -61,20 +61,20 @@ func virtualGardenGetSupportedVersions(ruleset string) []string {
 }
 
 // VirtualGardenProviderMetadata returns available metadata for the Virtual Garden Provider and it's supported rulesets.
-func VirtualGardenProviderMetadata() metadata.ProviderMetadata {
-	providerMetadata := metadata.ProviderMetadata{}
-	providerMetadata.ProviderID = "virtualgarden"
-	providerMetadata.ProviderName = "Virtual Garden"
+func VirtualGardenProviderMetadata() metadata.ProviderDetailed {
+	providerMetadata := metadata.ProviderDetailed{}
+	providerMetadata.ID = "virtualgarden"
+	providerMetadata.Name = "Virtual Garden"
 
 	var availableRulesets = map[string]string{
 		disak8sstig.RulesetID: disak8sstig.RulesetName,
 	}
 
 	for rulesetID, rulesetName := range availableRulesets {
-		rulesetMetadata := &metadata.RulesetMetadata{}
-		rulesetMetadata.RulesetID = rulesetID
-		rulesetMetadata.RulesetName = rulesetName
-		rulesetSupportedVersions := virtualGardenGetSupportedVersions(rulesetMetadata.RulesetID)
+		rulesetMetadata := &metadata.Ruleset{}
+		rulesetMetadata.ID = rulesetID
+		rulesetMetadata.Name = rulesetName
+		rulesetSupportedVersions := virtualGardenGetSupportedVersions(rulesetMetadata.ID)
 
 		for index, supportedVersion := range rulesetSupportedVersions {
 			if index == 0 {
@@ -83,7 +83,7 @@ func VirtualGardenProviderMetadata() metadata.ProviderMetadata {
 				rulesetMetadata.Versions = append(rulesetMetadata.Versions, metadata.Version{Version: supportedVersion, Latest: false})
 			}
 		}
-		providerMetadata.ProviderRulesets = append(providerMetadata.ProviderRulesets, *rulesetMetadata)
+		providerMetadata.Rulesets = append(providerMetadata.Rulesets, *rulesetMetadata)
 	}
 	return providerMetadata
 }

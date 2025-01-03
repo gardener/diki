@@ -72,10 +72,10 @@ func managedK8SGetSupportedVersions(ruleset string) []string {
 }
 
 // ManagedK8SProviderMetadata returns available metadata for the Managed Kubernetes Provider and it's supported rulesets.
-func ManagedK8SProviderMetadata() metadata.ProviderMetadata {
-	providerMetadata := metadata.ProviderMetadata{}
-	providerMetadata.ProviderID = "managedk8s"
-	providerMetadata.ProviderName = "Managed Kubernetes"
+func ManagedK8SProviderMetadata() metadata.ProviderDetailed {
+	providerMetadata := metadata.ProviderDetailed{}
+	providerMetadata.ID = "managedk8s"
+	providerMetadata.Name = "Managed Kubernetes"
 
 	var availableRulesets = map[string]string{
 		securityhardenedk8s.RulesetID: securityhardenedk8s.RulesetName,
@@ -83,10 +83,10 @@ func ManagedK8SProviderMetadata() metadata.ProviderMetadata {
 	}
 
 	for rulesetID, rulesetName := range availableRulesets {
-		rulesetMetadata := &metadata.RulesetMetadata{}
-		rulesetMetadata.RulesetID = rulesetID
-		rulesetMetadata.RulesetName = rulesetName
-		rulesetSupportedVersions := managedK8SGetSupportedVersions(rulesetMetadata.RulesetID)
+		rulesetMetadata := &metadata.Ruleset{}
+		rulesetMetadata.ID = rulesetID
+		rulesetMetadata.Name = rulesetName
+		rulesetSupportedVersions := managedK8SGetSupportedVersions(rulesetMetadata.ID)
 
 		for index, supportedVersion := range rulesetSupportedVersions {
 			if index == 0 {
@@ -95,7 +95,7 @@ func ManagedK8SProviderMetadata() metadata.ProviderMetadata {
 				rulesetMetadata.Versions = append(rulesetMetadata.Versions, metadata.Version{Version: supportedVersion, Latest: false})
 			}
 		}
-		providerMetadata.ProviderRulesets = append(providerMetadata.ProviderRulesets, *rulesetMetadata)
+		providerMetadata.Rulesets = append(providerMetadata.Rulesets, *rulesetMetadata)
 	}
 	return providerMetadata
 }

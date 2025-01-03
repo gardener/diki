@@ -74,20 +74,20 @@ func gardenerGetSupportedVersions(ruleset string) []string {
 }
 
 // GardenerProviderMetadata returns available metadata for the Gardener Provider and it's supported rulesets.
-func GardenerProviderMetadata() metadata.ProviderMetadata {
-	providerMetadata := metadata.ProviderMetadata{}
-	providerMetadata.ProviderID = "gardener"
-	providerMetadata.ProviderName = "Gardener"
+func GardenerProviderMetadata() metadata.ProviderDetailed {
+	providerMetadata := metadata.ProviderDetailed{}
+	providerMetadata.ID = "gardener"
+	providerMetadata.Name = "Gardener"
 
 	var availableRulesets = map[string]string{
 		disak8sstig.RulesetID: disak8sstig.RulesetName,
 	}
 
 	for rulesetID, rulesetName := range availableRulesets {
-		rulesetMetadata := &metadata.RulesetMetadata{}
-		rulesetMetadata.RulesetID = rulesetID
-		rulesetMetadata.RulesetName = rulesetName
-		rulesetSupportedVersions := gardenerGetSupportedVersions(rulesetMetadata.RulesetID)
+		rulesetMetadata := &metadata.Ruleset{}
+		rulesetMetadata.ID = rulesetID
+		rulesetMetadata.Name = rulesetName
+		rulesetSupportedVersions := gardenerGetSupportedVersions(rulesetMetadata.ID)
 
 		for index, supportedVersion := range rulesetSupportedVersions {
 			if index == 0 {
@@ -96,7 +96,7 @@ func GardenerProviderMetadata() metadata.ProviderMetadata {
 				rulesetMetadata.Versions = append(rulesetMetadata.Versions, metadata.Version{Version: supportedVersion, Latest: false})
 			}
 		}
-		providerMetadata.ProviderRulesets = append(providerMetadata.ProviderRulesets, *rulesetMetadata)
+		providerMetadata.Rulesets = append(providerMetadata.Rulesets, *rulesetMetadata)
 	}
 
 	return providerMetadata
