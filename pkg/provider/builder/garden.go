@@ -64,8 +64,8 @@ func gardenGetSupportedVersions(ruleset string) []string {
 func GardenProviderMetadata() metadata.ProviderDetailed {
 	providerMetadata := metadata.ProviderDetailed{
 		Provider: metadata.Provider{
-			ID:   "garden",
-			Name: "Garden",
+			ID:   garden.ProviderID,
+			Name: garden.ProviderName,
 		},
 		Rulesets: []metadata.Ruleset{
 			{

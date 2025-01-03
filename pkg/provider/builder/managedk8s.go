@@ -75,8 +75,8 @@ func managedK8SGetSupportedVersions(ruleset string) []string {
 func ManagedK8SProviderMetadata() metadata.ProviderDetailed {
 	providerMetadata := metadata.ProviderDetailed{
 		Provider: metadata.Provider{
-			ID:   "managedk8s",
-			Name: "Managed Kubernetes",
+			ID:   managedk8s.ProviderID,
+			Name: managedk8s.ProviderName,
 		},
 		Rulesets: []metadata.Ruleset{
 			{
