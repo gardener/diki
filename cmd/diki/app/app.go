@@ -185,7 +185,7 @@ func showProviderCmd(args []string, metadataFuncs map[string]metadata.MetadataFu
 	}
 
 	if len(args) == 0 {
-		providersMetadata := []metadata.Provider{}
+		var providersMetadata []metadata.Provider
 
 		for providerID := range metadataFuncs {
 			providersMetadata = append(providersMetadata, metadata.Provider{ID: providerID, Name: metadataFuncs[providerID]().Name})
@@ -196,21 +196,20 @@ func showProviderCmd(args []string, metadataFuncs map[string]metadata.MetadataFu
 		} else {
 			fmt.Println(string(bytes))
 		}
+		return nil
+	}
+
+	metadataFunc, ok := metadataFuncs[args[0]]
+	if !ok {
+		return fmt.Errorf("provider %s does not exist in the current diki binary", args[0])
+	}
+
+	providerMetadata := metadataFunc()
+
+	if bytes, err := json.Marshal(providerMetadata); err != nil {
+		return err
 	} else {
-		var providerArg = args[0]
-
-		metadataFunc, ok := metadataFuncs[providerArg]
-		if !ok {
-			return fmt.Errorf("provider %s does not exist in the current diki binary", providerArg)
-		}
-
-		providerMetadata := metadataFunc()
-
-		if bytes, err := json.Marshal(providerMetadata); err != nil {
-			return err
-		} else {
-			fmt.Println(string(bytes))
-		}
+		fmt.Println(string(bytes))
 	}
 	return nil
 }
