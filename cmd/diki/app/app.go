@@ -22,13 +22,12 @@ import (
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/metadata"
 	"github.com/gardener/diki/pkg/provider"
-	"github.com/gardener/diki/pkg/provider/builder"
 	"github.com/gardener/diki/pkg/report"
 	"github.com/gardener/diki/pkg/ruleset"
 )
 
 // NewDikiCommand creates a new command that is used to start Diki.
-func NewDikiCommand(providerCreateFuncs map[string]provider.ProviderFromConfigFunc) *cobra.Command {
+func NewDikiCommand(providerCreateFuncs map[string]provider.ProviderFromConfigFunc, metadataFuncs map[string]metadata.MetadataFunc) *cobra.Command {
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
 	logger := slog.New(handler)
 	slog.SetDefault(logger)
@@ -142,7 +141,7 @@ e.g. to check compliance of your hyperscaler accounts.`,
 		Short: "Show detailed information for the given provider.",
 		Long:  "Show detailed information for the given provider.",
 		RunE: func(_ *cobra.Command, args []string) error {
-			return showProviderCmd(args)
+			return showProviderCmd(args, metadataFuncs)
 		},
 	}
 
@@ -180,25 +179,16 @@ func addReportGenerateDiffFlags(cmd *cobra.Command, opts *generateDiffOptions) {
 	cmd.PersistentFlags().Var(cliflag.NewMapStringString(&opts.identityAttributes), "identity-attributes", "The keys are the IDs of the providers that will be present in the generated difference report and the values are metadata attributes to be used as identifiers.")
 }
 
-func showProviderCmd(args []string) error {
+func showProviderCmd(args []string, metadataFuncs map[string]metadata.MetadataFunc) error {
 	if len(args) > 1 {
 		return errors.New("command `show provider` accepts at most one provider")
 	}
 
-	var (
-		providerFuncMap = map[string]func() metadata.ProviderDetailed{
-			"gardener":      builder.GardenerProviderMetadata,
-			"garden":        builder.GardenProviderMetadata,
-			"managedk8s":    builder.ManagedK8SProviderMetadata,
-			"virtualgarden": builder.VirtualGardenProviderMetadata,
-		}
-	)
-
 	if len(args) == 0 {
 		providersMetadata := []metadata.Provider{}
 
-		for providerID := range providerFuncMap {
-			providersMetadata = append(providersMetadata, metadata.Provider{ID: providerID, Name: providerFuncMap[providerID]().Name})
+		for providerID := range metadataFuncs {
+			providersMetadata = append(providersMetadata, metadata.Provider{ID: providerID, Name: metadataFuncs[providerID]().Name})
 		}
 
 		if bytes, err := json.Marshal(providersMetadata); err != nil {
@@ -209,7 +199,7 @@ func showProviderCmd(args []string) error {
 	} else {
 		var providerArg = args[0]
 
-		metadataFunc, ok := providerFuncMap[providerArg]
+		metadataFunc, ok := metadataFuncs[providerArg]
 		if !ok {
 			return fmt.Errorf("provider %s does not exist in the current diki binary", providerArg)
 		}
