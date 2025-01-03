@@ -76,7 +76,7 @@ func VirtualGardenProviderMetadata() metadata.ProviderDetailed {
 	}
 
 	for i := range providerMetadata.Rulesets {
-		supportedVersions := gardenerGetSupportedVersions(providerMetadata.Rulesets[i].ID)
+		supportedVersions := virtualGardenGetSupportedVersions(providerMetadata.Rulesets[i].ID)
 		for _, supportedVersion := range supportedVersions {
 			providerMetadata.Rulesets[i].Versions = append(
 				providerMetadata.Rulesets[i].Versions,
