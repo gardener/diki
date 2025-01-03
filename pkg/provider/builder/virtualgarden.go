@@ -9,6 +9,7 @@ import (
 	"log/slog"
 
 	"github.com/gardener/diki/pkg/config"
+	"github.com/gardener/diki/pkg/metadata"
 	"github.com/gardener/diki/pkg/provider"
 	"github.com/gardener/diki/pkg/provider/virtualgarden"
 	"github.com/gardener/diki/pkg/provider/virtualgarden/ruleset/disak8sstig"
@@ -47,4 +48,47 @@ func VirtualGardenProviderFromConfig(conf config.ProviderConfig) (provider.Provi
 	}
 
 	return p, nil
+}
+
+// virtualGardenGetSupportedVersions returns the supported versions of a specific ruleset that is supported by the Virtual Garden provider.
+func virtualGardenGetSupportedVersions(ruleset string) []string {
+	switch ruleset {
+	case disak8sstig.RulesetID:
+		return disak8sstig.SupportedVersions
+	default:
+		return nil
+	}
+}
+
+// VirtualGardenProviderMetadata returns available metadata for the Virtual Garden Provider and it's supported rulesets.
+func VirtualGardenProviderMetadata() metadata.ProviderDetailed {
+	providerMetadata := metadata.ProviderDetailed{
+		Provider: metadata.Provider{
+			ID:   virtualgarden.ProviderID,
+			Name: virtualgarden.ProviderName,
+		},
+		Rulesets: []metadata.Ruleset{
+			{
+				ID:   disak8sstig.RulesetID,
+				Name: disak8sstig.RulesetName,
+			},
+		},
+	}
+
+	for i := range providerMetadata.Rulesets {
+		supportedVersions := virtualGardenGetSupportedVersions(providerMetadata.Rulesets[i].ID)
+		for _, supportedVersion := range supportedVersions {
+			providerMetadata.Rulesets[i].Versions = append(
+				providerMetadata.Rulesets[i].Versions,
+				metadata.Version{Version: supportedVersion, Latest: false},
+			)
+		}
+
+		// Mark the first version as latest as the versions are sorted from newest to oldest
+		if len(providerMetadata.Rulesets[i].Versions) > 0 {
+			providerMetadata.Rulesets[i].Versions[0].Latest = true
+		}
+	}
+
+	return providerMetadata
 }

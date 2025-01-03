@@ -21,6 +21,13 @@ import (
 	sharedprovider "github.com/gardener/diki/pkg/shared/provider"
 )
 
+const (
+	// ProviderID is a constant containing the id of the Garden provider.
+	ProviderID = "garden"
+	// ProviderName is a constant containing the user-friendly name of the Garden provider.
+	ProviderName = "Garden"
+)
+
 // Provider is a Garden Cluster Provider that can
 // be used to implement rules against a garden cluster.
 type Provider struct {

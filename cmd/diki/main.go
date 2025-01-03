@@ -10,6 +10,7 @@ import (
 	controllerruntime "sigs.k8s.io/controller-runtime"
 
 	"github.com/gardener/diki/cmd/diki/app"
+	"github.com/gardener/diki/pkg/metadata"
 	"github.com/gardener/diki/pkg/provider"
 	"github.com/gardener/diki/pkg/provider/builder"
 )
@@ -20,7 +21,13 @@ func main() {
 		"gardener":      builder.GardenerProviderFromConfig,
 		"managedk8s":    builder.ManagedK8SProviderFromConfig,
 		"virtualgarden": builder.VirtualGardenProviderFromConfig,
-	})
+	},
+		map[string]metadata.MetadataFunc{
+			"garden":        builder.GardenProviderMetadata,
+			"gardener":      builder.GardenerProviderMetadata,
+			"managedk8s":    builder.ManagedK8SProviderMetadata,
+			"virtualgarden": builder.VirtualGardenProviderMetadata,
+		})
 
 	if err := cmd.ExecuteContext(controllerruntime.SetupSignalHandler()); err != nil {
 		log.Fatal(err)

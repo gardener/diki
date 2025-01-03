@@ -21,6 +21,13 @@ import (
 	sharedprovider "github.com/gardener/diki/pkg/shared/provider"
 )
 
+const (
+	// ProviderID is a constant containing the id of the Managed Kubernetes provider.
+	ProviderID = "managedk8s"
+	// ProviderName is a constant containing the user-friendly name of the Managed Kubernetes provider.
+	ProviderName = "Managed Kubernetes"
+)
+
 // Provider is a Managed Kubernetes Cluster Provider that can
 // be used to implement rules against a kubernetes cluster.
 type Provider struct {
