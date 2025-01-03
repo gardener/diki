@@ -17,7 +17,7 @@ providers:
             resources.gardener.cloud/managed-by: gardener
           namespaceMatchLabels:
             resources.gardener.cloud/managed-by: gardener
-          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          justification: "Gardener managed resources are accepted to use a wider range of volume types"
           volumeNames:
           - "*"
     - ruleID: "2006"
@@ -27,14 +27,14 @@ providers:
             resources.gardener.cloud/managed-by: gardener
           namespaceMatchLabels:
             resources.gardener.cloud/managed-by: gardener
-          justification: "Roles managed by Gardener are allowed to use wildcards in RBAC resources"
+          justification: "Roles managed by Gardener are accepted to use wildcards in RBAC resources"
         acceptedClusterRoles:
         - matchLabels:
             resources.gardener.cloud/managed-by: gardener
-          justification: "ClusterRoles managed by Gardener are allowed to use wildcards in RBAC resources"
+          justification: "Kubernetes default ClusterRoles are accepted to use wildcards in RBAC resources"
         - matchLabels:
              kubernetes.io/bootstrapping: rbac-defaults
-          justification: "ClusterRoles managed by Gardener are allowed to use wildcards in RBAC verbs"
+          justification: "Kubernetes default ClusterRoles are accepted to use wildcards in RBAC verbs"
     - ruleID: "2007"
       args:
         acceptedRoles:
@@ -42,14 +42,14 @@ providers:
             resources.gardener.cloud/managed-by: gardener
           namespaceMatchLabels:
             resources.gardener.cloud/managed-by: gardener
-          justification: "ClusterRoles managed by Gardener are allowed to use wildcards in RBAC verbs"
+          justification: "ClusterRoles managed by Gardener are accepted to use wildcards in RBAC verbs"
         acceptedClusterRoles:
         - matchLabels:
             resources.gardener.cloud/managed-by: gardener
-          justification: "ClusterRoles managed by Gardener are allowed to use wildcards in RBAC verbs"
+          justification: "Kubernetes default ClusterRoles are accepted to use wildcards in RBAC verbs"
         - matchLabels:
              kubernetes.io/bootstrapping: rbac-defaults
-          justification: "ClusterRoles managed by Gardener are allowed to use wildcards in RBAC verbs"
+          justification: "Kubernetes default ClusterRoles are accepted to use wildcards in RBAC verbs"
     - ruleID: "2008"
       args:
         acceptedPods:
@@ -57,7 +57,7 @@ providers:
             resources.gardener.cloud/managed-by: gardener
           namespaceMatchLabels:
             resources.gardener.cloud/managed-by: gardener
-          justification: "Gardener managed resources are allowed to use a wider range of volume types"
+          justification: "Gardener managed resources are accepted to use a wider range of volume types"
           volumeNames:
           - "*"
 output:

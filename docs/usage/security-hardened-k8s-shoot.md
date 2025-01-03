@@ -1,12 +1,12 @@
-
+---
+	description: How can I check whether my shoot cluster fulfills the Security Hardened Kubernetes Cluster requirements?
+---
 
 ## Show Security Hardened Kubernetes Compliance for a Gardener Shoot Cluster
 
 ### Introduction
 
-This part covers the topic of showing compliance with the Security Hardened Kubernetes Cluster for a Gardener shoot cluster. The guide features the `managedk8s` provider, which implements rules from the Security Hardened Kubernetes Cluster ruleset.
-
-The `managedk8s` provider assumes that the user running the ruleset does not have access to the environment (the seed in this particular case), in which the control plane components reside.
+This part covers the topic of showing compliance with the Security Hardened Kubernetes Cluster requirements for a Gardener shoot cluster. The guide features the `managedk8s` provider, which implements rules from the Security Hardened Kubernetes Cluster ruleset.
 
 ### Prerequisites
 
@@ -27,7 +27,7 @@ In case you need instructions on how to generate such a kubeconfig, please read 
 
 Additional metadata such as the shoot's name can also be included in the `providers[id=="managedk8s].metadata` section. The metadata section can be used to add additional context to different diki runs.
 
-The provided configuration contain the recommended rule options for running the both providers, but you can modify rule options parameters according to requirements. All available options can be found in:
+The provided configuration contains the recommended rule options for running the both providers, but you can modify rule options parameters according to requirements. All available options can be found in:
 - [managedk8s example configuration](../../example/config/managedk8s.yaml).
 
 ### Running the DISA K8s STIGs Ruleset
