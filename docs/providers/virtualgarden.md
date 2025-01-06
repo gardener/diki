@@ -10,7 +10,7 @@ The `Gardener` provider implements the following `rulesets`:
 - [DISA Kubernetes Security Technical Implementation Guide](../rulesets/disa-k8s-stig/ruleset.md)
     - v2r2
     - v2r1
-    - v1r11
+    
 
 ### Configuration
 
