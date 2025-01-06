@@ -16,18 +16,20 @@ import (
 )
 
 func main() {
-	cmd := app.NewDikiCommand(map[string]provider.ProviderFromConfigFunc{
-		"garden":        builder.GardenProviderFromConfig,
-		"gardener":      builder.GardenerProviderFromConfig,
-		"managedk8s":    builder.ManagedK8SProviderFromConfig,
-		"virtualgarden": builder.VirtualGardenProviderFromConfig,
-	},
+	cmd := app.NewDikiCommand(
+		map[string]provider.ProviderFromConfigFunc{
+			"garden":        builder.GardenProviderFromConfig,
+			"gardener":      builder.GardenerProviderFromConfig,
+			"managedk8s":    builder.ManagedK8SProviderFromConfig,
+			"virtualgarden": builder.VirtualGardenProviderFromConfig,
+		},
 		map[string]metadata.MetadataFunc{
 			"garden":        builder.GardenProviderMetadata,
 			"gardener":      builder.GardenerProviderMetadata,
 			"managedk8s":    builder.ManagedK8SProviderMetadata,
 			"virtualgarden": builder.VirtualGardenProviderMetadata,
-		})
+		},
+	)
 
 	if err := cmd.ExecuteContext(controllerruntime.SetupSignalHandler()); err != nil {
 		log.Fatal(err)
