@@ -109,12 +109,12 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabel
 	}
 
 	switch rulesetConfig.Version {
-	case "v1r11":
-		if err := ruleset.registerV1R11Rules(ruleOptions); err != nil {
-			return nil, err
-		}
 	case "v2r1":
 		if err := ruleset.registerV2R1Rules(ruleOptions); err != nil {
+			return nil, err
+		}
+	case "v2r2":
+		if err := ruleset.registerV2R2Rules(ruleOptions); err != nil {
 			return nil, err
 		}
 	default:

@@ -5,8 +5,11 @@
 package disak8sstig
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/Masterminds/semver/v3"
 	"k8s.io/client-go/kubernetes"
@@ -22,7 +25,7 @@ import (
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
-func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
+func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
 	client, err := client.New(r.Config, client.Options{})
 	if err != nil {
 		return err
@@ -48,87 +51,93 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 		return err
 	}
 
-	opts242383, err := getV1R11OptionOrNil[sharedrules.Options242383](ruleOptions[sharedrules.ID242383].Args)
+	authorityCertPool := x509.NewCertPool()
+	ok := authorityCertPool.AppendCertsFromPEM(r.Config.CAData)
+	if !ok {
+		return fmt.Errorf("failed to parse kube-apiserver CA data from config")
+	}
+
+	opts242383, err := getV2R2OptionOrNil[sharedrules.Options242383](ruleOptions[sharedrules.ID242383].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242383 error: %s", err.Error())
 	}
-	opts242393, err := getV1R11OptionOrNil[sharedrules.Options242393](ruleOptions[sharedrules.ID242393].Args)
+	opts242393, err := getV2R2OptionOrNil[sharedrules.Options242393](ruleOptions[sharedrules.ID242393].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242393 error: %s", err.Error())
 	}
-	opts242394, err := getV1R11OptionOrNil[sharedrules.Options242394](ruleOptions[sharedrules.ID242394].Args)
+	opts242394, err := getV2R2OptionOrNil[sharedrules.Options242394](ruleOptions[sharedrules.ID242394].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242394 error: %s", err.Error())
 	}
-	opts242396, err := getV1R11OptionOrNil[sharedrules.Options242396](ruleOptions[sharedrules.ID242396].Args)
+	opts242396, err := getV2R2OptionOrNil[sharedrules.Options242396](ruleOptions[sharedrules.ID242396].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242396 error: %s", err.Error())
 	}
-	opts242400, err := getV1R11OptionOrNil[rules.Options242400](ruleOptions[sharedrules.ID242400].Args)
+	opts242400, err := getV2R2OptionOrNil[rules.Options242400](ruleOptions[sharedrules.ID242400].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242400 error: %s", err.Error())
 	}
-	opts242404, err := getV1R11OptionOrNil[sharedrules.Options242404](ruleOptions[sharedrules.ID242404].Args)
+	opts242404, err := getV2R2OptionOrNil[sharedrules.Options242404](ruleOptions[sharedrules.ID242404].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242404 error: %s", err.Error())
 	}
-	opts242406, err := getV1R11OptionOrNil[sharedrules.Options242406](ruleOptions[sharedrules.ID242406].Args)
+	opts242406, err := getV2R2OptionOrNil[sharedrules.Options242406](ruleOptions[sharedrules.ID242406].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242406 error: %s", err.Error())
 	}
-	opts242407, err := getV1R11OptionOrNil[sharedrules.Options242407](ruleOptions[sharedrules.ID242407].Args)
+	opts242407, err := getV2R2OptionOrNil[sharedrules.Options242407](ruleOptions[sharedrules.ID242407].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242407 error: %s", err.Error())
 	}
-	opts242414, err := getV1R11OptionOrNil[option.Options242414](ruleOptions[sharedrules.ID242414].Args)
+	opts242414, err := getV2R2OptionOrNil[option.Options242414](ruleOptions[sharedrules.ID242414].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242414 error: %s", err.Error())
 	}
-	opts242415, err := getV1R11OptionOrNil[option.Options242415](ruleOptions[sharedrules.ID242415].Args)
+	opts242415, err := getV2R2OptionOrNil[option.Options242415](ruleOptions[sharedrules.ID242415].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242415 error: %s", err.Error())
 	}
-	opts242417, err := getV1R11OptionOrNil[sharedrules.Options242417](ruleOptions[sharedrules.ID242417].Args)
+	opts242417, err := getV2R2OptionOrNil[sharedrules.Options242417](ruleOptions[sharedrules.ID242417].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242417 error: %s", err.Error())
 	}
-	opts242442, err := getV1R11OptionOrNil[rules.Options242442](ruleOptions[sharedrules.ID242442].Args)
+	opts242442, err := getV2R2OptionOrNil[rules.Options242442](ruleOptions[sharedrules.ID242442].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242442 error: %s", err.Error())
 	}
-	opts242447, err := getV1R11OptionOrNil[sharedrules.Options242447](ruleOptions[sharedrules.ID242447].Args)
+	opts242447, err := getV2R2OptionOrNil[sharedrules.Options242447](ruleOptions[sharedrules.ID242447].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242447 error: %s", err.Error())
 	}
-	opts242448, err := getV1R11OptionOrNil[sharedrules.Options242448](ruleOptions[sharedrules.ID242448].Args)
+	opts242448, err := getV2R2OptionOrNil[sharedrules.Options242448](ruleOptions[sharedrules.ID242448].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242448 error: %s", err.Error())
 	}
-	opts242449, err := getV1R11OptionOrNil[sharedrules.Options242449](ruleOptions[sharedrules.ID242449].Args)
+	opts242449, err := getV2R2OptionOrNil[sharedrules.Options242449](ruleOptions[sharedrules.ID242449].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242449 error: %s", err.Error())
 	}
-	opts242450, err := getV1R11OptionOrNil[sharedrules.Options242450](ruleOptions[sharedrules.ID242450].Args)
+	opts242450, err := getV2R2OptionOrNil[sharedrules.Options242450](ruleOptions[sharedrules.ID242450].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242450 error: %s", err.Error())
 	}
-	opts242451, err := getV1R11OptionOrNil[rules.Options242451](ruleOptions[sharedrules.ID242451].Args)
+	opts242451, err := getV2R2OptionOrNil[rules.Options242451](ruleOptions[sharedrules.ID242451].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242451 error: %s", err.Error())
 	}
-	opts242452, err := getV1R11OptionOrNil[sharedrules.Options242452](ruleOptions[sharedrules.ID242452].Args)
+	opts242452, err := getV2R2OptionOrNil[sharedrules.Options242452](ruleOptions[sharedrules.ID242452].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242452 error: %s", err.Error())
 	}
-	opts242453, err := getV1R11OptionOrNil[sharedrules.Options242453](ruleOptions[sharedrules.ID242453].Args)
+	opts242453, err := getV2R2OptionOrNil[sharedrules.Options242453](ruleOptions[sharedrules.ID242453].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242453 error: %s", err.Error())
 	}
-	opts242466, err := getV1R11OptionOrNil[rules.Options242466](ruleOptions[sharedrules.ID242466].Args)
+	opts242466, err := getV2R2OptionOrNil[rules.Options242466](ruleOptions[sharedrules.ID242466].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242466 error: %s", err.Error())
 	}
-	opts242467, err := getV1R11OptionOrNil[rules.Options242467](ruleOptions[sharedrules.ID242467].Args)
+	opts242467, err := getV2R2OptionOrNil[rules.Options242467](ruleOptions[sharedrules.ID242467].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242467 error: %s", err.Error())
 	}
@@ -239,13 +248,17 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 			rule.Skipped,
 			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
-		rule.NewSkipRule(
-			sharedrules.ID242390,
-			"The Kubernetes API server must have anonymous authentication disabled.",
-			noControlPlaneMsg,
-			rule.Skipped,
-			rule.SkipRuleWithSeverity(rule.SeverityHigh),
-		),
+		&rules.Rule242390{
+			KAPIExternalURL: r.Config.Host,
+			Client: &http.Client{
+				Transport: &http.Transport{
+					// the TLS MinVersion warnings are ignored in order to avoid version conflicts
+					TLSClientConfig: &tls.Config{ // #nosec: G402
+						RootCAs: authorityCertPool,
+					},
+				},
+			},
+		},
 		&sharedrules.Rule242391{
 			Client:       client,
 			V1RESTClient: clientSet.CoreV1().RESTClient(),
@@ -844,7 +857,7 @@ func (r *Ruleset) registerV1R11Rules(ruleOptions map[string]config.RuleOptionsCo
 	return r.AddRules(rules...)
 }
 
-func parseV1R11Options[O rules.RuleOption](options any) (*O, error) {
+func parseV2R2Options[O rules.RuleOption](options any) (*O, error) {
 	optionsByte, err := json.Marshal(options)
 	if err != nil {
 		return nil, err
@@ -864,9 +877,9 @@ func parseV1R11Options[O rules.RuleOption](options any) (*O, error) {
 	return &parsedOptions, nil
 }
 
-func getV1R11OptionOrNil[O rules.RuleOption](options any) (*O, error) {
+func getV2R2OptionOrNil[O rules.RuleOption](options any) (*O, error) {
 	if options == nil {
 		return nil, nil
 	}
-	return parseV1R11Options[O](options)
+	return parseV2R2Options[O](options)
 }
