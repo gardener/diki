@@ -204,9 +204,7 @@ func showProviderCmd(args []string, metadataFuncs map[string]metadata.MetadataFu
 		return fmt.Errorf("provider %s does not exist in the current diki binary", args[0])
 	}
 
-	providerMetadata := metadataFunc()
-
-	if bytes, err := json.Marshal(providerMetadata); err != nil {
+	if bytes, err := json.Marshal(metadataFunc()); err != nil {
 		return err
 	} else {
 		fmt.Println(string(bytes))

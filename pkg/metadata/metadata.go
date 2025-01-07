@@ -36,5 +36,5 @@ type ProviderDetailed struct {
 	Rulesets []Ruleset `json:"rulesets"`
 }
 
-// MetadataFunc constructs a detailed Provider metadata object
+// MetadataFunc constructs a detailed Provider metadata object.
 type MetadataFunc func() ProviderDetailed
