@@ -240,3 +240,26 @@ func getChecks(checkResults []rule.CheckResult, opts *ReportOptions) []Check {
 	}
 	return checks
 }
+
+// DiscardCheckResultsBelowMinStatus removes all of the report's checks which have a lower status than the minimal one
+func (r *Report) DiscardCheckResultsBelowMinStatus(minStatus rule.Status) {
+	if minStatus.Less(r.MinStatus) {
+		return
+	}
+
+	r.MinStatus = minStatus
+	for providerIdx := range r.Providers {
+
+		var provider = r.Providers[providerIdx]
+		for rulesetIdx := range provider.Rulesets {
+
+			var ruleset = provider.Rulesets[rulesetIdx]
+			for ruleIdx := range ruleset.Rules {
+				filteredChecks := slices.DeleteFunc(ruleset.Rules[ruleIdx].Checks, func(check Check) bool {
+					return check.Status.Less(minStatus)
+				})
+				ruleset.Rules[ruleIdx].Checks = filteredChecks
+			}
+		}
+	}
+}
