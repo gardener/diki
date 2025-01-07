@@ -13,6 +13,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -22,6 +23,7 @@ import (
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/provider"
 	"github.com/gardener/diki/pkg/report"
+	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
 )
 
@@ -144,6 +146,7 @@ func addRunFlags(cmd *cobra.Command, opts *runOptions) {
 func addReportGenerateFlags(cmd *cobra.Command, opts *generateOptions) {
 	cmd.PersistentFlags().Var(cliflag.NewMapStringString(&opts.distinctBy), "distinct-by", "If set generates a merged report. The keys are the IDs for the providers which the merged report will include and the values are distinct metadata attributes to be used as IDs for the different reports.")
 	cmd.PersistentFlags().StringVar(&opts.format, "format", "html", "Format for the output report. Format can be one of 'html' or 'json'.")
+	cmd.PersistentFlags().StringVar(&opts.minStatus, "min-status", "Passed", "If set specifies the minimal status that will be included in the generated report. Status can be one of 'Passed', 'Skipped', 'Accepted', 'Warning', 'Failed', 'Errored' or 'NotImplemented'")
 }
 
 func addReportDiffFlags(cmd *cobra.Command, opts *diffOptions) {
@@ -263,6 +266,17 @@ func generateCmd(args []string, rootOpts reportOptions, opts generateOptions, lo
 		return errors.New("generate command requires a single filepath argument when the distinct-by flag is not set")
 	}
 
+	var minStatus rule.Status
+
+	if len(opts.minStatus) == 0 {
+		minStatus = rule.Passed
+	} else {
+		minStatus = rule.Status(opts.minStatus)
+		if !slices.Contains(rule.Statuses(), minStatus) {
+			return fmt.Errorf("status %s is not defined", minStatus)
+		}
+	}
+
 	var reports []*report.Report
 	for _, arg := range args {
 		fileData, err := os.ReadFile(filepath.Clean(arg))
@@ -276,6 +290,7 @@ func generateCmd(args []string, rootOpts reportOptions, opts generateOptions, lo
 			return fmt.Errorf("failed to unmarshal data: %w", err)
 		}
 
+		rep.DiscardCheckResultsBelowMinStatus(minStatus)
 		reports = append(reports, rep)
 	}
 
@@ -455,6 +470,7 @@ type runOptions struct {
 type generateOptions struct {
 	distinctBy map[string]string
 	format     string
+	minStatus  string
 }
 
 type generateDiffOptions struct {
