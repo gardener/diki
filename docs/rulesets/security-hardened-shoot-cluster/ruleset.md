@@ -149,7 +149,7 @@ spec:
 ### 2007 - Shoot clusters must have a PodSecurity admission plugin configured.
 
 #### Description
-Shoot clusters must have a PodSecurity admission plugin configured. It is recommended to set default pod security standards to `baseline` or `restricted` level. This rule follows the requirements from DISA K8s STIG rule [242434](https://www.stigviewer.com/stig/kubernetes/2024-06-10/finding/V-254800).
+Shoot clusters must have a PodSecurity admission plugin configured. It is recommended to set default pod security standards to `baseline` or `restricted` level. This rule follows the requirements from DISA K8s STIG rule [254800](https://www.stigviewer.com/stig/kubernetes/2024-06-10/finding/V-254800).
 
 #### Fix
 Add `PodSecurity` admission plugin into `spec.kubernetes.kubeAPIServer.admissionPlugins` field with default standards set to `baseline` or `restricted`.
