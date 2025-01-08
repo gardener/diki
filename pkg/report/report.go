@@ -241,7 +241,7 @@ func getChecks(checkResults []rule.CheckResult, opts *ReportOptions) []Check {
 	return checks
 }
 
-// DiscardCheckResultsBelowMinStatus removes all of the report's checks which have a lower status than the minimal one
+// DiscardCheckResultsBelowMinStatus removes all checks of the report, whose statuses are lower than the specified one.
 func (r *Report) DiscardCheckResultsBelowMinStatus(minStatus rule.Status) {
 	if minStatus.Less(r.MinStatus) {
 		return
