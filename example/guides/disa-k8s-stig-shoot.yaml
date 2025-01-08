@@ -9,7 +9,7 @@ providers:
   rulesets:
   - id: disa-kubernetes-stig
     name: DISA Kubernetes Security Technical Implementation Guide
-    version: v2r1
+    version: v2r2
     ruleOptions:
     - ruleID: "242393"
       args:

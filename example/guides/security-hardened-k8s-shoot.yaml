@@ -1,0 +1,64 @@
+providers:
+- id: managedk8s
+  name: "Managed Kubernetes"
+  metadata:
+    shootName: shoot-abcd
+  args:
+    kubeconfigPath: /shoot-abcd-access/kubeconfig  # path to shoot admin kubeconfig
+  rulesets:
+  - id: security-hardened-k8s
+    name: Security Hardened Kubernetes Cluster
+    version: v0.1.0
+    ruleOptions:
+    - ruleID: "2003"
+      args:
+        acceptedPods:
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are accepted to use a wider range of volume types"
+          volumeNames:
+          - "*"
+    - ruleID: "2006"
+      args:
+        acceptedRoles:
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Roles managed by Gardener are accepted to use wildcards in RBAC resources"
+        acceptedClusterRoles:
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Kubernetes default ClusterRoles are accepted to use wildcards in RBAC resources"
+        - matchLabels:
+             kubernetes.io/bootstrapping: rbac-defaults
+          justification: "Kubernetes default ClusterRoles are accepted to use wildcards in RBAC verbs"
+    - ruleID: "2007"
+      args:
+        acceptedRoles:
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "ClusterRoles managed by Gardener are accepted to use wildcards in RBAC verbs"
+        acceptedClusterRoles:
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Kubernetes default ClusterRoles are accepted to use wildcards in RBAC verbs"
+        - matchLabels:
+             kubernetes.io/bootstrapping: rbac-defaults
+          justification: "Kubernetes default ClusterRoles are accepted to use wildcards in RBAC verbs"
+    - ruleID: "2008"
+      args:
+        acceptedPods:
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are accepted to use a wider range of volume types"
+          volumeNames:
+          - "*"
+output:
+  minStatus: Passed
