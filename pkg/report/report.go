@@ -126,7 +126,7 @@ func (r *Report) WriteToFile(filePath string) error {
 }
 
 // SetMinStatus sets minStatus of the report. It also removes all checks with status less than the specified one.
-// If the new minStatus is less that the original one, nothing is changed.
+// If the new minStatus is less than the original one, nothing is changed.
 func (r *Report) SetMinStatus(minStatus rule.Status) {
 	if minStatus.Less(r.MinStatus) {
 		return

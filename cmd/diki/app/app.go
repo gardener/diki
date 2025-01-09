@@ -146,7 +146,7 @@ func addRunFlags(cmd *cobra.Command, opts *runOptions) {
 func addReportGenerateFlags(cmd *cobra.Command, opts *generateOptions) {
 	cmd.PersistentFlags().Var(cliflag.NewMapStringString(&opts.distinctBy), "distinct-by", "If set generates a merged report. The keys are the IDs for the providers which the merged report will include and the values are distinct metadata attributes to be used as IDs for the different reports.")
 	cmd.PersistentFlags().StringVar(&opts.format, "format", "html", "Format for the output report. Format can be one of 'html' or 'json'.")
-	cmd.PersistentFlags().StringVar(&opts.minStatus, "min-status", "Passed", "If set specifies the minimal status that will be included in the generated report. Status can be one of 'Passed', 'Skipped', 'Accepted', 'Warning', 'Failed', 'Errored' or 'NotImplemented'")
+	cmd.PersistentFlags().StringVar(&opts.minStatus, "min-status", "Passed", "If set specifies the minimal status that will be included in the generated report. Ordered from lowest to highest priority, Status can be one of 'Passed', 'Skipped', 'Accepted', 'Warning', 'Failed', 'Errored' or 'NotImplemented'")
 }
 
 func addReportDiffFlags(cmd *cobra.Command, opts *diffOptions) {
