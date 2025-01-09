@@ -68,8 +68,8 @@ func (r *Rule2001) Run(ctx context.Context) (rule.RuleResult, error) {
 			if securityContext.Capabilities != nil {
 				// CAP_SYS_ADMIN only works on CRI-O. ref: https://github.com/kubernetes/kubernetes/issues/119568
 				// Valiadated with `ubuntu` container, to check enabled capabilities the `capsh --print` command can be used.
-				addsCapSysAdmin = slices.ContainsFunc(securityContext.Capabilities.Add, func(cap corev1.Capability) bool {
-					return strings.ToUpper(string(cap)) == "SYS_ADMIN" || strings.ToUpper(string(cap)) == "CAP_SYS_ADMIN"
+				addsCapSysAdmin = slices.ContainsFunc(securityContext.Capabilities.Add, func(capability corev1.Capability) bool {
+					return strings.ToUpper(string(capability)) == "SYS_ADMIN" || strings.ToUpper(string(capability)) == "CAP_SYS_ADMIN"
 				})
 			}
 
