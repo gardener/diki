@@ -105,3 +105,29 @@ var _ = Describe("#242404", func() {
 			}),
 	)
 })
+
+var _ = Describe("#242404", func() {
+	var (
+		fakeClient client.Client
+		ctx        = context.TODO()
+	)
+
+	BeforeEach(func() {
+		fakeClient = fakeclient.NewClientBuilder().Build()
+		It("should error when no allocatable nodes are found", func() {
+			r := rules.Rule242404{
+				Client: fakeClient,
+			}
+
+			res, err := r.Run(ctx)
+			Expect(err).To(BeNil())
+
+			Expect(res).To(Equal([]rule.CheckResult{
+				{Status: rule.Errored, Message: "no allocatable nodes could be selected", Target: rule.NewTarget()},
+			}))
+
+		})
+
+	})
+
+})

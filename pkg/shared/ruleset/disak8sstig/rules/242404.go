@@ -84,6 +84,10 @@ func (r *Rule242404) Run(ctx context.Context) (rule.RuleResult, error) {
 	selectedNodes, checks := kubeutils.SelectNodes(nodes, nodesAllocatablePods, nodeLabels)
 	checkResults = append(checkResults, checks...)
 
+	if len(selectedNodes) == 0 {
+		return rule.Result(r, rule.ErroredCheckResult("no allocatable nodes could be selected", rule.NewTarget())), nil
+	}
+
 	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
 	if err != nil {
 		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
