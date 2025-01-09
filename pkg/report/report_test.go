@@ -161,13 +161,13 @@ var _ = Describe("report", func() {
 					},
 				},
 			}
-			simpleReport.DiscardCheckResultsBelowMinStatus(rule.Failed)
+			simpleReport.SetMinStatus(rule.Failed)
 			Expect(simpleReport).To(Equal(expectedReportResult))
 		})
 
 		It("should not alter the report when the passed minStatus is not lower the report's minStatus", func() {
 			expectedReport := simpleReport
-			simpleReport.DiscardCheckResultsBelowMinStatus(rule.Passed)
+			simpleReport.SetMinStatus(rule.Passed)
 			Expect(simpleReport).To(Equal(expectedReport))
 		})
 	})

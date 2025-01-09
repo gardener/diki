@@ -266,14 +266,11 @@ func generateCmd(args []string, rootOpts reportOptions, opts generateOptions, lo
 		return errors.New("generate command requires a single filepath argument when the distinct-by flag is not set")
 	}
 
-	var minStatus rule.Status
-
-	if len(opts.minStatus) == 0 {
-		minStatus = rule.Passed
-	} else {
+	minStatus := rule.Passed
+	if len(opts.minStatus) != 0 {
 		minStatus = rule.Status(opts.minStatus)
 		if !slices.Contains(rule.Statuses(), minStatus) {
-			return fmt.Errorf("status %s is not defined", minStatus)
+			return fmt.Errorf("not defined status: %s", minStatus)
 		}
 	}
 
@@ -290,7 +287,7 @@ func generateCmd(args []string, rootOpts reportOptions, opts generateOptions, lo
 			return fmt.Errorf("failed to unmarshal data: %w", err)
 		}
 
-		rep.DiscardCheckResultsBelowMinStatus(minStatus)
+		rep.SetMinStatus(minStatus)
 		reports = append(reports, rep)
 	}
 
