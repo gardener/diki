@@ -20,9 +20,16 @@ import (
 const (
 	// RulesetID is a constant containing the id of the Security Hardened Kubernetes Cluster Ruleset.
 	RulesetID = "security-hardened-k8s"
+	// RulesetName is a constant containing the user-friendly name of the Security Hardened Kubernetes ruleset.
+	RulesetName = "Security Hardened Kubernetes Cluster"
 )
 
-var _ ruleset.Ruleset = &Ruleset{}
+var (
+	_ ruleset.Ruleset = &Ruleset{}
+	// SupportedVersions is a list of available versions for the Security Hardened Kubernetes Cluster Ruleset.
+	// Versions are sorted from newest to oldest.
+	SupportedVersions = []string{"v0.1.0"}
+)
 
 // Ruleset implements Security Hardened Kubernetes Cluster.
 type Ruleset struct {
@@ -54,7 +61,7 @@ func (r *Ruleset) ID() string {
 
 // Name returns the name of the Ruleset.
 func (r *Ruleset) Name() string {
-	return "Security Hardened Kubernetes Cluster"
+	return RulesetName
 }
 
 // Version returns the version of the Ruleset.

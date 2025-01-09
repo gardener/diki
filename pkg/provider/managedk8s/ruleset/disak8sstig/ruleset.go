@@ -23,9 +23,16 @@ import (
 const (
 	// RulesetID is a constant containing the id of the DISA Kubernetes STIG Ruleset.
 	RulesetID = "disa-kubernetes-stig"
+	// RulesetName is a constant containing the user-friendly name of the DISA Kubernetes STIG ruleset.
+	RulesetName = "DISA Kubernetes Security Technical Implementation Guide"
 )
 
-var _ ruleset.Ruleset = &Ruleset{}
+var (
+	_ ruleset.Ruleset = &Ruleset{}
+	// SupportedVersions is a list of available versions for the DISA Kubernetes STIG Ruleset.
+	// Versions are sorted from newest to oldest.
+	SupportedVersions = []string{"v2r2", "v2r1"}
+)
 
 // Ruleset implements DISA Kubernetes STIG.
 type Ruleset struct {
@@ -69,7 +76,7 @@ func (r *Ruleset) ID() string {
 
 // Name returns the name of the Ruleset.
 func (r *Ruleset) Name() string {
-	return "DISA Kubernetes Security Technical Implementation Guide"
+	return RulesetName
 }
 
 // Version returns the version of the Ruleset.
