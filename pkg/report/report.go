@@ -125,6 +125,26 @@ func (r *Report) WriteToFile(filePath string) error {
 	return os.WriteFile(filePath, data, 0600)
 }
 
+// SetMinStatus sets minStatus of the report. It also removes all checks with status less than the specified one.
+// If the new minStatus is less than the original one, nothing is changed.
+func (r *Report) SetMinStatus(minStatus rule.Status) {
+	if minStatus.Less(r.MinStatus) {
+		return
+	}
+
+	r.MinStatus = minStatus
+	for _, provider := range r.Providers {
+		for _, ruleset := range provider.Rulesets {
+			for ruleIdx := range ruleset.Rules {
+				filteredChecks := slices.DeleteFunc(ruleset.Rules[ruleIdx].Checks, func(check Check) bool {
+					return check.Status.Less(minStatus)
+				})
+				ruleset.Rules[ruleIdx].Checks = filteredChecks
+			}
+		}
+	}
+}
+
 // rulesetSummaryText returns a summary string with the number of rules with results per status.
 func rulesetSummaryText(ruleset *Ruleset) string {
 	statuses := rule.Statuses()
