@@ -52,11 +52,16 @@ func Run(
 	for i := 0; i < workers; i++ {
 		wg.Add(1)
 		go func() {
-			for rule := range rulesCh {
-				log.Info("starting rule run", "rule_id", rule.ID())
-				res, err := rule.Run(ctx)
-				res.RuleID = rule.ID()
-				res.RuleName = rule.Name()
+			for r := range rulesCh {
+				log.Info("starting rule run", "rule_id", r.ID())
+				res, err := r.Run(ctx)
+				res.RuleID = r.ID()
+				res.RuleName = r.Name()
+
+				if len(res.CheckResults) == 0 {
+					res.CheckResults = append(res.CheckResults, rule.ErroredCheckResult("Undefined - No check results are present.", rule.NewTarget()))
+				}
+
 				resultCh <- run{result: res, err: err}
 			}
 			wg.Done()

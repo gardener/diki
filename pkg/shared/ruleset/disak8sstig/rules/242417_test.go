@@ -78,6 +78,22 @@ var _ = Describe("#242417", func() {
 
 	})
 
+	It("should return passed checkResult when no pods are present in system namespaces", func() {
+		r := &rules.Rule242417{
+			Client:  fakeClient,
+			Options: options,
+		}
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).To(BeNil())
+
+		expectedCheckResults := []rule.CheckResult{
+			rule.PassedCheckResult("No pods are found for evaluation.", rule.NewTarget()),
+		}
+
+		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
+	})
+
 	It("should return passed checkResult when no user pods are present in system namespaces", func() {
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"

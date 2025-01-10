@@ -81,6 +81,10 @@ func (r *Rule2008) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
 	}
 
+	if len(pods) == 0 {
+		return rule.Result(r, rule.PassedCheckResult("There are no pods for evaluation.", rule.NewTarget())), nil
+	}
+
 	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil
@@ -108,7 +112,6 @@ func (r *Rule2008) Run(ctx context.Context) (rule.RuleResult, error) {
 			checkResults = append(checkResults, rule.PassedCheckResult("Pod does not use volumes of type hostPath.", podTarget))
 		}
 	}
-
 	return rule.Result(r, checkResults...), nil
 }
 
