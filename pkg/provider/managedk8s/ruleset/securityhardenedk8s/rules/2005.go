@@ -88,10 +88,6 @@ func (r *Rule2005) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	for _, pod := range pods {
 		podTarget := rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
-		if len(pod.Spec.Containers) == 0 {
-			checkResults = append(checkResults, rule.PassedCheckResult("Pod has no containers for evaluation.", podTarget))
-			continue
-		}
 
 		for _, container := range pod.Spec.Containers {
 			containerTarget := podTarget.With("container", container.Name)
