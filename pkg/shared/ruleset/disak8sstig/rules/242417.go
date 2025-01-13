@@ -137,7 +137,7 @@ func (r *Rule242417) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if len(checkResults) == 0 {
-		return rule.Result(r, rule.PassedCheckResult("No pods are found for evaluation.", rule.NewTarget())), nil
+		return rule.Result(r, rule.PassedCheckResult("The cluster does not have any pods for evaluation.", rule.NewTarget())), nil
 	}
 
 	return rule.Result(r, checkResults...), nil

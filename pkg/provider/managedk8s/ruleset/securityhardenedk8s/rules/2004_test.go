@@ -60,7 +60,7 @@ var _ = Describe("#2004", func() {
 		},
 		Entry("should pass when no services are set",
 			func() {}, rules.Options2004{},
-			rule.CheckResult{Status: rule.Passed, Message: "There are no services for evaluation.", Target: rule.NewTarget()},
+			rule.CheckResult{Status: rule.Passed, Message: "The cluster does not have any Services.", Target: rule.NewTarget()},
 		),
 		Entry("should pass when serviceSpec is not set",
 			func() {

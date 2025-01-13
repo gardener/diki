@@ -50,7 +50,7 @@ func (r *Rule242415) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if len(pods) == 0 {
-		return rule.Result(r, rule.PassedCheckResult("There are no pods to be evaluated.", target)), nil
+		return rule.Result(r, rule.PassedCheckResult("The cluster does not have any Pods.", target)), nil
 	}
 
 	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)

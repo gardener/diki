@@ -81,7 +81,7 @@ func (r *Rule2005) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if len(pods) == 0 {
-		return rule.Result(r, rule.PassedCheckResult("There are no pods for evaluation.", rule.NewTarget())), nil
+		return rule.Result(r, rule.PassedCheckResult("The cluster does not have any Pods.", rule.NewTarget())), nil
 	}
 
 	var checkResults []rule.CheckResult

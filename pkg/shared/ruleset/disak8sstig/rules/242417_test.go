@@ -88,7 +88,7 @@ var _ = Describe("#242417", func() {
 		Expect(err).To(BeNil())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("No pods are found for evaluation.", rule.NewTarget()),
+			rule.PassedCheckResult("The cluster does not have any pods for evaluation.", rule.NewTarget()),
 		}
 
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))

@@ -70,7 +70,7 @@ var _ = Describe("#242415", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Passed,
-				Message: "There are no pods to be evaluated.",
+				Message: "The cluster does not have any Pods.",
 				Target:  rule.NewTarget(),
 			},
 		}
