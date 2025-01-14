@@ -59,7 +59,7 @@ func Run(
 				res.RuleName = r.Name()
 
 				if len(res.CheckResults) == 0 {
-					res.CheckResults = append(res.CheckResults, rule.ErroredCheckResult("rule run did not report any status", rule.NewTarget()))
+					res.CheckResults = append(res.CheckResults, rule.WarningCheckResult("Rule run did not report any status.", rule.NewTarget()))
 				}
 
 				resultCh <- run{result: res, err: err}
