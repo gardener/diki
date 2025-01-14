@@ -59,12 +59,27 @@ var _ = Describe("#242404", func() {
 		node2.Name = "node2"
 		node2.Labels["foo"] = "bar"
 
-		Expect(fakeClient.Create(ctx, node1)).To(Succeed())
-		Expect(fakeClient.Create(ctx, node2)).To(Succeed())
+	})
+
+	It("should error when no allocatable nodes are found", func() {
+		r := rules.Rule242404{
+			Client: fakeClient,
+		}
+
+		res, err := r.Run(ctx)
+		Expect(err).To(BeNil())
+
+		Expect(res.CheckResults).To(Equal([]rule.CheckResult{
+			{Status: rule.Errored, Message: "no allocatable nodes could be selected", Target: rule.NewTarget()},
+		}))
+
 	})
 
 	DescribeTable("Run cases",
 		func(options rules.Options242404, executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
+			Expect(fakeClient.Create(ctx, node1)).To(Succeed())
+			Expect(fakeClient.Create(ctx, node2)).To(Succeed())
+
 			podContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
 			r := &rules.Rule242404{
 				Logger:     testLogger,
@@ -104,30 +119,4 @@ var _ = Describe("#242404", func() {
 				rule.FailedCheckResult("Flag hostname-override set.", rule.NewTarget("kind", "node", "name", "node2")),
 			}),
 	)
-})
-
-var _ = Describe("#242404", func() {
-	var (
-		fakeClient client.Client
-		ctx        = context.TODO()
-	)
-
-	BeforeEach(func() {
-		fakeClient = fakeclient.NewClientBuilder().Build()
-		It("should error when no allocatable nodes are found", func() {
-			r := rules.Rule242404{
-				Client: fakeClient,
-			}
-
-			res, err := r.Run(ctx)
-			Expect(err).To(BeNil())
-
-			Expect(res).To(Equal([]rule.CheckResult{
-				{Status: rule.Errored, Message: "no allocatable nodes could be selected", Target: rule.NewTarget()},
-			}))
-
-		})
-
-	})
-
 })
