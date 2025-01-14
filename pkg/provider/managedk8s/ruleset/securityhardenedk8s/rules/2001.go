@@ -89,6 +89,10 @@ func (r *Rule2001) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
 	}
 
+	if len(pods) == 0 {
+		return rule.Result(r, rule.PassedCheckResult("The cluster does not have any Pods.", rule.NewTarget())), nil
+	}
+
 	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil

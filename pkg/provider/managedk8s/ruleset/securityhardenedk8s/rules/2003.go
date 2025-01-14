@@ -73,14 +73,18 @@ func (r *Rule2003) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
-	allNamespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
-	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil
-	}
-
 	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+	}
+
+	if len(pods) == 0 {
+		return rule.Result(r, rule.PassedCheckResult("The cluster does not have any Pods.", rule.NewTarget())), nil
+	}
+
+	allNamespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil
 	}
 
 	var checkResults []rule.CheckResult
@@ -110,6 +114,7 @@ func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 			checkResults = append(checkResults, rule.PassedCheckResult("Pod uses only allowed volume types.", podTarget))
 		}
 	}
+
 	return rule.Result(r, checkResults...), nil
 }
 

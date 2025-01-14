@@ -58,6 +58,13 @@ var _ = Describe("#2001", func() {
 		}
 	})
 
+	It("should pass when no pods are present for evaluation", func() {
+		r := &rules.Rule2001{Client: client, Options: &rules.Options2001{}}
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{rule.PassedCheckResult("The cluster does not have any Pods.", rule.NewTarget())}))
+	})
+
 	DescribeTable("Run cases",
 		func(securityContext *corev1.SecurityContext, ruleOptions rules.Options2001, expectedResult rule.CheckResult) {
 			r := &rules.Rule2001{Client: client, Options: &ruleOptions}

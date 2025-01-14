@@ -65,6 +65,10 @@ func (r *Rule2004) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "serviceList"))), nil
 	}
 
+	if len(services) == 0 {
+		return rule.Result(r, rule.PassedCheckResult("The cluster does not have any Services.", rule.NewTarget())), nil
+	}
+
 	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil

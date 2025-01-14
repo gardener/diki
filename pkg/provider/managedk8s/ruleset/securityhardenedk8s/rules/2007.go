@@ -75,6 +75,10 @@ func (r *Rule2007) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "clusterRolesList"))), nil
 	}
 
+	if len(roles) == 0 && len(clusterRoles) == 0 {
+		return rule.Result(r, rule.PassedCheckResult("The cluster does not have any Roles or ClusterRoles.", rule.NewTarget())), nil
+	}
+
 	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil

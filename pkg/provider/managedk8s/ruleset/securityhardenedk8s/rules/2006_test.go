@@ -62,6 +62,13 @@ var _ = Describe("#2006", func() {
 		}
 	})
 
+	It("should pass when no roles or clusterRoles are present", func() {
+		r := &rules.Rule2006{Client: client}
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{{Status: rule.Passed, Message: "The cluster does not have any Roles or ClusterRoles.", Target: rule.NewTarget()}}))
+	})
+
 	It("should pass when all policyRule resources do not contain *", func() {
 		r := &rules.Rule2006{Client: client}
 
