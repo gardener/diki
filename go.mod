@@ -2,7 +2,7 @@ module github.com/gardener/diki
 
 go 1.23.0
 
-toolchain go1.23.4
+toolchain go1.23.5
 
 require (
 	github.com/Masterminds/semver/v3 v3.3.1
