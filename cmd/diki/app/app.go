@@ -137,8 +137,8 @@ e.g. to check compliance of your hyperscaler accounts.`,
 
 	showCmd := &cobra.Command{
 		Use:   "show",
-		Short: "Show metadata of the providers that the current diki binary supports.",
-		Long:  "Show metadata of the providers that the current diki binary supports.",
+		Short: "Show metadata information for different diki internals, i.e. providers.",
+		Long:  "Show metadata information for different diki internals, i.e. providers.",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return errors.New("show subcommand not selected")
 		},
@@ -148,8 +148,8 @@ e.g. to check compliance of your hyperscaler accounts.`,
 
 	showProviderCmd := &cobra.Command{
 		Use:   "provider",
-		Short: "Show detailed information for the given provider.",
-		Long:  "Show detailed information for the given provider.",
+		Short: "Show detailed information for providers.",
+		Long:  "Show detailed information for providers.",
 		RunE: func(_ *cobra.Command, args []string) error {
 			return showProviderCmd(args, metadataFuncs)
 		},
@@ -191,7 +191,7 @@ func addReportGenerateDiffFlags(cmd *cobra.Command, opts *generateDiffOptions) {
 
 func showProviderCmd(args []string, metadataFuncs map[string]provider.MetadataFunc) error {
 	if len(args) > 1 {
-		return errors.New("command `show provider` accepts at most one provider")
+		return errors.New("command 'show provider' accepts at most one provider")
 	}
 
 	if len(args) == 0 {
@@ -211,7 +211,7 @@ func showProviderCmd(args []string, metadataFuncs map[string]provider.MetadataFu
 
 	metadataFunc, ok := metadataFuncs[args[0]]
 	if !ok {
-		return fmt.Errorf("provider %s does not exist in the current diki binary", args[0])
+		return fmt.Errorf("unknown provider: %s", args[0])
 	}
 
 	if bytes, err := json.Marshal(metadataFunc()); err != nil {
