@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/gardener/diki/pkg/config"
+	"github.com/gardener/diki/pkg/metadata"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
 )
@@ -32,3 +33,12 @@ type ProviderResult struct {
 
 // ProviderFromConfigFunc constructs a Provider from ProviderConfig.
 type ProviderFromConfigFunc func(conf config.ProviderConfig) (Provider, error)
+
+// MetadataFunc constructs a detailed Provider metadata object.
+type MetadataFunc func() metadata.ProviderDetailed
+
+// ProviderOptions constructs a pair of a configuarion and metadata function for a specific provider.
+type ProviderOption struct {
+	ProviderFromConfigFunc
+	MetadataFunc
+}

@@ -27,10 +27,20 @@ import (
 )
 
 // NewDikiCommand creates a new command that is used to start Diki.
-func NewDikiCommand(providerCreateFuncs map[string]provider.ProviderFromConfigFunc, metadataFuncs map[string]metadata.MetadataFunc) *cobra.Command {
+func NewDikiCommand(providerOptions map[string]provider.ProviderOption) *cobra.Command {
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
 	logger := slog.New(handler)
 	slog.SetDefault(logger)
+
+	providerCreateFuncs := map[string]provider.ProviderFromConfigFunc{}
+	for providerID, providerOption := range providerOptions {
+		providerCreateFuncs[providerID] = providerOption.ProviderFromConfigFunc
+	}
+
+	metadataFuncs := map[string]provider.MetadataFunc{}
+	for providerID, providerOption := range providerOptions {
+		metadataFuncs[providerID] = providerOption.MetadataFunc
+	}
 
 	rootCmd := &cobra.Command{
 		Use:   "diki",
@@ -179,7 +189,7 @@ func addReportGenerateDiffFlags(cmd *cobra.Command, opts *generateDiffOptions) {
 	cmd.PersistentFlags().Var(cliflag.NewMapStringString(&opts.identityAttributes), "identity-attributes", "The keys are the IDs of the providers that will be present in the generated difference report and the values are metadata attributes to be used as identifiers.")
 }
 
-func showProviderCmd(args []string, metadataFuncs map[string]metadata.MetadataFunc) error {
+func showProviderCmd(args []string, metadataFuncs map[string]provider.MetadataFunc) error {
 	if len(args) > 1 {
 		return errors.New("command `show provider` accepts at most one provider")
 	}
