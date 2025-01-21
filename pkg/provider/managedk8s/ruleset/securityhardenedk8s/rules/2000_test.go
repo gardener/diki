@@ -17,6 +17,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/securityhardenedk8s/rules"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 )
 
 var _ = Describe("#2000", func() {
@@ -30,7 +31,38 @@ var _ = Describe("#2000", func() {
 	})
 
 	It("should return correct results", func() {
-		r := &rules.Rule2000{Client: client}
+		options := &rules.Options2000{
+			AcceptedNamespaces: []rules.AcceptedNamespaces2000{
+				{
+					AcceptedClusterObject: option.AcceptedClusterObject{
+						ClusterObjectSelector: option.ClusterObjectSelector{
+							MatchLabels: map[string]string{
+								"ns": "lease",
+							},
+						},
+					},
+					AcceptedTraffic: rules.AcceptedTraffic{
+						Egress: true,
+					},
+				},
+				{
+					AcceptedClusterObject: option.AcceptedClusterObject{
+						ClusterObjectSelector: option.ClusterObjectSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
+						},
+						Justification: "justification foo",
+					},
+					AcceptedTraffic: rules.AcceptedTraffic{
+						Egress:  true,
+						Ingress: true,
+					},
+				},
+			},
+		}
+
+		r := &rules.Rule2000{Client: client, Options: options}
 
 		nsDefault := &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
@@ -119,10 +151,24 @@ var _ = Describe("#2000", func() {
 		nsLease := &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "kube-node-lease",
+				Labels: map[string]string{
+					"ns": "lease",
+				},
 			},
 		}
 
 		Expect(client.Create(ctx, nsLease)).To(Succeed())
+
+		nsFoo := &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "kube-foo",
+				Labels: map[string]string{
+					"foo": "bar",
+				},
+			},
+		}
+
+		Expect(client.Create(ctx, nsFoo)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
@@ -164,9 +210,14 @@ var _ = Describe("#2000", func() {
 				Target:  rule.NewTarget("namespace", "kube-node-lease"),
 			},
 			{
-				Status:  rule.Failed,
-				Message: "Egress traffic is not denied by default.",
+				Status:  rule.Accepted,
+				Message: "Namespace is accepted to allow Egress traffic by default.",
 				Target:  rule.NewTarget("namespace", "kube-node-lease"),
+			},
+			{
+				Status:  rule.Accepted,
+				Message: "justification foo",
+				Target:  rule.NewTarget("namespace", "kube-foo"),
 			},
 		}
 
