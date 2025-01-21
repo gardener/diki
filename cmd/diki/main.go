@@ -12,7 +12,6 @@ import (
 	"github.com/gardener/diki/cmd/diki/app"
 	"github.com/gardener/diki/pkg/provider"
 	"github.com/gardener/diki/pkg/provider/builder"
-
 	"github.com/gardener/diki/pkg/provider/garden"
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/managedk8s"
