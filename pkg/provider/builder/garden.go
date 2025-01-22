@@ -9,6 +9,7 @@ import (
 	"log/slog"
 
 	"github.com/gardener/diki/pkg/config"
+	"github.com/gardener/diki/pkg/metadata"
 	"github.com/gardener/diki/pkg/provider"
 	"github.com/gardener/diki/pkg/provider/garden"
 	"github.com/gardener/diki/pkg/provider/garden/ruleset/securityhardenedshoot"
@@ -47,4 +48,47 @@ func GardenProviderFromConfig(conf config.ProviderConfig) (provider.Provider, er
 	}
 
 	return p, nil
+}
+
+// gardenGetSupportedVersions returns the Supported Versions of a specific ruleset that is supported by the Garden provider.
+func gardenGetSupportedVersions(ruleset string) []string {
+	switch ruleset {
+	case securityhardenedshoot.RulesetID:
+		return securityhardenedshoot.SupportedVersions
+	default:
+		return nil
+	}
+}
+
+// GardenProviderMetadata returns available metadata for the Garden Provider and it's supported rulesets.
+func GardenProviderMetadata() metadata.ProviderDetailed {
+	providerMetadata := metadata.ProviderDetailed{
+		Provider: metadata.Provider{
+			ID:   garden.ProviderID,
+			Name: garden.ProviderName,
+		},
+		Rulesets: []metadata.Ruleset{
+			{
+				ID:   securityhardenedshoot.RulesetID,
+				Name: securityhardenedshoot.RulesetName,
+			},
+		},
+	}
+
+	for i := range providerMetadata.Rulesets {
+		supportedVersions := gardenGetSupportedVersions(providerMetadata.Rulesets[i].ID)
+		for _, supportedVersion := range supportedVersions {
+			providerMetadata.Rulesets[i].Versions = append(
+				providerMetadata.Rulesets[i].Versions,
+				metadata.Version{Version: supportedVersion, Latest: false},
+			)
+		}
+
+		// Mark the first version as latest as the versions are sorted from newest to oldest
+		if len(providerMetadata.Rulesets[i].Versions) > 0 {
+			providerMetadata.Rulesets[i].Versions[0].Latest = true
+		}
+	}
+
+	return providerMetadata
 }

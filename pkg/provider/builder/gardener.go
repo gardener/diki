@@ -11,6 +11,7 @@ import (
 	"k8s.io/client-go/rest"
 
 	"github.com/gardener/diki/pkg/config"
+	"github.com/gardener/diki/pkg/metadata"
 	"github.com/gardener/diki/pkg/provider"
 	"github.com/gardener/diki/pkg/provider/gardener"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig"
@@ -60,4 +61,47 @@ func setConfigDefaults(config *rest.Config) {
 	if config.Burst <= 0 {
 		config.Burst = 40
 	}
+}
+
+// gardenerGetSupportedVersions returns the Supported Versions of a specific ruleset that is supported by the Gardener provider.
+func gardenerGetSupportedVersions(ruleset string) []string {
+	switch ruleset {
+	case disak8sstig.RulesetID:
+		return disak8sstig.SupportedVersions
+	default:
+		return nil
+	}
+}
+
+// GardenerProviderMetadata returns available metadata for the Gardener Provider and it's supported rulesets.
+func GardenerProviderMetadata() metadata.ProviderDetailed {
+	providerMetadata := metadata.ProviderDetailed{
+		Provider: metadata.Provider{
+			ID:   gardener.ProviderID,
+			Name: gardener.ProviderName,
+		},
+		Rulesets: []metadata.Ruleset{
+			{
+				ID:   disak8sstig.RulesetID,
+				Name: disak8sstig.RulesetName,
+			},
+		},
+	}
+
+	for i := range providerMetadata.Rulesets {
+		supportedVersions := gardenerGetSupportedVersions(providerMetadata.Rulesets[i].ID)
+		for _, supportedVersion := range supportedVersions {
+			providerMetadata.Rulesets[i].Versions = append(
+				providerMetadata.Rulesets[i].Versions,
+				metadata.Version{Version: supportedVersion, Latest: false},
+			)
+		}
+
+		// Mark the first version as latest as the versions are sorted from newest to oldest
+		if len(providerMetadata.Rulesets[i].Versions) > 0 {
+			providerMetadata.Rulesets[i].Versions[0].Latest = true
+		}
+	}
+
+	return providerMetadata
 }

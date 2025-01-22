@@ -21,6 +21,7 @@ import (
 	"k8s.io/component-base/version"
 
 	"github.com/gardener/diki/pkg/config"
+	"github.com/gardener/diki/pkg/metadata"
 	"github.com/gardener/diki/pkg/provider"
 	"github.com/gardener/diki/pkg/report"
 	"github.com/gardener/diki/pkg/rule"
@@ -28,10 +29,20 @@ import (
 )
 
 // NewDikiCommand creates a new command that is used to start Diki.
-func NewDikiCommand(providerCreateFuncs map[string]provider.ProviderFromConfigFunc) *cobra.Command {
+func NewDikiCommand(providerOptions map[string]provider.ProviderOption) *cobra.Command {
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
 	logger := slog.New(handler)
 	slog.SetDefault(logger)
+
+	providerCreateFuncs := map[string]provider.ProviderFromConfigFunc{}
+	for providerID, providerOption := range providerOptions {
+		providerCreateFuncs[providerID] = providerOption.ProviderFromConfigFunc
+	}
+
+	metadataFuncs := map[string]provider.MetadataFunc{}
+	for providerID, providerOption := range providerOptions {
+		metadataFuncs[providerID] = providerOption.MetadataFunc
+	}
 
 	rootCmd := &cobra.Command{
 		Use:   "diki",
@@ -126,6 +137,28 @@ e.g. to check compliance of your hyperscaler accounts.`,
 	addReportGenerateDiffFlags(generateDiffCmd, &generateDiffOpts)
 	generateCmd.AddCommand(generateDiffCmd)
 
+	showCmd := &cobra.Command{
+		Use:   "show",
+		Short: "Show metadata information for different diki internals, i.e. providers.",
+		Long:  "Show metadata information for different diki internals, i.e. providers.",
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return errors.New("show subcommand not selected")
+		},
+	}
+
+	rootCmd.AddCommand(showCmd)
+
+	showProviderCmd := &cobra.Command{
+		Use:   "provider",
+		Short: "Show detailed information for providers.",
+		Long:  "Show detailed information for providers.",
+		RunE: func(_ *cobra.Command, args []string) error {
+			return showProviderCmd(args, metadataFuncs)
+		},
+	}
+
+	showCmd.AddCommand(showProviderCmd)
+
 	return rootCmd
 }
 
@@ -157,6 +190,39 @@ func addReportDiffFlags(cmd *cobra.Command, opts *diffOptions) {
 
 func addReportGenerateDiffFlags(cmd *cobra.Command, opts *generateDiffOptions) {
 	cmd.PersistentFlags().Var(cliflag.NewMapStringString(&opts.identityAttributes), "identity-attributes", "The keys are the IDs of the providers that will be present in the generated difference report and the values are metadata attributes to be used as identifiers.")
+}
+
+func showProviderCmd(args []string, metadataFuncs map[string]provider.MetadataFunc) error {
+	if len(args) > 1 {
+		return errors.New("command 'show provider' accepts at most one provider")
+	}
+
+	if len(args) == 0 {
+		var providersMetadata []metadata.Provider
+
+		for providerID := range metadataFuncs {
+			providersMetadata = append(providersMetadata, metadata.Provider{ID: providerID, Name: metadataFuncs[providerID]().Name})
+		}
+
+		if bytes, err := json.Marshal(providersMetadata); err != nil {
+			return err
+		} else {
+			fmt.Println(string(bytes))
+		}
+		return nil
+	}
+
+	metadataFunc, ok := metadataFuncs[args[0]]
+	if !ok {
+		return fmt.Errorf("unknown provider: %s", args[0])
+	}
+
+	if bytes, err := json.Marshal(metadataFunc()); err != nil {
+		return err
+	} else {
+		fmt.Println(string(bytes))
+	}
+	return nil
 }
 
 func generateDiffCmd(args []string, generateDiffOpts generateDiffOptions, rootOpts reportOptions, logger *slog.Logger) error {

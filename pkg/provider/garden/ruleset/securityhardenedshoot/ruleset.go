@@ -19,11 +19,18 @@ import (
 )
 
 const (
-	// RulesetID is a constant containing the id of the Security Hardened Shoot Cluster Ruleset.
+	// RulesetID is a constant containing the id of the Security Hardened Shoot Cluster ruleset.
 	RulesetID = "security-hardened-shoot-cluster"
+	// RulesetName is a constant containing the user-friendly name of the Security Hardened Shoot Cluster ruleset.
+	RulesetName = "Security Hardened Shoot Cluster"
 )
 
-var _ ruleset.Ruleset = &Ruleset{}
+var (
+	_ ruleset.Ruleset = &Ruleset{}
+	// SupportedVersions is a list of available versions for the Security Hardened Shoot Cluster Ruleset.
+	// Versions are sorted from newest to oldest.
+	SupportedVersions = []string{"v0.1.0"}
+)
 
 // Ruleset implements Security Hardened Shoot Cluster.
 type Ruleset struct {
@@ -62,7 +69,7 @@ func (r *Ruleset) ID() string {
 
 // Name returns the name of the Ruleset.
 func (r *Ruleset) Name() string {
-	return "Security Hardened Shoot Cluster"
+	return RulesetName
 }
 
 // Version returns the version of the Ruleset.
