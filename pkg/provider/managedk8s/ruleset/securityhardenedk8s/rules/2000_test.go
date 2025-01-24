@@ -217,7 +217,12 @@ var _ = Describe("#2000", func() {
 			{
 				Status:  rule.Accepted,
 				Message: "justification foo",
-				Target:  rule.NewTarget("namespace", "kube-foo"),
+				Target:  rule.NewTarget("namespace", "kube-foo", "details", "traffic: egress"),
+			},
+			{
+				Status:  rule.Accepted,
+				Message: "justification foo",
+				Target:  rule.NewTarget("namespace", "kube-foo", "details", "traffic: ingress"),
 			},
 		}
 

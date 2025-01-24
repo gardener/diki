@@ -15,10 +15,10 @@ providers:
         acceptedNamespaces:
         - matchLabels:
             resources.gardener.cloud/managed-by: gardener
-          justification: "Gardener managed namespaces are accpeted to allow traffic by default"
-          accpetedTraffic:
-            Ingress: true
-            Egress: true
+          justification: "Gardener managed namespaces are accepted to allow traffic by default"
+          acceptedTraffic:
+            ingress: true
+            egress: true
     - ruleID: "2001"
       args:
         acceptedPods:

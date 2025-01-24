@@ -110,13 +110,18 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 		} else {
 			accepted, justification := r.acceptedIngress(namespace)
 
+			acceptedTarget := target
 			msg := "Namespace is accepted to allow Ingress traffic by default."
 			if len(justification) > 0 {
 				msg = justification
+				// We cannot guarantee that the user has specified in his justification the
+				// accepted traffic type. To avoid confusion and duplication of checkResults
+				// we specify the traffic type in the target details only for this case.
+				acceptedTarget = target.With("details", "traffic: ingress")
 			}
 
 			if accepted {
-				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, deniesIngressTarget))
+				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, acceptedTarget))
 			} else {
 				checkResults = append(checkResults, rule.FailedCheckResult("Ingress traffic is not denied by default.", target))
 			}
@@ -127,15 +132,18 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 		} else {
 			accepted, justification := r.acceptedEgress(namespace)
 
+			acceptedTarget := target
 			msg := "Namespace is accepted to allow Egress traffic by default."
 			if len(justification) > 0 {
 				msg = justification
+				// We cannot guarantee that the user has specified in his justification the
+				// accepted traffic type. To avoid confusion and duplication of checkResults
+				// we specify the traffic type in the target details only for this case.
+				acceptedTarget = target.With("details", "traffic: egress")
 			}
 
 			if accepted {
-				if len(checkResults) == 0 || checkResults[len(checkResults)-1].Message != msg {
-					checkResults = append(checkResults, rule.AcceptedCheckResult(msg, deniesEgressTarget))
-				}
+				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, acceptedTarget))
 			} else {
 				checkResults = append(checkResults, rule.FailedCheckResult("Egress traffic is not denied by default.", target))
 			}

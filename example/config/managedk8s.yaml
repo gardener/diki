@@ -184,8 +184,8 @@ providers:                   # contains information about known providers
     #         foo: bar
     #       justification: "justification"
     #       acceptedTraffic:
-    #         Ingress: true
-    #         Egress: true
+    #         ingress: true
+    #         egress: true
     # - ruleID: "2001"
     #   args:
     #     acceptedPods:
