@@ -10,6 +10,23 @@ providers:
     name: Security Hardened Kubernetes Cluster
     version: v0.1.0
     ruleOptions:
+    - ruleID: "2000"
+      args:
+        acceptedNamespaces:
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed namespaces are accepted to allow traffic by default"
+          acceptedTraffic:
+            ingress: true
+            egress: true
+    - ruleID: "2001"
+      args:
+        acceptedPods:
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed resources are accepted to allow privilege escalation"
     - ruleID: "2003"
       args:
         acceptedPods:

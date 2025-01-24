@@ -8,12 +8,15 @@ import (
 	"context"
 	"slices"
 
+	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 )
 
 var (
@@ -22,7 +25,22 @@ var (
 )
 
 type Rule2000 struct {
-	Client client.Client
+	Client  client.Client
+	Options *Options2000
+}
+
+type Options2000 struct {
+	AcceptedNamespaces []AcceptedNamespaces2000 `json:"acceptedNamespaces" yaml:"acceptedNamespaces"`
+}
+
+type AcceptedNamespaces2000 struct {
+	option.AcceptedClusterObject
+	AcceptedTraffic AcceptedTraffic `json:"acceptedTraffic" yaml:"acceptedTraffic"`
+}
+
+type AcceptedTraffic struct {
+	Egress  bool `json:"egress" yaml:"egress"`
+	Ingress bool `json:"ingress" yaml:"ingress"`
 }
 
 func (r *Rule2000) ID() string {
@@ -90,15 +108,78 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 		if deniesIngress {
 			checkResults = append(checkResults, rule.PassedCheckResult("Ingress traffic is denied by default.", deniesIngressTarget))
 		} else {
-			checkResults = append(checkResults, rule.FailedCheckResult("Ingress traffic is not denied by default.", target))
+			accepted, justification := r.acceptedIngress(namespace)
+
+			acceptedTarget := target
+			msg := "Namespace is accepted to allow Ingress traffic by default."
+			if len(justification) > 0 {
+				msg = justification
+				// We cannot guarantee that the user has specified in his justification the
+				// accepted traffic type. To avoid confusion and duplication of checkResults
+				// we specify the traffic type in the target details only for this case.
+				acceptedTarget = target.With("details", "traffic: ingress")
+			}
+
+			if accepted {
+				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, acceptedTarget))
+			} else {
+				checkResults = append(checkResults, rule.FailedCheckResult("Ingress traffic is not denied by default.", target))
+			}
 		}
 
 		if deniesEgress {
 			checkResults = append(checkResults, rule.PassedCheckResult("Egress traffic is denied by default.", deniesEgressTarget))
 		} else {
-			checkResults = append(checkResults, rule.FailedCheckResult("Egress traffic is not denied by default.", target))
+			accepted, justification := r.acceptedEgress(namespace)
+
+			acceptedTarget := target
+			msg := "Namespace is accepted to allow Egress traffic by default."
+			if len(justification) > 0 {
+				msg = justification
+				// We cannot guarantee that the user has specified in his justification the
+				// accepted traffic type. To avoid confusion and duplication of checkResults
+				// we specify the traffic type in the target details only for this case.
+				acceptedTarget = target.With("details", "traffic: egress")
+			}
+
+			if accepted {
+				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, acceptedTarget))
+			} else {
+				checkResults = append(checkResults, rule.FailedCheckResult("Egress traffic is not denied by default.", target))
+			}
 		}
 	}
 
 	return rule.Result(r, checkResults...), nil
+}
+
+func (r *Rule2000) acceptedIngress(namespace corev1.Namespace) (bool, string) {
+	if r.Options == nil {
+		return false, ""
+	}
+
+	for _, acceptedNamespace := range r.Options.AcceptedNamespaces {
+
+		if utils.MatchLabels(namespace.Labels, acceptedNamespace.MatchLabels) &&
+			acceptedNamespace.AcceptedTraffic.Ingress {
+			return true, acceptedNamespace.Justification
+		}
+	}
+
+	return false, ""
+}
+
+func (r *Rule2000) acceptedEgress(namespace corev1.Namespace) (bool, string) {
+	if r.Options == nil {
+		return false, ""
+	}
+
+	for _, acceptedNamespace := range r.Options.AcceptedNamespaces {
+		if utils.MatchLabels(namespace.Labels, acceptedNamespace.MatchLabels) &&
+			acceptedNamespace.AcceptedTraffic.Egress {
+			return true, acceptedNamespace.Justification
+		}
+	}
+
+	return false, ""
 }
