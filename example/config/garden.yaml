@@ -18,6 +18,14 @@ providers:       # contains information about known providers
     #     extensions:
     #     - type: extension-type-1
     #     - type: extension-type-2
+    # - ruleID: "1002"
+    #   args:
+    #     machineImages:
+    #     - name: image-name
+    #       expectedClassifications:
+    #       - supported
+    #       - supported
+    #       - preview
     # - ruleID: "2000"
     #   skip:
     #     enabled: true
