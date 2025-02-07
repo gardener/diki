@@ -22,6 +22,28 @@ spec:
 ```
 ---
 
+### 1002 - Shoot clusters should use supported versions for their Worker's images.
+
+#### Description
+Shoot clusters should use supported versions for their Worker's images. This rule can be configured to accept specific image classifications.
+
+#### Fix
+Configure `supported` machine image versions in the `spec.provider.workers[].machine.image.version` field.
+``` yaml
+kind: Shoot
+apiVersion: core.gardener.cloud/v1beta1
+spec:
+  provider:
+    workers:
+      - name: worker
+        machine:
+          image:
+            name: gardenlinux
+            version: <supported-version>
+```
+The supported versions can be found in the used `CloudProfile`.
+---
+
 ### 2000 - Shoot clusters must have anonymous authentication disabled for the Kubernetes API server.
 
 #### Description
