@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/gardener/gardener/pkg/apis/core"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	gardencorev1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -38,15 +37,19 @@ type Options1002 struct {
 }
 
 type MachineImage struct {
-	Name                    string   `json:"name" yaml:"name"`
-	ExpectedClassifications []string `json:"expectedClassifications" yaml:"expectedClassifications"`
+	Name                    string                                    `json:"name" yaml:"name"`
+	ExpectedClassifications []gardencorev1beta1.VersionClassification `json:"expectedClassifications" yaml:"expectedClassifications"`
 }
 
 func (o Options1002) Validate() field.ErrorList {
 	var (
 		allErrs                field.ErrorList
 		rootPath               = field.NewPath("machineImages")
-		versionClassifications = []string{string(core.ClassificationPreview), string(core.ClassificationSupported), string(core.ClassificationDeprecated)}
+		versionClassifications = []gardencorev1beta1.VersionClassification{
+			gardencorev1beta1.ClassificationPreview,
+			gardencorev1beta1.ClassificationSupported,
+			gardencorev1beta1.ClassificationDeprecated,
+		}
 	)
 
 	for _, machineImage := range o.MachineImages {
@@ -64,7 +67,7 @@ func (r *Rule1002) ID() string {
 }
 
 func (r *Rule1002) Name() string {
-	return "Shoot clusters should use supported versions for their Worker's images."
+	return "Shoot clusters should use supported versions for their Workers' images."
 }
 
 func (r *Rule1002) Severity() rule.SeverityLevel {
@@ -93,75 +96,47 @@ func (r *Rule1002) Run(ctx context.Context) (rule.RuleResult, error) {
 		kind = gardencorev1beta1constants.CloudProfileReferenceKindCloudProfile
 	}
 
-	if kind == gardencorev1beta1constants.CloudProfileReferenceKindCloudProfile {
+	switch kind {
+	case gardencorev1beta1constants.CloudProfileReferenceKindCloudProfile:
 		cloudProfile = &gardencorev1beta1.CloudProfile{ObjectMeta: v1.ObjectMeta{Name: cloudProfileName}}
 		if err := r.Client.Get(ctx, client.ObjectKeyFromObject(cloudProfile), cloudProfile); err != nil {
-			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("name", cloudProfileName, "kind", "CloudProfile"))), nil
+			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("name", cloudProfileName, "kind", gardencorev1beta1constants.CloudProfileReferenceKindCloudProfile))), nil
 		}
-	} else if kind == gardencorev1beta1constants.CloudProfileReferenceKindNamespacedCloudProfile {
+	case gardencorev1beta1constants.CloudProfileReferenceKindNamespacedCloudProfile:
 		namespacedCloudProfile = &gardencorev1beta1.NamespacedCloudProfile{ObjectMeta: v1.ObjectMeta{Name: cloudProfileName, Namespace: r.ShootNamespace}}
 		if err := r.Client.Get(ctx, client.ObjectKeyFromObject(namespacedCloudProfile), namespacedCloudProfile); err != nil {
-			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("name", cloudProfileName, "namespace", r.ShootNamespace, "kind", "NamespacedCloudProfile"))), nil
+			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("name", cloudProfileName, "namespace", r.ShootNamespace, "kind", gardencorev1beta1constants.CloudProfileReferenceKindNamespacedCloudProfile))), nil
 		}
-	} else {
+	default:
 		return rule.Result(r, rule.ErroredCheckResult(fmt.Sprintf("cloudProfile kind %s not recognised", kind), rule.NewTarget())), nil
 	}
 
 	for _, worker := range shoot.Spec.Provider.Workers {
 		target := rule.NewTarget("worker", worker.Name, "image", worker.Machine.Image.Name, "version", *worker.Machine.Image.Version)
-		checkResults = append(checkResults, r.checkImageVersion(
-			worker.Machine.Image.Name,
-			*worker.Machine.Image.Version,
-			cloudProfile,
-			namespacedCloudProfile,
-			target,
-		))
+		if cloudProfile != nil {
+			checkResult, found := r.checkMachineImages(worker.Machine.Image.Name, *worker.Machine.Image.Version, cloudProfile.Spec.MachineImages, target)
+			if found {
+				checkResults = append(checkResults, checkResult)
+			} else {
+				checkResults = append(checkResults, rule.ErroredCheckResult("image version not found in cloudProfile", target))
+			}
+		} else {
+			checkResult, found := r.checkMachineImages(worker.Machine.Image.Name, *worker.Machine.Image.Version, namespacedCloudProfile.Spec.MachineImages, target)
+			if found {
+				checkResults = append(checkResults, checkResult)
+				continue
+			}
+
+			checkResult, found = r.checkMachineImages(worker.Machine.Image.Name, *worker.Machine.Image.Version, namespacedCloudProfile.Status.CloudProfileSpec.MachineImages, target)
+			if found {
+				checkResults = append(checkResults, checkResult)
+			} else {
+				checkResults = append(checkResults, rule.ErroredCheckResult("image version not found in namespacedCloudProfile", target))
+			}
+		}
 	}
 
 	return rule.Result(r, checkResults...), nil
-}
-
-func (r *Rule1002) checkImageVersion(
-	imageName, imageVersion string,
-	cloudProfile *gardencorev1beta1.CloudProfile,
-	namespacedCloudProfile *gardencorev1beta1.NamespacedCloudProfile,
-	target rule.Target,
-) rule.CheckResult {
-	if cloudProfile != nil {
-		return r.checkCloudProfile(imageName, imageVersion, *cloudProfile, target)
-	} else {
-		return r.checkNamespacedCloudProfile(imageName, imageVersion, *namespacedCloudProfile, target)
-	}
-}
-
-func (r *Rule1002) checkNamespacedCloudProfile(
-	imageName, imageVersion string,
-	namespacedCloudProfile gardencorev1beta1.NamespacedCloudProfile,
-	target rule.Target,
-) rule.CheckResult {
-	result, found := r.checkMachineImages(imageName, imageVersion, namespacedCloudProfile.Spec.MachineImages, target)
-	if found {
-		return result
-	}
-
-	result, found = r.checkMachineImages(imageName, imageVersion, namespacedCloudProfile.Status.CloudProfileSpec.MachineImages, target)
-	if found {
-		return result
-	}
-	return rule.ErroredCheckResult("image version not found in namespacedCloudProfile", target)
-}
-
-func (r *Rule1002) checkCloudProfile(
-	imageName, imageVersion string,
-	cloudProfile gardencorev1beta1.CloudProfile,
-	target rule.Target,
-) rule.CheckResult {
-	result, found := r.checkMachineImages(imageName, imageVersion, cloudProfile.Spec.MachineImages, target)
-	if found {
-		return result
-	}
-
-	return rule.ErroredCheckResult("image version not found in cloudProfile", target)
 }
 
 func (r *Rule1002) checkMachineImages(imageName, imageVersion string, machineImages []gardencorev1beta1.MachineImage, target rule.Target) (rule.CheckResult, bool) {
@@ -169,11 +144,12 @@ func (r *Rule1002) checkMachineImages(imageName, imageVersion string, machineIma
 		if machineImage.Name == imageName {
 			for _, version := range machineImage.Versions {
 				if version.Version == imageVersion {
-					if version.Classification == nil {
+					switch {
+					case version.Classification == nil:
 						return rule.FailedCheckResult("Worker group uses image with unclassified image.", target), true
-					} else if slices.Contains(r.acceptedClassifications(imageName), string(*version.Classification)) {
+					case slices.Contains(r.acceptedClassifications(imageName), *version.Classification):
 						return rule.PassedCheckResult("Worker group has accepted image.", target.With("classification", string(*version.Classification))), true
-					} else {
+					default:
 						return rule.FailedCheckResult("Worker group has not accepted image.", target.With("classification", string(*version.Classification))), true
 					}
 				}
@@ -183,7 +159,7 @@ func (r *Rule1002) checkMachineImages(imageName, imageVersion string, machineIma
 	return rule.CheckResult{}, false
 }
 
-func (r *Rule1002) acceptedClassifications(name string) []string {
+func (r *Rule1002) acceptedClassifications(name string) []gardencorev1beta1.VersionClassification {
 	if r.Options != nil {
 		for _, machineImage := range r.Options.MachineImages {
 			if machineImage.Name == name {
@@ -193,5 +169,5 @@ func (r *Rule1002) acceptedClassifications(name string) []string {
 		}
 	}
 
-	return []string{string(core.ClassificationSupported)}
+	return []gardencorev1beta1.VersionClassification{gardencorev1beta1.ClassificationSupported}
 }

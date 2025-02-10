@@ -11,6 +11,10 @@ rules:
   name: "Shoot clusters should enable required extensions."
   description: "Shoot clusters should enable required extensions. This rule can be configured as per organisation's requirements in order to check if required extensions are enabled for the shoot cluster."
   severity: "MEDIUM"
+- id: 1002
+  name: "Shoot clusters should use supported versions for their Workers' images."
+  description: "Shoot clusters should use supported versions for their Workers' images. This rule can be configured to accept specific image classifications."
+  severity: "HIGH"
 - id: 2000
   name: "Shoot clusters must have anonymous authentication disabled for the Kubernetes API server."
   description: "Shoot clusters must have anonymous authentication disabled for the Kubernetes API server. This rule follows the requirements from DISA K8s STIG rule [242390](https://www.stigviewer.com/stig/kubernetes/2024-06-10/finding/V-242390)."

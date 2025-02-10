@@ -410,11 +410,11 @@ var _ = Describe("#1002", func() {
 				MachineImages: []rules.MachineImage{
 					{
 						Name:                    "foo",
-						ExpectedClassifications: []string{"supported", "preview"},
+						ExpectedClassifications: []gardencorev1beta1.VersionClassification{supportedClassification, previewClassification},
 					},
 					{
 						Name:                    "bar",
-						ExpectedClassifications: []string{"preview"},
+						ExpectedClassifications: []gardencorev1beta1.VersionClassification{previewClassification},
 					},
 				},
 			},
