@@ -37,7 +37,7 @@ var _ = Describe("#1002", func() {
 		cloudProfile   *gardencorev1beta1.CloudProfile
 		nsCloudProfile *gardencorev1beta1.NamespacedCloudProfile
 		r              rule.Rule
-		ruleName       = "Shoot clusters should use supported versions for their Worker's images."
+		ruleName       = "Shoot clusters should use supported versions for their Workers' images."
 		ruleID         = "1002"
 		severity       = rule.SeverityHigh
 	)
