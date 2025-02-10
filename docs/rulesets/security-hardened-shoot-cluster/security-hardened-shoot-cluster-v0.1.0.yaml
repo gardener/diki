@@ -5,7 +5,7 @@
 ruleset:
   id: security-hardened-shoot-cluster
   name: "Security Hardened Shoot Cluster"
-  version: "v0.2.0-dev"
+  version: "v0.1.0"
 rules:
 - id: 1000
   name: "Shoot clusters should enable required extensions."
