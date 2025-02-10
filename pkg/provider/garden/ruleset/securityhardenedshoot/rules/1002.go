@@ -163,7 +163,6 @@ func (r *Rule1002) acceptedClassifications(name string) []gardencorev1beta1.Vers
 	if r.Options != nil {
 		for _, machineImage := range r.Options.MachineImages {
 			if machineImage.Name == name {
-
 				return machineImage.ExpectedClassifications
 			}
 		}
