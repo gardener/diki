@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
+// SPDX-FileCopyrightText: 2025 SAP SE or an SAP affiliate company and Gardener contributors
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -17,7 +17,7 @@ import (
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
-func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
+func (r *Ruleset) registerV02Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
 	c, err := client.New(r.Config, client.Options{
 		Scheme: gardenerk8s.GardenScheme,
 	})
@@ -25,11 +25,15 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 		return err
 	}
 
-	opts1000, err := getV01OptionOrNil[rules.Options1000](ruleOptions["1000"].Args)
+	opts1000, err := getV02OptionOrNil[rules.Options1000](ruleOptions["1000"].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 1000 error: %s", err.Error())
 	}
-	opts2007, err := getV01OptionOrNil[rules.Options2007](ruleOptions["2007"].Args)
+	opts1002, err := getV02OptionOrNil[rules.Options1002](ruleOptions["1002"].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 1002 error: %s", err.Error())
+	}
+	opts2007, err := getV02OptionOrNil[rules.Options2007](ruleOptions["2007"].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 2007 error: %s", err.Error())
 	}
@@ -40,6 +44,12 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			ShootName:      r.args.ShootName,
 			ShootNamespace: r.args.ProjectNamespace,
 			Options:        opts1000,
+		},
+		&rules.Rule1002{
+			Client:         c,
+			ShootName:      r.args.ShootName,
+			ShootNamespace: r.args.ProjectNamespace,
+			Options:        opts1002,
 		},
 		&rules.Rule2000{
 			Client:         c,
@@ -100,14 +110,14 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 
 	// check that the registered rules equal
 	// the number of rules in that ruleset version
-	if len(rules) != 9 {
-		return fmt.Errorf("revision expects 9 registered rules, but got: %d", len(rules))
+	if len(rules) != 10 {
+		return fmt.Errorf("revision expects 10 registered rules, but got: %d", len(rules))
 	}
 
 	return r.AddRules(rules...)
 }
 
-func parseV01Options[O rules.RuleOption](options any) (*O, error) {
+func parseV02Options[O rules.RuleOption](options any) (*O, error) {
 	optionsByte, err := json.Marshal(options)
 	if err != nil {
 		return nil, err
@@ -127,9 +137,9 @@ func parseV01Options[O rules.RuleOption](options any) (*O, error) {
 	return &parsedOptions, nil
 }
 
-func getV01OptionOrNil[O rules.RuleOption](options any) (*O, error) {
+func getV02OptionOrNil[O rules.RuleOption](options any) (*O, error) {
 	if options == nil {
 		return nil, nil
 	}
-	return parseV01Options[O](options)
+	return parseV02Options[O](options)
 }
