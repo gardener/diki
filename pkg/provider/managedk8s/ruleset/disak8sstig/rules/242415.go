@@ -42,67 +42,74 @@ func (r *Rule242415) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule242415) Run(ctx context.Context) (rule.RuleResult, error) {
-	target := rule.NewTarget()
-
 	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
 	}
 
 	if len(pods) == 0 {
-		return rule.Result(r, rule.PassedCheckResult("The cluster does not have any Pods.", target)), nil
+		return rule.Result(r, rule.PassedCheckResult("The cluster does not have any Pods.", rule.NewTarget())), nil
 	}
 
 	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "namespaceList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil
 	}
-	checkResults := r.checkPods(pods, namespaces, target)
+	checkResults := r.checkPods(pods, namespaces)
 
 	return rule.Result(r, checkResults...), nil
 }
 
-func (r *Rule242415) checkPods(pods []corev1.Pod, namespaces map[string]corev1.Namespace, clusterTarget rule.Target) []rule.CheckResult {
+func (r *Rule242415) checkPods(pods []corev1.Pod, namespaces map[string]corev1.Namespace) []rule.CheckResult {
 	var checkResults []rule.CheckResult
 	for _, pod := range pods {
-		target := clusterTarget.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
-		passed := true
+		var (
+			podCheckResults []rule.CheckResult
+			target          = rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
+		)
 		for _, container := range pod.Spec.Containers {
-			for _, env := range container.Env {
-				if env.ValueFrom != nil && env.ValueFrom.SecretKeyRef != nil {
-					target = target.With("details", fmt.Sprintf("containerName: %s, variableName: %s, keyRef: %s", container.Name, env.Name, env.ValueFrom.SecretKeyRef.Key))
-					if accepted, justification := r.accepted(pod.Labels, namespaces[pod.Namespace], env.Name); accepted {
-						msg := "Pod accepted to use environment to inject secret."
-						if justification != "" {
-							msg = justification
-						}
-						checkResults = append(checkResults, rule.AcceptedCheckResult(msg, target))
-					} else {
-						checkResults = append(checkResults, rule.FailedCheckResult("Pod uses environment to inject secret.", target))
-					}
-					passed = false
-				}
-			}
+			podCheckResults = append(podCheckResults, r.checkContainer(container, pod.Labels, namespaces[pod.Namespace].Labels, target)...)
 		}
-		if passed {
-			checkResults = append(checkResults, rule.CheckResult{
-				Status:  rule.Passed,
-				Message: "Pod does not use environment to inject secret.",
-				Target:  target,
-			})
+		for _, container := range pod.Spec.InitContainers {
+			podCheckResults = append(podCheckResults, r.checkContainer(container, pod.Labels, namespaces[pod.Namespace].Labels, target)...)
 		}
+		if len(podCheckResults) == 0 {
+			checkResults = append(checkResults, rule.PassedCheckResult("Pod does not use environment to inject secret.", target))
+		}
+		checkResults = append(checkResults, podCheckResults...)
 	}
 	return checkResults
 }
 
-func (r *Rule242415) accepted(podLabels map[string]string, namespace corev1.Namespace, environmentVariable string) (bool, string) {
+func (r *Rule242415) checkContainer(container corev1.Container, podLabels, namespaceLabels map[string]string, target rule.Target) []rule.CheckResult {
+	var checkResults []rule.CheckResult
+
+	for _, env := range container.Env {
+		if env.ValueFrom != nil && env.ValueFrom.SecretKeyRef != nil {
+			target = target.With("container", container.Name, "details", fmt.Sprintf("variableName: %s, keyRef: %s", env.Name, env.ValueFrom.SecretKeyRef.Key))
+			if accepted, justification := r.accepted(podLabels, namespaceLabels, env.Name); accepted {
+				msg := "Pod accepted to use environment to inject secret."
+				if justification != "" {
+					msg = justification
+				}
+				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, target))
+			} else {
+				checkResults = append(checkResults, rule.FailedCheckResult("Pod uses environment to inject secret.", target))
+			}
+		}
+	}
+
+	return checkResults
+}
+
+func (r *Rule242415) accepted(podLabels, namespaceLabels map[string]string, environmentVariable string) (bool, string) {
 	if r.Options == nil {
 		return false, ""
 	}
 
 	for _, acceptedPod := range r.Options.AcceptedPods {
 		if utils.MatchLabels(podLabels, acceptedPod.PodMatchLabels) &&
-			utils.MatchLabels(namespace.Labels, acceptedPod.NamespaceMatchLabels) {
+			utils.MatchLabels(namespaceLabels, acceptedPod.NamespaceMatchLabels) {
 			for _, acceptedEnvironmentVariable := range acceptedPod.EnvironmentVariables {
 				if acceptedEnvironmentVariable == environmentVariable {
 					return true, acceptedPod.Justification
