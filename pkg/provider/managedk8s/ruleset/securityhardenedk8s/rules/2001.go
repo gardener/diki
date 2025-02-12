@@ -61,7 +61,47 @@ func (r *Rule2001) Severity() rule.SeverityLevel {
 
 func (r *Rule2001) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
+		checkResults []rule.CheckResult
+	)
+
+	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+	}
+
+	if len(pods) == 0 {
+		return rule.Result(r, rule.PassedCheckResult("The cluster does not have any Pods.", rule.NewTarget())), nil
+	}
+
+	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil
+	}
+
+	for _, pod := range pods {
+		var (
+			podCheckResults []rule.CheckResult
+			podTarget       = rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
+		)
+		for _, container := range pod.Spec.Containers {
+			podCheckResults = append(podCheckResults, r.checkContainer(container, pod.Labels, namespaces[pod.Namespace].Labels, podTarget)...)
+		}
+		for _, container := range pod.Spec.InitContainers {
+			podCheckResults = append(podCheckResults, r.checkContainer(container, pod.Labels, namespaces[pod.Namespace].Labels, podTarget)...)
+		}
+		if len(podCheckResults) == 0 {
+			checkResults = append(checkResults, rule.PassedCheckResult("Pod does not escalate privileges.", podTarget))
+		}
+		checkResults = append(checkResults, podCheckResults...)
+	}
+
+	return rule.Result(r, checkResults...), nil
+}
+
+func (r *Rule2001) checkContainer(container corev1.Container, podLabels, namespaceLabels map[string]string, target rule.Target) []rule.CheckResult {
+	var (
 		checkResults              []rule.CheckResult
+		containerTarget           = target.With("container", container.Name)
 		allowsPrivilegeEscalation = func(securityContext corev1.SecurityContext) bool {
 			addsCapSysAdmin := false
 
@@ -84,55 +124,29 @@ func (r *Rule2001) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 	)
 
-	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
-	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
-	}
-
-	if len(pods) == 0 {
-		return rule.Result(r, rule.PassedCheckResult("The cluster does not have any Pods.", rule.NewTarget())), nil
-	}
-
-	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
-	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil
-	}
-
-	for _, pod := range pods {
-		podTarget := rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
-		allows := false
-		for _, container := range pod.Spec.Containers {
-			var containerTarget = podTarget.With("container", container.Name)
-
-			if container.SecurityContext == nil || allowsPrivilegeEscalation(*container.SecurityContext) {
-				allows = true
-				if accepted, justification := r.accepted(pod, namespaces[pod.Namespace]); accepted {
-					msg := "Pod accepted to escalate privileges."
-					if justification != "" {
-						msg = justification
-					}
-					checkResults = append(checkResults, rule.AcceptedCheckResult(msg, containerTarget))
-				} else {
-					checkResults = append(checkResults, rule.FailedCheckResult("Pod must not escalate privileges.", containerTarget))
-				}
+	if container.SecurityContext == nil || allowsPrivilegeEscalation(*container.SecurityContext) {
+		if accepted, justification := r.accepted(podLabels, namespaceLabels); accepted {
+			msg := "Pod accepted to escalate privileges."
+			if justification != "" {
+				msg = justification
 			}
-		}
-		if !allows {
-			checkResults = append(checkResults, rule.PassedCheckResult("Pod does not escalate privileges.", podTarget))
+			checkResults = append(checkResults, rule.AcceptedCheckResult(msg, containerTarget))
+		} else {
+			checkResults = append(checkResults, rule.FailedCheckResult("Pod must not escalate privileges.", containerTarget))
 		}
 	}
 
-	return rule.Result(r, checkResults...), nil
+	return checkResults
 }
 
-func (r *Rule2001) accepted(pod corev1.Pod, namespace corev1.Namespace) (bool, string) {
+func (r *Rule2001) accepted(podLabels, namespaceLabels map[string]string) (bool, string) {
 	if r.Options == nil {
 		return false, ""
 	}
 
 	for _, acceptedPod := range r.Options.AcceptedPods {
-		if utils.MatchLabels(pod.Labels, acceptedPod.MatchLabels) &&
-			utils.MatchLabels(namespace.Labels, acceptedPod.NamespaceMatchLabels) {
+		if utils.MatchLabels(podLabels, acceptedPod.MatchLabels) &&
+			utils.MatchLabels(namespaceLabels, acceptedPod.NamespaceMatchLabels) {
 			return true, acceptedPod.Justification
 		}
 	}
