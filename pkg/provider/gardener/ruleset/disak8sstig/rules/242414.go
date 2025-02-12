@@ -74,40 +74,53 @@ func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {
 func (r *Rule242414) checkPods(pods []corev1.Pod, namespaces map[string]corev1.Namespace, clusterTarget rule.Target) []rule.CheckResult {
 	var checkResults []rule.CheckResult
 	for _, pod := range pods {
-		target := clusterTarget.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
+		var (
+			podCheckResults []rule.CheckResult
+			target          = clusterTarget.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
+		)
 		for _, container := range pod.Spec.Containers {
-			uses := false
-			for _, port := range container.Ports {
-				if port.HostPort != 0 && port.HostPort < 1024 {
-					target = target.With("details", fmt.Sprintf("containerName: %s, port: %d", container.Name, port.HostPort))
-					if accepted, justification := r.accepted(pod, namespaces[pod.Namespace], port.HostPort); accepted {
-						msg := "Container accepted to use hostPort < 1024."
-						if justification != "" {
-							msg = justification
-						}
-						checkResults = append(checkResults, rule.AcceptedCheckResult(msg, target))
-					} else {
-						checkResults = append(checkResults, rule.FailedCheckResult("Container may not use hostPort < 1024.", target))
-					}
-					uses = true
-				}
-			}
-			if !uses {
-				checkResults = append(checkResults, rule.PassedCheckResult("Container does not use hostPort < 1024.", target))
-			}
+			podCheckResults = append(podCheckResults, r.checkContainer(container, pod.Labels, namespaces[pod.Namespace].Labels, target)...)
 		}
+		for _, container := range pod.Spec.InitContainers {
+			podCheckResults = append(podCheckResults, r.checkContainer(container, pod.Labels, namespaces[pod.Namespace].Labels, target)...)
+		}
+		if len(podCheckResults) == 0 {
+			checkResults = append(checkResults, rule.PassedCheckResult("Pod does not use hostPort < 1024.", target))
+		}
+		checkResults = append(checkResults, podCheckResults...)
 	}
 	return checkResults
 }
 
-func (r *Rule242414) accepted(pod corev1.Pod, namespace corev1.Namespace, hostPort int32) (bool, string) {
+func (r *Rule242414) checkContainer(container corev1.Container, podLabels, namespaceLabels map[string]string, target rule.Target) []rule.CheckResult {
+	var checkResults []rule.CheckResult
+
+	for _, port := range container.Ports {
+		if port.HostPort != 0 && port.HostPort < 1024 {
+			target := target.With("container", container.Name, "details", fmt.Sprintf("port: %d", port.HostPort))
+			if accepted, justification := r.accepted(podLabels, namespaceLabels, port.HostPort); accepted {
+				msg := "Pod accepted to use hostPort < 1024."
+				if justification != "" {
+					msg = justification
+				}
+				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, target))
+			} else {
+				checkResults = append(checkResults, rule.FailedCheckResult("Pod uses hostPort < 1024.", target))
+			}
+		}
+	}
+
+	return checkResults
+}
+
+func (r *Rule242414) accepted(podLabels, namespaceLabels map[string]string, hostPort int32) (bool, string) {
 	if r.Options == nil {
 		return false, ""
 	}
 
 	for _, acceptedPod := range r.Options.AcceptedPods {
-		if utils.MatchLabels(pod.Labels, acceptedPod.PodMatchLabels) &&
-			utils.MatchLabels(namespace.Labels, acceptedPod.NamespaceMatchLabels) {
+		if utils.MatchLabels(podLabels, acceptedPod.PodMatchLabels) &&
+			utils.MatchLabels(namespaceLabels, acceptedPod.NamespaceMatchLabels) {
 			for _, acceptedHostPort := range acceptedPod.Ports {
 				if acceptedHostPort == hostPort {
 					return true, acceptedPod.Justification
