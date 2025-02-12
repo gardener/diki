@@ -71,7 +71,7 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 	return rule.Result(r, checkResults...), nil
 }
 
-func (*Rule242442) checkImages(cluster string, pods []corev1.Pod) []rule.CheckResult {
+func (r *Rule242442) checkImages(cluster string, pods []corev1.Pod) []rule.CheckResult {
 	var (
 		checkResults    []rule.CheckResult
 		podsByNamespace = map[string][]corev1.Pod{}
@@ -89,36 +89,50 @@ func (*Rule242442) checkImages(cluster string, pods []corev1.Pod) []rule.CheckRe
 
 		for _, pod := range groupedPods {
 			for _, container := range pod.Spec.Containers {
-				containerStatusIdx := slices.IndexFunc(pod.Status.ContainerStatuses, func(containerStatus corev1.ContainerStatus) bool {
-					return containerStatus.Name == container.Name
-				})
-
-				if containerStatusIdx < 0 {
-					checkResults = append(checkResults, rule.ErroredCheckResult("containerStatus not found for container", rule.NewTarget("cluster", cluster, "name", pod.Name, "container", container.Name, "kind", "pod")))
-					continue
-				}
-
-				imageRef := pod.Status.ContainerStatuses[containerStatusIdx].ImageID
-				named, err := imageref.ParseNormalizedNamed(imageRef)
-				if err != nil {
-					checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget("imageRef", imageRef)))
-					continue
-				}
-				imageBase := named.Name()
-
-				if _, ok := images[imageBase]; ok {
-					if images[imageBase] != imageRef {
-						if _, reported := reportedImages[imageBase]; !reported {
-							target := rule.NewTarget("cluster", cluster, "image", imageBase, "namespace", namespace)
-							checkResults = append(checkResults, rule.FailedCheckResult("Image is used with more than one versions.", target))
-							reportedImages[imageBase] = struct{}{}
-						}
-					}
-				} else {
-					images[imageBase] = imageRef
-				}
+				checkResults = append(checkResults, r.checkContainerStatus(
+					cluster, namespace, pod.Name, container.Name, pod.Status.ContainerStatuses, reportedImages, images,
+				)...)
+			}
+			for _, container := range pod.Spec.InitContainers {
+				checkResults = append(checkResults, r.checkContainerStatus(
+					cluster, namespace, pod.Name, container.Name, pod.Status.InitContainerStatuses, reportedImages, images,
+				)...)
 			}
 		}
 	}
 	return checkResults
+}
+
+func (*Rule242442) checkContainerStatus(
+	cluster, namespaceName, podName, containerName string,
+	containerStatuses []corev1.ContainerStatus,
+	reportedImages map[string]struct{}, images map[string]string,
+) []rule.CheckResult {
+	containerStatusIdx := slices.IndexFunc(containerStatuses, func(containerStatus corev1.ContainerStatus) bool {
+		return containerStatus.Name == containerName
+	})
+
+	if containerStatusIdx < 0 {
+		return []rule.CheckResult{rule.ErroredCheckResult("containerStatus not found for container", rule.NewTarget("cluster", cluster, "name", podName, "container", containerName, "kind", "pod"))}
+	}
+
+	imageRef := containerStatuses[containerStatusIdx].ImageID
+	named, err := imageref.ParseNormalizedNamed(imageRef)
+	if err != nil {
+		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), rule.NewTarget("imageRef", imageRef))}
+	}
+	imageBase := named.Name()
+
+	if _, ok := images[imageBase]; ok {
+		if images[imageBase] != imageRef {
+			if _, reported := reportedImages[imageBase]; !reported {
+				target := rule.NewTarget("cluster", cluster, "image", imageBase, "namespace", namespaceName)
+				reportedImages[imageBase] = struct{}{}
+				return []rule.CheckResult{rule.FailedCheckResult("Image is used with more than one versions.", target)}
+			}
+		}
+	} else {
+		images[imageBase] = imageRef
+	}
+	return []rule.CheckResult{}
 }
