@@ -37,8 +37,8 @@ type Options1002 struct {
 }
 
 type MachineImage struct {
-	Name                    string                                    `json:"name" yaml:"name"`
-	ExpectedClassifications []gardencorev1beta1.VersionClassification `json:"expectedClassifications" yaml:"expectedClassifications"`
+	Name                   string                                    `json:"name" yaml:"name"`
+	AllowedClassifications []gardencorev1beta1.VersionClassification `json:"allowedClassifications" yaml:"allowedClassifications"`
 }
 
 func (o Options1002) Validate() field.ErrorList {
@@ -53,9 +53,13 @@ func (o Options1002) Validate() field.ErrorList {
 	)
 
 	for _, machineImage := range o.MachineImages {
-		for _, c := range machineImage.ExpectedClassifications {
+		if len(machineImage.Name) == 0 {
+			allErrs = append(allErrs, field.Required(rootPath.Child("name"), "must not be empty"))
+		}
+
+		for _, c := range machineImage.AllowedClassifications {
 			if !slices.Contains(versionClassifications, c) {
-				allErrs = append(allErrs, field.NotSupported(rootPath.Child("expectedClassifications"), c, versionClassifications))
+				allErrs = append(allErrs, field.NotSupported(rootPath.Child("allowedClassifications"), c, versionClassifications))
 			}
 		}
 	}
@@ -113,7 +117,7 @@ func (r *Rule1002) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	for _, worker := range shoot.Spec.Provider.Workers {
 		target := rule.NewTarget("worker", worker.Name, "image", worker.Machine.Image.Name, "version", *worker.Machine.Image.Version)
-		if cloudProfile != nil {
+		if kind == gardencorev1beta1constants.CloudProfileReferenceKindCloudProfile {
 			checkResult, found := r.checkMachineImages(worker.Machine.Image.Name, *worker.Machine.Image.Version, cloudProfile.Spec.MachineImages, target)
 			if found {
 				checkResults = append(checkResults, checkResult)
@@ -148,9 +152,9 @@ func (r *Rule1002) checkMachineImages(imageName, imageVersion string, machineIma
 					case version.Classification == nil:
 						return rule.FailedCheckResult("Worker group uses image with unclassified image.", target), true
 					case slices.Contains(r.acceptedClassifications(imageName), *version.Classification):
-						return rule.PassedCheckResult("Worker group has accepted image.", target.With("classification", string(*version.Classification))), true
+						return rule.PassedCheckResult("Worker group uses allowed classification of machine image.", target.With("classification", string(*version.Classification))), true
 					default:
-						return rule.FailedCheckResult("Worker group has not accepted image.", target.With("classification", string(*version.Classification))), true
+						return rule.FailedCheckResult("Worker group uses not allowed classification of machine image.", target.With("classification", string(*version.Classification))), true
 					}
 				}
 			}
@@ -163,7 +167,7 @@ func (r *Rule1002) acceptedClassifications(name string) []gardencorev1beta1.Vers
 	if r.Options != nil {
 		for _, machineImage := range r.Options.MachineImages {
 			if machineImage.Name == name {
-				return machineImage.ExpectedClassifications
+				return machineImage.AllowedClassifications
 			}
 		}
 	}

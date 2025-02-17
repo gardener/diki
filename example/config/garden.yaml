@@ -22,7 +22,7 @@ providers:       # contains information about known providers
     #   args:
     #     machineImages:
     #     - name: image-name
-    #       expectedClassifications:
+    #       allowedClassifications:
     #       - supported
     #       - preview
     # - ruleID: "2000"

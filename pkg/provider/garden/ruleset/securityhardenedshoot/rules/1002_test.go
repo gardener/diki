@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
+// SPDX-FileCopyrightText: 2025 SAP SE or an SAP affiliate company and Gardener contributors
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -12,6 +12,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -29,9 +30,10 @@ var _ = Describe("#1002", func() {
 		cloudProfileName   = "foo"
 		nsCloudProfileName = "foo"
 
-		deprecatedClassification = gardencorev1beta1.ClassificationDeprecated
-		supportedClassification  = gardencorev1beta1.ClassificationSupported
-		previewClassification    = gardencorev1beta1.ClassificationPreview
+		deprecatedClassification                                         = gardencorev1beta1.ClassificationDeprecated
+		supportedClassification                                          = gardencorev1beta1.ClassificationSupported
+		previewClassification                                            = gardencorev1beta1.ClassificationPreview
+		fakeClassification       gardencorev1beta1.VersionClassification = "fake"
 
 		shoot          *gardencorev1beta1.Shoot
 		cloudProfile   *gardencorev1beta1.CloudProfile
@@ -229,8 +231,8 @@ var _ = Describe("#1002", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "Worker group has accepted image.", Target: rule.NewTarget("worker", "foo", "image", "foo", "version", "2", "classification", "supported")},
-				{Status: rule.Passed, Message: "Worker group has accepted image.", Target: rule.NewTarget("worker", "foo2", "image", "bar", "version", "1", "classification", "supported")},
+				{Status: rule.Passed, Message: "Worker group uses allowed classification of machine image.", Target: rule.NewTarget("worker", "foo", "image", "foo", "version", "2", "classification", "supported")},
+				{Status: rule.Passed, Message: "Worker group uses allowed classification of machine image.", Target: rule.NewTarget("worker", "foo2", "image", "bar", "version", "1", "classification", "supported")},
 			},
 		),
 		Entry("should fail when workers use deprecated image varsion",
@@ -253,7 +255,7 @@ var _ = Describe("#1002", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Worker group has not accepted image.", Target: rule.NewTarget("worker", "foo", "image", "foo", "version", "1", "classification", "deprecated")},
+				{Status: rule.Failed, Message: "Worker group uses not allowed classification of machine image.", Target: rule.NewTarget("worker", "foo", "image", "foo", "version", "1", "classification", "deprecated")},
 			},
 		),
 		Entry("should fail when workers use preview image varsion",
@@ -276,7 +278,7 @@ var _ = Describe("#1002", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Worker group has not accepted image.", Target: rule.NewTarget("worker", "foo", "image", "foo", "version", "3", "classification", "preview")},
+				{Status: rule.Failed, Message: "Worker group uses not allowed classification of machine image.", Target: rule.NewTarget("worker", "foo", "image", "foo", "version", "3", "classification", "preview")},
 			},
 		),
 		Entry("should work correctly with namespacedCloudProfile",
@@ -345,11 +347,11 @@ var _ = Describe("#1002", func() {
 			nil,
 			[]rule.CheckResult{
 				{Status: rule.Errored, Message: "image version not found in namespacedCloudProfile", Target: rule.NewTarget("worker", "foo1", "image", "foo", "version", "1")},
-				{Status: rule.Passed, Message: "Worker group has accepted image.", Target: rule.NewTarget("worker", "foo2", "image", "foo", "version", "2", "classification", "supported")},
-				{Status: rule.Failed, Message: "Worker group has not accepted image.", Target: rule.NewTarget("worker", "foo3", "image", "foo", "version", "3", "classification", "preview")},
-				{Status: rule.Passed, Message: "Worker group has accepted image.", Target: rule.NewTarget("worker", "foo4", "image", "foo", "version", "4", "classification", "supported")},
+				{Status: rule.Passed, Message: "Worker group uses allowed classification of machine image.", Target: rule.NewTarget("worker", "foo2", "image", "foo", "version", "2", "classification", "supported")},
+				{Status: rule.Failed, Message: "Worker group uses not allowed classification of machine image.", Target: rule.NewTarget("worker", "foo3", "image", "foo", "version", "3", "classification", "preview")},
+				{Status: rule.Passed, Message: "Worker group uses allowed classification of machine image.", Target: rule.NewTarget("worker", "foo4", "image", "foo", "version", "4", "classification", "supported")},
 				{Status: rule.Failed, Message: "Worker group uses image with unclassified image.", Target: rule.NewTarget("worker", "bar1", "image", "bar", "version", "1")},
-				{Status: rule.Passed, Message: "Worker group has accepted image.", Target: rule.NewTarget("worker", "bar2", "image", "bar", "version", "2", "classification", "supported")},
+				{Status: rule.Passed, Message: "Worker group uses allowed classification of machine image.", Target: rule.NewTarget("worker", "bar2", "image", "bar", "version", "2", "classification", "supported")},
 			},
 		),
 		Entry("should work correctly with options",
@@ -409,22 +411,79 @@ var _ = Describe("#1002", func() {
 			&rules.Options1002{
 				MachineImages: []rules.MachineImage{
 					{
-						Name:                    "foo",
-						ExpectedClassifications: []gardencorev1beta1.VersionClassification{supportedClassification, previewClassification},
+						Name:                   "foo",
+						AllowedClassifications: []gardencorev1beta1.VersionClassification{supportedClassification, previewClassification},
 					},
 					{
-						Name:                    "bar",
-						ExpectedClassifications: []gardencorev1beta1.VersionClassification{previewClassification},
+						Name:                   "bar",
+						AllowedClassifications: []gardencorev1beta1.VersionClassification{previewClassification},
 					},
 				},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Worker group has not accepted image.", Target: rule.NewTarget("worker", "foo1", "image", "foo", "version", "1", "classification", "deprecated")},
-				{Status: rule.Passed, Message: "Worker group has accepted image.", Target: rule.NewTarget("worker", "foo2", "image", "foo", "version", "2", "classification", "supported")},
-				{Status: rule.Passed, Message: "Worker group has accepted image.", Target: rule.NewTarget("worker", "foo3", "image", "foo", "version", "3", "classification", "preview")},
+				{Status: rule.Failed, Message: "Worker group uses not allowed classification of machine image.", Target: rule.NewTarget("worker", "foo1", "image", "foo", "version", "1", "classification", "deprecated")},
+				{Status: rule.Passed, Message: "Worker group uses allowed classification of machine image.", Target: rule.NewTarget("worker", "foo2", "image", "foo", "version", "2", "classification", "supported")},
+				{Status: rule.Passed, Message: "Worker group uses allowed classification of machine image.", Target: rule.NewTarget("worker", "foo3", "image", "foo", "version", "3", "classification", "preview")},
 				{Status: rule.Errored, Message: "image version not found in cloudProfile", Target: rule.NewTarget("worker", "foo4", "image", "foo", "version", "4")},
-				{Status: rule.Failed, Message: "Worker group has not accepted image.", Target: rule.NewTarget("worker", "bar", "image", "bar", "version", "1", "classification", "supported")},
+				{Status: rule.Failed, Message: "Worker group uses not allowed classification of machine image.", Target: rule.NewTarget("worker", "bar", "image", "bar", "version", "1", "classification", "supported")},
 			},
 		),
 	)
+
+	Describe("#ValidateOptions", func() {
+		It("should not error when options are correct", func() {
+			options := rules.Options1002{
+				MachineImages: []rules.MachineImage{
+					{
+						Name: "foo",
+						AllowedClassifications: []gardencorev1beta1.VersionClassification{
+							supportedClassification, previewClassification,
+						},
+					},
+					{
+						Name: "bar",
+						AllowedClassifications: []gardencorev1beta1.VersionClassification{
+							deprecatedClassification,
+						},
+					},
+				},
+			}
+
+			result := options.Validate()
+			Expect(result).To(BeEmpty())
+		})
+		It("should error when options are incorrect", func() {
+			options := rules.Options1002{
+				MachineImages: []rules.MachineImage{
+					{
+						Name: "",
+						AllowedClassifications: []gardencorev1beta1.VersionClassification{
+							previewClassification,
+						},
+					},
+					{
+						Name: "bar",
+						AllowedClassifications: []gardencorev1beta1.VersionClassification{
+							fakeClassification,
+						},
+					},
+				},
+			}
+			result := options.Validate()
+			Expect(result).To(Equal(field.ErrorList{
+				{
+					Type:     field.ErrorTypeRequired,
+					Field:    "machineImages.name",
+					BadValue: "",
+					Detail:   "must not be empty",
+				},
+				{
+					Type:     field.ErrorTypeNotSupported,
+					Field:    "machineImages.allowedClassifications",
+					BadValue: fakeClassification,
+					Detail:   "supported values: \"preview\", \"supported\", \"deprecated\"",
+				},
+			}))
+		})
+	})
 })
