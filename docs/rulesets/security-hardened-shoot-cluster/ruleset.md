@@ -4,6 +4,8 @@
 
 The Security Hardened Shoot Cluster Guide is created by the Gardener team. It contains rules that check `Shoot` resources. The ruleset is inspired and follows some of the requirements from the [DISA Kubernetes Security Technical Implementation Guide](../disa-k8s-stig/ruleset.md).
 
+This documentation references rules from [Security Hardened Shoot Cluster Guide v0.2.0](./security-hardened-shoot-cluster-v0.2.0.yaml)
+
 ## Rules
 
 ### 1000 - Shoot clusters should enable required extensions.
@@ -20,6 +22,30 @@ spec:
   extensions:
     - type: required-extension
 ```
+---
+
+### 1002 - Shoot clusters should use supported versions for their Workers' images.
+
+#### Description
+Shoot clusters should use supported versions for their Workers' images. This rule can be configured to accept specific image classifications.
+
+#### Fix
+Configure `supported` machine image versions in the `spec.provider.workers[].machine.image.version` field.
+``` yaml
+kind: Shoot
+apiVersion: core.gardener.cloud/v1beta1
+spec:
+  provider:
+    workers:
+      - name: worker
+        machine:
+          image:
+            name: gardenlinux
+            version: <supported-version>
+```
+
+The supported versions can be found in the used `CloudProfile`.
+
 ---
 
 ### 2000 - Shoot clusters must have anonymous authentication disabled for the Kubernetes API server.

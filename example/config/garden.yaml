@@ -8,7 +8,7 @@ providers:       # contains information about known providers
   rulesets:
   - id: security-hardened-shoot-cluster
     name: Security Hardened Shoot Cluster
-    version: v0.1.0
+    version: v0.2.0
     args:
       projectNamespace: garden-project-name # name of project namespace containing the shoot resource to be tested
       shootName: foo                        # name of shoot resource to be tested
@@ -18,6 +18,13 @@ providers:       # contains information about known providers
     #     extensions:
     #     - type: extension-type-1
     #     - type: extension-type-2
+    # - ruleID: "1002"
+    #   args:
+    #     machineImages:
+    #     - name: image-name
+    #       allowedClassifications:
+    #       - supported
+    #       - preview
     # - ruleID: "2000"
     #   skip:
     #     enabled: true
