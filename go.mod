@@ -7,7 +7,7 @@ toolchain go1.23.5
 require (
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/distribution/reference v0.6.0
-	github.com/gardener/gardener v1.112.1
+	github.com/gardener/gardener v1.112.2
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo/v2 v2.22.2
 	github.com/onsi/gomega v1.36.2
@@ -46,7 +46,7 @@ require (
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/gardener/etcd-druid v0.26.1 // indirect
-	github.com/gardener/machine-controller-manager v0.56.0 // indirect
+	github.com/gardener/machine-controller-manager v0.56.1 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/zapr v1.3.0 // indirect
