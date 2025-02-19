@@ -52,6 +52,10 @@ spec:
   - name: ...
     securityContext:
       allowPrivilegeEscalation: false
+  initContainers:
+  - name: ...
+    securityContext:
+      allowPrivilegeEscalation: false
 ```
 ---
 
