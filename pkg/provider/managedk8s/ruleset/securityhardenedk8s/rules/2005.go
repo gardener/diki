@@ -101,20 +101,36 @@ func (r *Rule2005) Run(ctx context.Context) (rule.RuleResult, error) {
 				continue
 			}
 
-			var (
-				imageRef       = pod.Status.ContainerStatuses[containerStatusIdx].ImageID
-				imageRefTarget = containerTarget.With("imageRef", imageRef)
-			)
+			checkResults = append(checkResults, r.checkImage(pod.Status.ContainerStatuses[containerStatusIdx].ImageID, containerTarget))
+		}
 
-			if slices.ContainsFunc(r.Options.AllowedImages, func(allowedImage AllowedImage) bool {
-				return strings.HasPrefix(imageRef, allowedImage.Prefix)
-			}) {
-				checkResults = append(checkResults, rule.PassedCheckResult("Image has allowed prefix.", imageRefTarget))
-			} else {
-				checkResults = append(checkResults, rule.FailedCheckResult("Image has not allowed prefix.", imageRefTarget))
+		for _, container := range pod.Spec.InitContainers {
+			containerTarget := podTarget.With("container", container.Name)
+
+			containerStatusIdx := slices.IndexFunc(pod.Status.InitContainerStatuses, func(containerStatus corev1.ContainerStatus) bool {
+				return containerStatus.Name == container.Name
+			})
+
+			if containerStatusIdx < 0 {
+				checkResults = append(checkResults, rule.ErroredCheckResult("containerStatus not found for container", containerTarget))
+				continue
 			}
+
+			checkResults = append(checkResults, r.checkImage(pod.Status.InitContainerStatuses[containerStatusIdx].ImageID, containerTarget))
 		}
 	}
 
 	return rule.Result(r, checkResults...), nil
+}
+
+func (r *Rule2005) checkImage(imageRef string, target rule.Target) rule.CheckResult {
+	imageRefTarget := target.With("imageRef", imageRef)
+
+	if slices.ContainsFunc(r.Options.AllowedImages, func(allowedImage AllowedImage) bool {
+		return strings.HasPrefix(imageRef, allowedImage.Prefix)
+	}) {
+		return rule.PassedCheckResult("Image has allowed prefix.", imageRefTarget)
+	} else {
+		return rule.FailedCheckResult("Image has not allowed prefix.", imageRefTarget)
+	}
 }

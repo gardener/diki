@@ -77,12 +77,12 @@ var _ = Describe("#242414", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Passed,
-				Message: "Container does not use hostPort < 1024.",
+				Message: "Pod does not use hostPort < 1024.",
 				Target:  rule.NewTarget("name", "pod1", "namespace", "foo", "kind", "pod"),
 			},
 			{
 				Status:  rule.Passed,
-				Message: "Container does not use hostPort < 1024.",
+				Message: "Pod does not use hostPort < 1024.",
 				Target:  rule.NewTarget("name", "pod2", "namespace", "foo", "kind", "pod"),
 			},
 		}
@@ -107,13 +107,52 @@ var _ = Describe("#242414", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Passed,
-				Message: "Container does not use hostPort < 1024.",
+				Message: "Pod does not use hostPort < 1024.",
 				Target:  rule.NewTarget("name", "pod1", "namespace", "foo", "kind", "pod"),
 			},
 			{
 				Status:  rule.Failed,
-				Message: "Container uses hostPort < 1024.",
-				Target:  rule.NewTarget("name", "pod2", "namespace", "foo", "kind", "pod", "details", "containerName: test, port: 1011"),
+				Message: "Pod uses hostPort < 1024.",
+				Target:  rule.NewTarget("name", "pod2", "namespace", "foo", "kind", "pod", "container", "test", "details", "port: 1011"),
+			},
+		}
+
+		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+	})
+
+	It("should return correct results when a pod contains an initContainer", func() {
+		r := &rules.Rule242414{Client: client, Options: &options}
+		pod1 := plainPod.DeepCopy()
+		pod1.Name = "pod1"
+		Expect(client.Create(ctx, pod1)).To(Succeed())
+
+		pod2 := plainPod.DeepCopy()
+		pod2.Name = "pod2"
+		pod2.Spec.InitContainers = []corev1.Container{
+			{
+				Name: "initFoo",
+				Ports: []corev1.ContainerPort{
+					{
+						HostPort: 42,
+					},
+				},
+			},
+		}
+		Expect(client.Create(ctx, pod2)).To(Succeed())
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+
+		expectedCheckResults := []rule.CheckResult{
+			{
+				Status:  rule.Passed,
+				Message: "Pod does not use hostPort < 1024.",
+				Target:  rule.NewTarget("name", "pod1", "namespace", "foo", "kind", "pod"),
+			},
+			{
+				Status:  rule.Failed,
+				Message: "Pod uses hostPort < 1024.",
+				Target:  rule.NewTarget("name", "pod2", "namespace", "foo", "kind", "pod", "container", "initFoo", "details", "port: 42"),
 			},
 		}
 
@@ -162,12 +201,12 @@ var _ = Describe("#242414", func() {
 			{
 				Status:  rule.Accepted,
 				Message: "foo justify",
-				Target:  rule.NewTarget("name", "accepted-shoot-pod", "namespace", "foo", "kind", "pod", "details", "containerName: test, port: 53"),
+				Target:  rule.NewTarget("name", "accepted-shoot-pod", "namespace", "foo", "kind", "pod", "container", "test", "details", "port: 53"),
 			},
 			{
 				Status:  rule.Failed,
-				Message: "Container uses hostPort < 1024.",
-				Target:  rule.NewTarget("name", "not-accepted-shoot-pod", "namespace", "foo", "kind", "pod", "details", "containerName: test, port: 58"),
+				Message: "Pod uses hostPort < 1024.",
+				Target:  rule.NewTarget("name", "not-accepted-shoot-pod", "namespace", "foo", "kind", "pod", "container", "test", "details", "port: 58"),
 			},
 		}
 
