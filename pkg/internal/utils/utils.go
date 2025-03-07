@@ -188,7 +188,7 @@ func GetContainerID(pod corev1.Pod, containerNames ...string) (string, error) {
 			if initContainerStatusIdx < 0 {
 				continue
 			}
-			containerID = pod.Status.ContainerStatuses[initContainerStatusIdx].ContainerID
+			containerID = pod.Status.InitContainerStatuses[initContainerStatusIdx].ContainerID
 		} else {
 			containerID = pod.Status.ContainerStatuses[containerStatusIdx].ContainerID
 		}
