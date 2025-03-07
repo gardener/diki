@@ -95,6 +95,7 @@ var _ = Describe("#242415", func() {
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
+
 	It("should return correct results when a pod fails", func() {
 		r := &rules.Rule242415{Client: fakeClient, Options: options}
 		pod.Spec.Containers[0].Env = []corev1.EnvVar{
@@ -116,12 +117,46 @@ var _ = Describe("#242415", func() {
 			{
 				Status:  rule.Failed,
 				Message: "Pod uses environment to inject secret.",
-				Target:  rule.NewTarget("name", "pod", "namespace", "foo", "kind", "pod", "details", "containerName: test, variableName: SECRET_TEST, keyRef: secret_test"),
+				Target:  rule.NewTarget("name", "pod", "namespace", "foo", "kind", "pod", "container", "test", "details", "variableName: SECRET_TEST, keyRef: secret_test"),
 			},
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
+
+	It("should return correct results when a pod contains an initContainer", func() {
+		r := &rules.Rule242415{Client: fakeClient, Options: options}
+		pod.Spec.InitContainers = []corev1.Container{
+			{
+				Name: "initFoo",
+				Env: []corev1.EnvVar{
+					{
+						Name: "SECRET_TEST",
+						ValueFrom: &corev1.EnvVarSource{
+							SecretKeyRef: &corev1.SecretKeySelector{
+								Key: "secret_test",
+							},
+						},
+					},
+				},
+			},
+		}
+		Expect(fakeClient.Create(ctx, pod)).To(Succeed())
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+
+		expectedCheckResults := []rule.CheckResult{
+			{
+				Status:  rule.Failed,
+				Message: "Pod uses environment to inject secret.",
+				Target:  rule.NewTarget("name", "pod", "namespace", "foo", "kind", "pod", "container", "initFoo", "details", "variableName: SECRET_TEST, keyRef: secret_test"),
+			},
+		}
+
+		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+	})
+
 	It("should return correct results when a pod has accepted environment variables", func() {
 		options = &option.Options242415{
 			AcceptedPods: []option.AcceptedPods242415{
@@ -156,7 +191,7 @@ var _ = Describe("#242415", func() {
 			{
 				Status:  rule.Accepted,
 				Message: "Pod accepted to use environment to inject secret.",
-				Target:  rule.NewTarget("name", "pod", "namespace", "foo", "kind", "pod", "details", "containerName: test, variableName: SECRET_TEST, keyRef: secret_test"),
+				Target:  rule.NewTarget("name", "pod", "namespace", "foo", "kind", "pod", "container", "test", "details", "variableName: SECRET_TEST, keyRef: secret_test"),
 			},
 		}
 

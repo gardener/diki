@@ -51,6 +51,11 @@ var _ = Describe("#242442", func() {
 						Name: "foobar",
 					},
 				},
+				InitContainers: []corev1.Container{
+					{
+						Name: "initFoo",
+					},
+				},
 			},
 			Status: corev1.PodStatus{
 				ContainerStatuses: []corev1.ContainerStatus{
@@ -62,6 +67,11 @@ var _ = Describe("#242442", func() {
 					},
 					{
 						Name: "foobar",
+					},
+				},
+				InitContainerStatuses: []corev1.ContainerStatus{
+					{
+						Name: "initFoo",
 					},
 				},
 			},
@@ -86,6 +96,11 @@ var _ = Describe("#242442", func() {
 						Name: "foobar",
 					},
 				},
+				InitContainers: []corev1.Container{
+					{
+						Name: "initFoo",
+					},
+				},
 			},
 			Status: corev1.PodStatus{
 				ContainerStatuses: []corev1.ContainerStatus{
@@ -99,6 +114,11 @@ var _ = Describe("#242442", func() {
 						Name: "foobar",
 					},
 				},
+				InitContainerStatuses: []corev1.ContainerStatus{
+					{
+						Name: "initFoo",
+					},
+				},
 			},
 		}
 	})
@@ -108,12 +128,14 @@ var _ = Describe("#242442", func() {
 		seedPod.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:" + digest1
 		seedPod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest2
 		seedPod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest3
+		seedPod.Status.InitContainerStatuses[0].ImageID = "eu.gcr.io/image10@sha256:" + digest1
 		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
 		shootPod1 := shootPod.DeepCopy()
 		shootPod1.Name = "shoot-pod1"
 		shootPod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:" + digest1
 		shootPod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest2
 		shootPod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest3
+		shootPod1.Status.InitContainerStatuses[0].ImageID = "eu.gcr.io/image10@sha256:" + digest2
 		Expect(fakeShootClient.Create(ctx, shootPod1)).To(Succeed())
 		shootPod2 := shootPod.DeepCopy()
 		shootPod2.Name = "shoot-pod2"
@@ -121,6 +143,7 @@ var _ = Describe("#242442", func() {
 		shootPod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:" + digest3
 		shootPod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:" + digest2
 		shootPod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:" + digest1
+		shootPod2.Status.InitContainerStatuses[0].ImageID = "eu.gcr.io/image10@sha256:" + digest2
 		Expect(fakeShootClient.Create(ctx, shootPod2)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
@@ -130,7 +153,7 @@ var _ = Describe("#242442", func() {
 			rule.PassedCheckResult("All found images use current versions.", rule.Target{}),
 		}
 
-		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
 	})
 	It("should return correct results when an image uses more than 1 version", func() {
 		r := &rules.Rule242442{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace}
@@ -139,24 +162,28 @@ var _ = Describe("#242442", func() {
 		shootPod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:" + digest1
 		shootPod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest2
 		shootPod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest3
+		shootPod1.Status.InitContainerStatuses[0].ImageID = "eu.gcr.io/image10@sha256:" + digest2
 		Expect(fakeShootClient.Create(ctx, shootPod1)).To(Succeed())
 		shootPod2 := shootPod.DeepCopy()
 		shootPod2.Name = "shoot-pod2"
 		shootPod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:" + digest3
 		shootPod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:" + digest2
 		shootPod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:" + digest1
+		shootPod2.Status.InitContainerStatuses[0].ImageID = "eu.gcr.io/image10@sha256:" + digest3
 		Expect(fakeShootClient.Create(ctx, shootPod2)).To(Succeed())
 		seedPod1 := seedPod.DeepCopy()
 		seedPod1.Name = "seed-pod1"
 		seedPod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:" + digest2
 		seedPod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest3
 		seedPod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest1
+		seedPod1.Status.InitContainerStatuses[0].ImageID = "eu.gcr.io/image10@sha256:" + digest1
 		Expect(fakeSeedClient.Create(ctx, seedPod1)).To(Succeed())
 		seedPod2 := seedPod.DeepCopy()
 		seedPod2.Name = "seed-pod2"
 		seedPod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:" + digest3
 		seedPod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:" + digest2
 		seedPod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:" + digest1
+		seedPod2.Status.InitContainerStatuses[0].ImageID = "eu.gcr.io/image10@sha256:" + digest2
 		Expect(fakeSeedClient.Create(ctx, seedPod2)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
@@ -166,9 +193,11 @@ var _ = Describe("#242442", func() {
 			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "seed", "image", "eu.gcr.io/image3", "namespace", "foo")),
 			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "shoot", "image", "eu.gcr.io/image2", "namespace", "foo")),
 			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "shoot", "image", "eu.gcr.io/image3", "namespace", "foo")),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "seed", "image", "eu.gcr.io/image10", "namespace", "foo")),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "shoot", "image", "eu.gcr.io/image10", "namespace", "foo")),
 		}
 
-		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
 	})
 	It("should return correct results when the image repository includes port number", func() {
 		r := &rules.Rule242442{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace}
@@ -177,6 +206,7 @@ var _ = Describe("#242442", func() {
 		pod1.Status.ContainerStatuses[0].ImageID = "localhost:7777/image1@sha256:" + digest1
 		pod1.Status.ContainerStatuses[1].ImageID = "localhost:7777/image1@sha256:" + digest2
 		pod1.Status.ContainerStatuses[2].ImageID = "localhost:7777/image2@sha256:" + digest3
+		pod1.Status.InitContainerStatuses[0].ImageID = "localhost:7777/image10@sha256:" + digest1
 		Expect(fakeShootClient.Create(ctx, pod1)).To(Succeed())
 
 		pod2 := seedPod.DeepCopy()
@@ -184,6 +214,7 @@ var _ = Describe("#242442", func() {
 		pod2.Status.ContainerStatuses[0].ImageID = "localhost:7777/image2@sha256:" + digest3
 		pod2.Status.ContainerStatuses[1].ImageID = "localhost:7777/image3@sha256:" + digest1
 		pod2.Status.ContainerStatuses[2].ImageID = "localhost:7777/image3@sha256:" + digest3
+		pod2.Status.InitContainerStatuses[0].ImageID = "localhost:7777/image10@sha256:" + digest1
 		Expect(fakeSeedClient.Create(ctx, pod2)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
@@ -194,13 +225,14 @@ var _ = Describe("#242442", func() {
 			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "shoot", "image", "localhost:7777/image1", "namespace", shootPod.Namespace)),
 		}
 
-		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
 	})
 	It("should return errored results when containerStatus cannot be found for a given container", func() {
 		r := &rules.Rule242442{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace}
 		seedPod.Status.ContainerStatuses[0].Name = "not-foo"
 		seedPod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest2
 		seedPod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest3
+		seedPod.Status.InitContainerStatuses[0].ImageID = "eu.gcr.io/image10@sha256:" + digest1
 		Expect(fakeSeedClient.Create(ctx, seedPod)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
@@ -210,6 +242,6 @@ var _ = Describe("#242442", func() {
 			rule.ErroredCheckResult("containerStatus not found for container", rule.NewTarget("cluster", "seed", "container", "foo", "name", "seed-pod", "kind", "pod")),
 		}
 
-		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
 	})
 })
