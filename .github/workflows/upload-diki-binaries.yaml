@@ -20,7 +20,7 @@ jobs:
           make build
           echo "latest_release_filtered_tag=${GITHUB_REF##*/}" >> $GITHUB_ENV
       - name: Upload binaries to release
-        uses: AButler/upload-release-assets@c94805dc72e4b20745f543da0f62eaee7722df7a # v2.0.2
+        uses: AButler/upload-release-assets@45be2facf3acc71812c1c17b4cefef5f6e8cac8a # v3.0.1
         with:
           files: 'bin/diki-darwin-amd64;bin/diki-darwin-arm64;bin/diki-linux-amd64;bin/diki-linux-arm64;bin/diki-windows-amd64'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
