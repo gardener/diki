@@ -136,20 +136,12 @@ func GetMountedFilesStats(
 	stats := map[string][]FileStats{}
 	var err error
 
-	for _, container := range pod.Spec.Containers {
-
-		baseContainerID, err2 := GetContainerID(pod, container.Name)
-		if err2 != nil {
-			err = errors.Join(err, err2)
-			continue
-		}
-
+	for _, container := range slices.Concat(pod.Spec.Containers, pod.Spec.InitContainers) {
 		containerStats, err2 := getContainerMountedFileStatResults(ctx,
 			podExecutorRootPath,
 			podExecutor,
 			pod,
-			container.Name,
-			baseContainerID,
+			container,
 			excludeSources,
 		)
 		if err2 != nil {
@@ -160,6 +152,7 @@ func GetMountedFilesStats(
 			stats[container.Name] = containerStats
 		}
 	}
+
 	return stats, err
 }
 
@@ -171,10 +164,18 @@ func GetContainerID(pod corev1.Pod, containerNames ...string) (string, error) {
 			return containerStatus.Name == containerName
 		})
 
+		var containerID string
 		if containerStatusIdx < 0 {
-			continue
+			initContainerStatusIdx := slices.IndexFunc(pod.Status.InitContainerStatuses, func(containerStatus corev1.ContainerStatus) bool {
+				return containerStatus.Name == containerName
+			})
+			if initContainerStatusIdx < 0 {
+				continue
+			}
+			containerID = pod.Status.InitContainerStatuses[initContainerStatusIdx].ContainerID
+		} else {
+			containerID = pod.Status.ContainerStatuses[containerStatusIdx].ContainerID
 		}
-		containerID := pod.Status.ContainerStatuses[containerStatusIdx].ContainerID
 
 		switch {
 		case len(containerID) == 0:
@@ -214,13 +215,18 @@ func getContainerMountedFileStatResults(
 	podExecutorRootPath string,
 	podExecutor pod.PodExecutor,
 	pod corev1.Pod,
-	containerName, containerID string,
+	container corev1.Container,
 	excludedSources []string,
 ) ([]FileStats, error) {
 	var (
 		stats []FileStats
 		err   error
 	)
+
+	containerID, err := GetContainerID(pod, container.Name)
+	if err != nil {
+		return stats, err
+	}
 
 	mounts, err := GetContainerMounts(ctx, podExecutorRootPath, podExecutor, containerID)
 	if err != nil {
@@ -230,8 +236,8 @@ func getContainerMountedFileStatResults(
 
 	for _, mount := range mounts {
 		if strings.HasPrefix(mount.Source, "/") &&
-			!matchHostPathSources(excludedSourcesSet, mount.Destination, containerName, &pod) &&
-			isMountRequiredByContainer(mount.Destination, containerName, &pod) &&
+			!matchHostPathSources(excludedSourcesSet, mount.Destination, container, pod) &&
+			isMountRequiredByContainer(mount.Destination, container) &&
 			mount.Destination != "/dev/termination-log" {
 			mountFileStats, err2 := GetFileStatsByDir(ctx, podExecutor, mount.Source)
 			if err2 != nil {
@@ -244,46 +250,32 @@ func getContainerMountedFileStatResults(
 	return stats, err
 }
 
-func isMountRequiredByContainer(destination, containerName string, pod *corev1.Pod) bool {
-	for _, container := range pod.Spec.Containers {
-		if container.Name != containerName {
-			continue
-		}
-		if containsDestination := slices.ContainsFunc(container.VolumeMounts, func(volumeMount corev1.VolumeMount) bool {
-			return volumeMount.MountPath == destination
-		}); containsDestination {
-			return true
-		}
-	}
-	return false
+func isMountRequiredByContainer(destination string, container corev1.Container) bool {
+	return slices.ContainsFunc(container.VolumeMounts, func(volumeMount corev1.VolumeMount) bool {
+		return volumeMount.MountPath == destination
+	})
 }
 
-func matchHostPathSources(sources sets.Set[string], destination, containerName string, pod *corev1.Pod) bool {
-	for _, container := range pod.Spec.Containers {
-		if container.Name != containerName {
-			continue
-		}
-		volumeMountIdx := slices.IndexFunc(container.VolumeMounts, func(volumeMount corev1.VolumeMount) bool {
-			return volumeMount.MountPath == destination
-		})
+func matchHostPathSources(sources sets.Set[string], destination string, container corev1.Container, pod corev1.Pod) bool {
+	volumeMountIdx := slices.IndexFunc(container.VolumeMounts, func(volumeMount corev1.VolumeMount) bool {
+		return volumeMount.MountPath == destination
+	})
 
-		if volumeMountIdx < 0 {
-			return false
-		}
-
-		volumeIdx := slices.IndexFunc(pod.Spec.Volumes, func(volume corev1.Volume) bool {
-			return volume.Name == container.VolumeMounts[volumeMountIdx].Name
-		})
-
-		if volumeIdx < 0 {
-			return false
-		}
-
-		volume := pod.Spec.Volumes[volumeIdx]
-
-		return volume.HostPath != nil && sources.Has(volume.HostPath.Path)
+	if volumeMountIdx < 0 {
+		return false
 	}
-	return false
+
+	volumeIdx := slices.IndexFunc(pod.Spec.Volumes, func(volume corev1.Volume) bool {
+		return volume.Name == container.VolumeMounts[volumeMountIdx].Name
+	})
+
+	if volumeIdx < 0 {
+		return false
+	}
+
+	volume := pod.Spec.Volumes[volumeIdx]
+
+	return volume.HostPath != nil && sources.Has(volume.HostPath.Path)
 }
 
 // ExceedFilePermissions returns true if any of the user, group or other permissions
