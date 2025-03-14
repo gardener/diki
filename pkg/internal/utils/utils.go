@@ -136,7 +136,7 @@ func GetMountedFilesStats(
 	stats := map[string][]FileStats{}
 	var err error
 
-	for _, container := range pod.Spec.Containers {
+	for _, container := range slices.Concat(pod.Spec.Containers, pod.Spec.InitContainers) {
 		containerStats, err2 := getContainerMountedFileStatResults(ctx,
 			podExecutorRootPath,
 			podExecutor,
@@ -153,22 +153,6 @@ func GetMountedFilesStats(
 		}
 	}
 
-	for _, container := range pod.Spec.InitContainers {
-		containerStats, err2 := getContainerMountedFileStatResults(ctx,
-			podExecutorRootPath,
-			podExecutor,
-			pod,
-			container,
-			excludeSources,
-		)
-		if err2 != nil {
-			err = errors.Join(err, err2)
-		}
-
-		if len(containerStats) > 0 {
-			stats[container.Name] = containerStats
-		}
-	}
 	return stats, err
 }
 
@@ -267,13 +251,9 @@ func getContainerMountedFileStatResults(
 }
 
 func isMountRequiredByContainer(destination string, container corev1.Container) bool {
-	if containsDestination := slices.ContainsFunc(container.VolumeMounts, func(volumeMount corev1.VolumeMount) bool {
+	return slices.ContainsFunc(container.VolumeMounts, func(volumeMount corev1.VolumeMount) bool {
 		return volumeMount.MountPath == destination
-	}); containsDestination {
-		return true
-	}
-
-	return false
+	})
 }
 
 func matchHostPathSources(sources sets.Set[string], destination string, container corev1.Container, pod corev1.Pod) bool {

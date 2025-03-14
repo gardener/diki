@@ -61,47 +61,7 @@ func (r *Rule2001) Severity() rule.SeverityLevel {
 
 func (r *Rule2001) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
-		checkResults []rule.CheckResult
-	)
-
-	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
-	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
-	}
-
-	if len(pods) == 0 {
-		return rule.Result(r, rule.PassedCheckResult("The cluster does not have any Pods.", rule.NewTarget())), nil
-	}
-
-	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
-	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil
-	}
-
-	for _, pod := range pods {
-		var (
-			podCheckResults []rule.CheckResult
-			podTarget       = rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
-		)
-		for _, container := range pod.Spec.Containers {
-			podCheckResults = append(podCheckResults, r.checkContainer(container, pod.Labels, namespaces[pod.Namespace].Labels, podTarget)...)
-		}
-		for _, container := range pod.Spec.InitContainers {
-			podCheckResults = append(podCheckResults, r.checkContainer(container, pod.Labels, namespaces[pod.Namespace].Labels, podTarget)...)
-		}
-		if len(podCheckResults) == 0 {
-			checkResults = append(checkResults, rule.PassedCheckResult("Pod does not escalate privileges.", podTarget))
-		}
-		checkResults = append(checkResults, podCheckResults...)
-	}
-
-	return rule.Result(r, checkResults...), nil
-}
-
-func (r *Rule2001) checkContainer(container corev1.Container, podLabels, namespaceLabels map[string]string, target rule.Target) []rule.CheckResult {
-	var (
 		checkResults              []rule.CheckResult
-		containerTarget           = target.With("container", container.Name)
 		allowsPrivilegeEscalation = func(securityContext corev1.SecurityContext) bool {
 			addsCapSysAdmin := false
 
@@ -124,19 +84,47 @@ func (r *Rule2001) checkContainer(container corev1.Container, podLabels, namespa
 		}
 	)
 
-	if container.SecurityContext == nil || allowsPrivilegeEscalation(*container.SecurityContext) {
-		if accepted, justification := r.accepted(podLabels, namespaceLabels); accepted {
-			msg := "Pod accepted to escalate privileges."
-			if justification != "" {
-				msg = justification
-			}
-			checkResults = append(checkResults, rule.AcceptedCheckResult(msg, containerTarget))
-		} else {
-			checkResults = append(checkResults, rule.FailedCheckResult("Pod must not escalate privileges.", containerTarget))
-		}
+	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
 	}
 
-	return checkResults
+	if len(pods) == 0 {
+		return rule.Result(r, rule.PassedCheckResult("The cluster does not have any Pods.", rule.NewTarget())), nil
+	}
+
+	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil
+	}
+
+	for _, pod := range pods {
+		var (
+			podCheckResults []rule.CheckResult
+			podTarget       = rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
+		)
+		for _, container := range slices.Concat(pod.Spec.Containers, pod.Spec.InitContainers) {
+			containerTarget := podTarget.With("container", container.Name)
+
+			if container.SecurityContext == nil || allowsPrivilegeEscalation(*container.SecurityContext) {
+				if accepted, justification := r.accepted(pod.Labels, namespaces[pod.Namespace].Labels); accepted {
+					msg := "Pod accepted to escalate privileges."
+					if justification != "" {
+						msg = justification
+					}
+					podCheckResults = append(podCheckResults, rule.AcceptedCheckResult(msg, containerTarget))
+				} else {
+					podCheckResults = append(podCheckResults, rule.FailedCheckResult("Pod must not escalate privileges.", containerTarget))
+				}
+			}
+		}
+		if len(podCheckResults) == 0 {
+			checkResults = append(checkResults, rule.PassedCheckResult("Pod does not escalate privileges.", podTarget))
+		}
+		checkResults = append(checkResults, podCheckResults...)
+	}
+
+	return rule.Result(r, checkResults...), nil
 }
 
 func (r *Rule2001) accepted(podLabels, namespaceLabels map[string]string) (bool, string) {

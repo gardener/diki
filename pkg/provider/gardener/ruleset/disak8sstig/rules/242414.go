@@ -7,6 +7,7 @@ package rules
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -44,9 +45,12 @@ func (r *Rule242414) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {
+	var (
+		seedTarget  = rule.NewTarget("cluster", "seed")
+		shootTarget = rule.NewTarget("cluster", "shoot")
+	)
+
 	seedPods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, labels.NewSelector(), 300)
-	seedTarget := rule.NewTarget("cluster", "seed")
-	shootTarget := rule.NewTarget("cluster", "shoot")
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
 	}
@@ -78,38 +82,27 @@ func (r *Rule242414) checkPods(pods []corev1.Pod, namespaces map[string]corev1.N
 			podCheckResults []rule.CheckResult
 			target          = clusterTarget.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
 		)
-		for _, container := range pod.Spec.Containers {
-			podCheckResults = append(podCheckResults, r.checkContainer(container, pod.Labels, namespaces[pod.Namespace].Labels, target)...)
-		}
-		for _, container := range pod.Spec.InitContainers {
-			podCheckResults = append(podCheckResults, r.checkContainer(container, pod.Labels, namespaces[pod.Namespace].Labels, target)...)
+		for _, container := range slices.Concat(pod.Spec.Containers, pod.Spec.InitContainers) {
+			for _, port := range container.Ports {
+				if port.HostPort != 0 && port.HostPort < 1024 {
+					containertTarget := target.With("container", container.Name, "details", fmt.Sprintf("port: %d", port.HostPort))
+					if accepted, justification := r.accepted(pod.Labels, namespaces[pod.Namespace].Labels, port.HostPort); accepted {
+						msg := "Pod accepted to use hostPort < 1024."
+						if justification != "" {
+							msg = justification
+						}
+						podCheckResults = append(podCheckResults, rule.AcceptedCheckResult(msg, containertTarget))
+					} else {
+						podCheckResults = append(podCheckResults, rule.FailedCheckResult("Pod uses hostPort < 1024.", containertTarget))
+					}
+				}
+			}
 		}
 		if len(podCheckResults) == 0 {
 			checkResults = append(checkResults, rule.PassedCheckResult("Pod does not use hostPort < 1024.", target))
 		}
 		checkResults = append(checkResults, podCheckResults...)
 	}
-	return checkResults
-}
-
-func (r *Rule242414) checkContainer(container corev1.Container, podLabels, namespaceLabels map[string]string, target rule.Target) []rule.CheckResult {
-	var checkResults []rule.CheckResult
-
-	for _, port := range container.Ports {
-		if port.HostPort != 0 && port.HostPort < 1024 {
-			target := target.With("container", container.Name, "details", fmt.Sprintf("port: %d", port.HostPort))
-			if accepted, justification := r.accepted(podLabels, namespaceLabels, port.HostPort); accepted {
-				msg := "Pod accepted to use hostPort < 1024."
-				if justification != "" {
-					msg = justification
-				}
-				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, target))
-			} else {
-				checkResults = append(checkResults, rule.FailedCheckResult("Pod uses hostPort < 1024.", target))
-			}
-		}
-	}
-
 	return checkResults
 }
 

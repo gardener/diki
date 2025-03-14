@@ -96,51 +96,38 @@ func (r *Rule242442) checkImages(pods []corev1.Pod, target rule.Target) []rule.C
 		checkResults   []rule.CheckResult
 	)
 	for _, pod := range pods {
-		for _, container := range pod.Spec.Containers {
-			checkResults = append(checkResults, r.checkContainerStatus(
-				pod.Namespace, pod.Name, container.Name, pod.Status.ContainerStatuses, reportedImages, images, target,
-			)...)
-		}
-		for _, container := range pod.Spec.InitContainers {
-			checkResults = append(checkResults, r.checkContainerStatus(
-				pod.Namespace, pod.Name, container.Name, pod.Status.InitContainerStatuses, reportedImages, images, target,
-			)...)
+		for _, container := range slices.Concat(pod.Spec.Containers, pod.Spec.InitContainers) {
+			var (
+				containerStatuses  = slices.Concat(pod.Status.ContainerStatuses, pod.Status.InitContainerStatuses)
+				containerStatusIdx = slices.IndexFunc(containerStatuses, func(containerStatus corev1.ContainerStatus) bool {
+					return containerStatus.Name == container.Name
+				})
+			)
+
+			if containerStatusIdx < 0 {
+				checkResults = append(checkResults, rule.ErroredCheckResult("containerStatus not found for container", rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "container", container.Name, "kind", "pod")))
+				continue
+			}
+
+			imageRef := containerStatuses[containerStatusIdx].ImageID
+			named, err := imageref.ParseNormalizedNamed(imageRef)
+			if err != nil {
+				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target.With("imageRef", imageRef)))
+				continue
+			}
+			imageBase := named.Name()
+
+			if _, ok := images[imageBase]; ok {
+				if images[imageBase] != imageRef {
+					if _, reported := reportedImages[imageBase]; !reported {
+						reportedImages[imageBase] = struct{}{}
+						checkResults = append(checkResults, rule.FailedCheckResult("Image is used with more than one versions.", target.With("image", imageBase)))
+					}
+				}
+			} else {
+				images[imageBase] = imageRef
+			}
 		}
 	}
 	return checkResults
-}
-
-func (*Rule242442) checkContainerStatus(
-	namespaceName, podName, containerName string,
-	containerStatuses []corev1.ContainerStatus,
-	reportedImages map[string]struct{}, images map[string]string,
-	target rule.Target,
-) []rule.CheckResult {
-	containerStatusIdx := slices.IndexFunc(containerStatuses, func(containerStatus corev1.ContainerStatus) bool {
-		return containerStatus.Name == containerName
-	})
-
-	if containerStatusIdx < 0 {
-		return []rule.CheckResult{rule.ErroredCheckResult("containerStatus not found for container", rule.NewTarget("name", podName, "namespace", namespaceName, "container", containerName, "kind", "pod"))}
-	}
-
-	imageRef := containerStatuses[containerStatusIdx].ImageID
-	named, err := imageref.ParseNormalizedNamed(imageRef)
-	if err != nil {
-		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), target.With("imageRef", imageRef))}
-	}
-	imageBase := named.Name()
-
-	if _, ok := images[imageBase]; ok {
-		if images[imageBase] != imageRef {
-			if _, reported := reportedImages[imageBase]; !reported {
-				target := target.With("image", imageBase)
-				reportedImages[imageBase] = struct{}{}
-				return []rule.CheckResult{rule.FailedCheckResult("Image is used with more than one versions.", target)}
-			}
-		}
-	} else {
-		images[imageBase] = imageRef
-	}
-	return []rule.CheckResult{}
 }
