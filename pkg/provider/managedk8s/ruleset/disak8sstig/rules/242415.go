@@ -92,27 +92,6 @@ func (r *Rule242415) checkPods(pods []corev1.Pod, namespaces map[string]corev1.N
 	return checkResults
 }
 
-func (r *Rule242415) checkContainer(container corev1.Container, podLabels, namespaceLabels map[string]string, target rule.Target) []rule.CheckResult {
-	var checkResults []rule.CheckResult
-
-	for _, env := range container.Env {
-		if env.ValueFrom != nil && env.ValueFrom.SecretKeyRef != nil {
-			target = target.With("container", container.Name, "details", fmt.Sprintf("variableName: %s, keyRef: %s", env.Name, env.ValueFrom.SecretKeyRef.Key))
-			if accepted, justification := r.accepted(podLabels, namespaceLabels, env.Name); accepted {
-				msg := "Pod accepted to use environment to inject secret."
-				if justification != "" {
-					msg = justification
-				}
-				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, target))
-			} else {
-				checkResults = append(checkResults, rule.FailedCheckResult("Pod uses environment to inject secret.", target))
-			}
-		}
-	}
-
-	return checkResults
-}
-
 func (r *Rule242415) accepted(podLabels, namespaceLabels map[string]string, environmentVariable string) (bool, string) {
 	if r.Options == nil {
 		return false, ""

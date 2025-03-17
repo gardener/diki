@@ -89,9 +89,9 @@ func (r *Rule242415) checkPods(pods []corev1.Pod, namespaces map[string]corev1.N
 						if justification != "" {
 							msg = justification
 						}
-						podCheckResults = append(checkResults, rule.AcceptedCheckResult(msg, containerTarget))
+						podCheckResults = append(podCheckResults, rule.AcceptedCheckResult(msg, containerTarget))
 					} else {
-						podCheckResults = append(checkResults, rule.FailedCheckResult("Pod uses environment to inject secret.", containerTarget))
+						podCheckResults = append(podCheckResults, rule.FailedCheckResult("Pod uses environment to inject secret.", containerTarget))
 					}
 				}
 			}
