@@ -19,6 +19,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/httpstream"
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
@@ -150,9 +151,23 @@ func (spe *SimplePodExecutor) Execute(ctx context.Context, command string, comma
 		Param("stderr", "true").
 		Param("tty", "false")
 
-	executor, err := remotecommand.NewSPDYExecutor(spe.config, http.MethodPost, request.URL())
+	// Use a fallback executor with websocket as primary and spdy as fallback similar to kubectl.
+	// https://github.com/kubernetes/kubectl/blob/2e38fc220409bbc92f8270c49612f0f9d8e36c89/pkg/cmd/exec/exec.go#L143-L155
+	websocketExecutor, err := remotecommand.NewWebSocketExecutor(spe.config, http.MethodGet, request.URL().String())
 	if err != nil {
-		return "", fmt.Errorf("failed to initialized the command exector: %w", err)
+		return "", fmt.Errorf("failed to initialize the websocket executor: %w", err)
+	}
+
+	spdyExecutor, err := remotecommand.NewSPDYExecutor(spe.config, http.MethodPost, request.URL())
+	if err != nil {
+		return "", fmt.Errorf("failed to initialized the spdy command exector: %w", err)
+	}
+
+	executor, err := remotecommand.NewFallbackExecutor(websocketExecutor, spdyExecutor, func(err error) bool {
+		return httpstream.IsUpgradeFailure(err) || httpstream.IsHTTPSProxyError(err)
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to initialize the command executor: %w", err)
 	}
 
 	timeoutCtx, cancel := context.WithTimeout(ctx, spe.WaitTimeout)
