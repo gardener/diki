@@ -104,6 +104,11 @@ func (r *Rule2005) Run(ctx context.Context) (rule.RuleResult, error) {
 				continue
 			}
 
+			if len(containerStatuses[containerStatusIdx].ImageID) == 0 {
+				checkResults = append(checkResults, rule.ErroredCheckResult("ImageID is empty in container status.", containerTarget))
+				continue
+			}
+
 			imageRefTarget := containerTarget.With("imageRef", containerStatuses[containerStatusIdx].ImageID)
 
 			if slices.ContainsFunc(r.Options.AllowedImages, func(allowedImage AllowedImage) bool {
