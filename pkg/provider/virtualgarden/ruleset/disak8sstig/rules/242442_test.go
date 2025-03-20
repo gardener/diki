@@ -97,6 +97,40 @@ var _ = Describe("#242442", func() {
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
+	It("should return correct results when a pod contains an initContainer", func() {
+		r := &rules.Rule242442{Client: fakeClient, Namespace: namespace}
+		pod.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:" + digest1
+		pod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest2
+		pod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest3
+		pod.Spec.InitContainers = []corev1.Container{
+			{
+				Name: "initFoo",
+			},
+			{
+				Name: "initFoo2",
+			},
+		}
+		pod.Status.InitContainerStatuses = []corev1.ContainerStatus{
+			{
+				Name:    "initFoo",
+				ImageID: "eu.gcr.io/image10@sha256:" + digest1,
+			},
+			{
+				Name:    "initFoo2",
+				ImageID: "eu.gcr.io/image10@sha256:" + digest2,
+			},
+		}
+		Expect(fakeClient.Create(ctx, pod)).To(Succeed())
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+
+		expectedCheckResults := []rule.CheckResult{
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("image", "eu.gcr.io/image10")),
+		}
+
+		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+	})
 	It("should return correct results when the image repository includes port number", func() {
 		r := &rules.Rule242442{Client: fakeClient, Namespace: namespace}
 		pod1 := pod.DeepCopy()

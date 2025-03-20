@@ -56,20 +56,23 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 	return rule.Result(r, checkResults...), nil
 }
 
-func (*Rule242442) checkImages(pods []corev1.Pod, images map[string]string, reportedImages map[string]struct{}) []rule.CheckResult {
+func (r *Rule242442) checkImages(pods []corev1.Pod, images map[string]string, reportedImages map[string]struct{}) []rule.CheckResult {
 	var checkResults []rule.CheckResult
 	for _, pod := range pods {
-		for _, container := range pod.Spec.Containers {
-			containerStatusIdx := slices.IndexFunc(pod.Status.ContainerStatuses, func(containerStatus corev1.ContainerStatus) bool {
-				return containerStatus.Name == container.Name
-			})
+		for _, container := range slices.Concat(pod.Spec.Containers, pod.Spec.InitContainers) {
+			var (
+				containerStatuses  = slices.Concat(pod.Status.ContainerStatuses, pod.Status.InitContainerStatuses)
+				containerStatusIdx = slices.IndexFunc(containerStatuses, func(containerStatus corev1.ContainerStatus) bool {
+					return containerStatus.Name == container.Name
+				})
+			)
 
 			if containerStatusIdx < 0 {
 				checkResults = append(checkResults, rule.ErroredCheckResult("containerStatus not found for container", rule.NewTarget("name", pod.Name, "container", container.Name, "kind", "pod")))
 				continue
 			}
 
-			imageRef := pod.Status.ContainerStatuses[containerStatusIdx].ImageID
+			imageRef := containerStatuses[containerStatusIdx].ImageID
 			named, err := imageref.ParseNormalizedNamed(imageRef)
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget("imageRef", imageRef)))
@@ -77,13 +80,10 @@ func (*Rule242442) checkImages(pods []corev1.Pod, images map[string]string, repo
 			}
 			imageBase := named.Name()
 
-			if _, ok := images[imageBase]; ok {
-				if images[imageBase] != imageRef {
-					if _, reported := reportedImages[imageBase]; !reported {
-						target := rule.NewTarget("image", imageBase)
-						checkResults = append(checkResults, rule.FailedCheckResult("Image is used with more than one versions.", target))
-						reportedImages[imageBase] = struct{}{}
-					}
+			if ref, ok := images[imageBase]; ok && ref != imageRef {
+				if _, reported := reportedImages[imageBase]; !reported {
+					reportedImages[imageBase] = struct{}{}
+					checkResults = append(checkResults, rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("image", imageBase)))
 				}
 			} else {
 				images[imageBase] = imageRef

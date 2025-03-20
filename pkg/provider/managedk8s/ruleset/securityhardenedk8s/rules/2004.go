@@ -5,6 +5,7 @@
 package rules
 
 import (
+	"cmp"
 	"context"
 
 	corev1 "k8s.io/api/core/v1"
@@ -79,10 +80,7 @@ func (r *Rule2004) Run(ctx context.Context) (rule.RuleResult, error) {
 
 		if service.Spec.Type == corev1.ServiceTypeNodePort {
 			if accepted, justification := r.accepted(service, namespaces[service.Namespace]); accepted {
-				msg := "Service accepted to be of type NodePort."
-				if justification != "" {
-					msg = justification
-				}
+				msg := cmp.Or(justification, "Service accepted to be of type NodePort.")
 				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, serviceTarget))
 			} else {
 				checkResults = append(checkResults, rule.FailedCheckResult("Service should not be of type NodePort.", serviceTarget))

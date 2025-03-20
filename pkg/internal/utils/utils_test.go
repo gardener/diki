@@ -149,6 +149,12 @@ var _ = Describe("utils", func() {
 							},
 						},
 					},
+					InitContainers: []corev1.Container{
+						{
+							Name:         "initTest",
+							VolumeMounts: []corev1.VolumeMount{},
+						},
+					},
 					Volumes: []corev1.Volume{
 						{
 							Name: "bar",
@@ -167,6 +173,12 @@ var _ = Describe("utils", func() {
 							ContainerID: "containerd://bar",
 						},
 					},
+					InitContainerStatuses: []corev1.ContainerStatus{
+						{
+							Name:        "initTest",
+							ContainerID: "containerd://foo",
+						},
+					},
 				},
 			}
 
@@ -174,8 +186,8 @@ var _ = Describe("utils", func() {
 		})
 
 		It("Should return correct single stats", func() {
-			executeReturnString := []string{mounts, destinationStats}
-			executeReturnError := []error{nil, nil}
+			executeReturnString := []string{mounts, destinationStats, mounts}
+			executeReturnError := []error{nil, nil, nil}
 			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
 			result, err := utils.GetMountedFilesStats(ctx, "", fakePodExecutor, pod, []string{"/lib/modules"})
 
@@ -187,8 +199,8 @@ var _ = Describe("utils", func() {
 			pod.Spec.Containers[0].VolumeMounts = append(pod.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
 				MountPath: "/foo",
 			})
-			executeReturnString := []string{mounts, destinationStats, fooStats}
-			executeReturnError := []error{nil, nil, nil}
+			executeReturnString := []string{mounts, destinationStats, fooStats, mounts}
+			executeReturnError := []error{nil, nil, nil, nil}
 			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
 			result, err := utils.GetMountedFilesStats(ctx, "", fakePodExecutor, pod, []string{"/lib/modules"})
 
@@ -196,12 +208,25 @@ var _ = Describe("utils", func() {
 			Expect(result).To(Equal(map[string][]utils.FileStats{"test": {destinationFileStats, fooFileStats}}))
 		})
 
+		It("Should return correct stats with init Container", func() {
+			pod.Spec.InitContainers[0].VolumeMounts = append(pod.Spec.InitContainers[0].VolumeMounts, corev1.VolumeMount{
+				MountPath: "/foo",
+			})
+			executeReturnString := []string{mounts, destinationStats, mounts, fooStats}
+			executeReturnError := []error{nil, nil, nil, nil}
+			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
+			result, err := utils.GetMountedFilesStats(ctx, "", fakePodExecutor, pod, []string{"/lib/modules"})
+
+			Expect(err).To(BeNil())
+			Expect(result).To(Equal(map[string][]utils.FileStats{"test": {destinationFileStats}, "initTest": {fooFileStats}}))
+		})
+
 		It("Should return error when files could not be found", func() {
 			pod.Spec.Containers[0].VolumeMounts = append(pod.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
 				MountPath: "/foo",
 			})
-			executeReturnString := []string{mounts, destinationStats, "", "2\n"}
-			executeReturnError := []error{nil, nil, nil, nil}
+			executeReturnString := []string{mounts, destinationStats, "", "2\n", mounts}
+			executeReturnError := []error{nil, nil, nil, nil, nil}
 			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
 			result, err := utils.GetMountedFilesStats(ctx, "", fakePodExecutor, pod, []string{"/lib/modules"})
 
@@ -213,8 +238,8 @@ var _ = Describe("utils", func() {
 			pod.Spec.Containers[0].VolumeMounts = append(pod.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
 				MountPath: "/foo",
 			})
-			executeReturnString := []string{mounts, destinationStats, "", "0\n"}
-			executeReturnError := []error{nil, nil, nil, nil}
+			executeReturnString := []string{mounts, destinationStats, "", "0\n", mounts}
+			executeReturnError := []error{nil, nil, nil, nil, nil}
 			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
 			result, err := utils.GetMountedFilesStats(ctx, "", fakePodExecutor, pod, []string{"/lib/modules"})
 
@@ -234,16 +259,15 @@ var _ = Describe("utils", func() {
 					Name: "baz",
 				},
 			}
-			pod.Status = corev1.PodStatus{
-				ContainerStatuses: []corev1.ContainerStatus{
-					{
-						Name:        "bar",
-						ContainerID: "",
-					},
-					{
-						Name:        "baz",
-						ContainerID: "fake",
-					},
+			pod.Spec.InitContainers = []corev1.Container{}
+			pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+				{
+					Name:        "bar",
+					ContainerID: "",
+				},
+				{
+					Name:        "baz",
+					ContainerID: "fake",
 				},
 			}
 			var (
@@ -258,8 +282,8 @@ var _ = Describe("utils", func() {
 		})
 
 		It("Should error when first command errors", func() {
-			executeReturnString := []string{mounts}
-			executeReturnError := []error{errors.New("command error")}
+			executeReturnString := []string{mounts, mounts}
+			executeReturnError := []error{errors.New("command error"), nil}
 			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
 			result, err := utils.GetMountedFilesStats(ctx, "", fakePodExecutor, pod, []string{"/lib/modules"})
 
@@ -271,8 +295,8 @@ var _ = Describe("utils", func() {
 			pod.Spec.Containers[0].VolumeMounts = append(pod.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
 				MountPath: "/foo",
 			})
-			executeReturnString := []string{mounts, destinationStats, fooStats}
-			executeReturnError := []error{nil, errors.New("command error"), nil}
+			executeReturnString := []string{mounts, destinationStats, fooStats, mounts}
+			executeReturnError := []error{nil, errors.New("command error"), nil, nil}
 			fakePodExecutor = fakepod.NewFakePodExecutor(executeReturnString, executeReturnError)
 			result, err := utils.GetMountedFilesStats(ctx, "", fakePodExecutor, pod, []string{"/lib/modules"})
 
@@ -283,7 +307,7 @@ var _ = Describe("utils", func() {
 
 	Describe("#GetContainerID", func() {
 		DescribeTable("#MatchCases",
-			func(containerName, containerStatusName, containerID string, expectedID string, errorMatcher gomegatypes.GomegaMatcher) {
+			func(containerNames []string, containerStatusName, containerID string, expectedID string, errorMatcher gomegatypes.GomegaMatcher) {
 				pod := corev1.Pod{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "foo",
@@ -291,7 +315,12 @@ var _ = Describe("utils", func() {
 					Spec: corev1.PodSpec{
 						Containers: []corev1.Container{
 							{
-								Name: containerName,
+								Name: "foo",
+							},
+						},
+						InitContainers: []corev1.Container{
+							{
+								Name: "initFoo",
 							},
 						},
 					},
@@ -302,21 +331,31 @@ var _ = Describe("utils", func() {
 								ContainerID: containerID,
 							},
 						},
+						InitContainerStatuses: []corev1.ContainerStatus{
+							{
+								Name:        "initFoo",
+								ContainerID: "containerd://2",
+							},
+						},
 					},
 				}
-				result, err := utils.GetContainerID(pod, containerName)
+				result, err := utils.GetContainerID(pod, containerNames...)
 
 				Expect(err).To(errorMatcher)
 				Expect(result).To(Equal(expectedID))
 			},
 			Entry("should return correct containerID",
-				"test", "test", "containerd://1", "1", BeNil()),
+				[]string{"foo"}, "foo", "containerd://1", "1", BeNil()),
+			Entry("should return correct containerID when multiple container names are present",
+				[]string{"bar", "foo"}, "foo", "containerd://1", "1", BeNil()),
+			Entry("should return correct containerID when searching init container",
+				[]string{"initFoo"}, "", "containerd://2", "2", BeNil()),
 			Entry("should return error when containerStatus missing",
-				"test", "test2", "containerd://1", "", MatchError("container with name in [test] not (yet) in status")),
+				[]string{"foo"}, "test", "containerd://1", "", MatchError("container with name in [foo] not (yet) in status")),
 			Entry("should return error when containerID is empty",
-				"test", "test", "", "", MatchError("container with name test not (yet) running")),
+				[]string{"foo"}, "foo", "", "", MatchError("container with name foo not (yet) running")),
 			Entry("should return error when containerID is not recognized",
-				"test", "test", "1", "", MatchError("cannot handle container with name test")),
+				[]string{"foo"}, "foo", "1", "", MatchError("cannot handle container with name foo")),
 		)
 	})
 

@@ -5,6 +5,7 @@
 package rules
 
 import (
+	"cmp"
 	"context"
 	"slices"
 	"strings"
@@ -99,40 +100,39 @@ func (r *Rule2001) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	for _, pod := range pods {
-		podTarget := rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
-		allows := false
-		for _, container := range pod.Spec.Containers {
-			var containerTarget = podTarget.With("container", container.Name)
+		var (
+			podCheckResults []rule.CheckResult
+			podTarget       = rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
+		)
+		for _, container := range slices.Concat(pod.Spec.Containers, pod.Spec.InitContainers) {
+			containerTarget := podTarget.With("container", container.Name)
 
 			if container.SecurityContext == nil || allowsPrivilegeEscalation(*container.SecurityContext) {
-				allows = true
-				if accepted, justification := r.accepted(pod, namespaces[pod.Namespace]); accepted {
-					msg := "Pod accepted to escalate privileges."
-					if justification != "" {
-						msg = justification
-					}
-					checkResults = append(checkResults, rule.AcceptedCheckResult(msg, containerTarget))
+				if accepted, justification := r.accepted(pod.Labels, namespaces[pod.Namespace].Labels); accepted {
+					msg := cmp.Or(justification, "Pod accepted to escalate privileges.")
+					podCheckResults = append(podCheckResults, rule.AcceptedCheckResult(msg, containerTarget))
 				} else {
-					checkResults = append(checkResults, rule.FailedCheckResult("Pod must not escalate privileges.", containerTarget))
+					podCheckResults = append(podCheckResults, rule.FailedCheckResult("Pod must not escalate privileges.", containerTarget))
 				}
 			}
 		}
-		if !allows {
+		if len(podCheckResults) == 0 {
 			checkResults = append(checkResults, rule.PassedCheckResult("Pod does not escalate privileges.", podTarget))
 		}
+		checkResults = append(checkResults, podCheckResults...)
 	}
 
 	return rule.Result(r, checkResults...), nil
 }
 
-func (r *Rule2001) accepted(pod corev1.Pod, namespace corev1.Namespace) (bool, string) {
+func (r *Rule2001) accepted(podLabels, namespaceLabels map[string]string) (bool, string) {
 	if r.Options == nil {
 		return false, ""
 	}
 
 	for _, acceptedPod := range r.Options.AcceptedPods {
-		if utils.MatchLabels(pod.Labels, acceptedPod.MatchLabels) &&
-			utils.MatchLabels(namespace.Labels, acceptedPod.NamespaceMatchLabels) {
+		if utils.MatchLabels(podLabels, acceptedPod.MatchLabels) &&
+			utils.MatchLabels(namespaceLabels, acceptedPod.NamespaceMatchLabels) {
 			return true, acceptedPod.Justification
 		}
 	}

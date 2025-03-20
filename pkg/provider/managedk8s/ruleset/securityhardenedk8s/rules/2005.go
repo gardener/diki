@@ -89,10 +89,13 @@ func (r *Rule2005) Run(ctx context.Context) (rule.RuleResult, error) {
 	for _, pod := range pods {
 		podTarget := rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
 
-		for _, container := range pod.Spec.Containers {
-			containerTarget := podTarget.With("container", container.Name)
+		for _, container := range slices.Concat(pod.Spec.Containers, pod.Spec.InitContainers) {
+			var (
+				containerTarget   = podTarget.With("container", container.Name)
+				containerStatuses = slices.Concat(pod.Status.ContainerStatuses, pod.Status.InitContainerStatuses)
+			)
 
-			containerStatusIdx := slices.IndexFunc(pod.Status.ContainerStatuses, func(containerStatus corev1.ContainerStatus) bool {
+			containerStatusIdx := slices.IndexFunc(containerStatuses, func(containerStatus corev1.ContainerStatus) bool {
 				return containerStatus.Name == container.Name
 			})
 
@@ -101,13 +104,10 @@ func (r *Rule2005) Run(ctx context.Context) (rule.RuleResult, error) {
 				continue
 			}
 
-			var (
-				imageRef       = pod.Status.ContainerStatuses[containerStatusIdx].ImageID
-				imageRefTarget = containerTarget.With("imageRef", imageRef)
-			)
+			imageRefTarget := containerTarget.With("imageRef", containerStatuses[containerStatusIdx].ImageID)
 
 			if slices.ContainsFunc(r.Options.AllowedImages, func(allowedImage AllowedImage) bool {
-				return strings.HasPrefix(imageRef, allowedImage.Prefix)
+				return strings.HasPrefix(containerStatuses[containerStatusIdx].ImageID, allowedImage.Prefix)
 			}) {
 				checkResults = append(checkResults, rule.PassedCheckResult("Image has allowed prefix.", imageRefTarget))
 			} else {

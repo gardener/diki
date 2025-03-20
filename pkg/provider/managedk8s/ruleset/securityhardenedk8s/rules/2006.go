@@ -5,6 +5,7 @@
 package rules
 
 import (
+	"cmp"
 	"context"
 	"strings"
 
@@ -87,10 +88,7 @@ func (r *Rule2006) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
 		checkResults []rule.CheckResult
 		checkRules   = func(policyRules []rbacv1.PolicyRule, accepted bool, justification string, target rule.Target) rule.CheckResult {
-			msg := "Role is accepted to use \"*\" in policy rule resources."
-			if len(justification) > 0 {
-				msg = justification
-			}
+			msg := cmp.Or(justification, "Role is accepted to use \"*\" in policy rule resources.")
 
 			for _, policyRule := range policyRules {
 				for _, resource := range policyRule.Resources {
