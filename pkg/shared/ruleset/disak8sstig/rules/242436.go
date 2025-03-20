@@ -84,6 +84,6 @@ func (r *Rule242436) Run(ctx context.Context) (rule.RuleResult, error) {
 	case slices.Contains(strings.Split(enableAdmissionPluginsSlice[0], ","), "ValidatingAdmissionWebhook"):
 		return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", enableAdmissionPlugins), target)), nil
 	default:
-		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", enableAdmissionPlugins), target)), nil
+		return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Option %s defaults to allowed value.", enableAdmissionPlugins), target)), nil
 	}
 }
