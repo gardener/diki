@@ -5,6 +5,7 @@
 package rules
 
 import (
+	"cmp"
 	"context"
 	"slices"
 	"strings"
@@ -108,10 +109,7 @@ func (r *Rule2001) Run(ctx context.Context) (rule.RuleResult, error) {
 
 			if container.SecurityContext == nil || allowsPrivilegeEscalation(*container.SecurityContext) {
 				if accepted, justification := r.accepted(pod.Labels, namespaces[pod.Namespace].Labels); accepted {
-					msg := "Pod accepted to escalate privileges."
-					if justification != "" {
-						msg = justification
-					}
+					msg := cmp.Or(justification, "Pod accepted to escalate privileges.")
 					podCheckResults = append(podCheckResults, rule.AcceptedCheckResult(msg, containerTarget))
 				} else {
 					podCheckResults = append(podCheckResults, rule.FailedCheckResult("Pod must not escalate privileges.", containerTarget))

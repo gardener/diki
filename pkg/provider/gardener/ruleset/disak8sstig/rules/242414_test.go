@@ -110,12 +110,12 @@ var _ = Describe("#242414", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Passed,
-				Message: "Pod does not use hostPort < 1024.",
+				Message: "Pod does not have container using hostPort < 1024.",
 				Target:  rule.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
 			},
 			{
 				Status:  rule.Passed,
-				Message: "Pod does not use hostPort < 1024.",
+				Message: "Pod does not have container using hostPort < 1024.",
 				Target:  rule.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "shoot", "kind", "pod"),
 			},
 		}
@@ -135,12 +135,12 @@ var _ = Describe("#242414", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Passed,
-				Message: "Pod does not use hostPort < 1024.",
+				Message: "Pod does not have container using hostPort < 1024.",
 				Target:  rule.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
 			},
 			{
 				Status:  rule.Failed,
-				Message: "Pod uses hostPort < 1024.",
+				Message: "Pod has container using hostPort < 1024.",
 				Target:  rule.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "shoot", "kind", "pod", "container", "test", "details", "port: 1011"),
 			},
 		}
@@ -169,12 +169,12 @@ var _ = Describe("#242414", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Passed,
-				Message: "Pod does not use hostPort < 1024.",
+				Message: "Pod does not have container using hostPort < 1024.",
 				Target:  rule.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
 			},
 			{
 				Status:  rule.Failed,
-				Message: "Pod uses hostPort < 1024.",
+				Message: "Pod has container using hostPort < 1024.",
 				Target:  rule.NewTarget("cluster", "shoot", "name", "shoot-pod", "namespace", "shoot", "kind", "pod", "container", "initFoo", "details", "port: 42"),
 			},
 		}
@@ -225,7 +225,7 @@ var _ = Describe("#242414", func() {
 		expectedCheckResults := []rule.CheckResult{
 			{
 				Status:  rule.Passed,
-				Message: "Pod does not use hostPort < 1024.",
+				Message: "Pod does not have container using hostPort < 1024.",
 				Target:  rule.NewTarget("cluster", "seed", "name", "seed-pod", "namespace", "seed", "kind", "pod"),
 			},
 			{
@@ -235,7 +235,7 @@ var _ = Describe("#242414", func() {
 			},
 			{
 				Status:  rule.Failed,
-				Message: "Pod uses hostPort < 1024.",
+				Message: "Pod has container using hostPort < 1024.",
 				Target:  rule.NewTarget("cluster", "shoot", "name", "not-accepted-shoot-pod", "namespace", "shoot", "kind", "pod", "container", "test", "details", "port: 58"),
 			},
 		}

@@ -5,6 +5,7 @@
 package rules
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"slices"
@@ -85,10 +86,7 @@ func (r *Rule242415) checkPods(pods []corev1.Pod, namespaces map[string]corev1.N
 				if env.ValueFrom != nil && env.ValueFrom.SecretKeyRef != nil {
 					containerTarget := target.With("container", container.Name, "details", fmt.Sprintf("variableName: %s, keyRef: %s", env.Name, env.ValueFrom.SecretKeyRef.Key))
 					if accepted, justification := r.accepted(pod.Labels, namespaces[pod.Namespace].Labels, env.Name); accepted {
-						msg := "Pod accepted to use environment to inject secret."
-						if justification != "" {
-							msg = justification
-						}
+						msg := cmp.Or(justification, "Pod accepted to use environment to inject secret.")
 						podCheckResults = append(podCheckResults, rule.AcceptedCheckResult(msg, containerTarget))
 					} else {
 						podCheckResults = append(podCheckResults, rule.FailedCheckResult("Pod uses environment to inject secret.", containerTarget))

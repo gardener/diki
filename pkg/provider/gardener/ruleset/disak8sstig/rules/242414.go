@@ -5,6 +5,7 @@
 package rules
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"slices"
@@ -87,19 +88,16 @@ func (r *Rule242414) checkPods(pods []corev1.Pod, namespaces map[string]corev1.N
 				if port.HostPort != 0 && port.HostPort < 1024 {
 					containertTarget := target.With("container", container.Name, "details", fmt.Sprintf("port: %d", port.HostPort))
 					if accepted, justification := r.accepted(pod.Labels, namespaces[pod.Namespace].Labels, port.HostPort); accepted {
-						msg := "Pod accepted to use hostPort < 1024."
-						if justification != "" {
-							msg = justification
-						}
+						msg := cmp.Or(justification, "Pod accepted to have containers using hostPort < 1024.")
 						podCheckResults = append(podCheckResults, rule.AcceptedCheckResult(msg, containertTarget))
 					} else {
-						podCheckResults = append(podCheckResults, rule.FailedCheckResult("Pod uses hostPort < 1024.", containertTarget))
+						podCheckResults = append(podCheckResults, rule.FailedCheckResult("Pod has container using hostPort < 1024.", containertTarget))
 					}
 				}
 			}
 		}
 		if len(podCheckResults) == 0 {
-			checkResults = append(checkResults, rule.PassedCheckResult("Pod does not use hostPort < 1024.", target))
+			checkResults = append(checkResults, rule.PassedCheckResult("Pod does not have container using hostPort < 1024.", target))
 		}
 		checkResults = append(checkResults, podCheckResults...)
 	}

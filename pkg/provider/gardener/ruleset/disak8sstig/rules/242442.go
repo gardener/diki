@@ -109,13 +109,11 @@ func (r *Rule242442) checkImages(cluster string, pods []corev1.Pod) []rule.Check
 				}
 				imageBase := named.Name()
 
-				if _, ok := images[imageBase]; ok {
-					if images[imageBase] != imageRef {
-						if _, reported := reportedImages[imageBase]; !reported {
-							target := rule.NewTarget("cluster", cluster, "image", imageBase, "namespace", namespace)
-							reportedImages[imageBase] = struct{}{}
-							checkResults = append(checkResults, rule.FailedCheckResult("Image is used with more than one versions.", target))
-						}
+				if ref, ok := images[imageBase]; ok && ref != imageRef {
+					if _, reported := reportedImages[imageBase]; !reported {
+						target := rule.NewTarget("cluster", cluster, "image", imageBase, "namespace", namespace)
+						reportedImages[imageBase] = struct{}{}
+						checkResults = append(checkResults, rule.FailedCheckResult("Image is used with more than one versions.", target))
 					}
 				} else {
 					images[imageBase] = imageRef

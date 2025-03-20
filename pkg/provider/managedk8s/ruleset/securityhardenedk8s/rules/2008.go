@@ -5,6 +5,7 @@
 package rules
 
 import (
+	"cmp"
 	"context"
 	"slices"
 
@@ -98,10 +99,7 @@ func (r *Rule2008) Run(ctx context.Context) (rule.RuleResult, error) {
 			if volume.HostPath != nil {
 				uses = true
 				if accepted, justification := r.accepted(pod, namespaces[pod.Namespace], volume.Name); accepted {
-					msg := "Pod accepted to use volume of type hostPath."
-					if justification != "" {
-						msg = justification
-					}
+					msg := cmp.Or(justification, "Pod accepted to use volume of type hostPath.")
 					checkResults = append(checkResults, rule.AcceptedCheckResult(msg, volumeTarget))
 				} else {
 					checkResults = append(checkResults, rule.FailedCheckResult("Pod must not use volumes of type hostPath.", volumeTarget))
