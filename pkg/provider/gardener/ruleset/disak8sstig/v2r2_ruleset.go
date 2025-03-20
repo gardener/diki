@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Masterminds/semver/v3"
 	resourcesv1alpha1 "github.com/gardener/gardener/pkg/apis/resources/v1alpha1"
 	kubernetesgardener "github.com/gardener/gardener/pkg/client/kubernetes"
 	"k8s.io/client-go/kubernetes"
@@ -73,16 +72,6 @@ func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsCon
 	}
 
 	shootClientSet, err := kubernetes.NewForConfig(r.ShootConfig)
-	if err != nil {
-		return err
-	}
-
-	shootKubernetesVersion, err := shootClientSet.Discovery().ServerVersion()
-	if err != nil {
-		return err
-	}
-
-	semverShootKubernetesVersion, err := semver.NewVersion(shootKubernetesVersion.String())
 	if err != nil {
 		return err
 	}
@@ -235,11 +224,14 @@ func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsCon
 			rule.Skipped,
 			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
-		&sharedrules.Rule242399{
-			Client:            shootClient,
-			KubernetesVersion: semverShootKubernetesVersion,
-			V1RESTClient:      shootClientSet.CoreV1().RESTClient(),
-		},
+		rule.NewSkipRule(
+			sharedrules.ID242399,
+			"Kubernetes DynamicKubeletConfig must not be enabled.",
+			// feature-gates.DynamicKubeletConfig removed in v1.26. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
+			"Option feature-gates.DynamicKubeletConfig removed in Kubernetes v1.26.",
+			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
+		),
 		retry.New(
 			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242400)),
 			retry.WithBaseRule(&rules.Rule242400{
