@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Masterminds/semver/v3"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -37,16 +36,6 @@ func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsCon
 	}
 
 	clientSet, err := kubernetes.NewForConfig(r.Config)
-	if err != nil {
-		return err
-	}
-
-	kubernetesVersion, err := clientSet.Discovery().ServerVersion()
-	if err != nil {
-		return err
-	}
-
-	semverKubernetesVersion, err := semver.NewVersion(kubernetesVersion.String())
 	if err != nil {
 		return err
 	}
@@ -316,11 +305,14 @@ func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsCon
 			rule.Skipped,
 			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
-		&sharedrules.Rule242399{
-			Client:            client,
-			KubernetesVersion: semverKubernetesVersion,
-			V1RESTClient:      clientSet.CoreV1().RESTClient(),
-		},
+		rule.NewSkipRule(
+			sharedrules.ID242399,
+			"Kubernetes DynamicKubeletConfig must not be enabled.",
+			// feature-gates.DynamicKubeletConfig removed in v1.26. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
+			"Option feature-gates.DynamicKubeletConfig removed in Kubernetes v1.26.",
+			rule.Skipped,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
+		),
 		retry.New(
 			retry.WithLogger(r.Logger().With("rule_id", sharedrules.ID242400)),
 			retry.WithBaseRule(&rules.Rule242400{

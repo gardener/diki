@@ -223,7 +223,8 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 		rule.NewSkipRule(
 			sharedrules.ID242399,
 			"Kubernetes DynamicKubeletConfig must not be enabled.",
-			noKubeletsMsg,
+			// feature-gates.DynamicKubeletConfig removed in v1.26. ref https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates-removed/
+			"Option feature-gates.DynamicKubeletConfig removed in Kubernetes v1.26.",
 			rule.Skipped,
 			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
