@@ -156,22 +156,6 @@ spec:
 ```
 ---
 
-### 2006 - Shoot clusters must have static token kubeconfig disabled. <a id="2006"></a>
-
-#### Description
-Shoot clusters must have static token kubeconfig disabled. This rule follows the requirements from DISA K8s STIG rule [245543](https://www.stigviewer.com/stig/kubernetes/2024-06-10/finding/V-245543).
-
-#### Fix
-Set the `spec.kubernetes.kubelet.enableStaticTokenKubeconfig` to `false`. For `Shoot`s with `Kubernetes` version >= `v1.27` it is locked to `false`, for version = `v1.26` it defaults to `false`.
-``` yaml
-kind: Shoot
-apiVersion: core.gardener.cloud/v1beta1
-spec:
-  kubernetes:
-    enableStaticTokenKubeconfig: false
-```
----
-
 ### 2007 - Shoot clusters must have a PodSecurity admission plugin configured. <a id="2007"></a>
 
 #### Description

@@ -39,10 +39,6 @@ rules:
   name: "Shoot clusters must not disable timeouts for Kubelet."
   description: "Shoot clusters must not disable timeouts for Kubelet. The timeout must be between 5m and 4h. It is recommended for the timeout to be 5m. This rule follows the requirements from DISA K8s STIG rule [245541](https://www.stigviewer.com/stig/kubernetes/2024-06-10/finding/V-245541)."
   severity: "MEDIUM"
-- id: 2006
-  name: "Shoot clusters must have static token kubeconfig disabled."
-  description: "Shoot clusters must have static token kubeconfig disabled. This rule follows the requirements from DISA K8s STIG rule [245543](https://www.stigviewer.com/stig/kubernetes/2024-06-10/finding/V-245543)."
-  severity: "HIGH"
 - id: 2007
   name: "Shoot clusters must have a PodSecurity admission plugin configured."
   description: "Shoot clusters must have a PodSecurity admission plugin configured. It is recommended to set default pod security standards to `baseline` or `restricted` level. This rule follows the requirements from DISA K8s STIG rule [254800](https://www.stigviewer.com/stig/kubernetes/2024-06-10/finding/V-254800)."
