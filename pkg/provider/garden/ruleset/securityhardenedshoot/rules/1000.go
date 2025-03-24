@@ -92,9 +92,9 @@ func (r *Rule1000) Run(ctx context.Context) (rule.RuleResult, error) {
 		case extensionLabelValue == "true" && !extensionDisabled:
 			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Extension %s is enabled for the shoot cluster.", extension.Type), rule.NewTarget()))
 		case extensionLabelValue == "true" && extensionDisabled:
-			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Extension %s is disabled in the shoot spec and enabled in labels.", extension.Type), rule.NewTarget()))
+			checkResults = append(checkResults, rule.WarningCheckResult(fmt.Sprintf("Extension %s is disabled in the shoot spec and enabled in labels.", extension.Type), rule.NewTarget()))
 		default:
-			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Extension %s has unexpected label value: %s.", extension.Type, extensionLabelValue), rule.NewTarget()))
+			checkResults = append(checkResults, rule.WarningCheckResult(fmt.Sprintf("Extension %s has unexpected label value: %s.", extension.Type, extensionLabelValue), rule.NewTarget()))
 		}
 	}
 

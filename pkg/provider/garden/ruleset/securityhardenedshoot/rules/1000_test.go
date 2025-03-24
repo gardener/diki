@@ -158,7 +158,7 @@ var _ = Describe("#1000", func() {
 				{Status: rule.Passed, Message: "Extension foo is enabled for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
-		Entry("should fail when a listed extension is enabled in the shoot labels and disabled in the shoot spec",
+		Entry("should warn when a listed extension is enabled in the shoot labels and disabled in the shoot spec",
 			func() {
 				shoot.Labels = map[string]string{
 					"extensions.extensions.gardener.cloud/foo": "true",
@@ -177,10 +177,10 @@ var _ = Describe("#1000", func() {
 			},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Extension foo is disabled in the shoot spec and enabled in labels.", Target: rule.NewTarget()},
+				{Status: rule.Warning, Message: "Extension foo is disabled in the shoot spec and enabled in labels.", Target: rule.NewTarget()},
 			},
 		),
-		Entry("should fail when a listed extension has unecpected value in the shoot labels",
+		Entry("should warn when a listed extension has unecpected value in the shoot labels",
 			func() {
 				shoot.Labels = map[string]string{
 					"extensions.extensions.gardener.cloud/foo": "false",
@@ -198,7 +198,7 @@ var _ = Describe("#1000", func() {
 			},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Extension foo has unexpected label value: false.", Target: rule.NewTarget()},
+				{Status: rule.Warning, Message: "Extension foo has unexpected label value: false.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should create a check result for each provided extension in the configuration",
