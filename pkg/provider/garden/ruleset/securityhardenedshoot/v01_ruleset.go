@@ -74,8 +74,8 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 		rule.NewSkipRule(
 			"2006",
 			"Shoot clusters must have static token kubeconfig disabled.",
-			// spec.kubernetes.kubelet.enableStaticTokenKubeconfig deprecated in Gardener v1.114.0. ref https://github.com/gardener/gardener/pull/10664
-			"Option spec.kubernetes.kubelet.enableStaticTokenKubeconfig deprecated in Gardener v1.114.0.",
+			// spec.kubernetes.kubelet.enableStaticTokenKubeconfig no longer supported in Gardener v1.114.0. ref https://github.com/gardener/gardener/pull/10664
+			"Option spec.kubernetes.kubelet.enableStaticTokenKubeconfig no longer supported in Gardener v1.114.0.",
 			rule.Skipped,
 			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
