@@ -13,8 +13,8 @@ import (
 	lakomconst "github.com/gardener/gardener-extension-shoot-lakom-service/pkg/constants"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/kubectl/pkg/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/rule"
@@ -36,11 +36,11 @@ func (r *Rule1003) ID() string {
 }
 
 func (r *Rule1003) Name() string {
-	return "Shoot clusters should have Lakom extension configured correctly."
+	return "Shoot clusters must have the Lakom extension configured."
 }
 
 func (r *Rule1003) Severity() rule.SeverityLevel {
-	return rule.SeverityMedium
+	return rule.SeverityHigh
 }
 
 func (r *Rule1003) Run(ctx context.Context) (rule.RuleResult, error) {
@@ -50,26 +50,25 @@ func (r *Rule1003) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	var (
-		lakomExtensionType = lakomconst.ExtensionType
-		extensionIndex     = slices.IndexFunc(shoot.Spec.Extensions, func(shootSpecExtension gardencorev1beta1.Extension) bool {
-			return shootSpecExtension.Type == lakomExtensionType
+		extensionIndex = slices.IndexFunc(shoot.Spec.Extensions, func(shootSpecExtension gardencorev1beta1.Extension) bool {
+			return shootSpecExtension.Type == lakomconst.ExtensionType
 		})
 		extensionDisabled                         = extensionIndex >= 0 && shoot.Spec.Extensions[extensionIndex].Disabled != nil && *shoot.Spec.Extensions[extensionIndex].Disabled
-		extensionLabelValue, extensionLabelExists = shoot.Labels["extensions.extensions.gardener.cloud/"+lakomExtensionType]
+		extensionLabelValue, extensionLabelExists = shoot.Labels["extensions.extensions.gardener.cloud/"+lakomconst.ExtensionType]
 	)
 
 	switch {
 	case !extensionLabelExists:
-		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s is not configured for the shoot cluster.", lakomExtensionType), rule.NewTarget())), nil
+		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s is not configured for the shoot cluster.", lakomconst.ExtensionType), rule.NewTarget())), nil
 	case extensionLabelValue == "true" && !extensionDisabled && extensionIndex >= 0:
 		var (
 			lakomExtension = shoot.Spec.Extensions[extensionIndex]
 			lakomConfig    = &lakomapiv1alpha1.LakomConfig{}
-			scheme         = scheme.Scheme
+			scheme         = runtime.NewScheme()
 		)
 
 		if lakomExtension.ProviderConfig == nil {
-			return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s does not have provider config configured for the shoot cluster.", lakomExtensionType), rule.NewTarget())), nil
+			return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s is not configured for the shoot cluster.", lakomconst.ExtensionType), rule.NewTarget())), nil
 		}
 
 		if err := lakomapiv1alpha1.AddToScheme(scheme); err != nil {
@@ -82,15 +81,15 @@ func (r *Rule1003) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		if lakomConfig.TrustedKeysResourceName == nil || len(*lakomConfig.TrustedKeysResourceName) == 0 {
-			return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s does not have TrustedKeysResourceName configured.", lakomExtensionType), rule.NewTarget())), nil
-		} else {
-			return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Extension %s is correctly configured for the shoot cluster.", lakomExtensionType), rule.NewTarget())), nil
+			return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s does not configure trusted keys.", lakomconst.ExtensionType), rule.NewTarget())), nil
 		}
+
+		return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Extension %s configures trusted keys.", lakomconst.ExtensionType), rule.NewTarget())), nil
 	case extensionLabelValue == "true" && !extensionDisabled:
-		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s does not have extension config configured for the shoot cluster.", lakomExtensionType), rule.NewTarget())), nil
+		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s is not configured for the shoot cluster.", lakomconst.ExtensionType), rule.NewTarget())), nil
 	case extensionLabelValue == "true" && extensionDisabled:
-		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s is disabled in the shoot spec and enabled in labels.", lakomExtensionType), rule.NewTarget())), nil
+		return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Extension %s is disabled in the shoot spec and enabled in labels.", lakomconst.ExtensionType), rule.NewTarget())), nil
 	default:
-		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s has unexpected label value: %s.", lakomExtensionType, extensionLabelValue), rule.NewTarget())), nil
+		return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Extension %s has unexpected label value: %s.", lakomconst.ExtensionType, extensionLabelValue), rule.NewTarget())), nil
 	}
 }

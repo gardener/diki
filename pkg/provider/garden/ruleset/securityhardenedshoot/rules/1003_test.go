@@ -35,8 +35,8 @@ var _ = Describe("#1003", func() {
 
 		r        rule.Rule
 		ruleID   = "1003"
-		ruleName = "Shoot clusters should have Lakom extension configured correctly."
-		severity = rule.SeverityMedium
+		ruleName = "Shoot clusters must have the Lakom extension configured."
+		severity = rule.SeverityHigh
 
 		encode = func(obj runtime.Object) []byte {
 			data, err := json.Marshal(obj)
@@ -91,10 +91,10 @@ var _ = Describe("#1003", func() {
 				}
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Extension shoot-lakom-service does not have extension config configured for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "Extension shoot-lakom-service is not configured for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
-		Entry("should fail when Lakom extension is disabled",
+		Entry("should warn when Lakom extension is disabled",
 			func() {
 				shoot.Labels = map[string]string{
 					"extensions.extensions.gardener.cloud/shoot-lakom-service": "true",
@@ -107,17 +107,17 @@ var _ = Describe("#1003", func() {
 				}
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Extension shoot-lakom-service is disabled in the shoot spec and enabled in labels.", Target: rule.NewTarget()},
+				{Status: rule.Warning, Message: "Extension shoot-lakom-service is disabled in the shoot spec and enabled in labels.", Target: rule.NewTarget()},
 			},
 		),
-		Entry("should fail when Lakom extension has unecpected value in the shoot labels",
+		Entry("should warn when Lakom extension has unecpected value in the shoot labels",
 			func() {
 				shoot.Labels = map[string]string{
 					"extensions.extensions.gardener.cloud/shoot-lakom-service": "false",
 				}
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Extension shoot-lakom-service has unexpected label value: false.", Target: rule.NewTarget()},
+				{Status: rule.Warning, Message: "Extension shoot-lakom-service has unexpected label value: false.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should fail when Lakom extension does not have provider config",
@@ -132,7 +132,7 @@ var _ = Describe("#1003", func() {
 				}
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Extension shoot-lakom-service does not have provider config configured for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "Extension shoot-lakom-service is not configured for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should fail when Lakom extension does not have trustedKeysResourceName set",
@@ -155,7 +155,7 @@ var _ = Describe("#1003", func() {
 				}
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Extension shoot-lakom-service does not have TrustedKeysResourceName configured.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "Extension shoot-lakom-service does not configure trusted keys.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should fail when Lakom extension has trustedKeysResourceName set to empty string",
@@ -179,7 +179,7 @@ var _ = Describe("#1003", func() {
 				}
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Extension shoot-lakom-service does not have TrustedKeysResourceName configured.", Target: rule.NewTarget()},
+				{Status: rule.Failed, Message: "Extension shoot-lakom-service does not configure trusted keys.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should pass when Lakom extension has trustedKeysResourceName set",
@@ -203,7 +203,7 @@ var _ = Describe("#1003", func() {
 				}
 			},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "Extension shoot-lakom-service is correctly configured for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "Extension shoot-lakom-service configures trusted keys.", Target: rule.NewTarget()},
 			},
 		),
 	)
