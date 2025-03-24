@@ -33,7 +33,7 @@ type Rule1001 struct {
 }
 
 type Options1001 struct {
-	AllowedClassifications []gardencorev1beta1.VersionClassification
+	AllowedClassifications []gardencorev1beta1.VersionClassification `json:"allowedClassifications" yaml:"allowedClassifications"`
 }
 
 func (o Options1001) Validate() field.ErrorList {
@@ -65,7 +65,7 @@ func (r *Rule1001) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule1001) Name() string {
-	return "Shoot clusters should use a supported Kubernetes version."
+	return "Shoot clusters should use a supported version of Kubernetes."
 }
 
 func (r *Rule1001) Run(ctx context.Context) (rule.RuleResult, error) {
