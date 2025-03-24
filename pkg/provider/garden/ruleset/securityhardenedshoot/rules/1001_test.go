@@ -21,7 +21,7 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
-var _ = Describe("#1002", func() {
+var _ = Describe("#1001", func() {
 	var (
 		fakeClient         client.Client
 		ctx                = context.TODO()
