@@ -24,6 +24,21 @@ spec:
 ```
 ---
 
+### 1001 - Shoot clusters should use a supported version of Kubernetes <a id="1001"></a>
+
+#### Description
+Shoot clusters should use supported version of Kubernetes. This rule can be configured to accept specific version classifications.
+
+#### Fix
+Configure `supported` Kuberenetes version in the `spec.kubernetes.version` field.
+``` yaml
+kind: Shoot
+apiVersion: core.gardener.cloud/v1beta1
+spec:
+  kubernetes:
+    version: <supported-version>
+```
+
 ### 1002 - Shoot clusters should use supported versions for their Workers' images. <a id="1002"></a>
 
 #### Description
