@@ -24,7 +24,7 @@ spec:
 ```
 ---
 
-### 1001 - Shoot clusters should use a supported version of Kubernetes <a id="1001"></a>
+### 1001 - Shoot clusters should use a supported version of Kubernetes. <a id="1001"></a>
 
 #### Description
 Shoot clusters should use a supported version of Kubernetes. This rule can be configured to accept specific version classifications.
