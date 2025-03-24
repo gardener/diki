@@ -65,7 +65,7 @@ func (r *Rule1001) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule1001) Name() string {
-	return "Shoot clusters should use a supported version of Kubernetes."
+	return "Shoot clusters must use a supported version of Kubernetes."
 }
 
 func (r *Rule1001) Run(ctx context.Context) (rule.RuleResult, error) {
