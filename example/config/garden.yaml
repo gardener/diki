@@ -18,6 +18,11 @@ providers:       # contains information about known providers
     #     extensions:
     #     - type: extension-type-1
     #     - type: extension-type-2
+    # - ruleID: "1001"
+    #   args:
+    #     allowedClassifications:
+    #     - supported
+    #     - preview
     # - ruleID: "1002"
     #   args:
     #     machineImages:
