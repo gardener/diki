@@ -24,10 +24,10 @@ spec:
 ```
 ---
 
-### 1001 - Shoot clusters should use a supported version of Kubernetes. <a id="1001"></a>
+### 1001 - Shoot clusters must use a supported version of Kubernetes. <a id="1001"></a>
 
 #### Description
-Shoot clusters should use a supported version of Kubernetes. This rule can be configured to accept specific version classifications.
+Shoot clusters must use a supported version of Kubernetes. This rule can be configured to accept specific version classifications.
 
 #### Fix
 Configure `supported` Kuberenetes version in the `spec.kubernetes.version` field.
@@ -39,10 +39,12 @@ spec:
     version: <supported-version>
 ```
 
-### 1002 - Shoot clusters should use supported versions for their Workers' images. <a id="1002"></a>
+The supported versions can be found in the used `CloudProfile`.
+
+### 1002 - Shoot clusters must use supported versions for their Workers' images. <a id="1002"></a>
 
 #### Description
-Shoot clusters should use supported versions for their Workers' images. This rule can be configured to accept specific image classifications.
+Shoot clusters must use supported versions for their Workers' images. This rule can be configured to accept specific image classifications.
 
 #### Fix
 Configure `supported` machine image versions in the `spec.provider.workers[].machine.image.version` field.
