@@ -115,8 +115,8 @@ func (r *Ruleset) registerV02Rules(ruleOptions map[string]config.RuleOptionsConf
 
 	// check that the registered rules equal
 	// the number of rules in that ruleset version
-	if len(rules) != 11 {
-		return fmt.Errorf("revision expects 11 registered rules, but got: %d", len(rules))
+	if len(rules) != 10 {
+		return fmt.Errorf("revision expects 10 registered rules, but got: %d", len(rules))
 	}
 
 	return r.AddRules(rules...)
