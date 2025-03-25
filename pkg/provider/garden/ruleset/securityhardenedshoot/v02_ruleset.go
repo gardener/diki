@@ -29,6 +29,10 @@ func (r *Ruleset) registerV02Rules(ruleOptions map[string]config.RuleOptionsConf
 	if err != nil {
 		return fmt.Errorf("rule option 1000 error: %s", err.Error())
 	}
+	opts1001, err := getV02OptionOrNil[rules.Options1001](ruleOptions["1001"].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 1001 error: %s", err.Error())
+	}
 	opts1002, err := getV02OptionOrNil[rules.Options1002](ruleOptions["1002"].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 1002 error: %s", err.Error())
@@ -44,6 +48,12 @@ func (r *Ruleset) registerV02Rules(ruleOptions map[string]config.RuleOptionsConf
 			ShootName:      r.args.ShootName,
 			ShootNamespace: r.args.ProjectNamespace,
 			Options:        opts1000,
+		},
+		&rules.Rule1001{
+			Client:         c,
+			ShootName:      r.args.ShootName,
+			ShootNamespace: r.args.ProjectNamespace,
+			Options:        opts1001,
 		},
 		&rules.Rule1002{
 			Client:         c,
@@ -105,8 +115,8 @@ func (r *Ruleset) registerV02Rules(ruleOptions map[string]config.RuleOptionsConf
 
 	// check that the registered rules equal
 	// the number of rules in that ruleset version
-	if len(rules) != 9 {
-		return fmt.Errorf("revision expects 9 registered rules, but got: %d", len(rules))
+	if len(rules) != 10 {
+		return fmt.Errorf("revision expects 10 registered rules, but got: %d", len(rules))
 	}
 
 	return r.AddRules(rules...)

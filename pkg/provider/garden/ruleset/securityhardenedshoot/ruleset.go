@@ -29,7 +29,7 @@ var (
 	_ ruleset.Ruleset = &Ruleset{}
 	// SupportedVersions is a list of available versions for the Security Hardened Shoot Cluster Ruleset.
 	// Versions are sorted from newest to oldest.
-	SupportedVersions = []string{"v0.1.0", "v0.2.0"}
+	SupportedVersions = []string{"v0.2.0", "v0.1.0"}
 )
 
 // Ruleset implements Security Hardened Shoot Cluster.
