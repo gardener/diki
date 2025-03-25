@@ -19,6 +19,10 @@ rules:
   name: "Shoot clusters must use supported versions for their Workers' images."
   description: "Shoot clusters must use supported versions for their Workers' images. This rule can be configured to accept specific image classifications."
   severity: "HIGH"
+- id: 1003
+  name: "Shoot clusters must have the Lakom extension configured."
+  description: "Lakom is an admission controller which implements image signature verification. Shoot clusters must have the Lakom extension configured with trusted public keys so that only trusted images are allowed in the cluster."
+  severity: "HIGH"
 - id: 2000
   name: "Shoot clusters must have anonymous authentication disabled for the Kubernetes API server."
   description: "Shoot clusters must have anonymous authentication disabled for the Kubernetes API server. This rule follows the requirements from DISA K8s STIG rule [242390](https://www.stigviewer.com/stig/kubernetes/2024-06-10/finding/V-242390)."

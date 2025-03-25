@@ -61,6 +61,11 @@ func (r *Ruleset) registerV02Rules(ruleOptions map[string]config.RuleOptionsConf
 			ShootNamespace: r.args.ProjectNamespace,
 			Options:        opts1002,
 		},
+		&rules.Rule1003{
+			Client:         c,
+			ShootName:      r.args.ShootName,
+			ShootNamespace: r.args.ProjectNamespace,
+		},
 		&rules.Rule2000{
 			Client:         c,
 			ShootName:      r.args.ShootName,
