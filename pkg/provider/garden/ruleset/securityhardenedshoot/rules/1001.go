@@ -111,15 +111,15 @@ func (r *Rule1001) Run(ctx context.Context) (rule.RuleResult, error) {
 			return rule.Result(r, checkResult), nil
 		}
 		return rule.Result(r, rule.ErroredCheckResult("kubernetes version not found in cloudProfile", target)), nil
-	} else {
-		if checkResult, found := r.checkShootVersion(shoot.Spec.Kubernetes.Version, namespacedCloudProfile.Spec.Kubernetes.Versions, target); found {
-			return rule.Result(r, checkResult), nil
-		}
-		if checkResult, found := r.checkShootVersion(shoot.Spec.Kubernetes.Version, namespacedCloudProfile.Status.CloudProfileSpec.Kubernetes.Versions, target); found {
-			return rule.Result(r, checkResult), nil
-		}
-		return rule.Result(r, rule.ErroredCheckResult("kubernetes version not found in namespacedCloudProfile", target)), nil
 	}
+
+	if checkResult, found := r.checkShootVersion(shoot.Spec.Kubernetes.Version, namespacedCloudProfile.Spec.Kubernetes.Versions, target); found {
+		return rule.Result(r, checkResult), nil
+	}
+	if checkResult, found := r.checkShootVersion(shoot.Spec.Kubernetes.Version, namespacedCloudProfile.Status.CloudProfileSpec.Kubernetes.Versions, target); found {
+		return rule.Result(r, checkResult), nil
+	}
+	return rule.Result(r, rule.ErroredCheckResult("kubernetes version not found in namespacedCloudProfile", target)), nil
 }
 
 func (r *Rule1001) checkShootVersion(shootVersion string, kubernetesVersions []gardencorev1beta1.ExpirableVersion, target rule.Target) (rule.CheckResult, bool) {
@@ -131,7 +131,7 @@ func (r *Rule1001) checkShootVersion(shootVersion string, kubernetesVersions []g
 			case slices.Contains(r.acceptedClassifications(), *version.Classification):
 				return rule.PassedCheckResult("Shoot uses a Kubernetes version with an allowed classification.", target.With("classification", string(*version.Classification))), true
 			default:
-				return rule.FailedCheckResult("Shoot uses a Kubernetes version with a non-allowed classification.", target.With("classification", string(*version.Classification))), true
+				return rule.FailedCheckResult("Shoot uses a Kubernetes version with a forbidden classification.", target.With("classification", string(*version.Classification))), true
 			}
 		}
 	}

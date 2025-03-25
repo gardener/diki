@@ -184,7 +184,7 @@ var _ = Describe("#1001", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Shoot uses a Kubernetes version with a non-allowed classification.", Target: rule.NewTarget("version", "2", "classification", "deprecated")},
+				{Status: rule.Failed, Message: "Shoot uses a Kubernetes version with a forbidden classification.", Target: rule.NewTarget("version", "2", "classification", "deprecated")},
 			},
 		),
 		Entry("should fail when the shoot uses a preview version of Kubernetes",
@@ -197,7 +197,7 @@ var _ = Describe("#1001", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Shoot uses a Kubernetes version with a non-allowed classification.", Target: rule.NewTarget("version", "3", "classification", "preview")},
+				{Status: rule.Failed, Message: "Shoot uses a Kubernetes version with a forbidden classification.", Target: rule.NewTarget("version", "3", "classification", "preview")},
 			},
 		),
 		Entry("should pass when the shoot uses a supported version in the namespaceCloudProfile",
@@ -223,7 +223,7 @@ var _ = Describe("#1001", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Shoot uses a Kubernetes version with a non-allowed classification.", Target: rule.NewTarget("version", "3", "classification", "preview")},
+				{Status: rule.Failed, Message: "Shoot uses a Kubernetes version with a forbidden classification.", Target: rule.NewTarget("version", "3", "classification", "preview")},
 			},
 		),
 		Entry("should fail when the shoot uses a deprecated version in the namespaceCloudProfile",
@@ -236,7 +236,7 @@ var _ = Describe("#1001", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Shoot uses a Kubernetes version with a non-allowed classification.", Target: rule.NewTarget("version", "5", "classification", "deprecated")},
+				{Status: rule.Failed, Message: "Shoot uses a Kubernetes version with a forbidden classification.", Target: rule.NewTarget("version", "5", "classification", "deprecated")},
 			},
 		),
 		Entry("should error when the shoot uses an unknown version in the namespaceCloudProfile",
