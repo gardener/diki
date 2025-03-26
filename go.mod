@@ -7,7 +7,7 @@ toolchain go1.24.1
 require (
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/distribution/reference v0.6.0
-	github.com/gardener/gardener v1.115.0
+	github.com/gardener/gardener v1.115.1
 	github.com/gardener/gardener-extension-shoot-lakom-service v0.18.1
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo/v2 v2.23.3
@@ -47,7 +47,7 @@ require (
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/gardener/etcd-druid v0.27.0 // indirect
-	github.com/gardener/machine-controller-manager v0.57.0 // indirect
+	github.com/gardener/machine-controller-manager v0.57.1 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/zapr v1.3.0 // indirect
