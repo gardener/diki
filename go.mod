@@ -7,7 +7,7 @@ toolchain go1.24.1
 require (
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/distribution/reference v0.6.0
-	github.com/gardener/gardener v1.115.0
+	github.com/gardener/gardener v1.116.0
 	github.com/gardener/gardener-extension-shoot-lakom-service v0.18.1
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo/v2 v2.23.3
