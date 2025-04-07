@@ -11,7 +11,7 @@ require (
 	github.com/gardener/gardener-extension-shoot-lakom-service v0.18.1
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo/v2 v2.23.4
-	github.com/onsi/gomega v1.36.3
+	github.com/onsi/gomega v1.37.0
 	github.com/spf13/cobra v1.9.1
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.32.3
