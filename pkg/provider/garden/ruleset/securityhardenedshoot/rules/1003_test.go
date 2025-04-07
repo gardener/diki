@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 
+	lakomapi "github.com/gardener/gardener-extension-shoot-lakom-service/pkg/apis/lakom"
 	lakomv1alpha1 "github.com/gardener/gardener-extension-shoot-lakom-service/pkg/apis/lakom/v1alpha1"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/gardener/gardener/pkg/client/kubernetes"
@@ -37,6 +38,9 @@ var _ = Describe("#1003", func() {
 		ruleID   = "1003"
 		ruleName = "Shoot clusters must have the Lakom extension configured."
 		severity = rule.SeverityHigh
+
+		kubeSystemScope lakomapi.ScopeType = "KubeSystem"
+		clusterScope    lakomapi.ScopeType = "Cluster"
 
 		encode = func(obj runtime.Object) []byte {
 			data, err := json.Marshal(obj)
@@ -135,6 +139,53 @@ var _ = Describe("#1003", func() {
 				{Status: rule.Failed, Message: "Extension shoot-lakom-service is not configured for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
+		Entry("should fail when Lakom extension does not have scope set",
+			func() {
+				shoot.Labels = map[string]string{
+					"extensions.extensions.gardener.cloud/shoot-lakom-service": "true",
+				}
+				shoot.Spec.Extensions = []gardencorev1beta1.Extension{
+					{
+						Type: "shoot-lakom-service",
+						ProviderConfig: &runtime.RawExtension{
+							Raw: encode(&lakomv1alpha1.LakomConfig{
+								TypeMeta: metav1.TypeMeta{
+									APIVersion: lakomv1alpha1.SchemeGroupVersion.String(),
+									Kind:       "LakomConfig",
+								},
+							}),
+						},
+					},
+				}
+			},
+			[]rule.CheckResult{
+				{Status: rule.Failed, Message: "Extension shoot-lakom-service does not check every image in cluster. Configured scope should be 'Cluster'.", Target: rule.NewTarget()},
+			},
+		),
+		Entry("should fail when Lakom extension does have scope set, but does not check all images",
+			func() {
+				shoot.Labels = map[string]string{
+					"extensions.extensions.gardener.cloud/shoot-lakom-service": "true",
+				}
+				shoot.Spec.Extensions = []gardencorev1beta1.Extension{
+					{
+						Type: "shoot-lakom-service",
+						ProviderConfig: &runtime.RawExtension{
+							Raw: encode(&lakomv1alpha1.LakomConfig{
+								TypeMeta: metav1.TypeMeta{
+									APIVersion: lakomv1alpha1.SchemeGroupVersion.String(),
+									Kind:       "LakomConfig",
+								},
+								Scope: &kubeSystemScope,
+							}),
+						},
+					},
+				}
+			},
+			[]rule.CheckResult{
+				{Status: rule.Failed, Message: "Extension shoot-lakom-service does not check every image in cluster. Configured scope should be 'Cluster'.", Target: rule.NewTarget()},
+			},
+		),
 		Entry("should fail when Lakom extension does not have trustedKeysResourceName set",
 			func() {
 				shoot.Labels = map[string]string{
@@ -149,6 +200,7 @@ var _ = Describe("#1003", func() {
 									APIVersion: lakomv1alpha1.SchemeGroupVersion.String(),
 									Kind:       "LakomConfig",
 								},
+								Scope: &clusterScope,
 							}),
 						},
 					},
@@ -172,6 +224,7 @@ var _ = Describe("#1003", func() {
 									APIVersion: lakomv1alpha1.SchemeGroupVersion.String(),
 									Kind:       "LakomConfig",
 								},
+								Scope:                   &clusterScope,
 								TrustedKeysResourceName: ptr.To(""),
 							}),
 						},
@@ -196,6 +249,7 @@ var _ = Describe("#1003", func() {
 									APIVersion: lakomv1alpha1.SchemeGroupVersion.String(),
 									Kind:       "LakomConfig",
 								},
+								Scope:                   &clusterScope,
 								TrustedKeysResourceName: ptr.To("foo"),
 							}),
 						},

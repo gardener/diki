@@ -69,7 +69,7 @@ The supported versions can be found in the used `CloudProfile`.
 Lakom is an admission controller which implements image signature verification. Shoot clusters must have the Lakom extension configured with trusted public keys so that only trusted images are allowed in the cluster.
 
 #### Fix
-Follow the Lakom extension documentation on how to configure [TrustedKeysResourceName](https://github.com/gardener/gardener-extension-shoot-lakom-service/blob/v0.18.1/docs/usage/shoot-extension.md#trustedkeysresourcename).
+Follow the Lakom extension documentation on how to configure [TrustedKeysResourceName](https://github.com/gardener/gardener-extension-shoot-lakom-service/blob/v0.18.1/docs/usage/shoot-extension.md#trustedkeysresourcename) with `Cluster` scope to validate all images in the cluster.
 
 ---
 

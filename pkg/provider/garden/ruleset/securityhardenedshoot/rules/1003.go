@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"slices"
 
+	lakomapi "github.com/gardener/gardener-extension-shoot-lakom-service/pkg/apis/lakom"
 	lakomapiv1alpha1 "github.com/gardener/gardener-extension-shoot-lakom-service/pkg/apis/lakom/v1alpha1"
 	lakomconst "github.com/gardener/gardener-extension-shoot-lakom-service/pkg/constants"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
@@ -80,11 +81,14 @@ func (r *Rule1003) Run(ctx context.Context) (rule.RuleResult, error) {
 			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 		}
 
-		if lakomConfig.TrustedKeysResourceName == nil || len(*lakomConfig.TrustedKeysResourceName) == 0 {
+		switch {
+		case lakomConfig.Scope == nil || *lakomConfig.Scope != lakomapi.Cluster:
+			return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s does not check every image in cluster. Configured scope should be 'Cluster'.", lakomconst.ExtensionType), rule.NewTarget())), nil
+		case lakomConfig.TrustedKeysResourceName == nil || len(*lakomConfig.TrustedKeysResourceName) == 0:
 			return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s does not configure trusted keys.", lakomconst.ExtensionType), rule.NewTarget())), nil
+		default:
+			return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Extension %s configures trusted keys.", lakomconst.ExtensionType), rule.NewTarget())), nil
 		}
-
-		return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Extension %s configures trusted keys.", lakomconst.ExtensionType), rule.NewTarget())), nil
 	case extensionLabelValue == "true" && !extensionDisabled:
 		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s is not configured for the shoot cluster.", lakomconst.ExtensionType), rule.NewTarget())), nil
 	case extensionLabelValue == "true" && extensionDisabled:
