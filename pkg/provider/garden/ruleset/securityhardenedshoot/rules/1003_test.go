@@ -118,7 +118,21 @@ var _ = Describe("#1003", func() {
 				{Status: rule.Failed, Message: "Extension shoot-lakom-service is not configured with allowed scope.", Target: rule.NewTarget()},
 			},
 		),
-		Entry("should warn when Lakom extension is disabled",
+		Entry("should fail when Lakom extension is explicitly disabled but label is missing",
+			func() {
+				shoot.Spec.Extensions = []gardencorev1beta1.Extension{
+					{
+						Type:     "shoot-lakom-service",
+						Disabled: ptr.To(true),
+					},
+				}
+			},
+			nil,
+			[]rule.CheckResult{
+				{Status: rule.Failed, Message: "Extension shoot-lakom-service is not configured for the shoot cluster.", Target: rule.NewTarget()},
+			},
+		),
+		Entry("should warn when Lakom extension is explicitly disabled but label says extension is enabled",
 			func() {
 				shoot.Labels = map[string]string{
 					"extensions.extensions.gardener.cloud/shoot-lakom-service": "true",

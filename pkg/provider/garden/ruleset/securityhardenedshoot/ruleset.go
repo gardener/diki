@@ -114,7 +114,7 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.C
 			return nil, err
 		}
 	case "v0.2.0":
-		logger.Info("Using version v0.2.1 as latest patch version of security-hardened-shoot-cluster v0.2")
+		logger.Info("Using version v0.2.1 as latest patch version of security-hardened-shoot-cluster v0.2.x ruleset")
 
 		setLatestPatchVersion := WithVersion("v0.2.1")
 		setLatestPatchVersion(ruleset)

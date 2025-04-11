@@ -21,7 +21,7 @@ rules:
   severity: "HIGH"
 - id: 1003
   name: "Shoot clusters must have the Lakom extension configured."
-  description: "Lakom is an admission controller which implements image signature verification. Shoot clusters must have the Lakom extension configured with trusted public keys so that only trusted images are allowed in the cluster. As a bare minimum Lakom should verify Gardener managed workload in the `kube-system` namespace."
+  description: "Lakom is an admission controller which implements image signature verification. Shoot clusters should have the Lakom extension configured with trusted public keys so that only trusted images are allowed in the cluster. As a minimum requirement Lakom must verify workload managed by Gardener in the `kube-system` namespace."
   severity: "HIGH"
 - id: 2000
   name: "Shoot clusters must have anonymous authentication disabled for the Kubernetes API server."
