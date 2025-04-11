@@ -16,20 +16,43 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var (
 	_ rule.Rule     = &Rule1003{}
 	_ rule.Severity = &Rule1003{}
+	_ option.Option = &Options1003{}
 )
 
 type Rule1003 struct {
 	Client         client.Client
 	ShootName      string
 	ShootNamespace string
+	Options        *Options1003
+}
+
+type Options1003 struct {
+	AllowedLakomScopes []lakomapi.ScopeType `json:"allowedLakomScopes" yaml:"allowedLakomScopes"`
+}
+
+func (o Options1003) Validate() field.ErrorList {
+	var (
+		allErrs  field.ErrorList
+		rootPath = field.NewPath("minLakomScope")
+	)
+
+	for _, lakomScope := range o.AllowedLakomScopes {
+		if !lakomapi.AllowedScopes.Has(lakomScope) {
+			allErrs = append(allErrs, field.Invalid(rootPath, lakomScope, "must be valid Lakom Scope"))
+		}
+	}
+
+	return allErrs
 }
 
 func (r *Rule1003) ID() string {
@@ -45,6 +68,12 @@ func (r *Rule1003) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule1003) Run(ctx context.Context) (rule.RuleResult, error) {
+	AllowedLakomScopes := []lakomapi.ScopeType{lakomapi.KubeSystemManagedByGardener, lakomapi.KubeSystem, lakomapi.Cluster}
+
+	if r.Options != nil && len(r.Options.AllowedLakomScopes) > 0 {
+		AllowedLakomScopes = r.Options.AllowedLakomScopes
+	}
+
 	shoot := &gardencorev1beta1.Shoot{ObjectMeta: v1.ObjectMeta{Name: r.ShootName, Namespace: r.ShootNamespace}}
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(shoot), shoot); err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("name", r.ShootName, "namespace", r.ShootNamespace, "kind", "Shoot"))), nil
@@ -81,13 +110,17 @@ func (r *Rule1003) Run(ctx context.Context) (rule.RuleResult, error) {
 			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 		}
 
+		// Using KubeSystemManagedByGardener as default Lakom scope. ref: https://github.com/gardener/gardener-extension-shoot-lakom-service/blob/113638a466c1f53b9470d558b991130d0d951b79/pkg/controller/lifecycle/actuator.go#L117
+		lakomScope := lakomapi.KubeSystemManagedByGardener
+		if lakomConfig.Scope != nil {
+			lakomScope = *lakomConfig.Scope
+		}
+
 		switch {
-		case lakomConfig.Scope == nil || *lakomConfig.Scope != lakomapi.Cluster:
-			return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s does not check every image in cluster. Configured scope should be 'Cluster'.", lakomconst.ExtensionType), rule.NewTarget())), nil
-		case lakomConfig.TrustedKeysResourceName == nil || len(*lakomConfig.TrustedKeysResourceName) == 0:
-			return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s does not configure trusted keys.", lakomconst.ExtensionType), rule.NewTarget())), nil
+		case !slices.Contains(AllowedLakomScopes, lakomScope):
+			return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s is not configured with allowed scope.", lakomconst.ExtensionType), rule.NewTarget())), nil
 		default:
-			return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Extension %s configures trusted keys.", lakomconst.ExtensionType), rule.NewTarget())), nil
+			return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Extension %s configured correctly for the shoot cluster.", lakomconst.ExtensionType), rule.NewTarget())), nil
 		}
 	case extensionLabelValue == "true" && !extensionDisabled:
 		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s is not configured for the shoot cluster.", lakomconst.ExtensionType), rule.NewTarget())), nil
