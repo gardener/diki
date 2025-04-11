@@ -66,9 +66,13 @@ The supported versions can be found in the used `CloudProfile`.
 ### 1003 - Shoot clusters must have the Lakom extension configured. <a id="1003"></a>
 
 #### Description
-Lakom is an admission controller which implements image signature verification. Shoot clusters must have the Lakom extension configured with trusted public keys so that only trusted images are allowed in the cluster.
+Lakom is an admission controller which implements image signature verification. Shoot clusters must have the Lakom extension configured with trusted public keys so that only trusted images are allowed in the cluster. As a bare minimum Lakom should verify Gardener managed workload in the `kube-system` namespace.
 
 #### Fix
+The Lakom extension should be globally enabled by default by the Gardener admins. Please make sure you have not disabled the extension in the `spec.extensions` field.
+
+If Lakom is not enabled by default please follow the bellow guide.
+
 Add the Lakom extensions to the `spec.extensions` field.
 ``` yaml
 kind: Shoot

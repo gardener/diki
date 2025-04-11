@@ -94,7 +94,7 @@ var _ = Describe("#1003", func() {
 				{Status: rule.Failed, Message: "Extension shoot-lakom-service is not configured for the shoot cluster.", Target: rule.NewTarget()},
 			},
 		),
-		Entry("should fail when Lakom extension does not have extension configuration",
+		Entry("should pass when Lakom extension does not have extension config",
 			func() {
 				shoot.Labels = map[string]string{
 					"extensions.extensions.gardener.cloud/shoot-lakom-service": "true",
@@ -102,7 +102,20 @@ var _ = Describe("#1003", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Extension shoot-lakom-service is not configured for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "Extension shoot-lakom-service configured correctly for the shoot cluster.", Target: rule.NewTarget()},
+			},
+		),
+		Entry("should fail when Lakom extension does not have extension config and default scope is not allowed",
+			func() {
+				shoot.Labels = map[string]string{
+					"extensions.extensions.gardener.cloud/shoot-lakom-service": "true",
+				}
+			},
+			&rules.Options1003{
+				AllowedLakomScopes: []lakomapi.ScopeType{kubeSystemScope, clusterScope},
+			},
+			[]rule.CheckResult{
+				{Status: rule.Failed, Message: "Extension shoot-lakom-service is not configured with allowed scope.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should warn when Lakom extension is disabled",
@@ -133,7 +146,7 @@ var _ = Describe("#1003", func() {
 				{Status: rule.Warning, Message: "Extension shoot-lakom-service has unexpected label value: false.", Target: rule.NewTarget()},
 			},
 		),
-		Entry("should fail when Lakom extension does not have provider config",
+		Entry("should pass when Lakom extension does not have provider config",
 			func() {
 				shoot.Labels = map[string]string{
 					"extensions.extensions.gardener.cloud/shoot-lakom-service": "true",
@@ -146,7 +159,25 @@ var _ = Describe("#1003", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Extension shoot-lakom-service is not configured for the shoot cluster.", Target: rule.NewTarget()},
+				{Status: rule.Passed, Message: "Extension shoot-lakom-service configured correctly for the shoot cluster.", Target: rule.NewTarget()},
+			},
+		),
+		Entry("should fail when Lakom extension does not have provider config and default scope is not allowed",
+			func() {
+				shoot.Labels = map[string]string{
+					"extensions.extensions.gardener.cloud/shoot-lakom-service": "true",
+				}
+				shoot.Spec.Extensions = []gardencorev1beta1.Extension{
+					{
+						Type: "shoot-lakom-service",
+					},
+				}
+			},
+			&rules.Options1003{
+				AllowedLakomScopes: []lakomapi.ScopeType{kubeSystemScope, clusterScope},
+			},
+			[]rule.CheckResult{
+				{Status: rule.Failed, Message: "Extension shoot-lakom-service is not configured with allowed scope.", Target: rule.NewTarget()},
 			},
 		),
 		Entry("should pass when Lakom extension is configured",

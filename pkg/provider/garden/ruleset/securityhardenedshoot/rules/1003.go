@@ -68,10 +68,10 @@ func (r *Rule1003) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule1003) Run(ctx context.Context) (rule.RuleResult, error) {
-	AllowedLakomScopes := []lakomapi.ScopeType{lakomapi.KubeSystemManagedByGardener, lakomapi.KubeSystem, lakomapi.Cluster}
+	allowedLakomScopes := []lakomapi.ScopeType{lakomapi.KubeSystemManagedByGardener, lakomapi.KubeSystem, lakomapi.Cluster}
 
 	if r.Options != nil && len(r.Options.AllowedLakomScopes) > 0 {
-		AllowedLakomScopes = r.Options.AllowedLakomScopes
+		allowedLakomScopes = r.Options.AllowedLakomScopes
 	}
 
 	shoot := &gardencorev1beta1.Shoot{ObjectMeta: v1.ObjectMeta{Name: r.ShootName, Namespace: r.ShootNamespace}}
@@ -94,36 +94,36 @@ func (r *Rule1003) Run(ctx context.Context) (rule.RuleResult, error) {
 		var (
 			lakomExtension = shoot.Spec.Extensions[extensionIndex]
 			lakomConfig    = &lakomapiv1alpha1.LakomConfig{}
-			scheme         = runtime.NewScheme()
+			// Using KubeSystemManagedByGardener as default Lakom scope. ref: https://github.com/gardener/gardener-extension-shoot-lakom-service/blob/113638a466c1f53b9470d558b991130d0d951b79/pkg/controller/lifecycle/actuator.go#L117
+			lakomScope = lakomapi.KubeSystemManagedByGardener
+			scheme     = runtime.NewScheme()
 		)
 
-		if lakomExtension.ProviderConfig == nil {
-			return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s is not configured for the shoot cluster.", lakomconst.ExtensionType), rule.NewTarget())), nil
+		if lakomExtension.ProviderConfig != nil {
+			if err := lakomapiv1alpha1.AddToScheme(scheme); err != nil {
+				return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+			}
+
+			_, _, err := serializer.NewCodecFactory(scheme).UniversalDeserializer().Decode(lakomExtension.ProviderConfig.Raw, nil, lakomConfig)
+			if err != nil {
+				return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+			}
+
+			if lakomConfig.Scope != nil {
+				lakomScope = *lakomConfig.Scope
+			}
 		}
 
-		if err := lakomapiv1alpha1.AddToScheme(scheme); err != nil {
-			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
-		}
-
-		_, _, err := serializer.NewCodecFactory(scheme).UniversalDeserializer().Decode(lakomExtension.ProviderConfig.Raw, nil, lakomConfig)
-		if err != nil {
-			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
-		}
-
-		// Using KubeSystemManagedByGardener as default Lakom scope. ref: https://github.com/gardener/gardener-extension-shoot-lakom-service/blob/113638a466c1f53b9470d558b991130d0d951b79/pkg/controller/lifecycle/actuator.go#L117
-		lakomScope := lakomapi.KubeSystemManagedByGardener
-		if lakomConfig.Scope != nil {
-			lakomScope = *lakomConfig.Scope
-		}
-
-		switch {
-		case !slices.Contains(AllowedLakomScopes, lakomScope):
+		if !slices.Contains(allowedLakomScopes, lakomScope) {
 			return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s is not configured with allowed scope.", lakomconst.ExtensionType), rule.NewTarget())), nil
-		default:
-			return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Extension %s configured correctly for the shoot cluster.", lakomconst.ExtensionType), rule.NewTarget())), nil
 		}
+		return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Extension %s configured correctly for the shoot cluster.", lakomconst.ExtensionType), rule.NewTarget())), nil
 	case extensionLabelValue == "true" && !extensionDisabled:
-		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s is not configured for the shoot cluster.", lakomconst.ExtensionType), rule.NewTarget())), nil
+		// Using KubeSystemManagedByGardener as default Lakom scope. ref: https://github.com/gardener/gardener-extension-shoot-lakom-service/blob/113638a466c1f53b9470d558b991130d0d951b79/pkg/controller/lifecycle/actuator.go#L113
+		if !slices.Contains(allowedLakomScopes, lakomapi.KubeSystemManagedByGardener) {
+			return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Extension %s is not configured with allowed scope.", lakomconst.ExtensionType), rule.NewTarget())), nil
+		}
+		return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Extension %s configured correctly for the shoot cluster.", lakomconst.ExtensionType), rule.NewTarget())), nil
 	case extensionLabelValue == "true" && extensionDisabled:
 		return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Extension %s is disabled in the shoot spec and enabled in labels.", lakomconst.ExtensionType), rule.NewTarget())), nil
 	default:
