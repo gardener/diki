@@ -37,6 +37,10 @@ func (r *Ruleset) registerV02Rules(ruleOptions map[string]config.RuleOptionsConf
 	if err != nil {
 		return fmt.Errorf("rule option 1002 error: %s", err.Error())
 	}
+	opts1003, err := getV02OptionOrNil[rules.Options1003](ruleOptions["1003"].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 1003 error: %s", err.Error())
+	}
 	opts2007, err := getV02OptionOrNil[rules.Options2007](ruleOptions["2007"].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 2007 error: %s", err.Error())
@@ -65,6 +69,7 @@ func (r *Ruleset) registerV02Rules(ruleOptions map[string]config.RuleOptionsConf
 			Client:         c,
 			ShootName:      r.args.ShootName,
 			ShootNamespace: r.args.ProjectNamespace,
+			Options:        opts1003,
 		},
 		&rules.Rule2000{
 			Client:         c,
