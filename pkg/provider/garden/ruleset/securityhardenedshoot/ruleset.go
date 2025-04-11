@@ -15,6 +15,7 @@ import (
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
+	"github.com/gardener/diki/pkg/shared/provider"
 	sharedruleset "github.com/gardener/diki/pkg/shared/ruleset"
 )
 
@@ -29,7 +30,7 @@ var (
 	_ ruleset.Ruleset = &Ruleset{}
 	// SupportedVersions is a list of available versions for the Security Hardened Shoot Cluster Ruleset.
 	// Versions are sorted from newest to oldest.
-	SupportedVersions = []string{"v0.2.0", "v0.1.0"}
+	SupportedVersions = []string{"v0.2.1", "v0.2.0", "v0.1.0"}
 )
 
 // Ruleset implements Security Hardened Shoot Cluster.
@@ -78,7 +79,7 @@ func (r *Ruleset) Version() string {
 }
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
-func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.Config) (*Ruleset, error) {
+func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.Config, logger provider.Logger) (*Ruleset, error) {
 	rulesetArgsByte, err := json.Marshal(rulesetConfig.Args)
 	if err != nil {
 		return nil, err
@@ -113,6 +114,15 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.C
 			return nil, err
 		}
 	case "v0.2.0":
+		logger.Info("Using version v0.2.1 as latest patch version of security-hardened-shoot-cluster v0.2")
+
+		setLatestPatchVersion := WithVersion("v0.2.1")
+		setLatestPatchVersion(ruleset)
+
+		if err := ruleset.registerV02Rules(ruleOptions); err != nil {
+			return nil, err
+		}
+	case "v0.2.1":
 		if err := ruleset.registerV02Rules(ruleOptions); err != nil {
 			return nil, err
 		}

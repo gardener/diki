@@ -31,7 +31,7 @@ func GardenProviderFromConfig(conf config.ProviderConfig) (provider.Provider, er
 	for _, rulesetConfig := range conf.Rulesets {
 		switch rulesetConfig.ID {
 		case securityhardenedshoot.RulesetID:
-			ruleset, err := securityhardenedshoot.FromGenericConfig(rulesetConfig, p.Config)
+			ruleset, err := securityhardenedshoot.FromGenericConfig(rulesetConfig, p.Config, providerLogger)
 			if err != nil {
 				return nil, err
 			}

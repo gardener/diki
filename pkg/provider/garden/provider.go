@@ -71,6 +71,10 @@ func (p *Provider) RunAll(ctx context.Context) (provider.ProviderResult, error) 
 }
 
 func rulesetKey(rulesetID, rulesetVersion string) string {
+	if rulesetID == "security-hardened-shoot-cluster" && rulesetVersion == "v0.2.0" {
+		return rulesetID + "--v0.2.1"
+	}
+
 	return rulesetID + "--" + rulesetVersion
 }
 
