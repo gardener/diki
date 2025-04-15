@@ -71,11 +71,11 @@ func (r *Rule1002) ID() string {
 }
 
 func (r *Rule1002) Name() string {
-	return "Shoot clusters must use supported versions for their Workers' images."
+	return "Shoot clusters should use supported versions for their Workers' images."
 }
 
 func (r *Rule1002) Severity() rule.SeverityLevel {
-	return rule.SeverityHigh
+	return rule.SeverityMedium
 }
 
 func (r *Rule1002) Run(ctx context.Context) (rule.RuleResult, error) {
