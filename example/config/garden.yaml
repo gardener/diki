@@ -8,7 +8,7 @@ providers:       # contains information about known providers
   rulesets:
   - id: security-hardened-shoot-cluster
     name: Security Hardened Shoot Cluster
-    version: v0.2.0
+    version: v0.2.1
     args:
       projectNamespace: garden-project-name # name of project namespace containing the shoot resource to be tested
       shootName: foo                        # name of shoot resource to be tested
@@ -30,6 +30,12 @@ providers:       # contains information about known providers
     #       allowedClassifications:
     #       - supported
     #       - preview
+    # - ruleID: "1003"
+    #   args:
+    #     allowedLakomScopes: # Config can be skipped as it defaults to the full list of valid scopes
+    #     - KubeSystemManagedByGardener
+    #     - KubeSystem
+    #     - Cluster
     # - ruleID: "2000"
     #   skip:
     #     enabled: true
