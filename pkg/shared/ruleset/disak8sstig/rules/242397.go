@@ -63,10 +63,9 @@ func (r *Rule242397) Run(ctx context.Context) (rule.RuleResult, error) {
 			continue
 		}
 
-		switch {
-		case kubeletConfig.StaticPodPath == nil:
+		if kubeletConfig.StaticPodPath == nil {
 			checkResults = append(checkResults, rule.PassedCheckResult(fmt.Sprintf("Option %s not set.", staticPodPathConfigOption), target))
-		default:
+		} else {
 			checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Option %s set.", staticPodPathConfigOption), target))
 		}
 	}
