@@ -57,15 +57,15 @@ var _ = Describe("#242391", func() {
 
 	It("should return correct checkResults", func() {
 		node1 := plainNode.DeepCopy()
-		node1.ObjectMeta.Name = "node1"
+		node1.Name = "node1"
 		Expect(fakeClient.Create(ctx, node1)).To(Succeed())
 
 		node2 := plainNode.DeepCopy()
-		node2.ObjectMeta.Name = "node2"
+		node2.Name = "node2"
 		Expect(fakeClient.Create(ctx, node2)).To(Succeed())
 
 		node3 := plainNode.DeepCopy()
-		node3.ObjectMeta.Name = "node3"
+		node3.Name = "node3"
 		Expect(fakeClient.Create(ctx, node3)).To(Succeed())
 
 		fakeRESTClient = &manualfake.RESTClient{

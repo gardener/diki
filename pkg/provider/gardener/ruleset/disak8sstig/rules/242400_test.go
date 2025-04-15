@@ -165,13 +165,13 @@ var _ = Describe("#242400", func() {
 		Expect(fakeControlPlaneClient.Create(ctx, ksDeployment)).To(Succeed())
 
 		node1 := plainNode.DeepCopy()
-		node1.ObjectMeta.Name = "node1"
+		node1.Name = "node1"
 
 		node2 := plainNode.DeepCopy()
-		node2.ObjectMeta.Name = "node2"
+		node2.Name = "node2"
 
 		node3 := plainNode.DeepCopy()
-		node3.ObjectMeta.Name = "node3"
+		node3.Name = "node3"
 
 		Expect(fakeClusterClient.Create(ctx, node1)).To(Succeed())
 		Expect(fakeClusterClient.Create(ctx, node2)).To(Succeed())
@@ -280,7 +280,7 @@ var _ = Describe("#242400", func() {
 		Expect(fakeControlPlaneClient.Create(ctx, ksDeployment)).To(Succeed())
 
 		node1 := plainNode.DeepCopy()
-		node1.ObjectMeta.Name = "node1"
+		node1.Name = "node1"
 
 		Expect(fakeClusterClient.Create(ctx, node1)).To(Succeed())
 
@@ -336,7 +336,7 @@ var _ = Describe("#242400", func() {
 
 	It("should return error when deployments and pods are not found", func() {
 		node1 := plainNode.DeepCopy()
-		node1.ObjectMeta.Name = "node1"
+		node1.Name = "node1"
 
 		Expect(fakeClusterClient.Create(ctx, node1)).To(Succeed())
 
@@ -369,7 +369,7 @@ var _ = Describe("#242400", func() {
 
 	It("should return accepted check result when kubeProxyDiabled option is set to true", func() {
 		node1 := plainNode.DeepCopy()
-		node1.ObjectMeta.Name = "node1"
+		node1.Name = "node1"
 
 		Expect(fakeClusterClient.Create(ctx, node1)).To(Succeed())
 
