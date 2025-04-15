@@ -4,7 +4,7 @@
 
 The Security Hardened Shoot Cluster Guide is created by the Gardener team. It contains rules that check `Shoot` resources. The ruleset is inspired and follows some of the requirements from the [DISA Kubernetes Security Technical Implementation Guide](../disa-k8s-stig/ruleset.md).
 
-This documentation references rules from [Security Hardened Shoot Cluster Guide v0.2.0](./security-hardened-shoot-cluster-v0.2.0.yaml)
+This documentation references rules from [Security Hardened Shoot Cluster Guide v0.2.1](./security-hardened-shoot-cluster-v0.2.1.yaml)
 
 ## Rules
 
@@ -66,7 +66,7 @@ The supported versions can be found in the used `CloudProfile`.
 ### 1003 - Shoot clusters must have the Lakom extension configured. <a id="1003"></a>
 
 #### Description
-Lakom is an admission controller which implements image signature verification. Shoot clusters should have the Lakom extension configured with trusted public keys so that only trusted images are allowed in the cluster. As a minimum requirement Lakom must verify workload managed by Gardener in the `kube-system` namespace.
+Lakom is an admission controller which implements image signature verification. Shoot clusters should have the Lakom extension configured with trusted public keys so that only trusted images are allowed in the cluster. As a minimum requirement Lakom must verify workload managed by Gardener in the kube-system namespace.
 
 #### Fix
 The Lakom extension should be globally enabled by the Gardener admins so that the admission webhook verifies Gardener managed workload in the `kube-system` namespace. Please make sure you have not disabled the extension in the `spec.extensions` field.
