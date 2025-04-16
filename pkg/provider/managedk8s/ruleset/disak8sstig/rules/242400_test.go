@@ -117,15 +117,15 @@ var _ = Describe("#242400", func() {
 
 	It("should return correct checkResults", func() {
 		node1 := plainNode.DeepCopy()
-		node1.ObjectMeta.Name = "node1"
+		node1.Name = "node1"
 		Expect(fakeClient.Create(ctx, node1)).To(Succeed())
 
 		node2 := plainNode.DeepCopy()
-		node2.ObjectMeta.Name = "node2"
+		node2.Name = "node2"
 		Expect(fakeClient.Create(ctx, node2)).To(Succeed())
 
 		node3 := plainNode.DeepCopy()
-		node3.ObjectMeta.Name = "node3"
+		node3.Name = "node3"
 		Expect(fakeClient.Create(ctx, node3)).To(Succeed())
 
 		pod1 := plainPod.DeepCopy()
@@ -232,7 +232,7 @@ var _ = Describe("#242400", func() {
 
 	It("should check correct pods when options are used", func() {
 		node1 := plainNode.DeepCopy()
-		node1.ObjectMeta.Name = "node1"
+		node1.Name = "node1"
 		Expect(fakeClient.Create(ctx, node1)).To(Succeed())
 
 		pod1 := plainPod.DeepCopy()
@@ -294,7 +294,7 @@ var _ = Describe("#242400", func() {
 
 	It("should correctly find the kube-proxy container", func() {
 		node1 := plainNode.DeepCopy()
-		node1.ObjectMeta.Name = "node1"
+		node1.Name = "node1"
 		Expect(fakeClient.Create(ctx, node1)).To(Succeed())
 
 		kubeProxyContainerPod := plainPod.DeepCopy()
@@ -357,7 +357,7 @@ var _ = Describe("#242400", func() {
 
 	It("should error when kube-proxy pods cannot be found", func() {
 		node1 := plainNode.DeepCopy()
-		node1.ObjectMeta.Name = "node1"
+		node1.Name = "node1"
 		Expect(fakeClient.Create(ctx, node1)).To(Succeed())
 
 		fakeRESTClient = &manualfake.RESTClient{
@@ -386,7 +386,7 @@ var _ = Describe("#242400", func() {
 
 	It("should return accepted check result when kubeProxyDiabled option is set to true", func() {
 		node1 := plainNode.DeepCopy()
-		node1.ObjectMeta.Name = "node1"
+		node1.Name = "node1"
 		Expect(fakeClient.Create(ctx, node1)).To(Succeed())
 
 		fakeRESTClient = &manualfake.RESTClient{

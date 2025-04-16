@@ -156,10 +156,10 @@ func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
 		for _, p := range partialMetadata {
 			target := rule.NewTarget("name", p.Name, "namespace", p.Namespace, "kind", p.Kind)
 			acceptedIdx := slices.IndexFunc(acceptedResources, func(acceptedResource AcceptedResources242383) bool {
-				return (p.APIVersion == acceptedResource.ObjectSelector.APIVersion) &&
-					(acceptedResource.ObjectSelector.Kind == "*" || p.Kind == acceptedResource.ObjectSelector.Kind) &&
+				return (p.APIVersion == acceptedResource.APIVersion) &&
+					(acceptedResource.Kind == "*" || p.Kind == acceptedResource.Kind) &&
 					utils.MatchLabels(allNamespaces[namespace].Labels, acceptedResource.NamespaceMatchLabels) &&
-					utils.MatchLabels(p.Labels, acceptedResource.ObjectSelector.MatchLabels)
+					utils.MatchLabels(p.Labels, acceptedResource.MatchLabels)
 			})
 
 			if acceptedIdx < 0 {
