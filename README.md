@@ -19,7 +19,22 @@ It's colloquially known as "Don't I Know It", which is a nice fit as well for wh
 
 ## Getting Started
 
-#### Installation
+### Installation
+
+Install the latest release from [Homebrew](https://brew.sh/), [Chocolatey](https://chocolatey.org/packages/diki) or [GitHub Releases](https://github.com/gardener/diki/releases).
+
+#### Install using Package Managers
+
+```sh
+# Homebrew (macOS and Linux)
+brew install gardener/tap/diki
+
+# Chocolatey (Windows)
+# default location C:\ProgramData\chocolatey\bin\diki.exe
+choco install diki
+```
+
+#### Install from Github Release
 
 If you install via GitHub releases, you need to put the diki binary on your path.
 
@@ -44,7 +59,7 @@ chmod +x "./diki-${os}-${arch}"
 sudo mv "./diki-${os}-${arch}" /usr/local/bin/diki
 ```
 
-#### Run
+### Run
 
 Most of Diki's `run` configurations are provided through its [config file](./example/config/).
 Options depend on the different providers and rulesets.
@@ -84,7 +99,7 @@ diki run \
     --rule-id=242414
 ```
 
-#### Report
+### Report
 
 Diki can generate a human readable report from the output files of a `diki run` execution.
 Merged reports can be produced by setting the `distinct-by` flag.
@@ -105,7 +120,7 @@ diki report generate \
     output1.json output2.json
 ```
 
-#### Difference
+### Difference
 
 Diki can generate a json containing the difference between two output files of `diki run` executions.
 This can help to identify improvements (or regressions).
@@ -128,7 +143,7 @@ diki report generate diff \
     difference1.json difference2.json
 ```
 
-#### Unit Tests
+### Unit Tests
 
 You can manually run the tests via `make test`.
 
