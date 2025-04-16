@@ -19,7 +19,22 @@ It's colloquially known as "Don't I Know It", which is a nice fit as well for wh
 
 ## Getting Started
 
-#### Installation
+### Installation
+
+Install the latest release from [Homebrew](https://brew.sh/), [Chocolatey](https://chocolatey.org/packages/diki) or [GitHub Releases](https://github.com/gardener/diki/releases).
+
+#### Install using Package Managers
+
+```sh
+# Homebrew (macOS and Linux)
+brew install gardener/tap/diki
+
+# Chocolatey (Windows)
+# default location C:\ProgramData\chocolatey\bin\diki.exe
+choco install diki
+```
+
+#### Install from Github Release
 
 If you install via GitHub releases, you need to put the diki binary on your path.
 
