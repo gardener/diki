@@ -35,24 +35,37 @@ linters:
           - revive
         path: pkg/shared/ruleset/disak8sstig/rules/
         text: 'exported: exported'
-      # - path: (.+)\.go$
-      #   text: var-naming # ((var|const|struct field|func) .* should be .*
-      - path: (.+)\.go$
-        text: dot-imports # should not use dot imports
-      - path: (.+)\.go$
-        text: 'exported: (type|func) name will be used as .* by other packages, and that stutters;'
-      - path: (.+)\.go$
-        text: indent-error-flow # if block ends with a return statement, so drop this else and outdent its block
-      - path: (.+)\.go$
-        text: package-comments
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
-formatters:
-  exclusions:
-    generated: lax
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
+  settings:
+    revive:
+      rules:
+      # recommended rules https://github.com/mgechev/revive/tree/v1.9.0?tab=readme-ov-file#recommended-configuration
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+        arguments:
+        - allowedPackages:
+          - github.com/onsi/ginkgo/v2
+          - github.com/onsi/gomega
+          - github.com/onsi/gomega/gstruct
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+        arguments:
+        - disableStutteringCheck
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      # - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      # - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unused-parameter
+      - name: unreachable-code
+      - name: redefines-builtin-id
