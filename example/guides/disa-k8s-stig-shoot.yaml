@@ -3,9 +3,9 @@ providers:
   name: "Managed Kubernetes"
   metadata:
     # foo: bar
-    shootName: shoot-abcd
+    # shootName: <shoot-name>
   args:
-    kubeconfigPath: /shoot-abcd-access/kubeconfig  # path to shoot admin kubeconfig
+    kubeconfigPath: <shoot-kubeconfig-path>  # path to shoot admin kubeconfig
   rulesets:
   - id: disa-kubernetes-stig
     name: DISA Kubernetes Security Technical Implementation Guide
@@ -49,7 +49,7 @@ providers:
             k8s-app: node-local-dns
           namespaceMatchLabels:
             kubernetes.io/metadata.name: kube-system
-          justification: "node local dns requires port 53 in order to operate properly"
+          justification: "Node local dns requires port 53 in order to operate properly."
           ports:
           - 53
     - ruleID: "242417"
@@ -59,7 +59,7 @@ providers:
             resources.gardener.cloud/managed-by: gardener
           namespaceMatchLabels:
             kubernetes.io/metadata.name: kube-system
-          justification: "Pods managed by Gardener are not considered as user pods"
+          justification: "Pods managed by Gardener are not considered as user pods."
     - ruleID: "242449"
       args:
         nodeGroupByLabels:
@@ -93,14 +93,14 @@ providers:
   metadata:
   #  foo: bar
   args:
-    kubeconfigPath: /garden/config  # path to garden cluster kubeconfig
+    kubeconfigPath: <garden-kubeconfig-path>  # path to garden cluster kubeconfig
   rulesets:
   - id: security-hardened-shoot-cluster
     name: Security Hardened Shoot Cluster
     version: v0.2.1
     args:
-      projectNamespace: garden-project-name # name of project namespace containing the shoot resource to be tested
-      shootName: shoot-abcd                 # name of shoot resource to be tested
+      projectNamespace: garden-<project-name> # name of project namespace containing the shoot resource to be tested
+      shootName: <shoot-name>                 # name of shoot resource to be tested
     ruleOptions:
     - ruleID: "2007"
       args:

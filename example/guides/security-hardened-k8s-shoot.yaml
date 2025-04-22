@@ -2,9 +2,9 @@ providers:
 - id: managedk8s
   name: "Managed Kubernetes"
   metadata:
-    shootName: shoot-abcd
+    # shootName: <shoot-name>
   args:
-    kubeconfigPath: /shoot-abcd-access/kubeconfig  # path to shoot admin kubeconfig
+    kubeconfigPath: <shoot-kubeconfig-path>  # path to shoot admin kubeconfig
   rulesets:
   - id: security-hardened-k8s
     name: Security Hardened Kubernetes Cluster
@@ -15,7 +15,7 @@ providers:
         acceptedNamespaces:
         - matchLabels:
             resources.gardener.cloud/managed-by: gardener
-          justification: "Gardener managed namespaces are accepted to allow traffic by default"
+          justification: "Gardener managed namespaces are accepted to allow traffic by default."
           acceptedTraffic:
             ingress: true
             egress: true
@@ -26,7 +26,7 @@ providers:
             resources.gardener.cloud/managed-by: gardener
           namespaceMatchLabels:
             resources.gardener.cloud/managed-by: gardener
-          justification: "Gardener managed resources are accepted to allow privilege escalation"
+          justification: "Gardener managed resources are accepted to allow privilege escalation."
     - ruleID: "2003"
       args:
         acceptedPods:
@@ -34,7 +34,7 @@ providers:
             resources.gardener.cloud/managed-by: gardener
           namespaceMatchLabels:
             resources.gardener.cloud/managed-by: gardener
-          justification: "Gardener managed resources are accepted to use a wider range of volume types"
+          justification: "Gardener managed resources are accepted to use a wider range of volume types."
           volumeNames:
           - "*"
     - ruleID: "2006"
@@ -44,14 +44,14 @@ providers:
             resources.gardener.cloud/managed-by: gardener
           namespaceMatchLabels:
             resources.gardener.cloud/managed-by: gardener
-          justification: "Roles managed by Gardener are accepted to use wildcards in RBAC resources"
+          justification: "Roles managed by Gardener are accepted to use wildcards in RBAC resources."
         acceptedClusterRoles:
         - matchLabels:
             resources.gardener.cloud/managed-by: gardener
-          justification: "Kubernetes default ClusterRoles are accepted to use wildcards in RBAC resources"
+          justification: "ClusterRoles managed by Gardener are accepted to use wildcards in RBAC resources."
         - matchLabels:
              kubernetes.io/bootstrapping: rbac-defaults
-          justification: "Kubernetes default ClusterRoles are accepted to use wildcards in RBAC verbs"
+          justification: "Kubernetes default ClusterRoles are accepted to use wildcards in RBAC resources."
     - ruleID: "2007"
       args:
         acceptedRoles:
@@ -59,14 +59,14 @@ providers:
             resources.gardener.cloud/managed-by: gardener
           namespaceMatchLabels:
             resources.gardener.cloud/managed-by: gardener
-          justification: "ClusterRoles managed by Gardener are accepted to use wildcards in RBAC verbs"
+          justification: "Roles managed by Gardener are accepted to use wildcards in RBAC verbs."
         acceptedClusterRoles:
         - matchLabels:
             resources.gardener.cloud/managed-by: gardener
-          justification: "Kubernetes default ClusterRoles are accepted to use wildcards in RBAC verbs"
+          justification: "ClusterRoles managed by Gardener are accepted to use wildcards in RBAC verbs."
         - matchLabels:
              kubernetes.io/bootstrapping: rbac-defaults
-          justification: "Kubernetes default ClusterRoles are accepted to use wildcards in RBAC verbs"
+          justification: "Kubernetes default ClusterRoles are accepted to use wildcards in RBAC verbs."
     - ruleID: "2008"
       args:
         acceptedPods:
@@ -74,7 +74,7 @@ providers:
             resources.gardener.cloud/managed-by: gardener
           namespaceMatchLabels:
             resources.gardener.cloud/managed-by: gardener
-          justification: "Gardener managed resources are accepted to use a wider range of volume types"
+          justification: "Gardener managed resources are accepted to use a wider range of volume types."
           volumeNames:
           - "*"
 output:
