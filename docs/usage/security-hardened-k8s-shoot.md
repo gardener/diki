@@ -25,7 +25,7 @@ Set the following arguments:
 ``` yaml
 - id: managedk8s
   name: "Managed Kubernetes"
-  metadata:
+  metadata: # custom user metadata
     # shootName: <shoot-name>
   args:
     kubeconfigPath: <shoot-kubeconfig-path>  # path to shoot admin kubeconfig

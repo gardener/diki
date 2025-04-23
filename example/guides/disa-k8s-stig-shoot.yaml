@@ -1,9 +1,9 @@
 providers:
 - id: managedk8s
   name: "Managed Kubernetes"
-  metadata:
-    # foo: bar
+  metadata: # custom user metadata
     # shootName: <shoot-name>
+    # foo: bar
   args:
     kubeconfigPath: <shoot-kubeconfig-path>  # path to shoot admin kubeconfig
   rulesets:
@@ -90,8 +90,8 @@ providers:
         - worker.gardener.cloud/pool
 - id: garden
   name: "Garden"
-  metadata:
-  #  foo: bar
+  metadata: # custom user metadata
+    # foo: bar
   args:
     kubeconfigPath: <garden-kubeconfig-path>  # path to garden cluster kubeconfig
   rulesets:

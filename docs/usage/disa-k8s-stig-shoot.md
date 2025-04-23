@@ -34,9 +34,9 @@ Set the following arguments:
 ``` yaml
 - id: managedk8s
   name: "Managed Kubernetes"
-  metadata:
-    # foo: bar
+  metadata: # custom user metadata
     # shootName: <shoot-name>
+    # foo: bar
   args:
     kubeconfigPath: <shoot-kubeconfig-path>  # path to shoot admin kubeconfig
 ```
@@ -53,8 +53,8 @@ Set the following arguments:
 ``` yaml
 - id: garden
   name: "Garden"
-  metadata:
-  #  foo: bar
+  metadata: # custom user metadata
+    # foo: bar
   args:
     kubeconfigPath: <garden-kubeconfig-path>  # path to garden cluster kubeconfig
   rulesets:

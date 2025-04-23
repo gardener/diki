@@ -1,8 +1,9 @@
 providers:
 - id: managedk8s
   name: "Managed Kubernetes"
-  metadata:
+  metadata: # custom user metadata
     # shootName: <shoot-name>
+    # foo: bar
   args:
     kubeconfigPath: <shoot-kubeconfig-path>  # path to shoot admin kubeconfig
   rulesets:
