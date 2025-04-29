@@ -29,6 +29,17 @@ We will be using the sample [DISA K8s STIG for Shoots configuration file](../../
 
 Set the following arguments:
 - `providers[id=="managedk8s"].args.kubeconfigPath` pointing to a shoot admin kubeconfig.
+- (optional) `providers[id=="managedk8s"].metadata.shootName` should be set to the name of the shoot cluster. The `metadata` field contains custom metadata from the user that will be present in the generated report.
+
+``` yaml
+- id: managedk8s
+  name: "Managed Kubernetes"
+  metadata: # custom user metadata
+    # shootName: <shoot-name>
+    # foo: bar
+  args:
+    kubeconfigPath: <shoot-kubeconfig-path>  # path to shoot admin kubeconfig
+```
 
 In case you need instructions on how to generate such a kubeconfig, please read [Accessing Shoot Clusters](https://github.com/gardener/gardener/blob/master/docs/usage/shoot/shoot_access.md).
 
@@ -38,6 +49,22 @@ Set the following arguments:
 - `providers[id=="garden"].args.kubeconfigPath` pointing to the Garden cluster kubeconfig.
 - `providers[id=="garden"].rulesets.args.projectNamespace` should be set to the namespace in which the shoot cluster is created.
 - `providers[id=="garden"].rulesets.args.shootName` should be set to the name of the shoot cluster.
+
+``` yaml
+- id: garden
+  name: "Garden"
+  metadata: # custom user metadata
+    # foo: bar
+  args:
+    kubeconfigPath: <garden-kubeconfig-path>  # path to garden cluster kubeconfig
+  rulesets:
+  - id: security-hardened-shoot-cluster
+    name: Security Hardened Shoot Cluster
+    version: v0.2.1
+    args:
+      projectNamespace: garden-<project-name> # name of project namespace containing the shoot resource to be tested
+      shootName: <shoot-name>                 # name of shoot resource to be tested
+```
 
 #### Additional configurations
 

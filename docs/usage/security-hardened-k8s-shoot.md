@@ -20,6 +20,16 @@ We will be using the sample [Security Hardened Kubernetes Guide for Shoots confi
 
 Set the following arguments:
 - `providers[id=="managedk8s"].args.kubeconfigPath` pointing to a shoot admin kubeconfig.
+- (optional) `providers[id=="managedk8s"].metadata.shootName` should be set to the name of the shoot cluster. The `metadata` field contains custom metadata from the user that will be present in the generated report.
+
+``` yaml
+- id: managedk8s
+  name: "Managed Kubernetes"
+  metadata: # custom user metadata
+    # shootName: <shoot-name>
+  args:
+    kubeconfigPath: <shoot-kubeconfig-path>  # path to shoot admin kubeconfig
+```
 
 In case you need instructions on how to generate such a kubeconfig, please read [Accessing Shoot Clusters](https://github.com/gardener/gardener/blob/master/docs/usage/shoot/shoot_access.md).
 

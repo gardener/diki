@@ -33,7 +33,7 @@ providers:             # contains information about known providers
             k8s-app: node-local-dns
           namespaceMatchLabels:
             kubernetes.io/metadata.name: kube-system
-          justification: "node local dns is allowed because of special handling!"
+          justification: "Node local dns requires port 53 in order to operate properly."
           ports:
           - 53
         - podMatchLabels:
