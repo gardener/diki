@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
+// SPDX-FileCopyrightText: 2025 SAP SE or an SAP affiliate company and Gardener contributors
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -23,7 +23,7 @@ import (
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
-func parseV2R1Options[O rules.RuleOption](options any) (*O, error) {
+func parseV2R3Options[O rules.RuleOption](options any) (*O, error) {
 	optionsByte, err := json.Marshal(options)
 	if err != nil {
 		return nil, err
@@ -43,14 +43,14 @@ func parseV2R1Options[O rules.RuleOption](options any) (*O, error) {
 	return &parsedOptions, nil
 }
 
-func getV2R1OptionOrNil[O rules.RuleOption](options any) (*O, error) {
+func getV2R3OptionOrNil[O rules.RuleOption](options any) (*O, error) {
 	if options == nil {
 		return nil, nil
 	}
-	return parseV2R1Options[O](options)
+	return parseV2R3Options[O](options)
 }
 
-func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
+func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
 	shootClient, err := client.New(r.ShootConfig, client.Options{Scheme: kubernetesgardener.ShootScheme})
 	if err != nil {
 		return err
@@ -76,43 +76,43 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 		return err
 	}
 
-	opts242400, err := getV2R1OptionOrNil[option.KubeProxyOptions](ruleOptions[sharedrules.ID242400].Args)
+	opts242400, err := getV2R3OptionOrNil[option.KubeProxyOptions](ruleOptions[sharedrules.ID242400].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242400 error: %s", err.Error())
 	}
-	opts242414, err := getV2R1OptionOrNil[option.Options242414](ruleOptions[sharedrules.ID242414].Args)
+	opts242414, err := getV2R3OptionOrNil[option.Options242414](ruleOptions[sharedrules.ID242414].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242414 error: %s", err.Error())
 	}
-	opts242415, err := getV2R1OptionOrNil[option.Options242415](ruleOptions[sharedrules.ID242415].Args)
+	opts242415, err := getV2R3OptionOrNil[option.Options242415](ruleOptions[sharedrules.ID242415].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242415 error: %s", err.Error())
 	}
-	opts242445, err := getV2R1OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedrules.ID242445].Args)
+	opts242445, err := getV2R3OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedrules.ID242445].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242445 error: %s", err.Error())
 	}
-	opts242446, err := getV2R1OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedrules.ID242446].Args)
+	opts242446, err := getV2R3OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedrules.ID242446].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242446 error: %s", err.Error())
 	}
-	opts242451, err := getV2R1OptionOrNil[rules.Options242451](ruleOptions[sharedrules.ID242451].Args)
+	opts242451, err := getV2R3OptionOrNil[rules.Options242451](ruleOptions[sharedrules.ID242451].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242451 error: %s", err.Error())
 	}
-	opts242466, err := getV2R1OptionOrNil[option.KubeProxyOptions](ruleOptions[sharedrules.ID242466].Args)
+	opts242466, err := getV2R3OptionOrNil[option.KubeProxyOptions](ruleOptions[sharedrules.ID242466].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242466 error: %s", err.Error())
 	}
-	opts242467, err := getV2R1OptionOrNil[option.KubeProxyOptions](ruleOptions[sharedrules.ID242467].Args)
+	opts242467, err := getV2R3OptionOrNil[option.KubeProxyOptions](ruleOptions[sharedrules.ID242467].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242467 error: %s", err.Error())
 	}
-	opts245543, err := getV2R1OptionOrNil[sharedrules.Options245543](ruleOptions[sharedrules.ID245543].Args)
+	opts245543, err := getV2R3OptionOrNil[sharedrules.Options245543](ruleOptions[sharedrules.ID245543].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 245543 error: %s", err.Error())
 	}
-	opts254800, err := getV2R1OptionOrNil[sharedrules.Options254800](ruleOptions[sharedrules.ID254800].Args)
+	opts254800, err := getV2R3OptionOrNil[sharedrules.Options254800](ruleOptions[sharedrules.ID254800].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 254800 error: %s", err.Error())
 	}

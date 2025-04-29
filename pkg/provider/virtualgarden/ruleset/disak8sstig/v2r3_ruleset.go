@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+// SPDX-FileCopyrightText: 2025 SAP SE or an SAP affiliate company and Gardener contributors
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -21,7 +21,7 @@ import (
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
-func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
+func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
 	runtimeClient, err := client.New(r.RuntimeConfig, client.Options{})
 	if err != nil {
 		return err
@@ -31,19 +31,19 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 	if err != nil {
 		return err
 	}
-	opts242445, err := getV2R1OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedrules.ID242445].Args)
+	opts242445, err := getV2R3OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedrules.ID242445].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242445 error: %s", err.Error())
 	}
-	opts242446, err := getV2R1OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedrules.ID242446].Args)
+	opts242446, err := getV2R3OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedrules.ID242446].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242446 error: %s", err.Error())
 	}
-	opts242451, err := getV2R1OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedrules.ID242451].Args)
+	opts242451, err := getV2R3OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedrules.ID242451].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242451 error: %s", err.Error())
 	}
-	opts245543, err := getV2R1OptionOrNil[sharedrules.Options245543](ruleOptions[sharedrules.ID245543].Args)
+	opts245543, err := getV2R3OptionOrNil[sharedrules.Options245543](ruleOptions[sharedrules.ID245543].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 245543 error: %s", err.Error())
 	}
@@ -740,7 +740,7 @@ func (r *Ruleset) registerV2R1Rules(ruleOptions map[string]config.RuleOptionsCon
 	return r.AddRules(rules...)
 }
 
-func parseV2R1Options[O rules.RuleOption](options any) (*O, error) {
+func parseV2R3Options[O rules.RuleOption](options any) (*O, error) {
 	optionsByte, err := json.Marshal(options)
 	if err != nil {
 		return nil, err
@@ -760,9 +760,9 @@ func parseV2R1Options[O rules.RuleOption](options any) (*O, error) {
 	return &parsedOptions, nil
 }
 
-func getV2R1OptionOrNil[O rules.RuleOption](options any) (*O, error) {
+func getV2R3OptionOrNil[O rules.RuleOption](options any) (*O, error) {
 	if options == nil {
 		return nil, nil
 	}
-	return parseV2R1Options[O](options)
+	return parseV2R3Options[O](options)
 }
