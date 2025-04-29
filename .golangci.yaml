@@ -5,34 +5,34 @@ run:
 
 linters:
   enable:
-    - gocritic
-    - gosec
-    - revive
+  - gocritic
+  - gosec
+  - revive
   exclusions:
     generated: lax
     rules:
       - linters:
-          - revive
+        - revive
         path: pkg/provider/gardener/ruleset/disak8sstig/rules/
         text: 'exported: exported'
       - linters:
-          - revive
+        - revive
         path: pkg/provider/managedk8s/ruleset/disak8sstig/rules/
         text: 'exported: exported'
       - linters:
-          - revive
+        - revive
         path: pkg/provider/managedk8s/ruleset/securityhardenedk8s/rules/
         text: 'exported: exported'
       - linters:
-          - revive
+        - revive
         path: pkg/provider/virtualgarden/ruleset/disak8sstig/rules/
         text: 'exported: exported'
       - linters:
-          - revive
+        - revive
         path: pkg/provider/garden/ruleset/securityhardenedshoot/rules/
         text: 'exported: exported'
       - linters:
-          - revive
+        - revive
         path: pkg/shared/ruleset/disak8sstig/rules/
         text: 'exported: exported'
   settings:
