@@ -200,7 +200,7 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 				for _, fileStat := range fileStats {
 					expectedFilePermissionsMax := "644"
 					if strings.Contains(fileStat.Destination, "/etcd/data") {
-						expectedFilePermissionsMax = "660"
+						expectedFilePermissionsMax = "600"
 					}
 
 					containerTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)

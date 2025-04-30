@@ -54,8 +54,8 @@ var _ = Describe("#242459", func() {
 		emptyMounts           = `[]`
 		compliantStats        = "644\t0\t0\tregular file\t/source1/file1.txt\n400\t0\t65532\tregular file\t/source1/bar/file2.txt"
 		compliantStats2       = "600\t0\t0\tregular file\t/source1/file3.txt\n640\t1000\t0\tregular file\t/source1/bar/file4.txt\n"
-		compliantDataStats    = "660\t0\t0\tregular file\t/source2/file1.txt\n400\t0\t65532\tregular file\t/source2/bar/file2.txt"
-		compliantDataStats2   = "600\t0\t0\tregular file\t/source2/file3.txt\n640\t1000\t0\tregular file\t/source2/bar/file4.txt\n"
+		compliantDataStats    = "600\t0\t0\tregular file\t/source2/file1.txt\n400\t0\t65532\tregular file\t/source2/bar/file2.txt"
+		compliantDataStats2   = "600\t0\t0\tregular file\t/source2/file3.txt\n200\t1000\t0\tregular file\t/source2/bar/file4.txt\n"
 		nonCompliantStats     = "660\t0\t0\tregular file\t/source1/file1.key\n700\t0\t0\tregular file\t/source1/bar/file2.key\n"
 		nonCompliantDataStats = "644\t0\t0\tregular file\t/source2/file1.key\n700\t0\t0\tregular file\t/source2/bar/file2.key\n"
 	)
@@ -229,12 +229,12 @@ var _ = Describe("#242459", func() {
 			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source1/file1.txt, permissions: 644")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source1/bar/file2.txt, permissions: 400")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/file1.txt, permissions: 660")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/file1.txt, permissions: 600")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/bar/file2.txt, permissions: 400")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source1/file3.txt, permissions: 600")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source1/bar/file4.txt, permissions: 640")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/file3.txt, permissions: 600")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/bar/file4.txt, permissions: 640")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/bar/file4.txt, permissions: 200")),
 			}),
 		Entry("should return correct errored checkResults when old ETCD pods are partially found", false,
 			[][]string{{mounts, compliantStats, compliantDataStats}},
@@ -243,7 +243,7 @@ var _ = Describe("#242459", func() {
 				rule.ErroredCheckResult("pods not found", rule.NewTarget("selector", "instance=etcd-events", "namespace", "foo")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source1/file1.txt, permissions: 644")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source1/bar/file2.txt, permissions: 400")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/file1.txt, permissions: 660")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/file1.txt, permissions: 600")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/bar/file2.txt, permissions: 400")),
 			}))
 
@@ -277,12 +277,12 @@ var _ = Describe("#242459", func() {
 			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source1/file1.txt, permissions: 644")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source1/bar/file2.txt, permissions: 400")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/file1.txt, permissions: 660")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/file1.txt, permissions: 600")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/bar/file2.txt, permissions: 400")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source1/file3.txt, permissions: 600")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source1/bar/file4.txt, permissions: 640")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/file3.txt, permissions: 600")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/bar/file4.txt, permissions: 640")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/bar/file4.txt, permissions: 200")),
 			}),
 		Entry("should return failed checkResults when files have too wide permissions",
 			[][]string{{mounts, nonCompliantStats, nonCompliantDataStats, emptyMounts}},
@@ -290,8 +290,8 @@ var _ = Describe("#242459", func() {
 			[]rule.CheckResult{
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source1/file1.key, permissions: 660, expectedPermissionsMax: 644")),
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source1/bar/file2.key, permissions: 700, expectedPermissionsMax: 644")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/file1.key, permissions: 644, expectedPermissionsMax: 660")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/bar/file2.key, permissions: 700, expectedPermissionsMax: 660")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/file1.key, permissions: 644, expectedPermissionsMax: 600")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/bar/file2.key, permissions: 700, expectedPermissionsMax: 600")),
 			}),
 		Entry("should correctly return errored checkResults when commands error",
 			[][]string{{mounts, mounts, compliantStats2, compliantDataStats2}},
@@ -300,7 +300,7 @@ var _ = Describe("#242459", func() {
 				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242459-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
 				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242459-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/file3.txt, permissions: 600")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/bar/file4.txt, permissions: 640")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/bar/file4.txt, permissions: 200")),
 			}),
 		Entry("should check files when GetMountedFilesStats errors",
 			[][]string{{mountsMulty, compliantStats, compliantStats2, emptyMounts, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
@@ -320,7 +320,7 @@ var _ = Describe("#242459", func() {
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source1/file3.txt, permissions: 600")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source1/bar/file4.txt, permissions: 640")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/file3.txt, permissions: 600")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/bar/file4.txt, permissions: 640")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /source2/bar/file4.txt, permissions: 200")),
 			}),
 	)
 })
