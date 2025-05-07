@@ -130,9 +130,9 @@ var _ = Describe("#242383", func() {
 		pod4.Labels["compliance.gardener.cloud/role"] = "diki-privileged-pod"
 		Expect(fakeClient.Create(ctx, pod4)).To(Succeed())
 
-		options.AcceptedResources[0].ObjectSelector.MatchLabels["label"] = "value"
+		options.AcceptedResources[0].MatchLabels["label"] = "value"
 		options.AcceptedResources[0].Status = "Passed"
-		options.AcceptedResources[1].ObjectSelector.MatchLabels["label"] = "value"
+		options.AcceptedResources[1].MatchLabels["label"] = "value"
 		options.AcceptedResources[1].Status = "Passed"
 		r := &rules.Rule242383{
 			Client:  fakeClient,
@@ -262,13 +262,13 @@ var _ = Describe("#242383", func() {
 		pod4.Labels["compliance.gardener.cloud/role"] = "diki-privileged-pod"
 		Expect(fakeClient.Create(ctx, pod4)).To(Succeed())
 
-		options.AcceptedResources[0].ObjectSelector.MatchLabels["foo"] = "bar"
-		options.AcceptedResources[0].ObjectSelector.MatchLabels["bar"] = "foo"
+		options.AcceptedResources[0].MatchLabels["foo"] = "bar"
+		options.AcceptedResources[0].MatchLabels["bar"] = "foo"
 		options.AcceptedResources[0].Status = "Accepted"
 		options.AcceptedResources[0].Justification = "Accept pod."
 
-		options.AcceptedResources[1].ObjectSelector.MatchLabels["foo"] = "bar"
-		options.AcceptedResources[1].ObjectSelector.MatchLabels["bar"] = "foo"
+		options.AcceptedResources[1].MatchLabels["foo"] = "bar"
+		options.AcceptedResources[1].MatchLabels["bar"] = "foo"
 		options.AcceptedResources[1].Status = "Accepted"
 		options.AcceptedResources[1].Justification = "Accept pod."
 

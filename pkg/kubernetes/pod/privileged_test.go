@@ -98,7 +98,7 @@ var _ = Describe("podutils", func() {
 
 		It("should return correct pod when podName length is more than 63", func() {
 			tooLongPodName := strings.Repeat("a", 256)
-			expectedPod.ObjectMeta.Name = strings.Repeat("a", 63)
+			expectedPod.Name = strings.Repeat("a", 63)
 			podFunc := pod.NewPrivilegedPod(tooLongPodName, namespace, image, "", map[string]string{"one": "two"})
 
 			Expect(podFunc()).To(Equal(expectedPod))

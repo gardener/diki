@@ -1,43 +1,71 @@
+version: "2"
+
 run:
   concurrency: 4
-  deadline: 10m
 
 linters:
   enable:
   - gocritic
   - gosec
   - revive
-
-issues:
-  exclude-use-default: false
-  exclude:
-  # - var-naming # ((var|const|struct field|func) .* should be .*
-  - dot-imports # should not use dot imports
-  - "exported: (type|func) name will be used as .* by other packages, and that stutters;"
-  - indent-error-flow # if block ends with a return statement, so drop this else and outdent its block
-  - package-comments
-  exclude-rules:
-    - path: 'pkg/provider/gardener/ruleset/disak8sstig/rules/'
-      linters:
+  exclusions:
+    generated: lax
+    rules:
+      - linters:
         - revive
-      text: "exported: exported"
-    - path: 'pkg/provider/managedk8s/ruleset/disak8sstig/rules/'
-      linters:
+        path: pkg/provider/gardener/ruleset/disak8sstig/rules/
+        text: 'exported: exported'
+      - linters:
         - revive
-      text: "exported: exported"
-    - path: 'pkg/provider/managedk8s/ruleset/securityhardenedk8s/rules/'
-      linters:
+        path: pkg/provider/managedk8s/ruleset/disak8sstig/rules/
+        text: 'exported: exported'
+      - linters:
         - revive
-      text: "exported: exported"
-    - path: 'pkg/provider/virtualgarden/ruleset/disak8sstig/rules/'
-      linters:
+        path: pkg/provider/managedk8s/ruleset/securityhardenedk8s/rules/
+        text: 'exported: exported'
+      - linters:
         - revive
-      text: "exported: exported"
-    - path: 'pkg/provider/garden/ruleset/securityhardenedshoot/rules/'
-      linters:
+        path: pkg/provider/virtualgarden/ruleset/disak8sstig/rules/
+        text: 'exported: exported'
+      - linters:
         - revive
-      text: "exported: exported"
-    - path: 'pkg/shared/ruleset/disak8sstig/rules/'
-      linters:
+        path: pkg/provider/garden/ruleset/securityhardenedshoot/rules/
+        text: 'exported: exported'
+      - linters:
         - revive
-      text: "exported: exported"
+        path: pkg/shared/ruleset/disak8sstig/rules/
+        text: 'exported: exported'
+  settings:
+    revive:
+      rules:
+      # recommended rules https://github.com/mgechev/revive/tree/v1.9.0?tab=readme-ov-file#recommended-configuration
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+        arguments:
+        - allowedPackages:
+          - github.com/onsi/ginkgo/v2
+          - github.com/onsi/gomega
+          - github.com/onsi/gomega/gstruct
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+        arguments:
+        - disableStutteringCheck
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      # - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      # - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unused-parameter
+      - name: unreachable-code
+      - name: redefines-builtin-id
