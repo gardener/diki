@@ -118,7 +118,7 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 				allowsAllEgress = true
 			}
 
-			if deniesIngress && deniesEgress || allowsAllIngress && allowsAllEgress {
+			if allowsAllIngress && allowsAllEgress {
 				break
 			}
 		}
@@ -172,7 +172,6 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 				} else {
 					checkResults = append(checkResults, rule.FailedCheckResult("Egress traffic is not denied by default.", target))
 				}
-
 			}
 		}
 	}
