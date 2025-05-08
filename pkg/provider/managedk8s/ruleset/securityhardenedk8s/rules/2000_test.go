@@ -72,6 +72,19 @@ var _ = Describe("#2000", func() {
 						Egress: true,
 					},
 				},
+				{
+					AcceptedClusterObject: option.AcceptedClusterObject{
+						ClusterObjectSelector: option.ClusterObjectSelector{
+							MatchLabels: map[string]string{
+								"role": "test4",
+							},
+						},
+						Justification: "justification test 4",
+					},
+					AcceptedTraffic: rules.AcceptedTraffic{
+						Ingress: true,
+					},
+				},
 			},
 		}
 
@@ -232,12 +245,7 @@ var _ = Describe("#2000", func() {
 					networkingv1.PolicyTypeIngress,
 					networkingv1.PolicyTypeEgress,
 				},
-				Egress: []networkingv1.NetworkPolicyEgressRule{
-					{
-						Ports: []networkingv1.NetworkPolicyPort{},
-						To:    []networkingv1.NetworkPolicyPeer{},
-					},
-				},
+				Egress: []networkingv1.NetworkPolicyEgressRule{{}},
 			},
 		}
 
@@ -281,6 +289,47 @@ var _ = Describe("#2000", func() {
 		}
 
 		Expect(client.Create(ctx, npTest3)).To(Succeed())
+
+		nsTest4 := &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test4",
+				Labels: map[string]string{
+					"role": "test4",
+				},
+			},
+		}
+
+		Expect(client.Create(ctx, nsTest4)).To(Succeed())
+
+		npTest4Allow := &networkingv1.NetworkPolicy{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "default-allow-egress",
+				Namespace: "test4",
+			},
+			Spec: networkingv1.NetworkPolicySpec{
+				PolicyTypes: []networkingv1.PolicyType{
+					networkingv1.PolicyTypeEgress,
+				},
+				Egress: []networkingv1.NetworkPolicyEgressRule{{}},
+			},
+		}
+
+		Expect(client.Create(ctx, npTest4Allow)).To(Succeed())
+
+		npTest4Deny := &networkingv1.NetworkPolicy{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "default-deny-egress",
+				Namespace: "test4",
+			},
+			Spec: networkingv1.NetworkPolicySpec{
+				PolicyTypes: []networkingv1.PolicyType{
+					networkingv1.PolicyTypeEgress,
+				},
+				Egress: []networkingv1.NetworkPolicyEgressRule{},
+			},
+		}
+
+		Expect(client.Create(ctx, npTest4Deny)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
@@ -365,6 +414,16 @@ var _ = Describe("#2000", func() {
 				Status:  rule.Passed,
 				Message: "Ingress traffic is denied by default.",
 				Target:  rule.NewTarget("namespace", "test3", "kind", "networkPolicy", "name", "ingress-deny-only"),
+			},
+			{
+				Status:  rule.Accepted,
+				Message: "justification test 4",
+				Target:  rule.NewTarget("namespace", "test4", "details", "traffic: ingress"),
+			},
+			{
+				Status:  rule.Failed,
+				Message: "All Egress traffic is allowed by default.",
+				Target:  rule.NewTarget("namespace", "test4", "kind", "networkPolicy", "name", "default-allow-egress"),
 			},
 		}
 
