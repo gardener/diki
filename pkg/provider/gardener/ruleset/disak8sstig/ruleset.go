@@ -31,7 +31,7 @@ var (
 	_ ruleset.Ruleset = &Ruleset{}
 	// SupportedVersions is a list of available versions for the DISA Kubernetes STIG Ruleset.
 	// Versions are sorted from newest to oldest.
-	SupportedVersions = []string{"v2r2", "v2r1"}
+	SupportedVersions = []string{"v2r3", "v2r2"}
 )
 
 // Ruleset implements DISA Kubernetes STIG.
@@ -121,12 +121,12 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabel
 	}
 
 	switch rulesetConfig.Version {
-	case "v2r1":
-		if err := ruleset.registerV2R1Rules(ruleOptions); err != nil {
-			return nil, err
-		}
 	case "v2r2":
 		if err := ruleset.registerV2R2Rules(ruleOptions); err != nil {
+			return nil, err
+		}
+	case "v2r3":
+		if err := ruleset.registerV2R3Rules(ruleOptions); err != nil {
 			return nil, err
 		}
 	default:
