@@ -29,6 +29,7 @@ type FileStats struct {
 	Permissions           string
 	UserOwner, GroupOwner string
 	FileType              string
+	Destination           string
 }
 
 // NewFileStats creates a new FileStats object from the result of
@@ -243,6 +244,10 @@ func getContainerMountedFileStatResults(
 			if err2 != nil {
 				err = errors.Join(err, err2)
 				continue
+			}
+
+			for i := range mountFileStats {
+				mountFileStats[i].Destination = mount.Destination
 			}
 			stats = append(stats, mountFileStats...)
 		}
