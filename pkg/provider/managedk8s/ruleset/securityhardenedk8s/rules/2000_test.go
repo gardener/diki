@@ -204,18 +204,8 @@ var _ = Describe("#2000", func() {
 					networkingv1.PolicyTypeIngress,
 					networkingv1.PolicyTypeEgress,
 				},
-				Ingress: []networkingv1.NetworkPolicyIngressRule{
-					{
-						Ports: []networkingv1.NetworkPolicyPort{},
-						From:  []networkingv1.NetworkPolicyPeer{},
-					},
-				},
-				Egress: []networkingv1.NetworkPolicyEgressRule{
-					{
-						Ports: []networkingv1.NetworkPolicyPort{},
-						To:    []networkingv1.NetworkPolicyPeer{},
-					},
-				},
+				Ingress: []networkingv1.NetworkPolicyIngressRule{{}},
+				Egress:  []networkingv1.NetworkPolicyEgressRule{{}},
 			},
 		}
 
@@ -252,6 +242,45 @@ var _ = Describe("#2000", func() {
 		}
 
 		Expect(client.Create(ctx, npTest2)).To(Succeed())
+
+		nsTest3 := &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test3",
+				Labels: map[string]string{
+					"role": "test3",
+				},
+			},
+		}
+
+		Expect(client.Create(ctx, nsTest3)).To(Succeed())
+
+		npTest3 := &networkingv1.NetworkPolicy{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "ingress-deny-only",
+				Namespace: "test3",
+			},
+			Spec: networkingv1.NetworkPolicySpec{
+				PolicyTypes: []networkingv1.PolicyType{
+					networkingv1.PolicyTypeIngress,
+					networkingv1.PolicyTypeEgress,
+				},
+				Egress: []networkingv1.NetworkPolicyEgressRule{
+					{
+						To: []networkingv1.NetworkPolicyPeer{
+							{
+								NamespaceSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"foo": "bar",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		Expect(client.Create(ctx, npTest3)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
@@ -326,6 +355,16 @@ var _ = Describe("#2000", func() {
 				Status:  rule.Failed,
 				Message: "All Egress traffic is allowed by default.",
 				Target:  rule.NewTarget("namespace", "test2", "kind", "networkPolicy", "name", "mixed-allow"),
+			},
+			{
+				Status:  rule.Failed,
+				Message: "Egress traffic is not denied by default.",
+				Target:  rule.NewTarget("namespace", "test3"),
+			},
+			{
+				Status:  rule.Passed,
+				Message: "Ingress traffic is denied by default.",
+				Target:  rule.NewTarget("namespace", "test3", "kind", "networkPolicy", "name", "ingress-deny-only"),
 			},
 		}
 
