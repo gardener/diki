@@ -138,11 +138,12 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 				acceptedTarget = target.With("details", "traffic: ingress")
 			}
 
-			if accepted {
+			switch {
+			case accepted:
 				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, acceptedTarget))
-			} else if allowsAllIngress {
+			case allowsAllIngress:
 				checkResults = append(checkResults, rule.FailedCheckResult("All Ingress traffic is allowed by default.", allowsAllIngressTarget))
-			} else {
+			default:
 				checkResults = append(checkResults, rule.FailedCheckResult("Ingress traffic is not denied by default.", target))
 			}
 		}
@@ -162,11 +163,12 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 				acceptedTarget = target.With("details", "traffic: egress")
 			}
 
-			if accepted {
+			switch {
+			case accepted:
 				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, acceptedTarget))
-			} else if allowsAllEgress {
+			case allowsAllEgress:
 				checkResults = append(checkResults, rule.FailedCheckResult("All Egress traffic is allowed by default.", allowsAllEgressTarget))
-			} else {
+			default:
 				checkResults = append(checkResults, rule.FailedCheckResult("Egress traffic is not denied by default.", target))
 			}
 		}
