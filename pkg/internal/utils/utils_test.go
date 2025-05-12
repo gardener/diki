@@ -122,6 +122,7 @@ var _ = Describe("utils", func() {
 				UserOwner:   "0",
 				GroupOwner:  "0",
 				FileType:    "regular file",
+				Destination: "/destination",
 			}
 			fooFileStats = utils.FileStats{
 				Path:        "/foo/file2.txt",
@@ -129,6 +130,7 @@ var _ = Describe("utils", func() {
 				UserOwner:   "0",
 				GroupOwner:  "65532",
 				FileType:    "regular file",
+				Destination: "/foo",
 			}
 			pod = corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
