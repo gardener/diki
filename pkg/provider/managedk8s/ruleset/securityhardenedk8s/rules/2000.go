@@ -77,11 +77,11 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 	for _, namespace := range namespaces {
 
 		var (
-			deniesIngress, deniesEgress       bool
+			deniesAllIngress, deniesAllEgress bool
 			allowsAllIngress, allowsAllEgress bool
 			target                            = rule.NewTarget("namespace", namespace.Name)
-			deniesIngressTarget               = target
-			deniesEgressTarget                = target
+			deniesAllIngressTarget            = target
+			deniesAllEgressTarget             = target
 			allowsAllIngressTarget            = target
 			allowsAllEgressTarget             = target
 		)
@@ -92,10 +92,10 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 				continue
 			}
 
-			if !deniesIngress && len(networkPolicy.Spec.Ingress) == 0 &&
+			if !deniesAllIngress && len(networkPolicy.Spec.Ingress) == 0 &&
 				slices.Contains(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeIngress) {
-				deniesIngressTarget = deniesIngressTarget.With("kind", "networkPolicy", "name", networkPolicy.Name)
-				deniesIngress = true
+				deniesAllIngressTarget = deniesAllIngressTarget.With("kind", "networkPolicy", "name", networkPolicy.Name)
+				deniesAllIngress = true
 			}
 
 			if !allowsAllIngress && slices.ContainsFunc(networkPolicy.Spec.Ingress, func(ingress networkingv1.NetworkPolicyIngressRule) bool {
@@ -105,10 +105,10 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 				allowsAllIngress = true
 			}
 
-			if !deniesEgress && len(networkPolicy.Spec.Egress) == 0 &&
+			if !deniesAllEgress && len(networkPolicy.Spec.Egress) == 0 &&
 				slices.Contains(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeEgress) {
-				deniesEgressTarget = deniesEgressTarget.With("kind", "networkPolicy", "name", networkPolicy.Name)
-				deniesEgress = true
+				deniesAllEgressTarget = deniesAllEgressTarget.With("kind", "networkPolicy", "name", networkPolicy.Name)
+				deniesAllEgress = true
 			}
 
 			if !allowsAllEgress && slices.ContainsFunc(networkPolicy.Spec.Egress, func(egress networkingv1.NetworkPolicyEgressRule) bool {
@@ -123,8 +123,8 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 			}
 		}
 
-		if deniesIngress && !allowsAllIngress {
-			checkResults = append(checkResults, rule.PassedCheckResult("Ingress traffic is denied by default.", deniesIngressTarget))
+		if deniesAllIngress && !allowsAllIngress {
+			checkResults = append(checkResults, rule.PassedCheckResult("Ingress traffic is denied by default.", deniesAllIngressTarget))
 		} else {
 			accepted, justification := r.acceptedIngress(namespace)
 
@@ -140,17 +140,15 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 
 			if accepted {
 				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, acceptedTarget))
+			} else if allowsAllIngress {
+				checkResults = append(checkResults, rule.FailedCheckResult("All Ingress traffic is allowed by default.", allowsAllIngressTarget))
 			} else {
-				if allowsAllIngress {
-					checkResults = append(checkResults, rule.FailedCheckResult("All Ingress traffic is allowed by default.", allowsAllIngressTarget))
-				} else {
-					checkResults = append(checkResults, rule.FailedCheckResult("Ingress traffic is not denied by default.", target))
-				}
+				checkResults = append(checkResults, rule.FailedCheckResult("Ingress traffic is not denied by default.", target))
 			}
 		}
 
-		if deniesEgress && !allowsAllEgress {
-			checkResults = append(checkResults, rule.PassedCheckResult("Egress traffic is denied by default.", deniesEgressTarget))
+		if deniesAllEgress && !allowsAllEgress {
+			checkResults = append(checkResults, rule.PassedCheckResult("Egress traffic is denied by default.", deniesAllEgressTarget))
 		} else {
 			accepted, justification := r.acceptedEgress(namespace)
 
@@ -166,12 +164,10 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 
 			if accepted {
 				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, acceptedTarget))
+			} else if allowsAllEgress {
+				checkResults = append(checkResults, rule.FailedCheckResult("All Egress traffic is allowed by default.", allowsAllEgressTarget))
 			} else {
-				if allowsAllEgress {
-					checkResults = append(checkResults, rule.FailedCheckResult("All Egress traffic is allowed by default.", allowsAllEgressTarget))
-				} else {
-					checkResults = append(checkResults, rule.FailedCheckResult("Egress traffic is not denied by default.", target))
-				}
+				checkResults = append(checkResults, rule.FailedCheckResult("Egress traffic is not denied by default.", target))
 			}
 		}
 	}
