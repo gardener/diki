@@ -44,8 +44,10 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	switch {
+	//lint:ignore SA1019 EnableAnonymousAuthentication is deprecated but still used in the Gardener API
 	case shoot.Spec.Kubernetes.KubeAPIServer == nil || shoot.Spec.Kubernetes.KubeAPIServer.EnableAnonymousAuthentication == nil:
 		return rule.Result(r, rule.PassedCheckResult("Anonymous authentication is not enabled.", rule.NewTarget())), nil
+	//lint:ignore SA1019 EnableAnonymousAuthentication is deprecated but still used in the Gardener API
 	case *shoot.Spec.Kubernetes.KubeAPIServer.EnableAnonymousAuthentication:
 		return rule.Result(r, rule.FailedCheckResult("Anonymous authentication is enabled for the kube-apiserver.", rule.NewTarget())), nil
 	default:
