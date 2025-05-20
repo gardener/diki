@@ -139,6 +139,7 @@ func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsCon
 		*retryerrors.ContainerFileNotFoundOnNodeRegexp,
 		*retryerrors.ContainerNotReadyRegexp,
 		*retryerrors.OpsPodNotFoundRegexp,
+		*retryerrors.ObjectNotFoundRegexp,
 	)
 
 	const (

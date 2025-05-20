@@ -125,6 +125,7 @@ func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsCon
 		*retryerrors.ContainerFileNotFoundOnNodeRegexp,
 		*retryerrors.ContainerNotReadyRegexp,
 		*retryerrors.OpsPodNotFoundRegexp,
+		*retryerrors.ObjectNotFoundRegexp,
 	)
 
 	// Gardener images use distroless nonroot user with ID 65532
