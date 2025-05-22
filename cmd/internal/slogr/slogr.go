@@ -15,12 +15,12 @@ var (
 	_ logr.LogSink = &Slogr{}
 )
 
-// Slogr is a wrapper around slog.Logger to implement the [logr.LogSink] interface.
+// Slogr is a wrapper around [slog.Logger] to implement the [logr.LogSink] interface.
 type Slogr struct {
 	logger *slog.Logger
 }
 
-// NewLogr creates a new [logr.Logger] from a slog.Logger.
+// NewLogr creates a new [logr.Logger] from a [slog.Logger].
 func NewLogr(logger *slog.Logger) logr.Logger {
 	return logr.New(Slogr{logger: logger})
 }
@@ -31,12 +31,12 @@ func (s Slogr) Enabled(level int) bool {
 }
 
 // Error logs an error message.
-func (s Slogr) Error(err error, msg string, keysAndValues ...interface{}) {
-	s.logger.Error(msg, append([]interface{}{"error", err}, keysAndValues)...)
+func (s Slogr) Error(err error, msg string, keysAndValues ...any) {
+	s.logger.Error(msg, append([]any{"error", err}, keysAndValues)...)
 }
 
 // Info logs an info message.
-func (s Slogr) Info(_ int, msg string, keysAndValues ...interface{}) {
+func (s Slogr) Info(_ int, msg string, keysAndValues ...any) {
 	s.logger.Info(msg, keysAndValues...)
 }
 
@@ -51,7 +51,7 @@ func (s Slogr) WithName(name string) logr.LogSink {
 }
 
 // WithValues returns a new [logr.Logger] with the specified key-value pairs.
-func (s Slogr) WithValues(keysAndValues ...interface{}) logr.LogSink {
+func (s Slogr) WithValues(keysAndValues ...any) logr.LogSink {
 	s.logger = s.logger.With(keysAndValues...)
 	return &s
 }
