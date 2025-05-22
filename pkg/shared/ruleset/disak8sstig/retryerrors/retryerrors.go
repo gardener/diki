@@ -17,4 +17,6 @@ var (
 	ContainerNotReadyRegexp = regexp.MustCompile(`(?i)(container with name .* (not \(yet\) in status|not \(yet\) running))`)
 	// OpsPodNotFoundRegexp regex to match ops pod not found for DISA K8s STIG ruleset
 	OpsPodNotFoundRegexp = regexp.MustCompile(`(?i)(pods "diki-[\d]{6}-.{10}" not found)`)
+	// ObjectNotFoundRegexp regex to match object not found by nerdctl
+	ObjectNotFoundRegexp = regexp.MustCompile(`(?i)(command /bin/sh /.*/nerdctl .* \[no such object)`)
 )
