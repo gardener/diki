@@ -102,6 +102,11 @@ func (r *Rule242442) checkImages(cluster string, pods []corev1.Pod) []rule.Check
 				}
 
 				imageRef := containerStatuses[containerStatusIdx].ImageID
+				if len(imageRef) == 0 {
+					checkResults = append(checkResults, rule.ErroredCheckResult("imageID not found for container", rule.NewTarget("cluster", cluster, "name", pod.Name, "container", container.Name, "kind", "pod")))
+					continue
+				}
+
 				named, err := imageref.ParseNormalizedNamed(imageRef)
 				if err != nil {
 					checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget("imageRef", imageRef)))
