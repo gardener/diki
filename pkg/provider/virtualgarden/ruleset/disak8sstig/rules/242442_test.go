@@ -184,8 +184,8 @@ var _ = Describe("#242442", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.ErroredCheckResult("imageID not found for container", rule.NewTarget("container", "foo", "namespace", "foo", "name", "pod", "kind", "pod")),
-			rule.ErroredCheckResult("imageID not found for container", rule.NewTarget("container", "foobar", "namespace", "foo", "name", "pod", "kind", "pod")),
+			rule.ErroredCheckResult("imageID not found for container", rule.NewTarget("container", "foo", "name", "pod", "kind", "pod")),
+			rule.ErroredCheckResult("imageID not found for container", rule.NewTarget("container", "foobar", "name", "pod", "kind", "pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
