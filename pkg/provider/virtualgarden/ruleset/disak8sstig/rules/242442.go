@@ -65,14 +65,20 @@ func (r *Rule242442) checkImages(pods []corev1.Pod, images map[string]string, re
 				containerStatusIdx = slices.IndexFunc(containerStatuses, func(containerStatus corev1.ContainerStatus) bool {
 					return containerStatus.Name == container.Name
 				})
+				containerTarget = rule.NewTarget("name", pod.Name, "container", container.Name, "kind", "pod")
 			)
 
 			if containerStatusIdx < 0 {
-				checkResults = append(checkResults, rule.ErroredCheckResult("containerStatus not found for container", rule.NewTarget("name", pod.Name, "container", container.Name, "kind", "pod")))
+				checkResults = append(checkResults, rule.ErroredCheckResult("containerStatus not found for container", containerTarget))
 				continue
 			}
 
 			imageRef := containerStatuses[containerStatusIdx].ImageID
+			if len(imageRef) == 0 {
+				checkResults = append(checkResults, rule.ErroredCheckResult("imageID not found for container", containerTarget))
+				continue
+			}
+
 			named, err := imageref.ParseNormalizedNamed(imageRef)
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget("imageRef", imageRef)))
