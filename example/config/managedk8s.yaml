@@ -194,6 +194,12 @@ providers:                   # contains information about known providers
     #       namespaceMatchLabels:
     #         foo: bar
     #       justification: "justification"
+    # - ruleID: "2002"
+    #   args:
+    #     acceptedStorageClasses:
+    #     - matchLabels:
+    #         foo: bar
+    #       justification: "justification"
     # - ruleID: "2003"
     #   args:
     #     acceptedPods:
