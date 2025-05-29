@@ -7,7 +7,6 @@ package rules_test
 import (
 	"context"
 
-	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -19,6 +18,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/securityhardenedk8s/rules"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 )
 
 var _ = Describe("#2002", func() {
