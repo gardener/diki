@@ -30,6 +30,10 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 	if err != nil {
 		return fmt.Errorf("rule option 2001 error: %s", err.Error())
 	}
+	opts2002, err := getV01OptionOrNil[rules.Options2002](ruleOptions["2002"].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 2002 error: %s", err.Error())
+	}
 	opts2003, err := getV01OptionOrNil[rules.Options2003](ruleOptions["2003"].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 2003 error: %s", err.Error())
@@ -65,7 +69,8 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			Options: opts2001,
 		},
 		&rules.Rule2002{
-			Client: c,
+			Client:  c,
+			Options: opts2002,
 		},
 		&rules.Rule2003{
 			Client:  c,
