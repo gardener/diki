@@ -5,23 +5,45 @@
 package rules
 
 import (
+	"cmp"
 	"context"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	disaoptions "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var (
-	_ rule.Rule     = &Rule2002{}
-	_ rule.Severity = &Rule2002{}
+	_ rule.Rule          = &Rule2002{}
+	_ rule.Severity      = &Rule2002{}
+	_ disaoptions.Option = &Options2002{}
 )
 
 type Rule2002 struct {
-	Client client.Client
+	Client  client.Client
+	Options *Options2002
+}
+
+type Options2002 struct {
+	AcceptedStorageClasses []option.AcceptedClusterObject `json:"acceptedStorageClasses" yaml:"acceptedStorageClasses"`
+}
+
+// Validate validates that option configurations are correctly defined
+func (o Options2002) Validate() field.ErrorList {
+	var allErrs field.ErrorList
+
+	for _, sc := range o.AcceptedStorageClasses {
+		allErrs = append(allErrs, sc.Validate()...)
+	}
+
+	return allErrs
 }
 
 func (r *Rule2002) ID() string {
@@ -50,13 +72,33 @@ func (r *Rule2002) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	for _, storageClass := range storageClasses {
 		target := rule.NewTarget("kind", "storageClass", "name", storageClass.Name)
-		switch {
-		case storageClass.ReclaimPolicy != nil && *storageClass.ReclaimPolicy == corev1.PersistentVolumeReclaimDelete:
+
+		if storageClass.ReclaimPolicy != nil && *storageClass.ReclaimPolicy == corev1.PersistentVolumeReclaimDelete {
 			checkResults = append(checkResults, rule.PassedCheckResult("StorageClass has a Delete ReclaimPolicy set.", target))
-		default:
+			continue
+		}
+
+		if accepted, justification := r.accepted(storageClass.Labels); accepted {
+			msg := cmp.Or(justification, "StorageClass accepted to not have Delete ReclaimPolicy.")
+			checkResults = append(checkResults, rule.AcceptedCheckResult(msg, target))
+		} else {
 			checkResults = append(checkResults, rule.FailedCheckResult("StorageClass does not have a Delete ReclaimPolicy set.", target))
 		}
 	}
 
 	return rule.Result(r, checkResults...), err
+}
+
+func (r *Rule2002) accepted(storageClassLabels map[string]string) (bool, string) {
+	if r.Options == nil {
+		return false, ""
+	}
+
+	for _, acceptedStorageClass := range r.Options.AcceptedStorageClasses {
+		if utils.MatchLabels(storageClassLabels, acceptedStorageClass.MatchLabels) {
+			return true, acceptedStorageClass.Justification
+		}
+	}
+
+	return false, ""
 }
