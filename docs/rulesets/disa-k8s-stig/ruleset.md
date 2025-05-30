@@ -5,7 +5,7 @@
 ### Track the rules
 - [Cyber Trackr](https://cyber.trackr.live/stig)
 - [DISA STIGs](https://public.cyber.mil/stigs/downloads/)
-- [STIG Viewer](https://www.stigviewer.com/stig/kubernetes/)
+- [STIG Viewer](https://stigviewer.com/stigs/kubernetes/)
 
 ### Kubernetes Components
 - [ETCD Command Line Options (deprecated, yet overwriting)](https://etcd.io/docs/v3.4/op-guide/configuration)
