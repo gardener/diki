@@ -101,7 +101,7 @@ func FilterPodsByOwnerRef(pods []corev1.Pod) []corev1.Pod {
 
 	for _, pod := range pods {
 		ownerRef := pod.OwnerReferences
-		if ownerRef == nil || len(ownerRef) == 0 {
+		if len(ownerRef) == 0 {
 			filteredPods = append(filteredPods, pod)
 			continue
 		}
