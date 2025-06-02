@@ -8,6 +8,10 @@ import (
 	"context"
 	"fmt"
 
+	"gopkg.in/yaml.v3"
+	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	apiserverv1beta1 "k8s.io/apiserver/pkg/apis/apiserver/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
@@ -39,7 +43,11 @@ func (r *Rule242390) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule242390) Run(ctx context.Context) (rule.RuleResult, error) {
-	const option = "anonymous-auth"
+	const (
+		anonymousAuthOption        = "anonymous-auth"
+		authenticationConfigOption = "authentication-config"
+	)
+
 	deploymentName := "kube-apiserver"
 	containerName := "kube-apiserver"
 
@@ -52,21 +60,65 @@ func (r *Rule242390) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
 
-	optSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, option)
+	optSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, anonymousAuthOption)
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
-	switch {
-	case len(optSlice) == 0:
-		return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has not been set.", option), target)), nil
-	case len(optSlice) > 1:
-		return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", option), target)), nil
-	case optSlice[0] == "true":
-		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", option), target)), nil
-	case optSlice[0] == "false":
-		return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", option), target)), nil
-	default:
-		return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Option %s set to neither 'true' nor 'false'.", option), target)), nil
+	if len(optSlice) > 0 {
+		switch {
+		case len(optSlice) > 1:
+			return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", anonymousAuthOption), target)), nil
+		case optSlice[0] == "true":
+			return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", anonymousAuthOption), target)), nil
+		case optSlice[0] == "false":
+			return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", anonymousAuthOption), target)), nil
+		default:
+			return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Option %s set to neither 'true' nor 'false'.", anonymousAuthOption), target)), nil
+		}
 	}
+
+	optSlice, err = kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, authenticationConfigOption)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
+	}
+
+	if len(optSlice) == 0 {
+		return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Neither options %s nor %s have been set.", anonymousAuthOption, authenticationConfigOption), target)), nil
+	}
+
+	if len(optSlice) > 1 {
+		return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", authenticationConfigOption), target)), nil
+	}
+
+	kubeAPIServerDeployment := &appsv1.Deployment{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      deploymentName,
+			Namespace: r.Namespace,
+		},
+	}
+
+	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(kubeAPIServerDeployment), kubeAPIServerDeployment); err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
+	}
+
+	bytes, err := kubeutils.GetVolumeConfigByteSliceByMountPath(ctx, r.Client, kubeAPIServerDeployment, containerName, optSlice[0])
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
+	}
+
+	authConfig := &apiserverv1beta1.AuthenticationConfiguration{}
+	if err := yaml.Unmarshal(bytes, authConfig); err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
+	}
+
+	if authConfig.Anonymous == nil {
+		return rule.Result(r, rule.FailedCheckResult("The authentication configuration does not explicitly disable anonymous authentication.", target)), nil
+	}
+
+	if authConfig.Anonymous != nil && authConfig.Anonymous.Enabled {
+		return rule.Result(r, rule.FailedCheckResult("The authentication configuration has anonymous authentication enabled.", target)), nil
+	}
+
+	return rule.Result(r, rule.PassedCheckResult("The authentication configuration has anonymous authentication disabled.", target)), nil
 }
