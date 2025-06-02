@@ -103,9 +103,9 @@ var _ = Describe("#2003", func() {
 		),
 		Entry("should fail when a pod volume is not of an allowed type",
 			func() {
-				podWithPermittedVolumes := plainPod.DeepCopy()
-				podWithPermittedVolumes.Name = "podWithPermittedVolumes"
-				podWithPermittedVolumes.Spec.Volumes = []corev1.Volume{
+				podWithNotPermittedVolumes := plainPod.DeepCopy()
+				podWithNotPermittedVolumes.Name = "podWithNotPermittedVolumes"
+				podWithNotPermittedVolumes.Spec.Volumes = []corev1.Volume{
 					{
 						Name: "emptyDirVolume",
 						VolumeSource: corev1.VolumeSource{
@@ -119,11 +119,41 @@ var _ = Describe("#2003", func() {
 						},
 					},
 				}
-				Expect(fakeClient.Create(ctx, podWithPermittedVolumes)).To(Succeed())
+				Expect(fakeClient.Create(ctx, podWithNotPermittedVolumes)).To(Succeed())
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Pod uses not allowed volume type.", Target: rule.NewTarget("kind", "pod", "name", "podWithPermittedVolumes", "namespace", "plainNamespace", "volume", "cinderVolume")},
+				{Status: rule.Failed, Message: "Pod uses not allowed volume type.", Target: rule.NewTarget("kind", "pod", "name", "podWithNotPermittedVolumes", "namespace", "plainNamespace", "volume", "cinderVolume")},
+			},
+		),
+		Entry("should skip when a pod is a diki privileged pod",
+			func() {
+				dikiPrivilegedPod := plainPod.DeepCopy()
+				dikiPrivilegedPod.Name = "dikiPrivilegedPod"
+				dikiPrivilegedPod.Labels = map[string]string{
+					"compliance.gardener.cloud/role": "diki-privileged-pod",
+				}
+				dikiPrivilegedPod.Spec.Volumes = []corev1.Volume{
+					{
+						Name: "emptyDirVolume",
+						VolumeSource: corev1.VolumeSource{
+							EmptyDir: &corev1.EmptyDirVolumeSource{},
+						},
+					},
+					{
+						Name: "cinderVolume",
+						VolumeSource: corev1.VolumeSource{
+							HostPath: &corev1.HostPathVolumeSource{
+								Path: "foo/bar",
+							},
+						},
+					},
+				}
+				Expect(fakeClient.Create(ctx, dikiPrivilegedPod)).To(Succeed())
+			},
+			nil,
+			[]rule.CheckResult{
+				{Status: rule.Skipped, Message: "Diki privileged pod requires the use of hostPaths.", Target: rule.NewTarget("kind", "pod", "name", "dikiPrivilegedPod", "namespace", "plainNamespace")},
 			},
 		),
 		Entry("should accept a volume when it is specified in the options configuration",

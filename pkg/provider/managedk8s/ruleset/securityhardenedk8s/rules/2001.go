@@ -16,6 +16,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/internal/utils"
+	kubepod "github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
@@ -101,9 +102,18 @@ func (r *Rule2001) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	for _, pod := range pods {
 		var (
-			podCheckResults []rule.CheckResult
-			podTarget       = rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
+			podCheckResults         []rule.CheckResult
+			podTarget               = rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
+			dikiPrivilegedPodLabels = map[string]string{
+				kubepod.LabelComplianceRoleKey: kubepod.LabelComplianceRolePrivPod,
+			}
 		)
+
+		// Diki privileged pods require privileged mode. During execution parallel diki rules might create pods.
+		if utils.MatchLabels(pod.Labels, dikiPrivilegedPodLabels) {
+			checkResults = append(checkResults, rule.SkippedCheckResult("Diki privileged pod requires privileged mode.", podTarget))
+			continue
+		}
 		for _, container := range slices.Concat(pod.Spec.Containers, pod.Spec.InitContainers) {
 			containerTarget := podTarget.With("container", container.Name)
 
