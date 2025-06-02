@@ -90,6 +90,31 @@ func GetAllObjectsMetadata(ctx context.Context, c client.Client, namespace strin
 	return objects, nil
 }
 
+// FilterPodsByOwnerRef returns a subset of Pods which contains only unique
+// owner references. If a Pod has no owner reference, it is included in the result.
+// The first instance of a Pod with a specific owner reference is kept.
+func FilterPodsByOwnerRef(pods []corev1.Pod) []corev1.Pod {
+	var (
+		filteredPods = []corev1.Pod{}
+		ownerRefs    = map[string]struct{}{}
+	)
+
+	for _, pod := range pods {
+
+		ownerRef := pod.OwnerReferences
+		if ownerRef == nil || len(ownerRef) == 0 {
+			filteredPods = append(filteredPods, pod)
+			continue
+		}
+
+		if _, ok := ownerRefs[string(ownerRef[0].UID)]; !ok {
+			ownerRefs[string(ownerRef[0].UID)] = struct{}{}
+			filteredPods = append(filteredPods, pod)
+		}
+	}
+	return filteredPods
+}
+
 // GetPods returns all pods for a given namespace, or all namespaces if it's set to empty string "".
 // It retrieves pods by portions set by limit.
 func GetPods(ctx context.Context, c client.Client, namespace string, selector labels.Selector, limit int64) ([]corev1.Pod, error) {
