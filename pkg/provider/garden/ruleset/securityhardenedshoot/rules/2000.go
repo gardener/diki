@@ -73,7 +73,7 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	authConfigString, ok := configMap.Data[fileName]
 	if !ok {
-		return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("The %s key is not present in the configMap.", fileName), rule.NewTarget("name", configMapName, "namespace", r.ShootNamespace, "kind", "ConfigMap"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(fmt.Sprintf("configMap: %s does not contain field: %s in Data field", configMapName, fileName), rule.NewTarget("name", configMapName, "namespace", r.ShootNamespace, "kind", "ConfigMap"))), nil
 	}
 
 	authenticationConfig := &apiserverv1beta1.AuthenticationConfiguration{}

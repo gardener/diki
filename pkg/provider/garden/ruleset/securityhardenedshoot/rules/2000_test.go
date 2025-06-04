@@ -146,7 +146,7 @@ var _ = Describe("#2000", func() {
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Warning, Message: "The config.yaml key is not present in the configMap.", Target: rule.NewTarget("name", configMapName, "namespace", shootNamespace, "kind", "ConfigMap")},
+			rule.CheckResult{Status: rule.Errored, Message: "configMap: authentication-config does not contain field: config.yaml in Data field", Target: rule.NewTarget("name", configMapName, "namespace", shootNamespace, "kind", "ConfigMap")},
 		),
 		Entry("should error if the structuredAuthentication configMap contains an invalid value",
 			func() {
