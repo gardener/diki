@@ -128,7 +128,7 @@ var _ = Describe("#2000", func() {
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Errored, Message: "configmaps \"authentication-config\" not found", Target: rule.NewTarget("name", configMapName, "namespace", shootNamespace, "kind", "ConfigMap")},
+			rule.CheckResult{Status: rule.Errored, Message: "configmaps \"authentication-config\" not found", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
 		),
 		Entry("should warn if the structured authentication config does not contain a config.yaml key",
 			func() {
@@ -146,7 +146,7 @@ var _ = Describe("#2000", func() {
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Errored, Message: "configMap: authentication-config does not contain field: config.yaml in Data field", Target: rule.NewTarget("name", configMapName, "namespace", shootNamespace, "kind", "ConfigMap")},
+			rule.CheckResult{Status: rule.Errored, Message: "configMap: authentication-config does not contain field: config.yaml in Data field", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
 		),
 		Entry("should error if the structuredAuthentication configMap contains an invalid value",
 			func() {
@@ -164,7 +164,7 @@ var _ = Describe("#2000", func() {
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Errored, Message: "yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `foo` into v1beta1.AuthenticationConfiguration", Target: rule.NewTarget("name", configMapName, "namespace", shootNamespace, "kind", "ConfigMap")},
+			rule.CheckResult{Status: rule.Errored, Message: "yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `foo` into v1beta1.AuthenticationConfiguration", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
 		),
 		Entry("should fail if the structuredAuthentication configuration has anonymous access enabled unconditionally",
 			func() {
@@ -182,7 +182,7 @@ var _ = Describe("#2000", func() {
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Failed, Message: "Anonymous authentication is enabled for the kube-apiserver.", Target: rule.NewTarget("name", configMapName, "namespace", shootNamespace, "kind", "ConfigMap")},
+			rule.CheckResult{Status: rule.Failed, Message: "Anonymous authentication is enabled for the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
 		),
 		Entry("should fail if the structured authentication config has anonymous access enabled with conditions",
 			func() {
@@ -200,7 +200,7 @@ var _ = Describe("#2000", func() {
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Failed, Message: "Anonymous authentication is enabled for the kube-apiserver.", Target: rule.NewTarget("name", configMapName, "namespace", shootNamespace, "kind", "ConfigMap")},
+			rule.CheckResult{Status: rule.Failed, Message: "Anonymous authentication is enabled for the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
 		),
 		Entry("should pass if the structured authentication config has anonymous access disabled",
 			func() {
@@ -218,7 +218,7 @@ var _ = Describe("#2000", func() {
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Passed, Message: "Anonymous authentication is disabled for the kube-apiserver.", Target: rule.NewTarget("name", configMapName, "namespace", shootNamespace, "kind", "ConfigMap")},
+			rule.CheckResult{Status: rule.Passed, Message: "Anonymous authentication is disabled for the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
 		),
 	)
 })
