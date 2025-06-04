@@ -133,7 +133,7 @@ var _ = Describe("#242390", func() {
 			[]rule.CheckResult{{Status: rule.Warning, Message: "Option authentication-config has been set more than once in container command.", Target: target}},
 			BeNil(),
 			func() {}),
-		Entry("should error if the volume can not be retrieved from the mount",
+		Entry("should error if the volume cannot be retrieved from the mount",
 			corev1.Container{
 				Name:    "kube-apiserver",
 				Command: []string{"--authentication-config=/etc/foo/bar"},
@@ -147,7 +147,7 @@ var _ = Describe("#242390", func() {
 			[]rule.CheckResult{{Status: rule.Errored, Message: "deployment does not contain volume with name: authentication-config", Target: target}},
 			BeNil(),
 			func() {}),
-		Entry("should error if the configMap can not be parsed",
+		Entry("should error if the configMap cannot be parsed",
 			corev1.Container{
 				Name:    "kube-apiserver",
 				Command: []string{"--authentication-config=/etc/foo/bar"},
