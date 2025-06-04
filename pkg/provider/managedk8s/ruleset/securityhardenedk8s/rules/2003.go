@@ -98,7 +98,7 @@ func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 			}
 		)
 
-		// Diki privileged pod uses hostPath volume. During execution parallel diki rules might create pods.
+		// Diki privileged pod uses hostPath volume. During execution, parallel diki rules might create pods.
 		if utils.MatchLabels(pod.Labels, dikiPrivilegedPodLabels) {
 			checkResults = append(checkResults, rule.SkippedCheckResult("Diki privileged pod requires the use of hostPaths.", podTarget))
 			continue

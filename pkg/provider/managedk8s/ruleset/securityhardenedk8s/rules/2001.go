@@ -109,7 +109,7 @@ func (r *Rule2001) Run(ctx context.Context) (rule.RuleResult, error) {
 			}
 		)
 
-		// Diki privileged pods require privileged mode. During execution parallel diki rules might create pods.
+		// Diki privileged pods require privileged mode. During execution, parallel diki rules might create pods.
 		if utils.MatchLabels(pod.Labels, dikiPrivilegedPodLabels) {
 			checkResults = append(checkResults, rule.SkippedCheckResult("Diki privileged pod requires privileged mode.", podTarget))
 			continue
