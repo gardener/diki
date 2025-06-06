@@ -48,8 +48,8 @@ func NewDikiCommand(providerOptions map[string]provider.ProviderOption) *cobra.C
 
 	rootCmd := &cobra.Command{
 		Use:   "diki",
-		Short: "Diki a \"compliance checker\" or sorts, a detective control framework.",
-		Long: `Diki a "compliance checker" or sorts, a detective control framework. 
+		Short: "Diki a \"compliance checker\" of sorts, a detective control framework.",
+		Long: `Diki a "compliance checker" of sorts, a detective control framework. 
 It is part of the Gardener family, but can be used also on other Kubernetes distros or even on non-Kubernetes environments, 
 e.g. to check compliance of your hyperscaler accounts.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
