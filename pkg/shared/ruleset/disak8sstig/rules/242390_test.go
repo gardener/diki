@@ -106,7 +106,7 @@ var _ = Describe("#242390", func() {
 	)
 
 	DescribeTable("Run cases for authentication-config flag",
-		func(container corev1.Container, expectedCheckResults []rule.CheckResult, errorMatcher gomegatypes.GomegaMatcher, modifyKAPIServer func()) {
+		func(container corev1.Container, modifyKAPIServer func(), expectedCheckResults []rule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
 			ksDeployment.Spec.Template.Spec.Containers = []corev1.Container{container}
 			modifyKAPIServer()
 			Expect(fakeClient.Create(ctx, ksDeployment)).To(Succeed())
@@ -119,16 +119,17 @@ var _ = Describe("#242390", func() {
 		},
 		Entry("should warn if neither the anonymous-auth nor authentication-config options are set",
 			corev1.Container{Name: "kube-apiserver", Command: []string{}},
+			func() {},
 			[]rule.CheckResult{{Status: rule.Warning, Message: "Neither options anonymous-auth nor authentication-config have been set.", Target: target}},
-			BeNil(),
-			func() {}),
+			BeNil()),
 		Entry("should warn if the authentication-config flag is set more than once",
 			corev1.Container{
 				Name:    "kube-apiserver",
-				Command: []string{"--authentication-config=/etc/foo/bar", "--authentication-config=/etc/foo/baz"}},
+				Command: []string{"--authentication-config=/etc/foo/bar", "--authentication-config=/etc/foo/baz"},
+			},
+			func() {},
 			[]rule.CheckResult{{Status: rule.Warning, Message: "Option authentication-config has been set more than once in container command.", Target: target}},
-			BeNil(),
-			func() {}),
+			BeNil()),
 		Entry("should error if the volume cannot be retrieved from the mount",
 			corev1.Container{
 				Name:    "kube-apiserver",
@@ -140,9 +141,9 @@ var _ = Describe("#242390", func() {
 					},
 				},
 			},
+			func() {},
 			[]rule.CheckResult{{Status: rule.Errored, Message: "deployment does not contain volume with name: authentication-config", Target: target}},
-			BeNil(),
-			func() {}),
+			BeNil()),
 		Entry("should error if the configMap cannot be parsed",
 			corev1.Container{
 				Name:    "kube-apiserver",
@@ -154,8 +155,6 @@ var _ = Describe("#242390", func() {
 					},
 				},
 			},
-			[]rule.CheckResult{{Status: rule.Errored, Message: "yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `foo` into v1beta1.AuthenticationConfiguration", Target: target}},
-			BeNil(),
 			func() {
 				ksDeployment.Spec.Template.Spec.Volumes = []corev1.Volume{{
 					Name: "authentication-config",
@@ -179,7 +178,8 @@ var _ = Describe("#242390", func() {
 				}
 				Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
 			},
-		),
+			[]rule.CheckResult{{Status: rule.Errored, Message: "yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `foo` into v1beta1.AuthenticationConfiguration", Target: target}},
+			BeNil()),
 		Entry("should fail if the authentication configuration has anonymous authentication enabled unconditionally.",
 			corev1.Container{
 				Name:    "kube-apiserver",
@@ -191,8 +191,6 @@ var _ = Describe("#242390", func() {
 					},
 				},
 			},
-			[]rule.CheckResult{{Status: rule.Failed, Message: "The authentication configuration has anonymous authentication enabled.", Target: target}},
-			BeNil(),
 			func() {
 				ksDeployment.Spec.Template.Spec.Volumes = []corev1.Volume{{
 					Name: "authentication-config",
@@ -216,7 +214,8 @@ var _ = Describe("#242390", func() {
 				}
 				Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
 			},
-		),
+			[]rule.CheckResult{{Status: rule.Failed, Message: "The authentication configuration has anonymous authentication enabled.", Target: target}},
+			BeNil()),
 		Entry("should fail if the authentication configuration has anonymous authentication enabled with conditions.",
 			corev1.Container{
 				Name:    "kube-apiserver",
@@ -228,8 +227,6 @@ var _ = Describe("#242390", func() {
 					},
 				},
 			},
-			[]rule.CheckResult{{Status: rule.Failed, Message: "The authentication configuration has anonymous authentication enabled.", Target: target}},
-			BeNil(),
 			func() {
 				ksDeployment.Spec.Template.Spec.Volumes = []corev1.Volume{{
 					Name: "authentication-config",
@@ -253,7 +250,8 @@ var _ = Describe("#242390", func() {
 				}
 				Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
 			},
-		),
+			[]rule.CheckResult{{Status: rule.Failed, Message: "The authentication configuration has anonymous authentication enabled.", Target: target}},
+			BeNil()),
 		Entry("should pass if the authentication configuration has anonymous authentication disabled.",
 			corev1.Container{
 				Name:    "kube-apiserver",
@@ -265,8 +263,6 @@ var _ = Describe("#242390", func() {
 					},
 				},
 			},
-			[]rule.CheckResult{{Status: rule.Passed, Message: "The authentication configuration has anonymous authentication disabled.", Target: target}},
-			BeNil(),
 			func() {
 				ksDeployment.Spec.Template.Spec.Volumes = []corev1.Volume{{
 					Name: "authentication-config",
@@ -290,6 +286,7 @@ var _ = Describe("#242390", func() {
 				}
 				Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
 			},
-		),
+			[]rule.CheckResult{{Status: rule.Passed, Message: "The authentication configuration has anonymous authentication disabled.", Target: target}},
+			BeNil()),
 	)
 })
