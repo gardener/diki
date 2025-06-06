@@ -92,6 +92,26 @@ var _ = Describe("#2002", func() {
 				AcceptedStorageClasses: []option.AcceptedClusterObject{
 					{
 						ClusterObjectSelector: option.ClusterObjectSelector{
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"foo": "bar"},
+							},
+						},
+						Justification: "foo justify",
+					},
+				},
+			},
+			[]rule.CheckResult{
+				{Status: rule.Accepted, Message: "foo justify", Target: rule.NewTarget("kind", "storageClass", "name", "default")},
+			},
+		),
+		Entry("should pass when a storage class's reclaim policy is set to a non-delete value but accepted by MatchLabels options",
+			func() {
+				plainStorageClass.ReclaimPolicy = ptr.To(notDeleteReclaimPolicy)
+				Expect(client.Create(ctx, plainStorageClass)).To(Succeed())
+			}, rules.Options2002{
+				AcceptedStorageClasses: []option.AcceptedClusterObject{
+					{
+						ClusterObjectSelector: option.ClusterObjectSelector{
 							MatchLabels: map[string]string{"foo": "bar"},
 						},
 						Justification: "foo justify",
@@ -122,7 +142,9 @@ var _ = Describe("#2002", func() {
 				AcceptedStorageClasses: []option.AcceptedClusterObject{
 					{
 						ClusterObjectSelector: option.ClusterObjectSelector{
-							MatchLabels: map[string]string{"bar": "foo"},
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"bar": "foo"},
+							},
 						},
 					},
 				},
