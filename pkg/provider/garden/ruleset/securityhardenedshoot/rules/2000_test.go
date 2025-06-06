@@ -71,7 +71,7 @@ var _ = Describe("#2000", func() {
 		}
 	})
 
-	// TODO (georgibaltiev): remove any references to the EnableAnonymousAuthentication field after it's deprecation
+	// TODO (georgibaltiev): remove any references to the EnableAnonymousAuthentication field after it's removal
 	DescribeTable("Run cases", func(updateFn func(), expectedCheckResult rule.CheckResult) {
 		updateFn()
 		Expect(fakeClient.Create(ctx, shoot)).To(Succeed())
