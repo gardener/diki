@@ -43,6 +43,7 @@ func (s *ClusterObjectSelector) Validate(fldPath *field.Path) field.ErrorList {
 	return allErrs
 }
 
+// Matches returns true if this selector matches the given set of labels.
 func (s *ClusterObjectSelector) Matches(objectLabels map[string]string) (bool, error) {
 	if s.LabelSelector != nil {
 		selector, err := metav1.LabelSelectorAsSelector(s.LabelSelector)
@@ -94,6 +95,7 @@ func (s *NamespacedObjectSelector) Validate(fldPath *field.Path) field.ErrorList
 	return allErrs
 }
 
+// Matches returns true if this selector matches the given set of labels.
 func (s *NamespacedObjectSelector) Matches(objectLabels map[string]string, namespaceLabels map[string]string) (bool, error) {
 	if s.LabelSelector != nil && s.NamespaceLabelSelector != nil {
 		selector, err := metav1.LabelSelectorAsSelector(s.LabelSelector)
