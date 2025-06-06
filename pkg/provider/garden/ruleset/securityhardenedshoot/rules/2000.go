@@ -23,8 +23,6 @@ var (
 	_ rule.Severity = &Rule2000{}
 )
 
-const fileName = "config.yaml"
-
 type Rule2000 struct {
 	Client         client.Client
 	ShootName      string
@@ -65,8 +63,12 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.PassedCheckResult("Anonymous authentication is not enabled for the kube-apiserver.", rule.NewTarget())), nil
 	}
 
-	configMapName := shoot.Spec.Kubernetes.KubeAPIServer.StructuredAuthentication.ConfigMapName
-	configMap := &corev1.ConfigMap{ObjectMeta: v1.ObjectMeta{Name: configMapName, Namespace: r.ShootNamespace}}
+	var (
+		fileName      = "config.yaml"
+		configMapName = shoot.Spec.Kubernetes.KubeAPIServer.StructuredAuthentication.ConfigMapName
+		configMap     = &corev1.ConfigMap{ObjectMeta: v1.ObjectMeta{Name: configMapName, Namespace: r.ShootNamespace}}
+	)
+
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(configMap), configMap); err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("name", configMapName, "namespace", r.ShootNamespace, "kind", "ConfigMap"))), nil
 	}
