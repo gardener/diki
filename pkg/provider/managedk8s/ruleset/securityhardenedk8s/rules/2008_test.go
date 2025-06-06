@@ -146,6 +146,46 @@ var _ = Describe("#2008", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 
+	It("should return correct results when checking diki privileged pod", func() {
+		r := &rules.Rule2008{Client: client, Options: &options}
+		pod1 := plainPod.DeepCopy()
+		pod1.Name = "pod1"
+		Expect(client.Create(ctx, pod1)).To(Succeed())
+
+		pod2 := plainPod.DeepCopy()
+		pod2.Name = "diki-privileged-pod"
+		pod2.Labels = map[string]string{
+			"compliance.gardener.cloud/role": "diki-privileged-pod",
+		}
+		pod2.Spec.Volumes = append(pod2.Spec.Volumes, corev1.Volume{
+			Name: "foo",
+			VolumeSource: corev1.VolumeSource{
+				HostPath: &corev1.HostPathVolumeSource{
+					Path: "foo/bar",
+				},
+			},
+		})
+		Expect(client.Create(ctx, pod2)).To(Succeed())
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+
+		expectedCheckResults := []rule.CheckResult{
+			{
+				Status:  rule.Passed,
+				Message: "Pod does not use volumes of type hostPath.",
+				Target:  rule.NewTarget("name", "pod1", "namespace", "foo", "kind", "pod"),
+			},
+			{
+				Status:  rule.Skipped,
+				Message: "Diki privileged pod requires the use of hostPaths.",
+				Target:  rule.NewTarget("name", "diki-privileged-pod", "namespace", "foo", "kind", "pod"),
+			},
+		}
+
+		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
+	})
+
 	It("should return correct results when options are present", func() {
 		options = rules.Options2008{
 			AcceptedPods: []rules.AcceptedPods2008{
