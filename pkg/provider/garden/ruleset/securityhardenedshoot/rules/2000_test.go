@@ -44,6 +44,7 @@ var _ = Describe("#2000", func() {
 		disabledAnonymousAuthenticationConfig                 = "apiVersion: apiserver.config.k8s.io/v1beta1\nkind: AuthenticationConfiguration\nanonymous:\n  enabled: false"
 		enabledAnonymousAuthenticationConfigWithConditions    = "apiVersion: apiserver.config.k8s.io/v1beta1\nkind: AuthenticationConfiguration\nanonymous:\n  enabled: true\n  conditions:\n  - path: /healthz\n  - path: /livez"
 		enabledAnonymousAuthenticationConfigWithoutConditions = "apiVersion: apiserver.config.k8s.io/v1beta1\nkind: AuthenticationConfiguration\nanonymous:\n  enabled: true"
+		nilAnonymusAuthenticationConfig                       = "apiVersion: apiserver.config.k8s.io/v1beta1\nkind: AuthenticationConfiguration"
 	)
 
 	BeforeEach(func() {
@@ -96,7 +97,7 @@ var _ = Describe("#2000", func() {
 			},
 			rule.CheckResult{Status: rule.Passed, Message: "Anonymous authentication is disabled for the kube-apiserver.", Target: rule.NewTarget()},
 		),
-		Entry("should fail the enabledAnoymousAuthentication flag is set to true",
+		Entry("should fail when the enabledAnoymousAuthentication flag is set to true",
 			func() {
 				shoot.Spec.Kubernetes = gardencorev1beta1.Kubernetes{
 					KubeAPIServer: &gardencorev1beta1.KubeAPIServerConfig{
@@ -165,6 +166,24 @@ var _ = Describe("#2000", func() {
 				}
 			},
 			rule.CheckResult{Status: rule.Errored, Message: "yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `foo` into v1beta1.AuthenticationConfiguration", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
+		),
+		Entry("should pass if the structuredAuthentication configuration does not have anonymous authentication config set",
+			func() {
+				authenticationConfigMap.Data = map[string]string{
+					fileName: nilAnonymusAuthenticationConfig,
+				}
+
+				Expect(fakeClient.Create(ctx, authenticationConfigMap)).To(Succeed())
+
+				shoot.Spec.Kubernetes = gardencorev1beta1.Kubernetes{
+					KubeAPIServer: &gardencorev1beta1.KubeAPIServerConfig{
+						StructuredAuthentication: &gardencorev1beta1.StructuredAuthentication{
+							ConfigMapName: configMapName,
+						},
+					},
+				}
+			},
+			rule.CheckResult{Status: rule.Passed, Message: "Anonymous authentication is not enabled for the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
 		),
 		Entry("should fail if the structuredAuthentication configuration has anonymous access enabled unconditionally",
 			func() {
