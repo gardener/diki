@@ -25,7 +25,8 @@ var _ = Describe("retryerrors", func() {
 		func(s string, expectedResult bool) {
 			Expect(retryerrors.ContainerFileNotFoundOnNodeRegexp.MatchString(s)).To(Equal(expectedResult))
 		},
-		Entry("Should match container file not found", "command /bin/sh find /var/lib/kubelet/pods/container-id -type f No such file or directory", true),
+		Entry("Should match container file not found by 'find'", "command /bin/sh find /var/lib/kubelet/pods/container-id -type f No such file or directory", true),
+		Entry("Should match container file not found by 'stat'", "command /bin/sh stat /var/lib/kubelet/pods/container-id -type f No such file or directory", true),
 		Entry("Should not match when it is found", "command /bin/sh find /var/lib/kubelet/pods/container-id -type f found", false),
 		Entry("Should not match when it is not container file path", "command /bin/sh /run/containerd/io.containerd.runtime.v2.task/k8s.io/id foo No such file or directory", false),
 	)
