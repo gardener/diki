@@ -90,6 +90,30 @@ func GetAllObjectsMetadata(ctx context.Context, c client.Client, namespace strin
 	return objects, nil
 }
 
+// FilterPodsByOwnerRef returns a subset of Pods which contains only unique
+// owner references. If a Pod has no owner reference, it is included in the result.
+// The first instance of a Pod with a specific owner reference is kept.
+func FilterPodsByOwnerRef(pods []corev1.Pod) []corev1.Pod {
+	var (
+		filteredPods = []corev1.Pod{}
+		ownerRefs    = map[string]struct{}{}
+	)
+
+	for _, pod := range pods {
+		ownerRef := pod.OwnerReferences
+		if len(ownerRef) == 0 {
+			filteredPods = append(filteredPods, pod)
+			continue
+		}
+
+		if _, ok := ownerRefs[string(ownerRef[0].UID)]; !ok {
+			ownerRefs[string(ownerRef[0].UID)] = struct{}{}
+			filteredPods = append(filteredPods, pod)
+		}
+	}
+	return filteredPods
+}
+
 // GetPods returns all pods for a given namespace, or all namespaces if it's set to empty string "".
 // It retrieves pods by portions set by limit.
 func GetPods(ctx context.Context, c client.Client, namespace string, selector labels.Selector, limit int64) ([]corev1.Pod, error) {
@@ -816,4 +840,41 @@ func SelectPodOfReferenceGroup(pods []corev1.Pod, nodesAllocatablePods map[strin
 		groupedPodsByNodes[podToUse.Spec.NodeName] = []corev1.Pod{podToUse}
 	}
 	return groupedPodsByNodes, checkResults
+}
+
+// TargetWithK8sObject creates a new Target with K8sObject coordinates.
+// It does not modify the original one.
+func TargetWithK8sObject(t rule.Target, objectType metav1.TypeMeta, objectMeta metav1.ObjectMeta) rule.Target {
+	target := maps.Clone(t)
+
+	// Namespaced objects
+	if len(objectMeta.Namespace) > 0 {
+		target = target.With("namespace", objectMeta.Namespace)
+	}
+
+	if len(objectMeta.OwnerReferences) == 0 {
+		target = target.With("kind", objectType.Kind, "name", objectMeta.Name)
+	} else {
+		target = target.With("kind", objectMeta.OwnerReferences[0].Kind, "name", objectMeta.OwnerReferences[0].Name)
+	}
+
+	return target
+}
+
+// TargetWithPod creates a new Target with Pod coordinates.
+// It does not modify the original one.
+func TargetWithPod(t rule.Target, pod corev1.Pod, replicaSets []appsv1.ReplicaSet) rule.Target {
+	for _, ownerRef := range pod.OwnerReferences {
+		if ownerRef.APIVersion == "apps/v1" && ownerRef.Kind == "ReplicaSet" {
+			replicaSetIdx := slices.IndexFunc(replicaSets, func(replicaSet appsv1.ReplicaSet) bool {
+				return replicaSet.UID == ownerRef.UID
+			})
+
+			if replicaSetIdx >= 0 {
+				return TargetWithK8sObject(t, metav1.TypeMeta{Kind: "ReplicaSet"}, replicaSets[replicaSetIdx].ObjectMeta)
+			}
+		}
+	}
+
+	return TargetWithK8sObject(t, metav1.TypeMeta{Kind: "Pod"}, pod.ObjectMeta)
 }
