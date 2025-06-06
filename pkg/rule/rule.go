@@ -8,11 +8,6 @@ import (
 	"context"
 	"maps"
 	"slices"
-	"strings"
-
-	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Rule defines what is considered a rule in the context of Diki.
@@ -77,43 +72,6 @@ func (t Target) With(keyValuePairs ...string) Target {
 		newTarget[keyValuePairs[i]] = keyValuePairs[i+1]
 	}
 	return newTarget
-}
-
-// WithPod creates a new Target with Pod coordinates.
-// It does not modify the original one.
-func (t Target) WithPod(pod corev1.Pod, replicaSets []appsv1.ReplicaSet) Target {
-	if len(pod.OwnerReferences) > 0 && pod.OwnerReferences[0].APIVersion == "apps/v1" && pod.OwnerReferences[0].Kind == "ReplicaSet" {
-		replicaSetIdx := slices.IndexFunc(replicaSets, func(replicaSet appsv1.ReplicaSet) bool {
-			return replicaSet.UID == pod.OwnerReferences[0].UID
-		})
-
-		if replicaSetIdx >= 0 {
-			return t.WithK8sObject(metav1.TypeMeta{Kind: "ReplicaSet"}, replicaSets[replicaSetIdx].ObjectMeta)
-		}
-	}
-
-	return t.WithK8sObject(metav1.TypeMeta{Kind: "Pod"}, pod.ObjectMeta)
-}
-
-// WithK8sObject creates a new Target with K8sObject coordinates.
-// It does not modify the original one.
-func (t Target) WithK8sObject(objectType metav1.TypeMeta, objectMeta metav1.ObjectMeta) Target {
-	target := maps.Clone(t)
-
-	// Namespaced objects
-	if len(objectMeta.Namespace) > 0 {
-		target = target.With("namespace", objectMeta.Namespace)
-	}
-
-	if len(objectMeta.OwnerReferences) == 0 {
-		objectKind := strings.ToLower(string(objectType.Kind[0])) + objectType.Kind[1:]
-		target = target.With("kind", objectKind, "name", objectMeta.Name)
-	} else {
-		referenceKind := strings.ToLower(string(objectMeta.OwnerReferences[0].Kind[0])) + objectMeta.OwnerReferences[0].Kind[1:]
-		target = target.With("kind", referenceKind, "name", objectMeta.OwnerReferences[0].Name)
-	}
-
-	return target
 }
 
 // CheckResult contains information about a Rule check. Returned from Rule runs.

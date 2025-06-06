@@ -70,7 +70,7 @@ func (r *Rule242414) checkPods(pods []corev1.Pod, repliaceSets []appsv1.ReplicaS
 	for _, pod := range pods {
 		var (
 			podCheckResults []rule.CheckResult
-			target          = rule.NewTarget().WithPod(pod, repliaceSets)
+			target          = kubeutils.TargetWithPod(rule.NewTarget(), pod, repliaceSets)
 		)
 		for _, container := range slices.Concat(pod.Spec.Containers, pod.Spec.InitContainers) {
 			for _, port := range container.Ports {

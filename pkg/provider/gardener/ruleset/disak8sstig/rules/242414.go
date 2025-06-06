@@ -54,14 +54,14 @@ func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	seedPods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "PodList"))), nil
 	}
 
 	filteredSeedPods := kubeutils.FilterPodsByOwnerRef(seedPods)
 
 	seedReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", r.ControlPlaneNamespace, "kind", "repliaceSetList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", r.ControlPlaneNamespace, "kind", "ReplicaSetList"))), nil
 	}
 
 	seedNamespaces, err := kubeutils.GetNamespaces(ctx, r.ControlPlaneClient)
@@ -72,13 +72,13 @@ func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	shootPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList")))...), nil
+		return rule.Result(r, append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "PodList")))...), nil
 	}
 	filteredShootPods := kubeutils.FilterPodsByOwnerRef(shootPods)
 
 	shootReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", r.ControlPlaneNamespace, "kind", "repliaceSetList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ReplicaSetList"))), nil
 	}
 
 	shootNamespaces, err := kubeutils.GetNamespaces(ctx, r.ClusterClient)
@@ -95,7 +95,7 @@ func (r *Rule242414) checkPods(pods []corev1.Pod, repliaceSets []appsv1.ReplicaS
 	for _, pod := range pods {
 		var (
 			podCheckResults []rule.CheckResult
-			target          = clusterTarget.WithPod(pod, repliaceSets)
+			target          = kubeutils.TargetWithPod(clusterTarget, pod, repliaceSets)
 		)
 		for _, container := range slices.Concat(pod.Spec.Containers, pod.Spec.InitContainers) {
 			for _, port := range container.Ports {

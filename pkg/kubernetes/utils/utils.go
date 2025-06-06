@@ -841,3 +841,40 @@ func SelectPodOfReferenceGroup(pods []corev1.Pod, nodesAllocatablePods map[strin
 	}
 	return groupedPodsByNodes, checkResults
 }
+
+// TargetWithK8sObject creates a new Target with K8sObject coordinates.
+// It does not modify the original one.
+func TargetWithK8sObject(t rule.Target, objectType metav1.TypeMeta, objectMeta metav1.ObjectMeta) rule.Target {
+	target := maps.Clone(t)
+
+	// Namespaced objects
+	if len(objectMeta.Namespace) > 0 {
+		target = target.With("namespace", objectMeta.Namespace)
+	}
+
+	if len(objectMeta.OwnerReferences) == 0 {
+		target = target.With("kind", objectType.Kind, "name", objectMeta.Name)
+	} else {
+		target = target.With("kind", objectMeta.OwnerReferences[0].Kind, "name", objectMeta.OwnerReferences[0].Name)
+	}
+
+	return target
+}
+
+// TargetWithPod creates a new Target with Pod coordinates.
+// It does not modify the original one.
+func TargetWithPod(t rule.Target, pod corev1.Pod, replicaSets []appsv1.ReplicaSet) rule.Target {
+	for _, ownerRef := range pod.OwnerReferences {
+		if ownerRef.APIVersion == "apps/v1" && ownerRef.Kind == "ReplicaSet" {
+			replicaSetIdx := slices.IndexFunc(replicaSets, func(replicaSet appsv1.ReplicaSet) bool {
+				return replicaSet.UID == ownerRef.UID
+			})
+
+			if replicaSetIdx >= 0 {
+				return TargetWithK8sObject(t, metav1.TypeMeta{Kind: "ReplicaSet"}, replicaSets[replicaSetIdx].ObjectMeta)
+			}
+		}
+	}
+
+	return TargetWithK8sObject(t, metav1.TypeMeta{Kind: "Pod"}, pod.ObjectMeta)
+}

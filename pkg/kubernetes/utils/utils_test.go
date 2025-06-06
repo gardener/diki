@@ -278,6 +278,79 @@ var _ = Describe("utils", func() {
 		})
 	})
 
+	Describe("#GFilterPodsByOwnerRef", func() {
+		var (
+			plainPod *corev1.Pod
+		)
+
+		BeforeEach(func() {
+			plainPod = &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "foo",
+				},
+			}
+		})
+
+		It("should return empty list when no pods are provided", func() {
+			pods := utils.FilterPodsByOwnerRef(nil)
+
+			Expect(pods).To(BeEmpty())
+		})
+		It("should return all pods when all have unique owner references", func() {
+			pod1 := plainPod.DeepCopy()
+			pod1.Name = "pod1"
+
+			pod2 := plainPod.DeepCopy()
+			pod2.Name = "pod2"
+			pod2.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: "1",
+				},
+			}
+
+			pod3 := plainPod.DeepCopy()
+			pod3.Name = "pod3"
+			pod3.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: "2",
+				},
+			}
+
+			pod4 := plainPod.DeepCopy()
+			pod4.Name = "pod4"
+
+			podList := []corev1.Pod{*pod1, *pod2, *pod3, *pod4}
+			res := utils.FilterPodsByOwnerRef(podList)
+
+			Expect(res).To(ConsistOf(podList))
+		})
+
+		It("should filter out pods with not unique owner references", func() {
+			pod1 := plainPod.DeepCopy()
+			pod1.Name = "pod1"
+
+			pod2 := plainPod.DeepCopy()
+			pod2.Name = "pod2"
+			pod2.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: "1",
+				},
+			}
+
+			pod3 := plainPod.DeepCopy()
+			pod3.Name = "pod3"
+			pod3.OwnerReferences = []metav1.OwnerReference{
+				{
+					UID: "1",
+				},
+			}
+
+			res := utils.FilterPodsByOwnerRef([]corev1.Pod{*pod1, *pod2, *pod3})
+
+			Expect(res).To(ConsistOf([]corev1.Pod{*pod1, *pod2}))
+		})
+	})
+
 	Describe("#GetPods", func() {
 		var (
 			fakeClient       client.Client
@@ -2342,4 +2415,119 @@ readOnlyPort: 222
 			Expect(checkResult).To(Equal(expectedCheckResults))
 		})
 	})
+
+	DescribeTable("#TargetWithK8sObject", func(target rule.Target, objectType metav1.TypeMeta, objectMeta metav1.ObjectMeta, expectedTarget rule.Target) {
+		result := utils.TargetWithK8sObject(target, objectType, objectMeta)
+
+		Expect(result).To(Equal(expectedTarget))
+	},
+		Entry("should return correct target",
+			rule.NewTarget(), metav1.TypeMeta{Kind: "Namespace"}, metav1.ObjectMeta{Name: "bar"},
+			rule.NewTarget("kind", "Namespace", "name", "bar"),
+		),
+		Entry("should return correct namespaced target",
+			rule.NewTarget(), metav1.TypeMeta{Kind: "Pod"}, metav1.ObjectMeta{Name: "foo", Namespace: "bar"},
+			rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "bar"),
+		),
+		Entry("should return correct target when objects has ownerReferences",
+			rule.NewTarget(), metav1.TypeMeta{Kind: "Pod"},
+			metav1.ObjectMeta{Name: "foo", Namespace: "bar", OwnerReferences: []metav1.OwnerReference{{Kind: "ReplicaSet", Name: "baz"}}},
+			rule.NewTarget("kind", "ReplicaSet", "name", "baz", "namespace", "bar"),
+		),
+		Entry("should return the first ownerReference",
+			rule.NewTarget(), metav1.TypeMeta{Kind: "Pod"},
+			metav1.ObjectMeta{Name: "foo", Namespace: "bar", OwnerReferences: []metav1.OwnerReference{{Kind: "ReplicaSet", Name: "baz"}, {Kind: "ReplicaSet", Name: "foo"}}},
+			rule.NewTarget("kind", "ReplicaSet", "name", "baz", "namespace", "bar"),
+		),
+		Entry("should retain original target values",
+			rule.NewTarget("foo", "bar"), metav1.TypeMeta{Kind: "Namespace"}, metav1.ObjectMeta{Name: "bar"},
+			rule.NewTarget("foo", "bar", "kind", "Namespace", "name", "bar"),
+		),
+	)
+
+	DescribeTable("#TargetWithPod", func(target rule.Target, objectType metav1.TypeMeta, objectMeta metav1.ObjectMeta, expectedTarget rule.Target) {
+		replicaSets := []appsv1.ReplicaSet{
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "replicaSet1",
+					Namespace: "bar",
+					UID:       "1",
+					OwnerReferences: []metav1.OwnerReference{
+						{
+							Kind: "Deployment",
+							Name: "deployment",
+						},
+					},
+				},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "replicaSet2",
+					Namespace: "bar",
+					UID:       "2",
+					OwnerReferences: []metav1.OwnerReference{
+						{
+							Kind: "StatefulSet",
+							Name: "statefulSet",
+						},
+					},
+				},
+			},
+		}
+		pod := corev1.Pod{
+			TypeMeta:   objectType,
+			ObjectMeta: objectMeta,
+		}
+		result := utils.TargetWithPod(target, pod, replicaSets)
+
+		Expect(result).To(Equal(expectedTarget))
+	},
+		Entry("should return correct Target",
+			rule.NewTarget(), metav1.TypeMeta{Kind: "Pod"}, metav1.ObjectMeta{Name: "foo", Namespace: "bar"},
+			rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "bar"),
+		),
+		Entry("should return correct target when objects has ownerReferences",
+			rule.NewTarget(), metav1.TypeMeta{Kind: "Pod"},
+			metav1.ObjectMeta{Name: "foo", Namespace: "bar", OwnerReferences: []metav1.OwnerReference{{Kind: "DaemonSet", Name: "baz"}}},
+			rule.NewTarget("kind", "DaemonSet", "name", "baz", "namespace", "bar"),
+		),
+		Entry("should return correct target when objects has replicaSet as ownerReference",
+			rule.NewTarget(), metav1.TypeMeta{Kind: "Pod"},
+			metav1.ObjectMeta{
+				Name:      "foo",
+				Namespace: "bar",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: "apps/v1",
+						Kind:       "ReplicaSet",
+						UID:        "1",
+					},
+				},
+			},
+			rule.NewTarget("kind", "Deployment", "name", "deployment", "namespace", "bar"),
+		),
+		Entry("should return correct target when objects has more than 1ownerReference",
+			rule.NewTarget(), metav1.TypeMeta{Kind: "Pod"},
+			metav1.ObjectMeta{
+				Name:      "foo",
+				Namespace: "bar",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: "apps/v1",
+						Kind:       "Deployment",
+					},
+					{
+						APIVersion: "apps/v1",
+						Kind:       "ReplicaSet",
+						UID:        "2",
+					},
+				},
+			},
+			rule.NewTarget("kind", "StatefulSet", "name", "statefulSet", "namespace", "bar"),
+		),
+		Entry("should retain original target values",
+			rule.NewTarget("foo", "bar"), metav1.TypeMeta{Kind: "Pod"}, metav1.ObjectMeta{Name: "foo", Namespace: "bar"},
+			rule.NewTarget("foo", "bar", "kind", "Pod", "name", "foo", "namespace", "bar"),
+		),
+	)
 })
