@@ -101,7 +101,7 @@ var _ = Describe("#2002", func() {
 				},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Accepted, Message: "foo justify", Target: rule.NewTarget("kind", "storageClass", "name", "default")},
+				{Status: rule.Accepted, Message: "foo justify", Target: rule.NewTarget("kind", "StorageClass", "name", "default")},
 			},
 		),
 		Entry("should pass when a storage class's reclaim policy is set to a non-delete value but accepted by MatchLabels options",
