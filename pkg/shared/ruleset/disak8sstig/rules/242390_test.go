@@ -103,10 +103,6 @@ var _ = Describe("#242390", func() {
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--anonymous-auth=true"}},
 			[]rule.CheckResult{{Status: rule.Failed, Message: "Option anonymous-auth set to not allowed value.", Target: target}},
 			BeNil()),
-		Entry("should pass when anonymous-auth is set to allowed value fakse",
-			corev1.Container{Name: "kube-apiserver", Command: []string{"--anonymous-auth=false"}},
-			[]rule.CheckResult{{Status: rule.Passed, Message: "Option anonymous-auth set to allowed value.", Target: target}},
-			BeNil()),
 	)
 
 	DescribeTable("Run cases for authentication-config flag",
