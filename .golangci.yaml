@@ -69,3 +69,9 @@ linters:
       - name: unused-parameter
       - name: unreachable-code
       - name: redefines-builtin-id
+    staticcheck:
+      # Default: ["all", "-ST1000", "-ST1003", "-ST1016", "-ST1020", "-ST1021", "-ST1022"]
+      checks:
+      - all
+      - -ST1000 # checks if at least one file in a package has comments
+      - -SA1019 # checks if deprecated API is used
