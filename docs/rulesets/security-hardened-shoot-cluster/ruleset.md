@@ -82,41 +82,11 @@ Shoot clusters must have anonymous authentication disabled for the Kubernetes AP
 
 #### Fix
 
-Create a `structuredAuthentication` configMap in your project namespace.
+Do not set `structuredAuthentication` explicitly, since the enablement of `anonymousAuthentication` defaults to false.
 
-Set an `AuthenticationConfiguration` to the `data[config.yaml]` field of your configMap.
+Otherwise, configure the `structuredAuthentication` field to explicitly deny `anonymousAuthentication`
 
-``` yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: anonymous-auth-config
-  namespace: garden-local
-data:
-  config.yaml: |
-    apiVersion: apiserver.config.k8s.io/v1beta1
-    kind: AuthenticationConfiguration
-```
-
-In the `AuthenticationConfiguration`, do not set the `anonymous` field as it defaults to false, or set it to false explicitly.
-
-``` yaml
-apiVersion: apiserver.config.k8s.io/v1beta1
-kind: AuthenticationConfiguration
-anonymous:
-  enabled: false
-```
-
-In the shoot, set the `.spec.kubernetes.kubeAPIServer.configMapName` to point to the configMap in the project namespace.
-
-``` yaml
-kind: Shoot
-apiVersion: core.gardener.cloud/v1beta1
-spec:
-  kubernetes:
-    kubeAPIServer:
-      configMapName: anonymous-auth-config
-```
+You can configure the `structuredAuthentication` via the [following guide](https://gardener.cloud/docs/gardener/shoot/shoot_access/#structured-authentication): 
 
 ---
 
