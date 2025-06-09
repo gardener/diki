@@ -29,12 +29,11 @@ var _ = Describe("#2000", func() {
 		shootNamespace = "bar"
 
 		authenticationConfigMap *corev1.ConfigMap
-
-		shoot    *gardencorev1beta1.Shoot
-		r        rule.Rule
-		ruleName = "Shoot clusters must have anonymous authentication disabled for the Kubernetes API server."
-		ruleID   = "2000"
-		severity = rule.SeverityHigh
+		shoot                   *gardencorev1beta1.Shoot
+		r                       rule.Rule
+		ruleName                = "Shoot clusters must have anonymous authentication disabled for the Kubernetes API server."
+		ruleID                  = "2000"
+		severity                = rule.SeverityHigh
 	)
 
 	const (
