@@ -112,13 +112,12 @@ func (r *Rule242390) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
-	if authConfig.Anonymous == nil {
+	switch {
+	case authConfig.Anonymous == nil:
 		return rule.Result(r, rule.FailedCheckResult("The authentication configuration does not explicitly disable anonymous authentication.", target)), nil
-	}
-
-	if authConfig.Anonymous != nil && authConfig.Anonymous.Enabled {
+	case authConfig.Anonymous != nil && authConfig.Anonymous.Enabled:
 		return rule.Result(r, rule.FailedCheckResult("The authentication configuration has anonymous authentication enabled.", target)), nil
+	default:
+		return rule.Result(r, rule.PassedCheckResult("The authentication configuration has anonymous authentication disabled.", target)), nil
 	}
-
-	return rule.Result(r, rule.PassedCheckResult("The authentication configuration has anonymous authentication disabled.", target)), nil
 }
