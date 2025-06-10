@@ -13,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
@@ -78,7 +77,9 @@ func (r *Rule2002) Run(ctx context.Context) (rule.RuleResult, error) {
 			continue
 		}
 
-		if accepted, justification := r.accepted(storageClass.Labels); accepted {
+		if accepted, justification, err := r.accepted(storageClass.Labels); err != nil {
+			return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), err
+		} else if accepted {
 			msg := cmp.Or(justification, "StorageClass accepted to not have Delete ReclaimPolicy.")
 			checkResults = append(checkResults, rule.AcceptedCheckResult(msg, target))
 		} else {
@@ -89,16 +90,21 @@ func (r *Rule2002) Run(ctx context.Context) (rule.RuleResult, error) {
 	return rule.Result(r, checkResults...), err
 }
 
-func (r *Rule2002) accepted(storageClassLabels map[string]string) (bool, string) {
+func (r *Rule2002) accepted(storageClassLabels map[string]string) (bool, string, error) {
 	if r.Options == nil {
-		return false, ""
+		return false, "", nil
 	}
 
 	for _, acceptedStorageClass := range r.Options.AcceptedStorageClasses {
-		if utils.MatchLabels(storageClassLabels, acceptedStorageClass.MatchLabels) {
-			return true, acceptedStorageClass.Justification
+		matches, err := acceptedStorageClass.Matches(storageClassLabels)
+		if err != nil {
+			return false, "", err
+		}
+
+		if matches {
+			return true, acceptedStorageClass.Justification, nil
 		}
 	}
 
-	return false, ""
+	return false, "", nil
 }
