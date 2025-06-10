@@ -82,11 +82,9 @@ Shoot clusters must have anonymous authentication disabled for the Kubernetes AP
 
 #### Fix
 
-Do not set `structuredAuthentication` explicitly, since the enablement of `anonymousAuthentication` defaults to false.
+Do not set `anonymous.enabled` field in `structuredAuthentication` configuration file as it defaults to `false` or set it explicitly to `false`
 
-Otherwise, configure the `structuredAuthentication` field to explicitly deny `anonymousAuthentication`
-
-You can configure the `structuredAuthentication` via the [following guide](https://gardener.cloud/docs/gardener/shoot/shoot_access/#structured-authentication): 
+For how to configure `structuredAuthentication` for `Shoot` clusters please see [its documentation](https://gardener.cloud/docs/gardener/shoot/shoot_access/#structured-authentication)
 
 ---
 
