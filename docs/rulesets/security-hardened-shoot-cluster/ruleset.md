@@ -81,14 +81,11 @@ If you want to extend the scope of the verified images to include non-Gardener w
 Shoot clusters must have anonymous authentication disabled for the Kubernetes API server. This rule follows the requirements from DISA K8s STIG rule [242390](https://stigviewer.com/stigs/kubernetes/2024-08-22/finding/V-242390).
 
 #### Fix
-Do not set `spec.kubernetes.enableAnonymousAuthentication` field as it defaults to `false` or set it explicitly to `false`.
-``` yaml
-kind: Shoot
-apiVersion: core.gardener.cloud/v1beta1
-spec:
-  kubernetes:
-    enableAnonymousAuthentication: false
-```
+
+Do not set `anonymous.enabled` field in `structuredAuthentication` configuration file as it defaults to `false` or set it explicitly to `false`
+
+For how to configure `structuredAuthentication` for `Shoot` clusters please see [its documentation](https://gardener.cloud/docs/gardener/shoot/shoot_access/#structured-authentication)
+
 ---
 
 ### 2001 - Shoot clusters must disable ssh access to worker nodes. <a id="2001"></a>
