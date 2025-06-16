@@ -37,13 +37,33 @@ var _ = Describe("#2000", func() {
 	)
 
 	const (
-		fileName                                              = "config.yaml"
-		configMapName                                         = "authentication-config"
-		invalidAnonymousAuthenticationConfig                  = "foo"
-		disabledAnonymousAuthenticationConfig                 = "apiVersion: apiserver.config.k8s.io/v1beta1\nkind: AuthenticationConfiguration\nanonymous:\n  enabled: false"
-		enabledAnonymousAuthenticationConfigWithConditions    = "apiVersion: apiserver.config.k8s.io/v1beta1\nkind: AuthenticationConfiguration\nanonymous:\n  enabled: true\n  conditions:\n  - path: /healthz\n  - path: /livez"
-		enabledAnonymousAuthenticationConfigWithoutConditions = "apiVersion: apiserver.config.k8s.io/v1beta1\nkind: AuthenticationConfiguration\nanonymous:\n  enabled: true"
-		nilAnonymusAuthenticationConfig                       = "apiVersion: apiserver.config.k8s.io/v1beta1\nkind: AuthenticationConfiguration"
+		fileName                             = "config.yaml"
+		configMapName                        = "authentication-config"
+		invalidAnonymousAuthenticationConfig = "foo"
+
+		disabledAnonymousAuthenticationConfig = `apiVersion: apiserver.config.k8s.io/v1beta1
+kind: AuthenticationConfiguration
+anonymous:
+  enabled: false
+`
+		enabledAnonymousAuthenticationConfigWithConditions = `apiVersion: apiserver.config.k8s.io/v1beta1
+kind: AuthenticationConfiguration
+anonymous:
+  enabled: true
+  conditions:
+  - path: /healthz
+  - path: /livez
+`
+
+		enabledAnonymousAuthenticationConfigWithoutConditions = `apiVersion: apiserver.config.k8s.io/v1beta1
+kind: AuthenticationConfiguration
+anonymous:
+  enabled: true
+`
+
+		nilAnonymusAuthenticationConfig = `apiVersion: apiserver.config.k8s.io/v1beta1
+kind: AuthenticationConfiguration
+`
 	)
 
 	BeforeEach(func() {
