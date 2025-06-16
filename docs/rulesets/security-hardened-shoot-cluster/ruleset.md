@@ -82,9 +82,9 @@ Shoot clusters must have anonymous authentication disabled for the Kubernetes AP
 
 #### Fix
 
-Do not set `anonymous.enabled` field in `structuredAuthentication` configuration file as it defaults to `false` or set it explicitly to `false`
+Do not set `anonymous.enabled` field in `structuredAuthentication` configuration file as it defaults to `false` or set it explicitly to `false`.
 
-For how to configure `structuredAuthentication` for `Shoot` clusters please see [its documentation](https://gardener.cloud/docs/gardener/shoot/shoot_access/#structured-authentication)
+For more details, please consult the [structured authentication for `Shoot` clusters documentation](https://gardener.cloud/docs/gardener/shoot/shoot_access/#structured-authentication).
 
 ---
 
@@ -112,7 +112,7 @@ spec:
 Shoot clusters must not have the allAlpha feature gate enabled for any of their components. This rule follows the requirements from DISA K8s STIG rule [242400](https://stigviewer.com/stigs/kubernetes/2024-08-22/finding/V-242400).
 
 #### Fix
-Do not set `spec.kubernetes.{kubeAPIServer,kubeControllerManager,kubeScheduler,kubeProxy,kubelet}.featureGate.allAlpha` fields as they default to `false` or set them explicitly to `false`
+Do not set `spec.kubernetes.{kubeAPIServer,kubeControllerManager,kubeScheduler,kubeProxy,kubelet}.featureGate.allAlpha` fields as they default to `false` or set them explicitly to `false`.
 ``` yaml
 kind: Shoot
 apiVersion: core.gardener.cloud/v1beta1
