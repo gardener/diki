@@ -66,7 +66,7 @@ func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	seedNamespaces, err := kubeutils.GetNamespaces(ctx, r.ControlPlaneClient)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "namespaceList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "NamespaceList"))), nil
 	}
 	checkResults := r.checkPods(filteredSeedPods, seedReplicaSets, seedNamespaces, seedTarget)
 
@@ -83,7 +83,7 @@ func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	shootNamespaces, err := kubeutils.GetNamespaces(ctx, r.ClusterClient)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "namespaceList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "NamespaceList"))), nil
 	}
 	checkResults = append(checkResults, r.checkPods(filteredShootPods, shootReplicaSets, shootNamespaces, shootTarget)...)
 

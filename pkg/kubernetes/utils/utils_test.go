@@ -278,7 +278,7 @@ var _ = Describe("utils", func() {
 		})
 	})
 
-	Describe("#GFilterPodsByOwnerRef", func() {
+	Describe("#FilterPodsByOwnerRef", func() {
 		var (
 			plainPod *corev1.Pod
 		)
@@ -2506,7 +2506,7 @@ readOnlyPort: 222
 			},
 			rule.NewTarget("kind", "Deployment", "name", "deployment", "namespace", "bar"),
 		),
-		Entry("should return correct target when objects has more than 1ownerReference",
+		Entry("should return correct target when objects has more than 1 ownerReference",
 			rule.NewTarget(), metav1.TypeMeta{Kind: "Pod"},
 			metav1.ObjectMeta{
 				Name:      "foo",

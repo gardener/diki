@@ -47,18 +47,18 @@ func (r *Rule242414) Severity() rule.SeverityLevel {
 func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {
 	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "PodList"))), nil
 	}
 	filteredPods := kubeutils.FilterPodsByOwnerRef(pods)
 
 	replicaSets, err := kubeutils.GetReplicaSets(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "repliaceSetList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ReplicaSetList"))), nil
 	}
 
 	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NamespaceList"))), nil
 	}
 	checkResults := r.checkPods(filteredPods, replicaSets, namespaces)
 
