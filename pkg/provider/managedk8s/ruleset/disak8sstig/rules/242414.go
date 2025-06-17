@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"slices"
 
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -46,24 +47,30 @@ func (r *Rule242414) Severity() rule.SeverityLevel {
 func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {
 	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "PodList"))), nil
+	}
+	filteredPods := kubeutils.FilterPodsByOwnerRef(pods)
+
+	replicaSets, err := kubeutils.GetReplicaSets(ctx, r.Client, "", labels.NewSelector(), 300)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ReplicaSetList"))), nil
 	}
 
 	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NamespaceList"))), nil
 	}
-	checkResults := r.checkPods(pods, namespaces)
+	checkResults := r.checkPods(filteredPods, replicaSets, namespaces)
 
 	return rule.Result(r, checkResults...), nil
 }
 
-func (r *Rule242414) checkPods(pods []corev1.Pod, namespaces map[string]corev1.Namespace) []rule.CheckResult {
+func (r *Rule242414) checkPods(pods []corev1.Pod, repliaceSets []appsv1.ReplicaSet, namespaces map[string]corev1.Namespace) []rule.CheckResult {
 	var checkResults []rule.CheckResult
 	for _, pod := range pods {
 		var (
 			podCheckResults []rule.CheckResult
-			target          = rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
+			target          = kubeutils.TargetWithPod(rule.NewTarget(), pod, repliaceSets)
 		)
 		for _, container := range slices.Concat(pod.Spec.Containers, pod.Spec.InitContainers) {
 			for _, port := range container.Ports {
