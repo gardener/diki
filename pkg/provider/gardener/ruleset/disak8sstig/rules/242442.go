@@ -104,7 +104,7 @@ func (r *Rule242442) checkImages(cluster string, pods []corev1.Pod) []rule.Check
 
 				imageRef := containerStatuses[containerStatusIdx].ImageID
 				if len(imageRef) == 0 {
-					checkResults = append(checkResults, rule.ErroredCheckResult("imageID not found for container", containerTarget))
+					checkResults = append(checkResults, rule.WarningCheckResult("ImageID is empty in container status.", containerTarget))
 					continue
 				}
 
