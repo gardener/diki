@@ -245,7 +245,7 @@ var _ = Describe("#242442", func() {
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
 	})
 
-	It("should return errored result when the imageID cannot be found for a given container", func() {
+	It("should return warning result when the imageID cannot be found for a given container", func() {
 		r := &rules.Rule242442{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace}
 		seedPod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest2
 		seedPod.Status.ContainerStatuses[2].ImageID = ""
@@ -255,9 +255,9 @@ var _ = Describe("#242442", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.ErroredCheckResult("imageID not found for container", rule.NewTarget("cluster", "seed", "container", "foo", "name", "seed-pod", "kind", "pod")),
-			rule.ErroredCheckResult("imageID not found for container", rule.NewTarget("cluster", "seed", "container", "foobar", "name", "seed-pod", "kind", "pod")),
-			rule.ErroredCheckResult("imageID not found for container", rule.NewTarget("cluster", "seed", "container", "initFoo", "name", "seed-pod", "kind", "pod")),
+			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("cluster", "seed", "container", "foo", "name", "seed-pod", "kind", "pod")),
+			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("cluster", "seed", "container", "foobar", "name", "seed-pod", "kind", "pod")),
+			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("cluster", "seed", "container", "initFoo", "name", "seed-pod", "kind", "pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))

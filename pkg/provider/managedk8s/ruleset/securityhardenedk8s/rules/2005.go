@@ -105,7 +105,7 @@ func (r *Rule2005) Run(ctx context.Context) (rule.RuleResult, error) {
 			}
 
 			if len(containerStatuses[containerStatusIdx].ImageID) == 0 {
-				checkResults = append(checkResults, rule.ErroredCheckResult("ImageID is empty in container status.", containerTarget))
+				checkResults = append(checkResults, rule.WarningCheckResult("ImageID is empty in container status.", containerTarget))
 				continue
 			}
 

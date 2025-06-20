@@ -174,7 +174,7 @@ var _ = Describe("#242442", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 
-	It("should return errored result when the imageID cannot be found for a given container", func() {
+	It("should return warning result when the imageID cannot be found for a given container", func() {
 		r := &rules.Rule242442{Client: fakeClient, Namespace: namespace}
 		pod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest1
 		pod.Status.ContainerStatuses[2].ImageID = ""
@@ -184,8 +184,8 @@ var _ = Describe("#242442", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.ErroredCheckResult("imageID not found for container", rule.NewTarget("container", "foo", "name", "pod", "kind", "pod")),
-			rule.ErroredCheckResult("imageID not found for container", rule.NewTarget("container", "foobar", "name", "pod", "kind", "pod")),
+			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("container", "foo", "name", "pod", "kind", "pod")),
+			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("container", "foobar", "name", "pod", "kind", "pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
