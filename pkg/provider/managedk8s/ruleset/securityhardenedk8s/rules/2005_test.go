@@ -133,7 +133,7 @@ var _ = Describe("#2005", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 
-	It("should error when imageID is empty", func() {
+	It("should warn when imageID is empty", func() {
 		option.AllowedImages = append(option.AllowedImages, rules.AllowedImage{
 			Prefix: "eu.gcr.io/foo",
 		})
@@ -145,7 +145,7 @@ var _ = Describe("#2005", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.ErroredCheckResult("ImageID is empty in container status.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "foo")),
+			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "foo")),
 			rule.PassedCheckResult("Image has allowed prefix.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "bar", "imageRef", "eu.gcr.io/foo/image@sha256:"+digest)),
 		}
 
