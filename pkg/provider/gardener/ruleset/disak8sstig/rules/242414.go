@@ -90,12 +90,12 @@ func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {
 	return rule.Result(r, checkResults...), nil
 }
 
-func (r *Rule242414) checkPods(pods []corev1.Pod, repliaceSets []appsv1.ReplicaSet, namespaces map[string]corev1.Namespace, clusterTarget rule.Target) []rule.CheckResult {
+func (r *Rule242414) checkPods(pods []corev1.Pod, replicaSets []appsv1.ReplicaSet, namespaces map[string]corev1.Namespace, clusterTarget rule.Target) []rule.CheckResult {
 	var checkResults []rule.CheckResult
 	for _, pod := range pods {
 		var (
 			podCheckResults []rule.CheckResult
-			target          = kubeutils.TargetWithPod(clusterTarget, pod, repliaceSets)
+			target          = kubeutils.TargetWithPod(clusterTarget, pod, replicaSets)
 		)
 		for _, container := range slices.Concat(pod.Spec.Containers, pod.Spec.InitContainers) {
 			for _, port := range container.Ports {
