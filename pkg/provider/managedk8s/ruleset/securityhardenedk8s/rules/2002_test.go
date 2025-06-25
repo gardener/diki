@@ -63,7 +63,7 @@ var _ = Describe("#2002", func() {
 				Expect(client.Create(ctx, plainStorageClass)).To(Succeed())
 			}, rules.Options2002{},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "StorageClass does not have a Delete ReclaimPolicy set.", Target: rule.NewTarget("kind", "storageClass", "name", "default")},
+				{Status: rule.Failed, Message: "StorageClass does not have a Delete ReclaimPolicy set.", Target: rule.NewTarget("kind", "StorageClass", "name", "default")},
 			},
 		),
 		Entry("should pass when a storage class's reclaim policy is explicitly set to delete",
@@ -72,7 +72,7 @@ var _ = Describe("#2002", func() {
 				Expect(client.Create(ctx, plainStorageClass)).To(Succeed())
 			}, rules.Options2002{},
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "StorageClass has a Delete ReclaimPolicy set.", Target: rule.NewTarget("kind", "storageClass", "name", "default")},
+				{Status: rule.Passed, Message: "StorageClass has a Delete ReclaimPolicy set.", Target: rule.NewTarget("kind", "StorageClass", "name", "default")},
 			},
 		),
 		Entry("should fail when a storage class's reclaim policy is set to a non-delete value",
@@ -81,7 +81,7 @@ var _ = Describe("#2002", func() {
 				Expect(client.Create(ctx, plainStorageClass)).To(Succeed())
 			}, rules.Options2002{},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "StorageClass does not have a Delete ReclaimPolicy set.", Target: rule.NewTarget("kind", "storageClass", "name", "default")},
+				{Status: rule.Failed, Message: "StorageClass does not have a Delete ReclaimPolicy set.", Target: rule.NewTarget("kind", "StorageClass", "name", "default")},
 			},
 		),
 		Entry("should pass when a storage class's reclaim policy is set to a non-delete value but accepted by options",
@@ -99,7 +99,7 @@ var _ = Describe("#2002", func() {
 				},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Accepted, Message: "foo justify", Target: rule.NewTarget("kind", "storageClass", "name", "default")},
+				{Status: rule.Accepted, Message: "foo justify", Target: rule.NewTarget("kind", "StorageClass", "name", "default")},
 			},
 		),
 		Entry("should return multiple check results when multiple storage classes are configured",
@@ -128,9 +128,9 @@ var _ = Describe("#2002", func() {
 				},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "StorageClass does not have a Delete ReclaimPolicy set.", Target: rule.NewTarget("kind", "storageClass", "name", "storageClassDefault")},
-				{Status: rule.Passed, Message: "StorageClass has a Delete ReclaimPolicy set.", Target: rule.NewTarget("kind", "storageClass", "name", "storageClassDeletePolicyPolicy")},
-				{Status: rule.Accepted, Message: "StorageClass accepted to not have Delete ReclaimPolicy.", Target: rule.NewTarget("kind", "storageClass", "name", "storageClassRetainPolicyPolicy")},
+				{Status: rule.Failed, Message: "StorageClass does not have a Delete ReclaimPolicy set.", Target: rule.NewTarget("kind", "StorageClass", "name", "storageClassDefault")},
+				{Status: rule.Passed, Message: "StorageClass has a Delete ReclaimPolicy set.", Target: rule.NewTarget("kind", "StorageClass", "name", "storageClassDeletePolicyPolicy")},
+				{Status: rule.Accepted, Message: "StorageClass accepted to not have Delete ReclaimPolicy.", Target: rule.NewTarget("kind", "StorageClass", "name", "storageClassRetainPolicyPolicy")},
 			},
 		),
 	)
