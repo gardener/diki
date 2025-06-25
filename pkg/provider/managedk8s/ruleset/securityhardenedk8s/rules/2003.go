@@ -9,6 +9,7 @@ import (
 	"slices"
 
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -76,23 +77,25 @@ func (r *Rule2003) Severity() rule.SeverityLevel {
 func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "PodList"))), nil
 	}
 
 	if len(pods) == 0 {
 		return rule.Result(r, rule.PassedCheckResult("The cluster does not have any Pods.", rule.NewTarget())), nil
 	}
 
+	filteredPods := kubeutils.FilterPodsByOwnerRef(pods)
+
 	allNamespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NamespaceList"))), nil
 	}
 
 	var checkResults []rule.CheckResult
-	for _, pod := range pods {
+	for _, pod := range filteredPods {
 		var (
 			uses                    = false
-			podTarget               = rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
+			podTarget               = kubeutils.TargetWithK8sObject(rule.NewTarget(), v1.TypeMeta{Kind: "Pod"}, pod.ObjectMeta)
 			dikiPrivilegedPodLabels = map[string]string{
 				kubepod.LabelComplianceRoleKey: kubepod.LabelComplianceRolePrivPod,
 			}
