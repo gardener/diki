@@ -338,27 +338,27 @@ var _ = Describe("#2000", func() {
 			{
 				Status:  rule.Passed,
 				Message: "Ingress traffic is denied by default.",
-				Target:  rule.NewTarget("namespace", "default", "kind", "networkPolicy", "name", "deny-all"),
+				Target:  rule.NewTarget("namespace", "default", "kind", "NetworkPolicy", "name", "deny-all"),
 			},
 			{
 				Status:  rule.Passed,
 				Message: "Egress traffic is denied by default.",
-				Target:  rule.NewTarget("namespace", "default", "kind", "networkPolicy", "name", "deny-all"),
+				Target:  rule.NewTarget("namespace", "default", "kind", "NetworkPolicy", "name", "deny-all"),
 			},
 			{
 				Status:  rule.Passed,
 				Message: "Ingress traffic is denied by default.",
-				Target:  rule.NewTarget("namespace", "kube-system", "kind", "networkPolicy", "name", "deny-ingress"),
+				Target:  rule.NewTarget("namespace", "kube-system", "kind", "NetworkPolicy", "name", "deny-ingress"),
 			},
 			{
 				Status:  rule.Failed,
 				Message: "All Egress traffic is allowed by default.",
-				Target:  rule.NewTarget("namespace", "kube-system", "kind", "networkPolicy", "name", "deny-ingress"),
+				Target:  rule.NewTarget("namespace", "kube-system", "kind", "NetworkPolicy", "name", "deny-ingress"),
 			},
 			{
 				Status:  rule.Passed,
 				Message: "Egress traffic is denied by default.",
-				Target:  rule.NewTarget("namespace", "kube-public", "kind", "networkPolicy", "name", "deny-egress"),
+				Target:  rule.NewTarget("namespace", "kube-public", "kind", "NetworkPolicy", "name", "deny-egress"),
 			},
 			{
 				Status:  rule.Failed,
@@ -388,7 +388,7 @@ var _ = Describe("#2000", func() {
 			{
 				Status:  rule.Failed,
 				Message: "All Ingress traffic is allowed by default.",
-				Target:  rule.NewTarget("namespace", "test1", "kind", "networkPolicy", "name", "default-allow"),
+				Target:  rule.NewTarget("namespace", "test1", "kind", "NetworkPolicy", "name", "default-allow"),
 			},
 			{
 				Status:  rule.Accepted,
@@ -398,12 +398,12 @@ var _ = Describe("#2000", func() {
 			{
 				Status:  rule.Passed,
 				Message: "Ingress traffic is denied by default.",
-				Target:  rule.NewTarget("namespace", "test2", "kind", "networkPolicy", "name", "mixed-allow"),
+				Target:  rule.NewTarget("namespace", "test2", "kind", "NetworkPolicy", "name", "mixed-allow"),
 			},
 			{
 				Status:  rule.Failed,
 				Message: "All Egress traffic is allowed by default.",
-				Target:  rule.NewTarget("namespace", "test2", "kind", "networkPolicy", "name", "mixed-allow"),
+				Target:  rule.NewTarget("namespace", "test2", "kind", "NetworkPolicy", "name", "mixed-allow"),
 			},
 			{
 				Status:  rule.Failed,
@@ -413,7 +413,7 @@ var _ = Describe("#2000", func() {
 			{
 				Status:  rule.Passed,
 				Message: "Ingress traffic is denied by default.",
-				Target:  rule.NewTarget("namespace", "test3", "kind", "networkPolicy", "name", "ingress-deny-only"),
+				Target:  rule.NewTarget("namespace", "test3", "kind", "NetworkPolicy", "name", "ingress-deny-only"),
 			},
 			{
 				Status:  rule.Accepted,
@@ -423,7 +423,7 @@ var _ = Describe("#2000", func() {
 			{
 				Status:  rule.Failed,
 				Message: "All Egress traffic is allowed by default.",
-				Target:  rule.NewTarget("namespace", "test4", "kind", "networkPolicy", "name", "default-allow-egress"),
+				Target:  rule.NewTarget("namespace", "test4", "kind", "NetworkPolicy", "name", "default-allow-egress"),
 			},
 		}
 
