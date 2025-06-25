@@ -2063,7 +2063,7 @@ readOnlyPort: 222
 				{
 					Status:  rule.Warning,
 					Message: "Node is missing a label",
-					Target:  rule.NewTarget("kind", "node", "name", "node3", "label", "label"),
+					Target:  rule.NewTarget("kind", "Node", "name", "node3", "label", "label"),
 				},
 			}
 

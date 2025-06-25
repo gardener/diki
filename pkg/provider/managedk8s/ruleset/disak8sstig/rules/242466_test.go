@@ -250,7 +250,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			[]rule.CheckResult{
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.crt, permissions: 600")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
-				rule.WarningCheckResult("Node is missing a label", rule.NewTarget("name", "node01", "kind", "node", "label", "foo")),
+				rule.WarningCheckResult("Node is missing a label", rule.NewTarget("name", "node01", "kind", "Node", "label", "foo")),
 				rule.ErroredCheckResult("no allocatable nodes could be selected", rule.NewTarget()),
 			}),
 		Entry("should return accepted check result when kubeProxyDiabled option is set to true",

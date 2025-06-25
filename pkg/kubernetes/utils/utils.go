@@ -731,7 +731,7 @@ func SelectNodes(nodes []corev1.Node, nodesAllocatablePods map[string]int, label
 			if value, ok := node.Labels[label]; ok {
 				keyBuilder.WriteString(fmt.Sprintf("%s=%s,", label, value))
 			} else {
-				checkResults = append(checkResults, rule.WarningCheckResult("Node is missing a label", rule.NewTarget("kind", "node", "name", node.Name, "label", label)))
+				checkResults = append(checkResults, rule.WarningCheckResult("Node is missing a label", TargetWithK8sObject(rule.NewTarget("label", label), metav1.TypeMeta{Kind: "Node"}, node.ObjectMeta)))
 				keyBuilder.Reset()
 				break
 			}
