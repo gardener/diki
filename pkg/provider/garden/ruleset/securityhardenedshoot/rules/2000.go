@@ -15,6 +15,7 @@ import (
 	apiserverv1beta1 "k8s.io/apiserver/pkg/apis/apiserver/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -44,7 +45,7 @@ func (r *Rule2000) Severity() rule.SeverityLevel {
 func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 	shoot := &gardencorev1beta1.Shoot{ObjectMeta: v1.ObjectMeta{Name: r.ShootName, Namespace: r.ShootNamespace}}
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(shoot), shoot); err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("name", r.ShootName, "namespace", r.ShootNamespace, "kind", "Shoot"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), kubeutils.TargetWithK8sObject(rule.NewTarget(), v1.TypeMeta{Kind: "Shoot"}, shoot.ObjectMeta))), nil
 	}
 
 	if shoot.Spec.Kubernetes.KubeAPIServer == nil {
@@ -64,31 +65,32 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	var (
-		fileName      = "config.yaml"
-		configMapName = shoot.Spec.Kubernetes.KubeAPIServer.StructuredAuthentication.ConfigMapName
-		configMap     = &corev1.ConfigMap{ObjectMeta: v1.ObjectMeta{Name: configMapName, Namespace: r.ShootNamespace}}
+		fileName        = "config.yaml"
+		configMapName   = shoot.Spec.Kubernetes.KubeAPIServer.StructuredAuthentication.ConfigMapName
+		configMap       = &corev1.ConfigMap{ObjectMeta: v1.ObjectMeta{Name: configMapName, Namespace: r.ShootNamespace}}
+		configMapTarget = kubeutils.TargetWithK8sObject(rule.NewTarget(), v1.TypeMeta{Kind: "ConfigMap"}, configMap.ObjectMeta)
 	)
 
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(configMap), configMap); err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("name", configMapName, "namespace", r.ShootNamespace, "kind", "ConfigMap"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), configMapTarget)), nil
 	}
 
 	authConfigString, ok := configMap.Data[fileName]
 	if !ok {
-		return rule.Result(r, rule.ErroredCheckResult(fmt.Sprintf("configMap: %s does not contain field: %s in Data field", configMapName, fileName), rule.NewTarget("name", configMapName, "namespace", r.ShootNamespace, "kind", "ConfigMap"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(fmt.Sprintf("configMap: %s does not contain field: %s in Data field", configMapName, fileName), configMapTarget)), nil
 	}
 
 	authenticationConfig := &apiserverv1beta1.AuthenticationConfiguration{}
 	if err := yaml.Unmarshal([]byte(authConfigString), authenticationConfig); err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("name", configMapName, "namespace", r.ShootNamespace, "kind", "ConfigMap"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), configMapTarget)), nil
 	}
 
 	switch {
 	case authenticationConfig.Anonymous == nil:
-		return rule.Result(r, rule.PassedCheckResult("Anonymous authentication is not enabled for the kube-apiserver.", rule.NewTarget("name", configMapName, "namespace", r.ShootNamespace, "kind", "ConfigMap"))), nil
+		return rule.Result(r, rule.PassedCheckResult("Anonymous authentication is not enabled for the kube-apiserver.", configMapTarget)), nil
 	case authenticationConfig.Anonymous.Enabled:
-		return rule.Result(r, rule.FailedCheckResult("Anonymous authentication is enabled for the kube-apiserver.", rule.NewTarget("name", configMapName, "namespace", r.ShootNamespace, "kind", "ConfigMap"))), nil
+		return rule.Result(r, rule.FailedCheckResult("Anonymous authentication is enabled for the kube-apiserver.", configMapTarget)), nil
 	default:
-		return rule.Result(r, rule.PassedCheckResult("Anonymous authentication is disabled for the kube-apiserver.", rule.NewTarget("name", configMapName, "namespace", r.ShootNamespace, "kind", "ConfigMap"))), nil
+		return rule.Result(r, rule.PassedCheckResult("Anonymous authentication is disabled for the kube-apiserver.", configMapTarget)), nil
 	}
 }
