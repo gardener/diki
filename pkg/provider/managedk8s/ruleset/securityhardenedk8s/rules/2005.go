@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -77,17 +78,19 @@ func (r *Rule2005) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "PodList"))), nil
 	}
 
 	if len(pods) == 0 {
 		return rule.Result(r, rule.PassedCheckResult("The cluster does not have any Pods.", rule.NewTarget())), nil
 	}
 
+	filteredPods := kubeutils.FilterPodsByOwnerRef(pods)
+
 	var checkResults []rule.CheckResult
 
-	for _, pod := range pods {
-		podTarget := rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
+	for _, pod := range filteredPods {
+		podTarget := kubeutils.TargetWithK8sObject(rule.NewTarget(), v1.TypeMeta{Kind: "Pod"}, pod.ObjectMeta)
 
 		for _, container := range slices.Concat(pod.Spec.Containers, pod.Spec.InitContainers) {
 			var (
