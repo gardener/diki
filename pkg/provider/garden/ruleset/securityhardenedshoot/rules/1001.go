@@ -15,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
@@ -71,7 +72,7 @@ func (r *Rule1001) Name() string {
 func (r *Rule1001) Run(ctx context.Context) (rule.RuleResult, error) {
 	shoot := &gardencorev1beta1.Shoot{ObjectMeta: v1.ObjectMeta{Name: r.ShootName, Namespace: r.ShootNamespace}}
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(shoot), shoot); err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("name", r.ShootName, "namespace", r.ShootNamespace, "kind", "Shoot"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), kubeutils.TargetWithK8sObject(rule.NewTarget(), v1.TypeMeta{Kind: "Shoot"}, shoot.ObjectMeta))), nil
 	}
 
 	var (
@@ -93,12 +94,12 @@ func (r *Rule1001) Run(ctx context.Context) (rule.RuleResult, error) {
 	case gardencorev1beta1constants.CloudProfileReferenceKindCloudProfile:
 		cloudProfile = &gardencorev1beta1.CloudProfile{ObjectMeta: v1.ObjectMeta{Name: cloudProfileName}}
 		if err := r.Client.Get(ctx, client.ObjectKeyFromObject(cloudProfile), cloudProfile); err != nil {
-			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("name", cloudProfileName, "kind", gardencorev1beta1constants.CloudProfileReferenceKindCloudProfile))), nil
+			return rule.Result(r, rule.ErroredCheckResult(err.Error(), kubeutils.TargetWithK8sObject(rule.NewTarget(), v1.TypeMeta{Kind: "CloudProfile"}, cloudProfile.ObjectMeta))), nil
 		}
 	case gardencorev1beta1constants.CloudProfileReferenceKindNamespacedCloudProfile:
 		namespacedCloudProfile = &gardencorev1beta1.NamespacedCloudProfile{ObjectMeta: v1.ObjectMeta{Name: cloudProfileName, Namespace: r.ShootNamespace}}
 		if err := r.Client.Get(ctx, client.ObjectKeyFromObject(namespacedCloudProfile), namespacedCloudProfile); err != nil {
-			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("name", cloudProfileName, "namespace", r.ShootNamespace, "kind", gardencorev1beta1constants.CloudProfileReferenceKindNamespacedCloudProfile))), nil
+			return rule.Result(r, rule.ErroredCheckResult(err.Error(), kubeutils.TargetWithK8sObject(rule.NewTarget(), v1.TypeMeta{Kind: "NamespacedCloudProfile"}, namespacedCloudProfile.ObjectMeta))), nil
 		}
 	default:
 		return rule.Result(r, rule.ErroredCheckResult(fmt.Sprintf("cloudProfile kind %s not recognised", kind), rule.NewTarget())), nil

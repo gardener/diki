@@ -12,6 +12,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 )
 
@@ -41,7 +42,7 @@ func (r *Rule2002) Severity() rule.SeverityLevel {
 func (r *Rule2002) Run(ctx context.Context) (rule.RuleResult, error) {
 	shoot := &gardencorev1beta1.Shoot{ObjectMeta: metav1.ObjectMeta{Name: r.ShootName, Namespace: r.ShootNamespace}}
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(shoot), shoot); err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "Shoot", "name", r.ShootName, "namespace", r.ShootNamespace))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), kubeutils.TargetWithK8sObject(rule.NewTarget(), metav1.TypeMeta{Kind: "Shoot"}, shoot.ObjectMeta))), nil
 	}
 
 	var (
