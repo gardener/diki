@@ -123,7 +123,7 @@ var _ = Describe("#242452", func() {
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "node", "name", "node1", "details", "fileName: /var/lib/kubelet/config/kubelet, permissions: 644")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "node", "name", "node3", "details", "fileName: /var/lib/kubelet/kubeconfig, permissions: 600")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "node", "name", "node3", "details", "fileName: /var/lib/kubelet/config/kubelet, permissions: 644")),
-				rule.WarningCheckResult("Node is missing a label", rule.NewTarget("kind", "node", "name", "node4", "label", "foo")),
+				rule.WarningCheckResult("Node is missing a label", rule.NewTarget("kind", "Node", "name", "node4", "label", "foo")),
 			}),
 		Entry("should return correct checkResults when commands error", nil,
 			[][]string{{kubeletPID, rawKubeletCommand}, {kubeletPID, rawKubeletCommand, compliantKubeconfigStats, compliantConfigStats},

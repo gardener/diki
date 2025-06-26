@@ -74,8 +74,8 @@ var _ = Describe("#242395", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Kubernetes dashboard installed", rule.NewTarget("name", pod1.Name, "namespace", pod1.Namespace, "kind", "pod")),
-			rule.FailedCheckResult("Kubernetes dashboard installed", rule.NewTarget("name", pod2.Name, "namespace", pod2.Namespace, "kind", "pod")),
+			rule.FailedCheckResult("Kubernetes dashboard installed", rule.NewTarget("name", pod1.Name, "namespace", pod1.Namespace, "kind", "Pod")),
+			rule.FailedCheckResult("Kubernetes dashboard installed", rule.NewTarget("name", pod2.Name, "namespace", pod2.Namespace, "kind", "Pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))

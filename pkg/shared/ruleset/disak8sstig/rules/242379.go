@@ -68,7 +68,7 @@ func (r *Rule242379) checkStatefulSet(ctx context.Context, statefulSetName strin
 		},
 	}
 
-	target := rule.NewTarget("name", statefulSetName, "namespace", r.Namespace, "kind", "statefulSet")
+	target := rule.NewTarget("name", statefulSetName, "namespace", r.Namespace, "kind", "StatefulSet")
 
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(statefulSet), statefulSet); err != nil {
 		return rule.ErroredCheckResult(err.Error(), target)

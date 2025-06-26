@@ -124,7 +124,7 @@ var _ = Describe("#242453", func() {
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "node", "name", "node1", "details", "fileName: /var/lib/kubelet/config/kubelet, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "node", "name", "node3", "details", "fileName: /var/lib/kubelet/kubeconfig, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "node", "name", "node3", "details", "fileName: /var/lib/kubelet/config/kubelet, ownerUser: 0, ownerGroup: 0")),
-				rule.WarningCheckResult("Node is missing a label", rule.NewTarget("kind", "node", "name", "node4", "label", "foo")),
+				rule.WarningCheckResult("Node is missing a label", rule.NewTarget("kind", "Node", "name", "node4", "label", "foo")),
 			}),
 		Entry("should return correct checkResults when fileOwner options are used",
 			rules.Options242453{

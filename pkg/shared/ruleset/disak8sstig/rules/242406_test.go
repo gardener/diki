@@ -103,11 +103,11 @@ var _ = Describe("#242406", func() {
 				{kubeletServicePath, nonCompliantUserKubeletServiceFileStats}, {kubeletServicePath, nonCompliantGroupKubeletServiceFileStats}},
 			[][]error{{nil, nil}, {nil, nil}, {nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "node", "name", "node1", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 0, ownerGroup: 0")),
-				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("kind", "node", "name", "node2", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 1000, expectedOwnerUsers: [0]")),
-				rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("kind", "node", "name", "node2", "details", "fileName: /etc/systemd/system/kubelet.service, ownerGroup: 2000, expectedOwnerGroups: [0]")),
-				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("kind", "node", "name", "node3", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 1000, expectedOwnerUsers: [0]")),
-				rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("kind", "node", "name", "node4", "details", "fileName: /etc/systemd/system/kubelet.service, ownerGroup: 1000, expectedOwnerGroups: [0]")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "Node", "name", "node1", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 0, ownerGroup: 0")),
+				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("kind", "Node", "name", "node2", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 1000, expectedOwnerUsers: [0]")),
+				rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("kind", "Node", "name", "node2", "details", "fileName: /etc/systemd/system/kubelet.service, ownerGroup: 2000, expectedOwnerGroups: [0]")),
+				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("kind", "Node", "name", "node3", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 1000, expectedOwnerUsers: [0]")),
+				rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("kind", "Node", "name", "node4", "details", "fileName: /etc/systemd/system/kubelet.service, ownerGroup: 1000, expectedOwnerGroups: [0]")),
 			}),
 		Entry("should return correct checkResults only for selected nodes",
 			sharedrules.Options242406{
@@ -116,9 +116,9 @@ var _ = Describe("#242406", func() {
 			[][]string{{kubeletServicePath, compliantKubeletServiceFileStats}, {kubeletServicePath, compliantKubeletServiceFileStats}},
 			[][]error{{nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "node", "name", "node1", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "node", "name", "node3", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 0, ownerGroup: 0")),
-				rule.WarningCheckResult("Node is missing a label", rule.NewTarget("kind", "node", "name", "node4", "label", "foo")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "Node", "name", "node1", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "Node", "name", "node3", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 0, ownerGroup: 0")),
+				rule.WarningCheckResult("Node is missing a label", rule.NewTarget("kind", "Node", "name", "node4", "label", "foo")),
 			}),
 		Entry("should return correct checkResults when expected owners are specified",
 			sharedrules.Options242406{
@@ -133,20 +133,20 @@ var _ = Describe("#242406", func() {
 				{kubeletServicePath, nonCompliantUserKubeletServiceFileStats}, {kubeletServicePath, nonCompliantGroupKubeletServiceFileStats}},
 			[][]error{{nil, nil}, {nil, nil}, {nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "node", "name", "node1", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "node", "name", "node2", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 1000, ownerGroup: 2000")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "node", "name", "node3", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 1000, ownerGroup: 0")),
-				rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("kind", "node", "name", "node4", "details", "fileName: /etc/systemd/system/kubelet.service, ownerGroup: 1000, expectedOwnerGroups: [0 2000]")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "Node", "name", "node1", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "Node", "name", "node2", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 1000, ownerGroup: 2000")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "Node", "name", "node3", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 1000, ownerGroup: 0")),
+				rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("kind", "Node", "name", "node4", "details", "fileName: /etc/systemd/system/kubelet.service, ownerGroup: 1000, expectedOwnerGroups: [0 2000]")),
 			}),
 		Entry("should return correct checkResults when commands error", nil,
 			[][]string{{kubeletServicePath}, {kubeletServicePath, ""},
 				{kubeletServicePath, compliantKubeletServiceFileStats}, {kubeletServicePath, compliantKubeletServiceFileStats}},
 			[][]error{{errors.New("foo")}, {nil, errors.New("bar")}, {nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("could not find kubelet.service path: foo", rule.NewTarget("name", "diki-242406-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242406-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "node", "name", "node3", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "node", "name", "node4", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 0, ownerGroup: 0")),
+				rule.ErroredCheckResult("could not find kubelet.service path: foo", rule.NewTarget("name", "diki-242406-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
+				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242406-bbbbbbbbbb", "namespace", "kube-system", "kind", "Pod")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "Node", "name", "node3", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "Node", "name", "node4", "details", "fileName: /etc/systemd/system/kubelet.service, ownerUser: 0, ownerGroup: 0")),
 			}),
 	)
 })

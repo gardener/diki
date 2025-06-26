@@ -95,10 +95,10 @@ var _ = Describe("#242394", func() {
 				{"", "Alias"}, {"port used!"}},
 			[][]error{{nil, nil}, {nil, errors.New(" foo NO such file or directory  ")}, {nil, nil}, {nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("SSH daemon disabled (or could not be probed)", rule.NewTarget("kind", "node", "name", "node1")),
-				rule.PassedCheckResult("SSH daemon service not installed", rule.NewTarget("kind", "node", "name", "node2")),
-				rule.FailedCheckResult("SSH daemon enabled", rule.NewTarget("kind", "node", "name", "node3")),
-				rule.FailedCheckResult("SSH daemon started on port 22", rule.NewTarget("kind", "node", "name", "node4")),
+				rule.PassedCheckResult("SSH daemon disabled (or could not be probed)", rule.NewTarget("kind", "Node", "name", "node1")),
+				rule.PassedCheckResult("SSH daemon service not installed", rule.NewTarget("kind", "Node", "name", "node2")),
+				rule.FailedCheckResult("SSH daemon enabled", rule.NewTarget("kind", "Node", "name", "node3")),
+				rule.FailedCheckResult("SSH daemon started on port 22", rule.NewTarget("kind", "Node", "name", "node4")),
 			}),
 		Entry("should return correct checkResults only for selected nodes",
 			rules.Options242394{
@@ -107,19 +107,19 @@ var _ = Describe("#242394", func() {
 			[][]string{{"", "foo"}, {"", ""}},
 			[][]error{{nil, nil}, {nil, errors.New(" foo NO such file or directory  ")}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("SSH daemon disabled (or could not be probed)", rule.NewTarget("kind", "node", "name", "node1")),
-				rule.PassedCheckResult("SSH daemon service not installed", rule.NewTarget("kind", "node", "name", "node3")),
-				rule.WarningCheckResult("Node is missing a label", rule.NewTarget("kind", "node", "name", "node4", "label", "foo")),
+				rule.PassedCheckResult("SSH daemon disabled (or could not be probed)", rule.NewTarget("kind", "Node", "name", "node1")),
+				rule.PassedCheckResult("SSH daemon service not installed", rule.NewTarget("kind", "Node", "name", "node3")),
+				rule.WarningCheckResult("Node is missing a label", rule.NewTarget("kind", "Node", "name", "node4", "label", "foo")),
 			}),
 		Entry("should return correct checkResults when commands error", nil,
 			[][]string{{""}, {"", "foo"},
 				{"", "foo"}, {"", ""}},
 			[][]error{{errors.New("foo")}, {nil, errors.New("bar")}, {nil, nil}, {nil, errors.New(" foo NO such file or directory  ")}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242394-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242394-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
-				rule.PassedCheckResult("SSH daemon disabled (or could not be probed)", rule.NewTarget("kind", "node", "name", "node3")),
-				rule.PassedCheckResult("SSH daemon service not installed", rule.NewTarget("kind", "node", "name", "node4")),
+				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242394-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
+				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242394-bbbbbbbbbb", "namespace", "kube-system", "kind", "Pod")),
+				rule.PassedCheckResult("SSH daemon disabled (or could not be probed)", rule.NewTarget("kind", "Node", "name", "node3")),
+				rule.PassedCheckResult("SSH daemon service not installed", rule.NewTarget("kind", "Node", "name", "node4")),
 			}),
 	)
 })

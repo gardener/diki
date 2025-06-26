@@ -95,9 +95,9 @@ var _ = Describe("#242397", func() {
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Option staticPodPath set.", rule.NewTarget("kind", "node", "name", "node1")),
-			rule.FailedCheckResult("Option staticPodPath set.", rule.NewTarget("kind", "node", "name", "node2")),
-			rule.PassedCheckResult("Option staticPodPath not set.", rule.NewTarget("kind", "node", "name", "node3")),
+			rule.FailedCheckResult("Option staticPodPath set.", rule.NewTarget("kind", "Node", "name", "node1")),
+			rule.FailedCheckResult("Option staticPodPath set.", rule.NewTarget("kind", "Node", "name", "node2")),
+			rule.PassedCheckResult("Option staticPodPath not set.", rule.NewTarget("kind", "Node", "name", "node3")),
 		}
 
 		Expect(err).To(BeNil())

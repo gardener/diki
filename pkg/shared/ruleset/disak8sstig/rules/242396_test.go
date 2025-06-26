@@ -101,10 +101,10 @@ var _ = Describe("#242396", func() {
 				{emptyKubectlVersion}, {emptyClientKubectlVersion}},
 			[][]error{{nil}, {nil}, {nil}, {nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("Node uses allowed kubectl version", rule.NewTarget("kind", "node", "name", "node1", "details", "Kubectl client version 1.12.9")),
-				rule.FailedCheckResult("Node uses not allowed kubectl version", rule.NewTarget("kind", "node", "name", "node2", "details", "Kubectl client version 1.12.8")),
-				rule.ErroredCheckResult("kubectl client version not preset in output", rule.NewTarget("name", "diki-242396-cccccccccc", "namespace", "kube-system", "kind", "pod", "output", "{}")),
-				rule.ErroredCheckResult("kubectl client version not preset in output", rule.NewTarget("name", "diki-242396-dddddddddd", "namespace", "kube-system", "kind", "pod", "output", "{\"clientVersion\": {}}")),
+				rule.PassedCheckResult("Node uses allowed kubectl version", rule.NewTarget("kind", "Node", "name", "node1", "details", "Kubectl client version 1.12.9")),
+				rule.FailedCheckResult("Node uses not allowed kubectl version", rule.NewTarget("kind", "Node", "name", "node2", "details", "Kubectl client version 1.12.8")),
+				rule.ErroredCheckResult("kubectl client version not preset in output", rule.NewTarget("name", "diki-242396-cccccccccc", "namespace", "kube-system", "kind", "Pod", "output", "{}")),
+				rule.ErroredCheckResult("kubectl client version not preset in output", rule.NewTarget("name", "diki-242396-dddddddddd", "namespace", "kube-system", "kind", "Pod", "output", "{\"clientVersion\": {}}")),
 			}),
 		Entry("should return correct checkResults only for selected nodes",
 			rules.Options242396{
@@ -113,19 +113,19 @@ var _ = Describe("#242396", func() {
 			[][]string{{allowedKubectlVersion}, {allowedKubectlVersion}},
 			[][]error{{nil}, {nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("Node uses allowed kubectl version", rule.NewTarget("kind", "node", "name", "node1", "details", "Kubectl client version 1.12.9")),
-				rule.PassedCheckResult("Node uses allowed kubectl version", rule.NewTarget("kind", "node", "name", "node3", "details", "Kubectl client version 1.12.9")),
-				rule.WarningCheckResult("Node is missing a label", rule.NewTarget("kind", "node", "name", "node4", "label", "foo")),
+				rule.PassedCheckResult("Node uses allowed kubectl version", rule.NewTarget("kind", "Node", "name", "node1", "details", "Kubectl client version 1.12.9")),
+				rule.PassedCheckResult("Node uses allowed kubectl version", rule.NewTarget("kind", "Node", "name", "node3", "details", "Kubectl client version 1.12.9")),
+				rule.WarningCheckResult("Node is missing a label", rule.NewTarget("kind", "Node", "name", "node4", "label", "foo")),
 			}),
 		Entry("should return correct checkResults when commands error", nil,
 			[][]string{{""}, {""},
 				{allowedKubectlVersion}, {allowedKubectlVersion}},
 			[][]error{{errors.New("foo")}, {errors.New("foo command terminated with exit code 127 bar ")}, {nil}, {nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242396-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.SkippedCheckResult("Kubectl command could not be found (or not installed)", rule.NewTarget("kind", "node", "name", "node2")),
-				rule.PassedCheckResult("Node uses allowed kubectl version", rule.NewTarget("kind", "node", "name", "node3", "details", "Kubectl client version 1.12.9")),
-				rule.PassedCheckResult("Node uses allowed kubectl version", rule.NewTarget("kind", "node", "name", "node4", "details", "Kubectl client version 1.12.9")),
+				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242396-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
+				rule.SkippedCheckResult("Kubectl command could not be found (or not installed)", rule.NewTarget("kind", "Node", "name", "node2")),
+				rule.PassedCheckResult("Node uses allowed kubectl version", rule.NewTarget("kind", "Node", "name", "node3", "details", "Kubectl client version 1.12.9")),
+				rule.PassedCheckResult("Node uses allowed kubectl version", rule.NewTarget("kind", "Node", "name", "node4", "details", "Kubectl client version 1.12.9")),
 			}),
 	)
 })

@@ -7,7 +7,6 @@ package rules
 import (
 	"context"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -37,14 +36,20 @@ func (r *Rule242395) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule242395) Run(ctx context.Context) (rule.RuleResult, error) {
-	podsPartialMetadata, err := kubeutils.GetObjectsMetadata(ctx, r.Client, corev1.SchemeGroupVersion.WithKind("PodList"), "", labels.SelectorFromSet(labels.Set{"k8s-app": "kubernetes-dashboard"}), 300)
+	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.SelectorFromSet(labels.Set{"k8s-app": "kubernetes-dashboard"}), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "PodList"))), nil
+	}
+	filteredPods := kubeutils.FilterPodsByOwnerRef(pods)
+
+	replicaSets, err := kubeutils.GetReplicaSets(ctx, r.Client, "", labels.NewSelector(), 300)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ReplicaSetList"))), nil
 	}
 
 	var checkResults []rule.CheckResult
-	for _, podPartialMetadata := range podsPartialMetadata {
-		target := rule.NewTarget("name", podPartialMetadata.Name, "namespace", podPartialMetadata.Namespace, "kind", "pod")
+	for _, pod := range filteredPods {
+		target := kubeutils.TargetWithPod(rule.NewTarget(), pod, replicaSets)
 		checkResults = append(checkResults, rule.FailedCheckResult("Kubernetes dashboard installed", target))
 	}
 

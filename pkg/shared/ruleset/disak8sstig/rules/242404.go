@@ -72,12 +72,12 @@ func (r *Rule242404) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "nodeList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NodeList"))), nil
 	}
 
 	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "PodList"))), nil
 	}
 
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(pods, nodes)
@@ -103,10 +103,10 @@ func (r *Rule242404) Run(ctx context.Context) (rule.RuleResult, error) {
 }
 
 func (r *Rule242404) checkNode(ctx context.Context, node corev1.Node, privPodImage string) rule.CheckResult {
-	target := rule.NewTarget("kind", "node", "name", node.Name)
+	target := rule.NewTarget("kind", "Node", "name", node.Name)
 
 	podName := fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
-	podTarget := rule.NewTarget("kind", "pod", "namespace", "kube-system", "name", podName)
+	podTarget := rule.NewTarget("kind", "Pod", "namespace", "kube-system", "name", podName)
 
 	defer func() {
 		timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Second*30)

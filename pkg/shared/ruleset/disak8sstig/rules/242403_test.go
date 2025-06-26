@@ -50,7 +50,7 @@ rules:
 		namespace  = "foo"
 
 		kapiDeployment *appsv1.Deployment
-		target         = rule.NewTarget("kind", "deployment", "name", "kube-apiserver", "namespace", namespace)
+		target         = rule.NewTarget("kind", "Deployment", "name", "kube-apiserver", "namespace", namespace)
 	)
 
 	BeforeEach(func() {

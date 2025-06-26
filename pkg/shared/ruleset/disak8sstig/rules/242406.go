@@ -10,6 +10,7 @@ import (
 	"slices"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/component-base/version"
@@ -90,11 +91,11 @@ func (r *Rule242406) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "PodList"))), nil
 	}
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "nodeList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NodeList"))), nil
 	}
 
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(pods, nodes)
@@ -113,7 +114,7 @@ func (r *Rule242406) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	for _, node := range selectedNodes {
 		podName := fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
-		execPodTarget := rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
+		execPodTarget := rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "Pod")
 		defer func() {
 			timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 			defer cancel()
@@ -142,7 +143,7 @@ func (r *Rule242406) Run(ctx context.Context) (rule.RuleResult, error) {
 			continue
 		}
 
-		target := rule.NewTarget("kind", "node", "name", node.Name, "details", fmt.Sprintf("filePath: %s", kubeletServicePath))
+		target := kubeutils.TargetWithK8sObject(rule.NewTarget("details", fmt.Sprintf("filePath: %s", kubeletServicePath)), metav1.TypeMeta{Kind: "Node"}, node.ObjectMeta)
 		checkResults = append(checkResults,
 			intutils.MatchFileOwnersCases(fileStats, options.ExpectedFileOwner.Users, options.ExpectedFileOwner.Groups, target)...)
 

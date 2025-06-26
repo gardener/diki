@@ -182,6 +182,100 @@ var _ = Describe("#242383", func() {
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
 	})
 
+	It("should return correct checkResult when resources have owner references", func() {
+		pod := plainPod.DeepCopy()
+		pod.Name = "foo"
+		pod.Namespace = "default"
+		Expect(fakeClient.Create(ctx, pod)).To(Succeed())
+
+		deployment := &appsv1.Deployment{
+			TypeMeta: metav1.TypeMeta{
+				Kind: "Deployment",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "deployment",
+				Namespace: "default",
+				UID:       "1",
+			},
+		}
+		Expect(fakeClient.Create(ctx, deployment)).To(Succeed())
+
+		replicaSet := &appsv1.ReplicaSet{
+			TypeMeta: metav1.TypeMeta{
+				Kind: "ReplicaSet",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "replicaSet",
+				Namespace: "default",
+				UID:       "3",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						UID: "1",
+					},
+				},
+			},
+		}
+		Expect(fakeClient.Create(ctx, replicaSet)).To(Succeed())
+
+		daemonSet := &appsv1.DaemonSet{
+			TypeMeta: metav1.TypeMeta{
+				Kind: "DaemonSet",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "daemonSet",
+				Namespace: "kube-public",
+				UID:       "2",
+			},
+		}
+		Expect(fakeClient.Create(ctx, daemonSet)).To(Succeed())
+
+		pod1 := plainPod.DeepCopy()
+		pod1.Name = "pod1"
+		pod1.Namespace = "default"
+		pod1.OwnerReferences = []metav1.OwnerReference{
+			{
+				UID: "3",
+			},
+		}
+		Expect(fakeClient.Create(ctx, pod1)).To(Succeed())
+
+		pod2 := plainPod.DeepCopy()
+		pod2.Name = "pod2"
+		pod2.Namespace = "default"
+		pod2.OwnerReferences = []metav1.OwnerReference{
+			{
+				Kind: "fake",
+				Name: "fake",
+				UID:  "4",
+			},
+		}
+		Expect(fakeClient.Create(ctx, pod2)).To(Succeed())
+
+		pod3 := plainPod.DeepCopy()
+		pod3.Name = "pod3"
+		pod3.Namespace = "kube-public"
+		pod3.OwnerReferences = []metav1.OwnerReference{
+			{
+				UID: "2",
+			},
+		}
+		Expect(fakeClient.Create(ctx, pod3)).To(Succeed())
+
+		r := &rules.Rule242383{Client: fakeClient}
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).To(BeNil())
+
+		expectedCheckResults := []rule.CheckResult{
+			rule.FailedCheckResult("Found user resource in system namespaces.", rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", pod.Kind)),
+			rule.FailedCheckResult("Found user resource in system namespaces.", rule.NewTarget("name", deployment.Name, "namespace", deployment.Namespace, "kind", deployment.Kind)),
+			rule.FailedCheckResult("Found user resource in system namespaces.", rule.NewTarget("name", daemonSet.Name, "namespace", daemonSet.Namespace, "kind", daemonSet.Kind)),
+			rule.FailedCheckResult("Found user resource in system namespaces.", rule.NewTarget("name", "fake", "namespace", pod2.Namespace, "kind", "fake")),
+		}
+
+		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
+	})
+
 	It("should return correct checkResult when different resources are present", func() {
 		pod := plainPod.DeepCopy()
 		pod.Name = "foo"

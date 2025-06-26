@@ -99,8 +99,8 @@ var _ = Describe("#242404", func() {
 			[][]string{{kubeletPID, "--hostname-override=/foo/bar --config=./config"}, {kubeletPID, "--not-hostname-override --config=./config"}},
 			[][]error{{nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.FailedCheckResult("Flag hostname-override set.", rule.NewTarget("kind", "node", "name", "node1")),
-				rule.PassedCheckResult("Flag hostname-override not set.", rule.NewTarget("kind", "node", "name", "node2")),
+				rule.FailedCheckResult("Flag hostname-override set.", rule.NewTarget("kind", "Node", "name", "node1")),
+				rule.PassedCheckResult("Flag hostname-override not set.", rule.NewTarget("kind", "Node", "name", "node2")),
 			}),
 		Entry("should return correct checkResults only for selected nodes",
 			rules.Options242404{
@@ -109,14 +109,14 @@ var _ = Describe("#242404", func() {
 			[][]string{{kubeletPID, "--hostname-override=/foo/bar --config=./config"}},
 			[][]error{{nil, nil}},
 			[]rule.CheckResult{
-				rule.FailedCheckResult("Flag hostname-override set.", rule.NewTarget("kind", "node", "name", "node1")),
+				rule.FailedCheckResult("Flag hostname-override set.", rule.NewTarget("kind", "Node", "name", "node1")),
 			}),
 		Entry("should return correct checkResults when commands error", nil,
 			[][]string{{""}, {kubeletPID, "--hostname-override=/foo/bar --config=./config"}},
 			[][]error{{errors.New("foo")}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242404-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.FailedCheckResult("Flag hostname-override set.", rule.NewTarget("kind", "node", "name", "node2")),
+				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242404-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
+				rule.FailedCheckResult("Flag hostname-override set.", rule.NewTarget("kind", "Node", "name", "node2")),
 			}),
 	)
 })
