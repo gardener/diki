@@ -102,10 +102,10 @@ var _ = Describe("#242407", func() {
 				{kubeletServicePath, nonCompliantKubeletServiceFileStats2}, {kubeletServicePath, nonCompliantKubeletServiceFileStats3}},
 			[][]error{{nil, nil}, {nil, nil}, {nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "node", "name", "node1", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 644")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("kind", "node", "name", "node2", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 664, expectedPermissionsMax: 644")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("kind", "node", "name", "node3", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 700, expectedPermissionsMax: 644")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("kind", "node", "name", "node4", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 606, expectedPermissionsMax: 644")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "Node", "name", "node1", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("kind", "Node", "name", "node2", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 664, expectedPermissionsMax: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("kind", "Node", "name", "node3", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 700, expectedPermissionsMax: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("kind", "Node", "name", "node4", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 606, expectedPermissionsMax: 644")),
 			}),
 		Entry("should return correct checkResults only for selected nodes",
 			rules.Options242407{
@@ -114,8 +114,8 @@ var _ = Describe("#242407", func() {
 			[][]string{{kubeletServicePath, compliantKubeletServiceFileStats}, {kubeletServicePath, compliantKubeletServiceFileStats}},
 			[][]error{{nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "node", "name", "node1", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 644")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "node", "name", "node3", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 644")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "Node", "name", "node1", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 644")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "Node", "name", "node3", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 644")),
 				rule.WarningCheckResult("Node is missing a label", rule.NewTarget("kind", "Node", "name", "node4", "label", "foo")),
 			}),
 		Entry("should return correct checkResults when commands error", nil,
@@ -123,10 +123,10 @@ var _ = Describe("#242407", func() {
 				{kubeletServicePath, compliantKubeletServiceFileStats}, {kubeletServicePath, compliantKubeletServiceFileStats}},
 			[][]error{{errors.New("foo")}, {nil, errors.New("bar")}, {nil, nil}, {nil, nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("could not find kubelet.service path: foo", rule.NewTarget("name", "diki-242407-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242407-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "node", "name", "node3", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 644")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "node", "name", "node4", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 644")),
+				rule.ErroredCheckResult("could not find kubelet.service path: foo", rule.NewTarget("name", "diki-242407-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
+				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242407-bbbbbbbbbb", "namespace", "kube-system", "kind", "Pod")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "Node", "name", "node3", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 644")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "Node", "name", "node4", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 644")),
 			}),
 	)
 })
