@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -103,10 +102,15 @@ func (r *Rule2001) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NamespaceList"))), nil
 	}
 
+	replicaSets, err := kubeutils.GetReplicaSets(ctx, r.Client, "", labels.NewSelector(), 300)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ReplicaSetList"))), nil
+	}
+
 	for _, pod := range filteredPods {
 		var (
 			podCheckResults         []rule.CheckResult
-			podTarget               = kubeutils.TargetWithK8sObject(rule.NewTarget(), v1.TypeMeta{Kind: "Pod"}, pod.ObjectMeta)
+			podTarget               = kubeutils.TargetWithPod(rule.NewTarget(), pod, replicaSets)
 			dikiPrivilegedPodLabels = map[string]string{
 				kubepod.LabelComplianceRoleKey: kubepod.LabelComplianceRolePrivPod,
 			}
