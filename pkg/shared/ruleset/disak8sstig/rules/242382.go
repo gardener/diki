@@ -70,7 +70,7 @@ func (r *Rule242382) Run(ctx context.Context) (rule.RuleResult, error) {
 		expectedStartModes = r.ExpectedStartModes
 	}
 
-	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
+	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "Deployment")
 
 	authzConfigOptSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, authorizationConfigOpt)
 	if err != nil {
@@ -108,7 +108,7 @@ func (r *Rule242382) Run(ctx context.Context) (rule.RuleResult, error) {
 }
 
 func (r *Rule242382) checkAuthzConfig(ctx context.Context, deploymentName, containerName, volumePath string, expectedModes []string) rule.RuleResult {
-	deploymentTarget := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
+	deploymentTarget := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "Deployment")
 	authzConfigTarget := rule.NewTarget("kind", "AuthorizationConfiguration")
 
 	kubeAPIDeployment := &appsv1.Deployment{

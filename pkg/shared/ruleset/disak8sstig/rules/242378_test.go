@@ -27,7 +27,7 @@ var _ = Describe("#242378", func() {
 		namespace  = "foo"
 
 		deployment *appsv1.Deployment
-		target     = rule.NewTarget("name", "kube-apiserver", "namespace", namespace, "kind", "deployment")
+		target     = rule.NewTarget("name", "kube-apiserver", "namespace", namespace, "kind", "Deployment")
 	)
 
 	BeforeEach(func() {
@@ -78,7 +78,7 @@ var _ = Describe("#242378", func() {
 				Command: []string{"--tls-min-version=VersionTLS12"},
 			},
 		}
-		expectedTarget := rule.NewTarget("name", "foo", "namespace", namespace, "kind", "deployment")
+		expectedTarget := rule.NewTarget("name", "foo", "namespace", namespace, "kind", "Deployment")
 		Expect(fakeClient.Create(ctx, deployment)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)

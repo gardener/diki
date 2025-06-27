@@ -77,11 +77,11 @@ func (r *Rule242396) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "PodList"))), nil
 	}
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "nodeList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NodeList"))), nil
 	}
 
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(pods, nodes)
@@ -123,8 +123,8 @@ func (r *Rule242396) checkKubectl(
 	var (
 		kubectlVersion   kubectlversion.Version
 		podName          = fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
-		nodeTarget       = rule.NewTarget("kind", "node", "name", nodeName)
-		execPodTarget    = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
+		nodeTarget       = rule.NewTarget("kind", "Node", "name", nodeName)
+		execPodTarget    = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "Pod")
 		additionalLabels = map[string]string{pod.LabelInstanceID: r.InstanceID}
 	)
 

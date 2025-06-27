@@ -91,9 +91,9 @@ var _ = Describe("#242391", func() {
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("Option authentication.anonymous.enabled set to allowed value.", rule.NewTarget("kind", "node", "name", "node1")),
-			rule.FailedCheckResult("Option authentication.anonymous.enabled set to not allowed value.", rule.NewTarget("kind", "node", "name", "node2")),
-			rule.FailedCheckResult("Option authentication.anonymous.enabled not set.", rule.NewTarget("kind", "node", "name", "node3")),
+			rule.PassedCheckResult("Option authentication.anonymous.enabled set to allowed value.", rule.NewTarget("kind", "Node", "name", "node1")),
+			rule.FailedCheckResult("Option authentication.anonymous.enabled set to not allowed value.", rule.NewTarget("kind", "Node", "name", "node2")),
+			rule.FailedCheckResult("Option authentication.anonymous.enabled not set.", rule.NewTarget("kind", "Node", "name", "node3")),
 		}
 
 		Expect(err).To(BeNil())

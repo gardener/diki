@@ -91,9 +91,9 @@ var _ = Describe("#242392", func() {
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("Option authorization.mode set to allowed value.", rule.NewTarget("kind", "node", "name", "node1")),
-			rule.FailedCheckResult("Option authorization.mode set to not allowed value.", rule.NewTarget("kind", "node", "name", "node2", "details", "Authorization Mode set to AlwaysAllow")),
-			rule.FailedCheckResult("Option authorization.mode not set.", rule.NewTarget("kind", "node", "name", "node3")),
+			rule.PassedCheckResult("Option authorization.mode set to allowed value.", rule.NewTarget("kind", "Node", "name", "node1")),
+			rule.FailedCheckResult("Option authorization.mode set to not allowed value.", rule.NewTarget("kind", "Node", "name", "node2", "details", "Authorization Mode set to AlwaysAllow")),
+			rule.FailedCheckResult("Option authorization.mode not set.", rule.NewTarget("kind", "Node", "name", "node3")),
 		}
 
 		Expect(err).To(BeNil())

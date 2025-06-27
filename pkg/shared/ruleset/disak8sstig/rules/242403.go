@@ -60,7 +60,7 @@ func (r *Rule242403) Run(ctx context.Context) (rule.RuleResult, error) {
 		},
 	}
 
-	target := rule.NewTarget("kind", "deployment", "name", deploymentName, "namespace", r.Namespace)
+	target := rule.NewTarget("kind", "Deployment", "name", deploymentName, "namespace", r.Namespace)
 
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(deployment), deployment); err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil

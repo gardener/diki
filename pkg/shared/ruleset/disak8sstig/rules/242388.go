@@ -50,7 +50,7 @@ func (r *Rule242388) Run(ctx context.Context) (rule.RuleResult, error) {
 	if r.ContainerName != "" {
 		containerName = r.ContainerName
 	}
-	target := rule.NewTarget("kind", "deployment", "name", deploymentName, "namespace", r.Namespace)
+	target := rule.NewTarget("kind", "Deployment", "name", deploymentName, "namespace", r.Namespace)
 
 	insecureBindAddressOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, optName)
 	if err != nil {

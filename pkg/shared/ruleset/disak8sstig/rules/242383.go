@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strings"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
@@ -117,25 +118,38 @@ func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 	}
-	var checkResults []rule.CheckResult
-	systemNamespaces := []string{"default", "kube-public", "kube-node-lease"}
-	acceptedResources := []AcceptedResources242383{
-		{
-			// The 'kubernetes' Service is a required system resource exposing the kubernetes API server
-			ObjectSelector: ObjectSelector{
-				APIVersion: "v1",
-				Kind:       "Service",
-				MatchLabels: map[string]string{
-					"component": "apiserver",
-					"provider":  "kubernetes",
+
+	var (
+		checkResults      []rule.CheckResult
+		systemNamespaces  = []string{"default", "kube-public", "kube-node-lease"}
+		acceptedResources = []AcceptedResources242383{
+			{
+				// The 'kubernetes' Service is a required system resource exposing the kubernetes API server
+				ObjectSelector: ObjectSelector{
+					APIVersion: "v1",
+					Kind:       "Service",
+					MatchLabels: map[string]string{
+						"component": "apiserver",
+						"provider":  "kubernetes",
+					},
+					NamespaceMatchLabels: map[string]string{
+						"kubernetes.io/metadata.name": "default",
+					},
 				},
-				NamespaceMatchLabels: map[string]string{
-					"kubernetes.io/metadata.name": "default",
-				},
+				Status: "Passed",
 			},
-			Status: "Passed",
-		},
-	}
+		}
+		isPartOf = func(ownerRefs []metav1.OwnerReference, partialMetadata []metav1.PartialObjectMetadata) bool {
+			for _, ownerRef := range ownerRefs {
+				if slices.ContainsFunc(partialMetadata, func(p metav1.PartialObjectMetadata) bool {
+					return ownerRef.UID == p.UID
+				}) {
+					return true
+				}
+			}
+			return false
+		}
+	)
 
 	if r.Options != nil && r.Options.AcceptedResources != nil {
 		acceptedResources = append(acceptedResources, r.Options.AcceptedResources...)
@@ -151,10 +165,15 @@ func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
 	for _, namespace := range systemNamespaces {
 		partialMetadata, err := kubeutils.GetAllObjectsMetadata(ctx, r.Client, namespace, selector, 300)
 		if err != nil {
-			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", namespace, "kind", "allList"))), nil
+			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", namespace, "kind", "AllList"))), nil
 		}
 		for _, p := range partialMetadata {
-			target := rule.NewTarget("name", p.Name, "namespace", p.Namespace, "kind", p.Kind)
+			// Skip when owners reference of objects is checked
+			if isPartOf(p.OwnerReferences, partialMetadata) {
+				continue
+			}
+
+			target := kubeutils.TargetWithK8sObject(rule.NewTarget(), p.TypeMeta, p.ObjectMeta)
 			acceptedIdx := slices.IndexFunc(acceptedResources, func(acceptedResource AcceptedResources242383) bool {
 				return (p.APIVersion == acceptedResource.APIVersion) &&
 					(acceptedResource.Kind == "*" || p.Kind == acceptedResource.Kind) &&

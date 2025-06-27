@@ -67,7 +67,7 @@ authorizers:
 		configMapData             = "configMapData"
 		kcmDeployment             *appsv1.Deployment
 		configMap                 *corev1.ConfigMap
-		target                    = rule.NewTarget("name", "kube-apiserver", "namespace", namespace, "kind", "deployment")
+		target                    = rule.NewTarget("name", "kube-apiserver", "namespace", namespace, "kind", "Deployment")
 		authorizationConfigTarget = rule.NewTarget("kind", "AuthorizationConfiguration")
 	)
 

@@ -69,7 +69,7 @@ func (r *Rule242380) checkStatefulSet(ctx context.Context, statefulSetName strin
 		},
 	}
 
-	target := rule.NewTarget("name", statefulSetName, "namespace", r.Namespace, "kind", "statefulSet")
+	target := kubeutils.TargetWithK8sObject(rule.NewTarget(), metav1.TypeMeta{Kind: "StatefulSet"}, statefulSet.ObjectMeta)
 
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(statefulSet), statefulSet); err != nil {
 		return rule.ErroredCheckResult(err.Error(), target)

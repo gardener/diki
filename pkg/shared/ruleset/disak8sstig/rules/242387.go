@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strconv"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -43,7 +44,7 @@ func (r *Rule242387) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "nodeList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NodeList"))), nil
 	}
 
 	if len(nodes) == 0 {
@@ -52,7 +53,7 @@ func (r *Rule242387) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	const readOnlyPortConfigOption = "readOnlyPort"
 	for _, node := range nodes {
-		target := rule.NewTarget("kind", "node", "name", node.Name)
+		target := kubeutils.TargetWithK8sObject(rule.NewTarget(), metav1.TypeMeta{Kind: "Node"}, node.ObjectMeta)
 		if !kubeutils.NodeReadyStatus(node) {
 			checkResults = append(checkResults, rule.WarningCheckResult("Node is not in Ready state.", target))
 			continue

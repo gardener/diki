@@ -11,6 +11,7 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/component-base/version"
@@ -72,12 +73,12 @@ func (r *Rule242404) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "nodeList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NodeList"))), nil
 	}
 
 	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "PodList"))), nil
 	}
 
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(pods, nodes)
@@ -103,10 +104,11 @@ func (r *Rule242404) Run(ctx context.Context) (rule.RuleResult, error) {
 }
 
 func (r *Rule242404) checkNode(ctx context.Context, node corev1.Node, privPodImage string) rule.CheckResult {
-	target := rule.NewTarget("kind", "node", "name", node.Name)
-
-	podName := fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
-	podTarget := rule.NewTarget("kind", "pod", "namespace", "kube-system", "name", podName)
+	var (
+		target    = kubeutils.TargetWithK8sObject(rule.NewTarget(), metav1.TypeMeta{Kind: "Node"}, node.ObjectMeta)
+		podName   = fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
+		podTarget = rule.NewTarget("kind", "Pod", "namespace", "kube-system", "name", podName)
+	)
 
 	defer func() {
 		timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Second*30)
