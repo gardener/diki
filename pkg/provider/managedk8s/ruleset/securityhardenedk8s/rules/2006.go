@@ -11,6 +11,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -68,12 +69,12 @@ func (r *Rule2006) Severity() rule.SeverityLevel {
 func (r *Rule2006) Run(ctx context.Context) (rule.RuleResult, error) {
 	roles, err := kubeutils.GetRoles(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "rolesList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "RolesList"))), nil
 	}
 
 	clusterRoles, err := kubeutils.GetClusterRoles(ctx, r.Client, labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "clusterRolesList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ClusterRolesList"))), nil
 	}
 
 	if len(roles) == 0 && len(clusterRoles) == 0 {
@@ -82,7 +83,7 @@ func (r *Rule2006) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NamespaceList"))), nil
 	}
 
 	var (
@@ -105,14 +106,14 @@ func (r *Rule2006) Run(ctx context.Context) (rule.RuleResult, error) {
 	)
 
 	for _, role := range roles {
-		target := rule.NewTarget("kind", "role", "name", role.Name, "namespace", role.Namespace)
+		target := kubeutils.TargetWithK8sObject(rule.NewTarget(), v1.TypeMeta{Kind: "Role"}, role.ObjectMeta)
 
 		accepted, justification := r.acceptedRole(role, namespaces[role.Namespace])
 		checkResults = append(checkResults, checkRules(role.Rules, accepted, justification, target))
 	}
 
 	for _, clusterRole := range clusterRoles {
-		target := rule.NewTarget("kind", "clusterRole", "name", clusterRole.Name)
+		target := kubeutils.TargetWithK8sObject(rule.NewTarget(), v1.TypeMeta{Kind: "ClusterRole"}, clusterRole.ObjectMeta)
 
 		accepted, justification := r.acceptedClusterRole(clusterRole)
 		checkResults = append(checkResults, checkRules(clusterRole.Rules, accepted, justification, target))

@@ -10,6 +10,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -58,12 +59,12 @@ func (r *Rule2000) Severity() rule.SeverityLevel {
 func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 	networkPolicies, err := kubeutils.GetNetworkPolicies(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "serviceList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ServiceList"))), nil
 	}
 
 	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NamespaceList"))), nil
 	}
 
 	groupedNetworkPolicies := map[string][]networkingv1.NetworkPolicy{}
@@ -94,27 +95,27 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 
 			if !deniesAllIngress && len(networkPolicy.Spec.Ingress) == 0 &&
 				slices.Contains(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeIngress) {
-				deniesAllIngressTarget = deniesAllIngressTarget.With("kind", "networkPolicy", "name", networkPolicy.Name)
+				deniesAllIngressTarget = kubeutils.TargetWithK8sObject(deniesAllIngressTarget, metav1.TypeMeta{Kind: "NetworkPolicy"}, networkPolicy.ObjectMeta)
 				deniesAllIngress = true
 			}
 
 			if !allowsAllIngress && slices.ContainsFunc(networkPolicy.Spec.Ingress, func(ingress networkingv1.NetworkPolicyIngressRule) bool {
 				return len(ingress.From) == 0 && len(ingress.Ports) == 0
 			}) && slices.Contains(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeIngress) {
-				allowsAllIngressTarget = allowsAllIngressTarget.With("kind", "networkPolicy", "name", networkPolicy.Name)
+				allowsAllIngressTarget = kubeutils.TargetWithK8sObject(allowsAllIngressTarget, metav1.TypeMeta{Kind: "NetworkPolicy"}, networkPolicy.ObjectMeta)
 				allowsAllIngress = true
 			}
 
 			if !deniesAllEgress && len(networkPolicy.Spec.Egress) == 0 &&
 				slices.Contains(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeEgress) {
-				deniesAllEgressTarget = deniesAllEgressTarget.With("kind", "networkPolicy", "name", networkPolicy.Name)
+				deniesAllEgressTarget = kubeutils.TargetWithK8sObject(deniesAllEgressTarget, metav1.TypeMeta{Kind: "NetworkPolicy"}, networkPolicy.ObjectMeta)
 				deniesAllEgress = true
 			}
 
 			if !allowsAllEgress && slices.ContainsFunc(networkPolicy.Spec.Egress, func(egress networkingv1.NetworkPolicyEgressRule) bool {
 				return len(egress.To) == 0 && len(egress.Ports) == 0
 			}) && slices.Contains(networkPolicy.Spec.PolicyTypes, networkingv1.PolicyTypeEgress) {
-				allowsAllEgressTarget = allowsAllEgressTarget.With("kind", "networkPolicy", "name", networkPolicy.Name)
+				allowsAllEgressTarget = kubeutils.TargetWithK8sObject(allowsAllEgressTarget, metav1.TypeMeta{Kind: "NetworkPolicy"}, networkPolicy.ObjectMeta)
 				allowsAllEgress = true
 			}
 

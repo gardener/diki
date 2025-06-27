@@ -97,12 +97,12 @@ var _ = Describe("#2008", func() {
 			{
 				Status:  rule.Passed,
 				Message: "Pod does not use volumes of type hostPath.",
-				Target:  rule.NewTarget("name", "pod1", "namespace", "foo", "kind", "pod"),
+				Target:  rule.NewTarget("name", "pod1", "namespace", "foo", "kind", "Pod"),
 			},
 			{
 				Status:  rule.Passed,
 				Message: "Pod does not use volumes of type hostPath.",
-				Target:  rule.NewTarget("name", "pod2", "namespace", "foo", "kind", "pod"),
+				Target:  rule.NewTarget("name", "pod2", "namespace", "foo", "kind", "Pod"),
 			},
 		}
 
@@ -134,12 +134,12 @@ var _ = Describe("#2008", func() {
 			{
 				Status:  rule.Passed,
 				Message: "Pod does not use volumes of type hostPath.",
-				Target:  rule.NewTarget("name", "pod1", "namespace", "foo", "kind", "pod"),
+				Target:  rule.NewTarget("name", "pod1", "namespace", "foo", "kind", "Pod"),
 			},
 			{
 				Status:  rule.Failed,
 				Message: "Pod must not use volumes of type hostPath.",
-				Target:  rule.NewTarget("name", "pod2", "namespace", "foo", "kind", "pod", "volume", "foo"),
+				Target:  rule.NewTarget("name", "pod2", "namespace", "foo", "kind", "Pod", "volume", "foo"),
 			},
 		}
 
@@ -174,12 +174,12 @@ var _ = Describe("#2008", func() {
 			{
 				Status:  rule.Passed,
 				Message: "Pod does not use volumes of type hostPath.",
-				Target:  rule.NewTarget("name", "pod1", "namespace", "foo", "kind", "pod"),
+				Target:  rule.NewTarget("name", "pod1", "namespace", "foo", "kind", "Pod"),
 			},
 			{
 				Status:  rule.Skipped,
 				Message: "Diki privileged pod requires the use of hostPaths.",
-				Target:  rule.NewTarget("name", "diki-privileged-pod", "namespace", "foo", "kind", "pod"),
+				Target:  rule.NewTarget("name", "diki-privileged-pod", "namespace", "foo", "kind", "Pod"),
 			},
 		}
 
@@ -242,12 +242,12 @@ var _ = Describe("#2008", func() {
 			{
 				Status:  rule.Accepted,
 				Message: "foo justify",
-				Target:  rule.NewTarget("name", "accepted-shoot-pod", "namespace", "foo", "kind", "pod", "volume", "foo"),
+				Target:  rule.NewTarget("name", "accepted-shoot-pod", "namespace", "foo", "kind", "Pod", "volume", "foo"),
 			},
 			{
 				Status:  rule.Failed,
 				Message: "Pod must not use volumes of type hostPath.",
-				Target:  rule.NewTarget("name", "not-accepted-shoot-pod", "namespace", "foo", "kind", "pod", "volume", "bar"),
+				Target:  rule.NewTarget("name", "not-accepted-shoot-pod", "namespace", "foo", "kind", "Pod", "volume", "bar"),
 			},
 		}
 
@@ -317,9 +317,9 @@ var _ = Describe("#2008", func() {
 		Expect(err).To(BeNil())
 
 		Expect(result.CheckResults).To(Equal([]rule.CheckResult{
-			{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume1")},
-			{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume2")},
-			{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume3")},
+			{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume1")},
+			{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume2")},
+			{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume3")},
 		}))
 	})
 

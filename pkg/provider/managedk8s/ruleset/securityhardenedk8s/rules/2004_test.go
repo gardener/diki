@@ -69,7 +69,7 @@ var _ = Describe("#2004", func() {
 				Expect(client.Create(ctx, namespace)).To(Succeed())
 
 			}, rules.Options2004{},
-			rule.CheckResult{Status: rule.Passed, Message: "Service is not of type NodePort.", Target: rule.NewTarget("kind", "service", "name", "foo", "namespace", "foo")},
+			rule.CheckResult{Status: rule.Passed, Message: "Service is not of type NodePort.", Target: rule.NewTarget("kind", "Service", "name", "foo", "namespace", "foo")},
 		),
 		Entry("should fail when service is of type NodePort",
 			func() {
@@ -78,7 +78,7 @@ var _ = Describe("#2004", func() {
 				Expect(client.Create(ctx, namespace)).To(Succeed())
 
 			}, rules.Options2004{},
-			rule.CheckResult{Status: rule.Failed, Message: "Service should not be of type NodePort.", Target: rule.NewTarget("kind", "service", "name", "foo", "namespace", "foo")},
+			rule.CheckResult{Status: rule.Failed, Message: "Service should not be of type NodePort.", Target: rule.NewTarget("kind", "Service", "name", "foo", "namespace", "foo")},
 		),
 		Entry("should pass when service is not of type NodePort",
 			func() {
@@ -87,7 +87,7 @@ var _ = Describe("#2004", func() {
 				Expect(client.Create(ctx, namespace)).To(Succeed())
 
 			}, rules.Options2004{},
-			rule.CheckResult{Status: rule.Passed, Message: "Service is not of type NodePort.", Target: rule.NewTarget("kind", "service", "name", "foo", "namespace", "foo")},
+			rule.CheckResult{Status: rule.Passed, Message: "Service is not of type NodePort.", Target: rule.NewTarget("kind", "Service", "name", "foo", "namespace", "foo")},
 		),
 		Entry("should pass when options are set",
 			func() {
@@ -107,7 +107,7 @@ var _ = Describe("#2004", func() {
 					},
 				},
 			},
-			rule.CheckResult{Status: rule.Accepted, Message: "foo justify", Target: rule.NewTarget("kind", "service", "name", "foo", "namespace", "foo")},
+			rule.CheckResult{Status: rule.Accepted, Message: "foo justify", Target: rule.NewTarget("kind", "Service", "name", "foo", "namespace", "foo")},
 		),
 	)
 })

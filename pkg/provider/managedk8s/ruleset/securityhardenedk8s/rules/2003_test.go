@@ -98,7 +98,7 @@ var _ = Describe("#2003", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Passed, Message: "Pod uses only allowed volume types.", Target: rule.NewTarget("kind", "pod", "name", "podWithPermittedVolumes", "namespace", "plainNamespace")},
+				{Status: rule.Passed, Message: "Pod uses only allowed volume types.", Target: rule.NewTarget("kind", "Pod", "name", "podWithPermittedVolumes", "namespace", "plainNamespace")},
 			},
 		),
 		Entry("should fail when a pod volume is not of an allowed type",
@@ -123,7 +123,7 @@ var _ = Describe("#2003", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Pod uses not allowed volume type.", Target: rule.NewTarget("kind", "pod", "name", "podWithNotPermittedVolumes", "namespace", "plainNamespace", "volume", "cinderVolume")},
+				{Status: rule.Failed, Message: "Pod uses not allowed volume type.", Target: rule.NewTarget("kind", "Pod", "name", "podWithNotPermittedVolumes", "namespace", "plainNamespace", "volume", "cinderVolume")},
 			},
 		),
 		Entry("should skip when a pod is a diki privileged pod",
@@ -153,7 +153,7 @@ var _ = Describe("#2003", func() {
 			},
 			nil,
 			[]rule.CheckResult{
-				{Status: rule.Skipped, Message: "Diki privileged pod requires the use of hostPaths.", Target: rule.NewTarget("kind", "pod", "name", "dikiPrivilegedPod", "namespace", "plainNamespace")},
+				{Status: rule.Skipped, Message: "Diki privileged pod requires the use of hostPaths.", Target: rule.NewTarget("kind", "Pod", "name", "dikiPrivilegedPod", "namespace", "plainNamespace")},
 			},
 		),
 		Entry("should accept a volume when it is specified in the options configuration",
@@ -202,7 +202,7 @@ var _ = Describe("#2003", func() {
 				},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Accepted, Message: "justification 1", Target: rule.NewTarget("kind", "pod", "name", "acceptedPod", "namespace", "plainNamespace", "volume", "acceptedVolume1")},
+				{Status: rule.Accepted, Message: "justification 1", Target: rule.NewTarget("kind", "Pod", "name", "acceptedPod", "namespace", "plainNamespace", "volume", "acceptedVolume1")},
 			},
 		),
 		Entry("should return appropriate check results for multiple pods",
@@ -290,10 +290,10 @@ var _ = Describe("#2003", func() {
 				},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Accepted, Message: "justification 1", Target: rule.NewTarget("kind", "pod", "name", "acceptedPod", "namespace", "plainNamespace", "volume", "acceptedVolume1")},
-				{Status: rule.Failed, Message: "Pod uses not allowed volume type.", Target: rule.NewTarget("kind", "pod", "name", "acceptedPod", "namespace", "plainNamespace", "volume", "forbiddenVolume1")},
-				{Status: rule.Failed, Message: "Pod uses not allowed volume type.", Target: rule.NewTarget("kind", "pod", "name", "regularPod", "namespace", "plainNamespace", "volume", "acceptedVolume1")},
-				{Status: rule.Failed, Message: "Pod uses not allowed volume type.", Target: rule.NewTarget("kind", "pod", "name", "regularPod", "namespace", "plainNamespace", "volume", "forbiddenVolume1")},
+				{Status: rule.Accepted, Message: "justification 1", Target: rule.NewTarget("kind", "Pod", "name", "acceptedPod", "namespace", "plainNamespace", "volume", "acceptedVolume1")},
+				{Status: rule.Failed, Message: "Pod uses not allowed volume type.", Target: rule.NewTarget("kind", "Pod", "name", "acceptedPod", "namespace", "plainNamespace", "volume", "forbiddenVolume1")},
+				{Status: rule.Failed, Message: "Pod uses not allowed volume type.", Target: rule.NewTarget("kind", "Pod", "name", "regularPod", "namespace", "plainNamespace", "volume", "acceptedVolume1")},
+				{Status: rule.Failed, Message: "Pod uses not allowed volume type.", Target: rule.NewTarget("kind", "Pod", "name", "regularPod", "namespace", "plainNamespace", "volume", "forbiddenVolume1")},
 			},
 		),
 
@@ -357,8 +357,8 @@ var _ = Describe("#2003", func() {
 				},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Accepted, Message: "justification 1", Target: rule.NewTarget("kind", "pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "acceptedVolume1")},
-				{Status: rule.Failed, Message: "Pod uses not allowed volume type.", Target: rule.NewTarget("kind", "pod", "name", "plainNamespacePod", "namespace", "plainNamespace", "volume", "forbiddenVolume1")},
+				{Status: rule.Accepted, Message: "justification 1", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "acceptedVolume1")},
+				{Status: rule.Failed, Message: "Pod uses not allowed volume type.", Target: rule.NewTarget("kind", "Pod", "name", "plainNamespacePod", "namespace", "plainNamespace", "volume", "forbiddenVolume1")},
 			},
 		),
 		Entry("should accept all volume when a wildcard accepted pod is matched", func() {
@@ -420,9 +420,9 @@ var _ = Describe("#2003", func() {
 				},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume1")},
-				{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume2")},
-				{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume3")},
+				{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume1")},
+				{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume2")},
+				{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume3")},
 			},
 		),
 	)

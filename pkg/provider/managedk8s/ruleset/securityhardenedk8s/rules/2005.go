@@ -77,17 +77,24 @@ func (r *Rule2005) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "PodList"))), nil
 	}
 
 	if len(pods) == 0 {
 		return rule.Result(r, rule.PassedCheckResult("The cluster does not have any Pods.", rule.NewTarget())), nil
 	}
 
+	filteredPods := kubeutils.FilterPodsByOwnerRef(pods)
+
+	replicaSets, err := kubeutils.GetReplicaSets(ctx, r.Client, "", labels.NewSelector(), 300)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ReplicaSetList"))), nil
+	}
+
 	var checkResults []rule.CheckResult
 
-	for _, pod := range pods {
-		podTarget := rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
+	for _, pod := range filteredPods {
+		podTarget := kubeutils.TargetWithPod(rule.NewTarget(), pod, replicaSets)
 
 		for _, container := range slices.Concat(pod.Spec.Containers, pod.Spec.InitContainers) {
 			var (

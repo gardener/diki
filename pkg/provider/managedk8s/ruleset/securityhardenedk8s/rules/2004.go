@@ -9,6 +9,7 @@ import (
 	"context"
 
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -63,7 +64,7 @@ func (r *Rule2004) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	services, err := kubeutils.GetServices(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "serviceList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ServiceList"))), nil
 	}
 
 	if len(services) == 0 {
@@ -72,11 +73,11 @@ func (r *Rule2004) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NamespaceList"))), nil
 	}
 
 	for _, service := range services {
-		serviceTarget := rule.NewTarget("kind", "service", "name", service.Name, "namespace", service.Namespace)
+		serviceTarget := kubeutils.TargetWithK8sObject(rule.NewTarget(), v1.TypeMeta{Kind: "Service"}, service.ObjectMeta)
 
 		if service.Spec.Type == corev1.ServiceTypeNodePort {
 			if accepted, justification := r.accepted(service, namespaces[service.Namespace]); accepted {
