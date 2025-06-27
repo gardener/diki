@@ -106,10 +106,10 @@ var _ = Describe("#242449", func() {
 				{kubeletPID, rawKubeletCommand, kubeletConfig, nonCompliantClientCAFileStats2}, {kubeletPID, rawKubeletCommand, kubeletConfig, nonCompliantClientCAFileStats3}},
 			[][]error{{nil, nil, nil, nil}, {nil, nil, nil, nil}, {nil, nil, nil, nil}, {nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "node", "name", "node1", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 644")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("kind", "node", "name", "node2", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 664, expectedPermissionsMax: 644")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("kind", "node", "name", "node3", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 700, expectedPermissionsMax: 644")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("kind", "node", "name", "node4", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 606, expectedPermissionsMax: 644")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "Node", "name", "node1", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("kind", "Node", "name", "node2", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 664, expectedPermissionsMax: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("kind", "Node", "name", "node3", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 700, expectedPermissionsMax: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("kind", "Node", "name", "node4", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 606, expectedPermissionsMax: 644")),
 			}),
 		Entry("should return correct checkResults only for selected nodes",
 			rules.Options242449{
@@ -118,8 +118,8 @@ var _ = Describe("#242449", func() {
 			[][]string{{kubeletPID, rawKubeletCommand, kubeletConfig, compliantClientCAFileStats}, {kubeletPID, rawKubeletCommand, kubeletConfig, compliantClientCAFileStats}},
 			[][]error{{nil, nil, nil, nil}, {nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "node", "name", "node1", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 644")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "node", "name", "node3", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 644")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "Node", "name", "node1", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 644")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "Node", "name", "node3", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 644")),
 				rule.WarningCheckResult("Node is missing a label", rule.NewTarget("kind", "Node", "name", "node4", "label", "foo")),
 			}),
 		Entry("should return correct checkResults when commands error", nil,
@@ -127,10 +127,10 @@ var _ = Describe("#242449", func() {
 				{kubeletPID, rawKubeletCommand, kubeletConfig, compliantClientCAFileStats}, {kubeletPID, rawKubeletCommand, kubeletConfig, compliantClientCAFileStats}},
 			[][]error{{errors.New("foo")}, {nil, nil, errors.New("bar")}, {nil, nil, nil, errors.New("foo-bar")}, {nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242449-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.ErroredCheckResult("could not retrieve kubelet config: bar", rule.NewTarget("name", "diki-242449-bbbbbbbbbb", "namespace", "kube-system", "kind", "pod")),
-				rule.ErroredCheckResult("foo-bar", rule.NewTarget("name", "diki-242449-cccccccccc", "namespace", "kube-system", "kind", "pod")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "node", "name", "node4", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 644")),
+				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242449-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
+				rule.ErroredCheckResult("could not retrieve kubelet config: bar", rule.NewTarget("name", "diki-242449-bbbbbbbbbb", "namespace", "kube-system", "kind", "Pod")),
+				rule.ErroredCheckResult("foo-bar", rule.NewTarget("name", "diki-242449-cccccccccc", "namespace", "kube-system", "kind", "Pod")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "Node", "name", "node4", "details", "fileName: /var/lib/kubelet/ca.crt, permissions: 644")),
 			}),
 	)
 })

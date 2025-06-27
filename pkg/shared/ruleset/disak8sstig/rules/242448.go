@@ -71,10 +71,12 @@ func (r *Rule242448) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
-	var checkResults []rule.CheckResult
-	options := option.FileOwnerOptions{}
-	kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
-	kubeProxyContainerNames := []string{"kube-proxy", "proxy"}
+	var (
+		checkResults            []rule.CheckResult
+		options                 = option.FileOwnerOptions{}
+		kubeProxySelector       = labels.SelectorFromSet(labels.Set{"role": "proxy"})
+		kubeProxyContainerNames = []string{"kube-proxy", "proxy"}
+	)
 
 	if r.Options != nil {
 		if r.Options.FileOwnerOptions != nil {
@@ -94,7 +96,7 @@ func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
 	target := rule.NewTarget()
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "PodList"))), nil
 	}
 
 	var pods []corev1.Pod
@@ -110,7 +112,7 @@ func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "nodeList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "NodeList"))), nil
 	}
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
 	groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, target)
@@ -121,9 +123,14 @@ func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 	image.WithOptionalTag(version.Get().GitVersion)
 
+	replicaSets, err := kubeutils.GetReplicaSets(ctx, r.Client, "", labels.NewSelector(), 300)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ReplicaSetList"))), nil
+	}
+
 	for nodeName, pods := range groupedPods {
 		podName := fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
-		execPodTarget := target.With("name", podName, "namespace", "kube-system", "kind", "pod")
+		execPodTarget := target.With("name", podName, "namespace", "kube-system", "kind", "Pod")
 
 		defer func() {
 			timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Second*30)
@@ -162,8 +169,10 @@ func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
 		})
 
 		for _, pod := range pods {
-			var selectedFileStats []intutils.FileStats
-			podTarget := target.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
+			var (
+				selectedFileStats []intutils.FileStats
+				podTarget         = kubeutils.TargetWithPod(rule.NewTarget(), pod, replicaSets)
+			)
 
 			rawKubeProxyCommand, err := kubeutils.GetContainerCommand(pod, kubeProxyContainerNames...)
 			if err != nil {
@@ -243,10 +252,8 @@ func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
 			selectedFileStats = append(selectedFileStats, kubeconfigFileStats)
 
 			for _, fileStats := range selectedFileStats {
-				containerTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
-
 				checkResults = append(checkResults,
-					intutils.MatchFileOwnersCases(fileStats, options.ExpectedFileOwner.Users, options.ExpectedFileOwner.Groups, containerTarget)...)
+					intutils.MatchFileOwnersCases(fileStats, options.ExpectedFileOwner.Users, options.ExpectedFileOwner.Groups, podTarget)...)
 			}
 		}
 	}

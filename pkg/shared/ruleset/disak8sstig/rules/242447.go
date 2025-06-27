@@ -66,9 +66,11 @@ func (r *Rule242447) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
-	var checkResults []rule.CheckResult
-	kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
-	kubeProxyContainerNames := []string{"kube-proxy", "proxy"}
+	var (
+		checkResults            []rule.CheckResult
+		kubeProxySelector       = labels.SelectorFromSet(labels.Set{"role": "proxy"})
+		kubeProxyContainerNames = []string{"kube-proxy", "proxy"}
+	)
 
 	if r.Options != nil && len(r.Options.KubeProxyMatchLabels) > 0 {
 		kubeProxySelector = labels.SelectorFromSet(labels.Set(r.Options.KubeProxyMatchLabels))
@@ -77,7 +79,7 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 	target := rule.NewTarget()
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "PodList"))), nil
 	}
 
 	var pods []corev1.Pod
@@ -93,7 +95,7 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "nodeList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "NodeList"))), nil
 	}
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
 	groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, target)
@@ -104,9 +106,14 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 	image.WithOptionalTag(version.Get().GitVersion)
 
+	replicaSets, err := kubeutils.GetReplicaSets(ctx, r.Client, "", labels.NewSelector(), 300)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ReplicaSetList"))), nil
+	}
+
 	for nodeName, pods := range groupedPods {
 		podName := fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
-		execPodTarget := target.With("name", podName, "namespace", "kube-system", "kind", "pod")
+		execPodTarget := target.With("name", podName, "namespace", "kube-system", "kind", "Pod")
 
 		defer func() {
 			timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Second*30)
@@ -145,9 +152,11 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 		})
 
 		for _, pod := range pods {
-			var selectedFileStats []intutils.FileStats
-			expectedFilePermissionsMax := "644"
-			podTarget := target.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
+			var (
+				selectedFileStats          []intutils.FileStats
+				expectedFilePermissionsMax = "644"
+				podTarget                  = kubeutils.TargetWithPod(rule.NewTarget(), pod, replicaSets)
+			)
 
 			rawKubeProxyCommand, err := kubeutils.GetContainerCommand(pod, kubeProxyContainerNames...)
 			if err != nil {
@@ -227,20 +236,19 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 			selectedFileStats = append(selectedFileStats, kubeconfigFileStats)
 
 			for _, fileStats := range selectedFileStats {
-				containerTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
 				exceedFilePermissions, err := intutils.ExceedFilePermissions(fileStats.Permissions, expectedFilePermissionsMax)
 				if err != nil {
-					checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), containerTarget))
+					checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), podTarget))
 					continue
 				}
 
 				if exceedFilePermissions {
-					detailedTarget := containerTarget.With("details", fmt.Sprintf("fileName: %s, permissions: %s, expectedPermissionsMax: %s", fileStats.Path, fileStats.Permissions, expectedFilePermissionsMax))
+					detailedTarget := podTarget.With("details", fmt.Sprintf("fileName: %s, permissions: %s, expectedPermissionsMax: %s", fileStats.Path, fileStats.Permissions, expectedFilePermissionsMax))
 					checkResults = append(checkResults, rule.FailedCheckResult("File has too wide permissions", detailedTarget))
 					continue
 				}
 
-				detailedTarget := containerTarget.With("details", fmt.Sprintf("fileName: %s, permissions: %s", fileStats.Path, fileStats.Permissions))
+				detailedTarget := podTarget.With("details", fmt.Sprintf("fileName: %s, permissions: %s", fileStats.Path, fileStats.Permissions))
 				checkResults = append(checkResults, rule.PassedCheckResult("File has expected permissions", detailedTarget))
 			}
 		}

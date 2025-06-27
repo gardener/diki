@@ -91,9 +91,9 @@ var _ = Describe("#242434", func() {
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("Option protectKernelDefaults set to allowed value.", rule.NewTarget("kind", "node", "name", "node1")),
-			rule.FailedCheckResult("Option protectKernelDefaults set to not allowed value.", rule.NewTarget("kind", "node", "name", "node2")),
-			rule.FailedCheckResult("Option protectKernelDefaults not set.", rule.NewTarget("kind", "node", "name", "node3")),
+			rule.PassedCheckResult("Option protectKernelDefaults set to allowed value.", rule.NewTarget("kind", "Node", "name", "node1")),
+			rule.FailedCheckResult("Option protectKernelDefaults set to not allowed value.", rule.NewTarget("kind", "Node", "name", "node2")),
+			rule.FailedCheckResult("Option protectKernelDefaults not set.", rule.NewTarget("kind", "Node", "name", "node3")),
 		}
 
 		Expect(err).To(BeNil())

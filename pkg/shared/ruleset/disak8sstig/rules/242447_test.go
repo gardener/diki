@@ -125,19 +125,37 @@ var _ = Describe("#242447", func() {
 		kubeProxyPod1.Labels["role"] = "proxy"
 		kubeProxyPod1.Labels["component"] = "kube-proxy"
 		kubeProxyPod1.Spec.Containers[0].Command = []string{"--config=/var/lib/config", "--kubeconfig=/var/lib/kubeconfig"}
-		kubeProxyPod1.OwnerReferences[0].UID = "1"
+		kubeProxyPod1.OwnerReferences = []metav1.OwnerReference{
+			{
+				Kind: "DaemonSet",
+				Name: "kube-proxy1",
+				UID:  "1",
+			},
+		}
 
 		kubeProxyPod2 = plainPod.DeepCopy()
 		kubeProxyPod2.Name = "2-pod"
 		kubeProxyPod2.Labels["role"] = "proxy"
 		kubeProxyPod2.Spec.Containers[0].Command = []string{"--config=/var/lib/config"}
-		kubeProxyPod2.OwnerReferences[0].UID = "2"
+		kubeProxyPod2.OwnerReferences = []metav1.OwnerReference{
+			{
+				Kind: "DaemonSet",
+				Name: "kube-proxy2",
+				UID:  "2",
+			},
+		}
 
 		kubeProxyPod3 = plainPod.DeepCopy()
 		kubeProxyPod3.Name = "3-pod"
 		kubeProxyPod3.Labels["role"] = "proxy"
 		kubeProxyPod3.Spec.Containers[0].Command = []string{"--kubeconfig=/var/lib/kubeconfig"}
-		kubeProxyPod3.OwnerReferences[0].UID = "1"
+		kubeProxyPod3.OwnerReferences = []metav1.OwnerReference{
+			{
+				Kind: "DaemonSet",
+				Name: "kube-proxy1",
+				UID:  "1",
+			},
+		}
 
 		fooPod = plainPod.DeepCopy()
 		fooPod.Name = "foo"
@@ -174,7 +192,13 @@ var _ = Describe("#242447", func() {
 		kubeProxyContainerPod.Name = "pod1"
 		kubeProxyContainerPod.Labels["role"] = "proxy"
 		kubeProxyContainerPod.Spec.Containers[0].Command = []string{"--config=/var/lib/config", "--kubeconfig=/var/lib/kubeconfig"}
-		kubeProxyContainerPod.OwnerReferences[0].UID = "0"
+		kubeProxyContainerPod.OwnerReferences = []metav1.OwnerReference{
+			{
+				Kind: "DaemonSet",
+				Name: "kube-proxy0",
+				UID:  "0",
+			},
+		}
 		Expect(fakeClient.Create(ctx, kubeProxyContainerPod)).To(Succeed())
 
 		proxyContainerPod := plainPod.DeepCopy()
@@ -182,7 +206,13 @@ var _ = Describe("#242447", func() {
 		proxyContainerPod.Labels["role"] = "proxy"
 		proxyContainerPod.Spec.Containers[0].Name = "proxy"
 		proxyContainerPod.Spec.Containers[0].Command = []string{"--config=/var/lib/config"}
-		proxyContainerPod.OwnerReferences[0].UID = "1"
+		proxyContainerPod.OwnerReferences = []metav1.OwnerReference{
+			{
+				Kind: "DaemonSet",
+				Name: "kube-proxy1",
+				UID:  "1",
+			},
+		}
 		Expect(fakeClient.Create(ctx, proxyContainerPod)).To(Succeed())
 
 		nonValidContainerPod := plainPod.DeepCopy()
@@ -190,7 +220,13 @@ var _ = Describe("#242447", func() {
 		nonValidContainerPod.Labels["role"] = "proxy"
 		nonValidContainerPod.Spec.Containers[0].Name = "foo"
 		nonValidContainerPod.Spec.Containers[0].Command = []string{"--kubeconfig=/var/lib/kubeconfig"}
-		nonValidContainerPod.OwnerReferences[0].UID = "2"
+		nonValidContainerPod.OwnerReferences = []metav1.OwnerReference{
+			{
+				Kind: "DaemonSet",
+				Name: "kube-proxy2",
+				UID:  "2",
+			},
+		}
 		Expect(fakeClient.Create(ctx, nonValidContainerPod)).To(Succeed())
 
 		fakePodContext = fakepod.NewFakeSimplePodContext([][]string{{mounts, compliantConfigStats, compliantKubeconfigStats, mounts, nonCompliantConfigStats, kubeProxyConfig, nonCompliantKubeconfigStats2}},
@@ -206,11 +242,11 @@ var _ = Describe("#242447", func() {
 		Expect(err).To(BeNil())
 
 		expectedResults := []rule.CheckResult{
-			rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "pod1", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, permissions: 644")),
-			rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "pod1", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig, permissions: 600")),
-			rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "pod2", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, permissions: 664, expectedPermissionsMax: 644")),
-			rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "pod2", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig2, permissions: 606, expectedPermissionsMax: 644")),
-			rule.ErroredCheckResult("pod does not contain a container with name in [kube-proxy proxy]", rule.NewTarget("name", "pod3", "namespace", "kube-system", "kind", "pod")),
+			rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-proxy0", "namespace", "kube-system", "kind", "DaemonSet", "details", "fileName: /var/lib/config, permissions: 644")),
+			rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-proxy0", "namespace", "kube-system", "kind", "DaemonSet", "details", "fileName: /var/lib/kubeconfig, permissions: 600")),
+			rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "kube-proxy1", "namespace", "kube-system", "kind", "DaemonSet", "details", "fileName: /var/lib/config, permissions: 664, expectedPermissionsMax: 644")),
+			rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "kube-proxy1", "namespace", "kube-system", "kind", "DaemonSet", "details", "fileName: /var/lib/kubeconfig2, permissions: 606, expectedPermissionsMax: 644")),
+			rule.ErroredCheckResult("pod does not contain a container with name in [kube-proxy proxy]", rule.NewTarget("name", "kube-proxy2", "namespace", "kube-system", "kind", "DaemonSet")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedResults))
@@ -243,19 +279,19 @@ var _ = Describe("#242447", func() {
 			[][]string{{mounts, compliantConfigStats, compliantKubeconfigStats, mounts, compliantConfigStats, kubeProxyConfig, compliantKubeconfigStats2}},
 			[][]error{{nil, nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, permissions: 644")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig, permissions: 600")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "2-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, permissions: 644")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "2-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig2, permissions: 600")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-proxy1", "namespace", "kube-system", "kind", "DaemonSet", "details", "fileName: /var/lib/config, permissions: 644")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-proxy1", "namespace", "kube-system", "kind", "DaemonSet", "details", "fileName: /var/lib/kubeconfig, permissions: 600")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-proxy2", "namespace", "kube-system", "kind", "DaemonSet", "details", "fileName: /var/lib/config, permissions: 644")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-proxy2", "namespace", "kube-system", "kind", "DaemonSet", "details", "fileName: /var/lib/kubeconfig2, permissions: 600")),
 			}),
 		Entry("should return failed checkResults when files have too wide permissions", nil,
 			[][]string{{mounts, nonCompliantConfigStats, nonCompliantKubeconfigStats, mounts, nonCompliantConfigStats, kubeProxyConfig, nonCompliantKubeconfigStats2}},
 			[][]error{{nil, nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "1-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, permissions: 664, expectedPermissionsMax: 644")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "1-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig, permissions: 700, expectedPermissionsMax: 644")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "2-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, permissions: 664, expectedPermissionsMax: 644")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "2-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig2, permissions: 606, expectedPermissionsMax: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "kube-proxy1", "namespace", "kube-system", "kind", "DaemonSet", "details", "fileName: /var/lib/config, permissions: 664, expectedPermissionsMax: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "kube-proxy1", "namespace", "kube-system", "kind", "DaemonSet", "details", "fileName: /var/lib/kubeconfig, permissions: 700, expectedPermissionsMax: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "kube-proxy2", "namespace", "kube-system", "kind", "DaemonSet", "details", "fileName: /var/lib/config, permissions: 664, expectedPermissionsMax: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "kube-proxy2", "namespace", "kube-system", "kind", "DaemonSet", "details", "fileName: /var/lib/kubeconfig2, permissions: 606, expectedPermissionsMax: 644")),
 			}),
 		Entry("should check only pod with matched labels",
 			rules.Options242447{
@@ -266,30 +302,30 @@ var _ = Describe("#242447", func() {
 			[][]string{{mounts, compliantConfigStats, compliantKubeconfigStats}},
 			[][]error{{nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, permissions: 644")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig, permissions: 600")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-proxy1", "namespace", "kube-system", "kind", "DaemonSet", "details", "fileName: /var/lib/config, permissions: 644")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-proxy1", "namespace", "kube-system", "kind", "DaemonSet", "details", "fileName: /var/lib/kubeconfig, permissions: 600")),
 			}),
 		Entry("should return passed when kubeconfig is created by token", nil,
 			[][]string{{mounts, compliantConfigStats, compliantKubeconfigStats, mounts, compliantConfigStats, ""}},
 			[][]error{{nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/config, permissions: 644")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "kube-system", "kind", "pod", "details", "fileName: /var/lib/kubeconfig, permissions: 600")),
-				rule.PassedCheckResult("Kube-proxy uses in-cluster kubeconfig", rule.NewTarget("name", "2-pod", "namespace", "kube-system", "kind", "pod")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-proxy1", "namespace", "kube-system", "kind", "DaemonSet", "details", "fileName: /var/lib/config, permissions: 644")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-proxy1", "namespace", "kube-system", "kind", "DaemonSet", "details", "fileName: /var/lib/kubeconfig, permissions: 600")),
+				rule.PassedCheckResult("Kube-proxy uses in-cluster kubeconfig", rule.NewTarget("name", "kube-proxy2", "namespace", "kube-system", "kind", "DaemonSet")),
 			}),
 		Entry("should return correct errors when mounts and config stats commands fail", nil,
 			[][]string{{mounts, mounts, compliantConfigStats}},
 			[][]error{{errors.New("foo"), nil, errors.New("bar")}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242447-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242447-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
+				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242447-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
+				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242447-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
 			}),
 		Entry("should return correct errors when kubeconfig stats and kubeConfig commands fail", nil,
 			[][]string{{mounts, compliantConfigStats, compliantKubeconfigStats, mounts, compliantConfigStats, kubeProxyConfig}},
 			[][]error{{nil, nil, errors.New("foo"), nil, errors.New("bar")}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242447-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242447-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
+				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242447-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
+				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242447-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
 			}),
 	)
 })

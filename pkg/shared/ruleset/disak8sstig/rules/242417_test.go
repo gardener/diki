@@ -10,6 +10,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -132,8 +133,111 @@ var _ = Describe("#242417", func() {
 		Expect(err).To(BeNil())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("System pod in system namespaces.", rule.NewTarget("name", "bar", "namespace", "kube-system", "kind", "pod")),
-			rule.PassedCheckResult("System pod in system namespaces.", rule.NewTarget("name", "bar", "namespace", "kube-public", "kind", "pod")),
+			rule.PassedCheckResult("System pod in system namespaces.", rule.NewTarget("name", "bar", "namespace", "kube-system", "kind", "Pod")),
+			rule.PassedCheckResult("System pod in system namespaces.", rule.NewTarget("name", "bar", "namespace", "kube-public", "kind", "Pod")),
+		}
+
+		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
+	})
+
+	It("should return correct targets when pods have owner references", func() {
+		deployment := &appsv1.Deployment{
+			TypeMeta: metav1.TypeMeta{
+				Kind: "Deployment",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "deployment",
+				Namespace: "kube-system",
+				UID:       "1",
+			},
+		}
+		Expect(fakeClient.Create(ctx, deployment)).To(Succeed())
+
+		replicaSet := &appsv1.ReplicaSet{
+			TypeMeta: metav1.TypeMeta{
+				Kind: "ReplicaSet",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "replicaSet",
+				Namespace: "kube-system",
+				UID:       "3",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						UID:  "1",
+						Name: "deployment",
+						Kind: "Deployment",
+					},
+				},
+			},
+		}
+		Expect(fakeClient.Create(ctx, replicaSet)).To(Succeed())
+
+		daemonSet := &appsv1.DaemonSet{
+			TypeMeta: metav1.TypeMeta{
+				Kind: "DaemonSet",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "daemonSet",
+				Namespace: "kube-public",
+				UID:       "2",
+			},
+		}
+		Expect(fakeClient.Create(ctx, daemonSet)).To(Succeed())
+
+		pod1 := plainPod.DeepCopy()
+		pod1.Name = "pod1"
+		Expect(fakeClient.Create(ctx, pod1)).To(Succeed())
+
+		pod2 := plainPod.DeepCopy()
+		pod2.Name = "bar"
+		pod2.Namespace = "kube-system"
+		pod2.Labels["label"] = "value"
+		pod2.OwnerReferences = []metav1.OwnerReference{
+			{
+				UID:        "3",
+				APIVersion: "apps/v1",
+				Kind:       "ReplicaSet",
+				Name:       "replicaSet",
+			},
+		}
+		Expect(fakeClient.Create(ctx, pod2)).To(Succeed())
+
+		pod3 := plainPod.DeepCopy()
+		pod3.Name = "bar"
+		pod3.Namespace = "kube-public"
+		pod3.Labels["label"] = "value"
+		pod3.OwnerReferences = []metav1.OwnerReference{
+			{
+				UID:  "2",
+				Kind: "DaemonSet",
+				Name: "daemonSet",
+			},
+		}
+		Expect(fakeClient.Create(ctx, pod3)).To(Succeed())
+
+		pod4 := plainPod.DeepCopy()
+		pod4.Name = "bar"
+		pod4.Namespace = "kube-node-lease"
+		pod4.Labels["i_am"] = "privileged"
+		pod4.Labels["compliance.gardener.cloud/role"] = "diki-privileged-pod"
+		Expect(fakeClient.Create(ctx, pod4)).To(Succeed())
+
+		options.AcceptedPods[0].PodMatchLabels["label"] = "value"
+		options.AcceptedPods[0].Status = "Passed"
+		options.AcceptedPods[1].PodMatchLabels["label"] = "value"
+		options.AcceptedPods[1].Status = "Passed"
+
+		r := &rules.Rule242417{
+			Client:  fakeClient,
+			Options: options,
+		}
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).To(BeNil())
+
+		expectedCheckResults := []rule.CheckResult{
+			rule.PassedCheckResult("System pod in system namespaces.", rule.NewTarget("name", "deployment", "namespace", "kube-system", "kind", "Deployment")),
+			rule.PassedCheckResult("System pod in system namespaces.", rule.NewTarget("name", "daemonSet", "namespace", "kube-public", "kind", "DaemonSet")),
 		}
 
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
@@ -166,9 +270,9 @@ var _ = Describe("#242417", func() {
 		Expect(err).To(BeNil())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Found user pods in system namespaces.", rule.NewTarget("name", pod1.Name, "namespace", pod1.Namespace, "kind", "pod")),
-			rule.FailedCheckResult("Found user pods in system namespaces.", rule.NewTarget("name", pod2.Name, "namespace", pod2.Namespace, "kind", "pod")),
-			rule.FailedCheckResult("Found user pods in system namespaces.", rule.NewTarget("name", pod3.Name, "namespace", pod3.Namespace, "kind", "pod")),
+			rule.FailedCheckResult("Found user pods in system namespaces.", rule.NewTarget("name", pod1.Name, "namespace", pod1.Namespace, "kind", "Pod")),
+			rule.FailedCheckResult("Found user pods in system namespaces.", rule.NewTarget("name", pod2.Name, "namespace", pod2.Namespace, "kind", "Pod")),
+			rule.FailedCheckResult("Found user pods in system namespaces.", rule.NewTarget("name", pod3.Name, "namespace", pod3.Namespace, "kind", "Pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -229,9 +333,9 @@ var _ = Describe("#242417", func() {
 		Expect(err).To(BeNil())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.WarningCheckResult("unrecognized status: fake", rule.NewTarget("name", "pod1", "namespace", "kube-system", "kind", "pod")),
-			rule.AcceptedCheckResult("Accept pod.", rule.NewTarget("name", "pod2", "namespace", "kube-system", "kind", "pod")),
-			rule.AcceptedCheckResult("Accepted user pod in system namespaces.", rule.NewTarget("name", "pod3", "namespace", "kube-public", "kind", "pod")),
+			rule.WarningCheckResult("unrecognized status: fake", rule.NewTarget("name", "pod1", "namespace", "kube-system", "kind", "Pod")),
+			rule.AcceptedCheckResult("Accept pod.", rule.NewTarget("name", "pod2", "namespace", "kube-system", "kind", "Pod")),
+			rule.AcceptedCheckResult("Accepted user pod in system namespaces.", rule.NewTarget("name", "pod3", "namespace", "kube-public", "kind", "Pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))

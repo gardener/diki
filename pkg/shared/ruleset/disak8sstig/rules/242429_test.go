@@ -27,7 +27,7 @@ var _ = Describe("#242429", func() {
 		namespace  = "foo"
 
 		ksDeployment *appsv1.Deployment
-		target       = rule.NewTarget("name", "kube-apiserver", "namespace", namespace, "kind", "deployment")
+		target       = rule.NewTarget("name", "kube-apiserver", "namespace", namespace, "kind", "Deployment")
 	)
 
 	BeforeEach(func() {
