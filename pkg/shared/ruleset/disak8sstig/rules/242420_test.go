@@ -91,9 +91,9 @@ var _ = Describe("#242420", func() {
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Option authentication.x509.clientCAFile is empty.", rule.NewTarget("kind", "node", "name", "node1")),
-			rule.PassedCheckResult("Option authentication.x509.clientCAFile set.", rule.NewTarget("kind", "node", "name", "node2")),
-			rule.FailedCheckResult("Option authentication.x509.clientCAFile not set.", rule.NewTarget("kind", "node", "name", "node3")),
+			rule.FailedCheckResult("Option authentication.x509.clientCAFile is empty.", rule.NewTarget("kind", "Node", "name", "node1")),
+			rule.PassedCheckResult("Option authentication.x509.clientCAFile set.", rule.NewTarget("kind", "Node", "name", "node2")),
+			rule.FailedCheckResult("Option authentication.x509.clientCAFile not set.", rule.NewTarget("kind", "Node", "name", "node3")),
 		}
 
 		Expect(err).To(BeNil())

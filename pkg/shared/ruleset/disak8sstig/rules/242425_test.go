@@ -98,10 +98,10 @@ var _ = Describe("#242425", func() {
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("Option tlsCertFile set.", rule.NewTarget("kind", "node", "name", "node1")),
-			rule.FailedCheckResult("Option tlsCertFile is empty.", rule.NewTarget("kind", "node", "name", "node2")),
-			rule.PassedCheckResult("Kubelet rotates server certificates automatically itself.", rule.NewTarget("kind", "node", "name", "node3")),
-			rule.FailedCheckResult("Option tlsCertFile not set.", rule.NewTarget("kind", "node", "name", "node4")),
+			rule.PassedCheckResult("Option tlsCertFile set.", rule.NewTarget("kind", "Node", "name", "node1")),
+			rule.FailedCheckResult("Option tlsCertFile is empty.", rule.NewTarget("kind", "Node", "name", "node2")),
+			rule.PassedCheckResult("Kubelet rotates server certificates automatically itself.", rule.NewTarget("kind", "Node", "name", "node3")),
+			rule.FailedCheckResult("Option tlsCertFile not set.", rule.NewTarget("kind", "Node", "name", "node4")),
 		}
 
 		Expect(err).To(BeNil())

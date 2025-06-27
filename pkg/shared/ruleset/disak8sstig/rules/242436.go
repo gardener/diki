@@ -55,7 +55,7 @@ func (r *Rule242436) Run(ctx context.Context) (rule.RuleResult, error) {
 	if r.ContainerName != "" {
 		containerName = r.ContainerName
 	}
-	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
+	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "Deployment")
 
 	disableAdmissionPluginsSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, disableAdmissionPlugins)
 	if err != nil {
