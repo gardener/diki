@@ -197,8 +197,9 @@ providers:                   # contains information about known providers
     # - ruleID: "2002"
     #   args:
     #     acceptedStorageClasses:
-    #     - matchLabels:
-    #         foo: bar
+    #     - labelSelector:
+    #         matchLabels:
+    #           foo: bar
     #       justification: "justification"
     # - ruleID: "2003"
     #   args:
