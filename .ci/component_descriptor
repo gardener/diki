@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
-#
-# SPDX-License-Identifier: Apache-2.0
-
-"$(dirname $0)"/hack/component_descriptor "$(dirname $0)"/..

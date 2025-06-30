@@ -1,0 +1,11 @@
+name: Prepare-Release
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@v5
+    - name: prepare-release
+      shell: bash
+      run: |
+        set -eu
+        make generate
