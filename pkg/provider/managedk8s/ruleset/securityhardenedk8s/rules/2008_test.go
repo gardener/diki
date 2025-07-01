@@ -10,6 +10,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -321,6 +322,62 @@ var _ = Describe("#2008", func() {
 			{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume2")},
 			{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume3")},
 		}))
+	})
+
+	It("should return a ReplicaSet target when the pod has an owner reference", func() {
+		r := &rules.Rule2008{Client: client, Options: &rules.Options2008{}}
+
+		replicaSets := []appsv1.ReplicaSet{
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "foo",
+					Namespace: "foo",
+					UID:       "1",
+					OwnerReferences: []metav1.OwnerReference{
+						{
+							APIVersion: "apps/v1",
+							Kind:       "Deployment",
+							Name:       "foo",
+						},
+					},
+				},
+			},
+		}
+		Expect(client.Create(ctx, &replicaSets[0])).To(Succeed())
+
+		pod1 := plainPod.DeepCopy()
+		pod1.Name = "foo-bar"
+		pod1.Namespace = "foo"
+		pod1.OwnerReferences = []metav1.OwnerReference{
+			{
+				UID:        "1",
+				APIVersion: "apps/v1",
+				Kind:       "Deployment",
+				Name:       "foo",
+			},
+		}
+		Expect(client.Create(ctx, pod1)).To(Succeed())
+
+		pod2 := plainPod.DeepCopy()
+		pod2.Name = "foo-baz"
+		pod2.Namespace = "foo"
+		pod2.OwnerReferences = []metav1.OwnerReference{
+			{
+				UID:        "1",
+				APIVersion: "apps/v1",
+				Kind:       "Deployment",
+				Name:       "foo",
+			},
+		}
+		Expect(client.Create(ctx, pod2)).To(Succeed())
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(ruleResult.CheckResults).To(Equal(
+			[]rule.CheckResult{
+				{Status: rule.Passed, Message: "Pod does not use volumes of type hostPath.", Target: rule.NewTarget("kind", "Deployment", "name", "foo", "namespace", "foo")},
+			},
+		))
 	})
 
 	Describe("#ValidateOptions2008", func() {
