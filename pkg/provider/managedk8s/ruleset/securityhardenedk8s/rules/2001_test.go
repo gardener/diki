@@ -148,26 +148,24 @@ var _ = Describe("#2001", func() {
 		),
 	)
 
-	It("should return a ReplicaSet target when the pod has an owner reference", func() {
+	It("should return correct targets when pods have owner references", func() {
 		r := &rules.Rule2001{Client: client, Options: &rules.Options2001{}}
 
-		replicaSets := []appsv1.ReplicaSet{
-			{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "foo",
-					Namespace: "foo",
-					UID:       "1",
-					OwnerReferences: []metav1.OwnerReference{
-						{
-							APIVersion: "apps/v1",
-							Kind:       "Deployment",
-							Name:       "foo",
-						},
+		replicaSet := &appsv1.ReplicaSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "foo",
+				Namespace: "foo",
+				UID:       "1",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: "apps/v1",
+						Kind:       "Deployment",
+						Name:       "foo",
 					},
 				},
 			},
 		}
-		Expect(client.Create(ctx, &replicaSets[0])).To(Succeed())
+		Expect(client.Create(ctx, replicaSet)).To(Succeed())
 
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "foo-bar"
@@ -176,8 +174,14 @@ var _ = Describe("#2001", func() {
 			{
 				UID:        "1",
 				APIVersion: "apps/v1",
-				Kind:       "Deployment",
-				Name:       "foo",
+				Kind:       "ReplicaSet",
+				Name:       "ReplicaSet",
+			},
+			{
+				UID:        "2",
+				APIVersion: "apps/v1",
+				Kind:       "DaemonSet",
+				Name:       "bar",
 			},
 		}
 		Expect(client.Create(ctx, pod1)).To(Succeed())
@@ -189,8 +193,8 @@ var _ = Describe("#2001", func() {
 			{
 				UID:        "1",
 				APIVersion: "apps/v1",
-				Kind:       "Deployment",
-				Name:       "foo",
+				Kind:       "ReplicaSet",
+				Name:       "ReplicaSet",
 			},
 		}
 		Expect(client.Create(ctx, pod2)).To(Succeed())
