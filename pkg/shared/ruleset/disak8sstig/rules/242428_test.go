@@ -46,8 +46,8 @@ client-transport-security:
 
 		etcdMainStatefulSet   *appsv1.StatefulSet
 		etcdEventsStatefulSet *appsv1.StatefulSet
-		targetEtcdMain        = rule.NewTarget("name", "etcd-main", "namespace", namespace, "kind", "statefulSet")
-		targetEtcdEvents      = rule.NewTarget("name", "etcd-events", "namespace", namespace, "kind", "statefulSet")
+		targetEtcdMain        = rule.NewTarget("name", "etcd-main", "namespace", namespace, "kind", "StatefulSet")
+		targetEtcdEvents      = rule.NewTarget("name", "etcd-events", "namespace", namespace, "kind", "StatefulSet")
 	)
 
 	BeforeEach(func() {

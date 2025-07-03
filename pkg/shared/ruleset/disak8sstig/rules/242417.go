@@ -10,7 +10,6 @@ import (
 	"slices"
 	"strings"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -97,16 +96,22 @@ func (r *Rule242417) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	for _, namespace := range systemNamespaces {
-		podsPartialMetadata, err := kubeutils.GetObjectsMetadata(ctx, r.Client, corev1.SchemeGroupVersion.WithKind("PodList"), namespace, selector, 300)
+		pods, err := kubeutils.GetPods(ctx, r.Client, namespace, selector, 300)
 		if err != nil {
-			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", namespace, "kind", "podList"))), nil
+			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", namespace, "kind", "PodList"))), nil
+		}
+		filteredPods := kubeutils.FilterPodsByOwnerRef(pods)
+
+		replicaSets, err := kubeutils.GetReplicaSets(ctx, r.Client, namespace, labels.NewSelector(), 300)
+		if err != nil {
+			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", namespace, "kind", "ReplicaSetList"))), nil
 		}
 
-		for _, podPartialMetadata := range podsPartialMetadata {
-			target := rule.NewTarget("name", podPartialMetadata.Name, "namespace", podPartialMetadata.Namespace, "kind", "pod")
+		for _, pod := range filteredPods {
+			target := kubeutils.TargetWithPod(rule.NewTarget(), pod, replicaSets)
 
 			acceptedPodIdx := slices.IndexFunc(acceptedPods, func(acceptedPod AcceptedPods242417) bool {
-				return utils.MatchLabels(podPartialMetadata.Labels, acceptedPod.PodMatchLabels) &&
+				return utils.MatchLabels(pod.Labels, acceptedPod.PodMatchLabels) &&
 					utils.MatchLabels(allNamespaces[namespace].Labels, acceptedPod.NamespaceMatchLabels)
 			})
 
