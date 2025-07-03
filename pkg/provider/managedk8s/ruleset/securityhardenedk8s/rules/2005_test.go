@@ -242,12 +242,6 @@ var _ = Describe("#2005", func() {
 				Kind:       "ReplicaSet",
 				Name:       "ReplicaSet",
 			},
-			{
-				UID:        "2",
-				APIVersion: "apps/v1",
-				Kind:       "DaemonSet",
-				Name:       "bar",
-			},
 		}
 		Expect(client.Create(ctx, pod1)).To(Succeed())
 
@@ -256,10 +250,10 @@ var _ = Describe("#2005", func() {
 		pod2.Namespace = "foo"
 		pod2.OwnerReferences = []metav1.OwnerReference{
 			{
-				UID:        "1",
+				UID:        "2",
 				APIVersion: "apps/v1",
-				Kind:       "ReplicaSet",
-				Name:       "ReplicaSet",
+				Kind:       "DaemonSet",
+				Name:       "bar",
 			},
 		}
 		Expect(client.Create(ctx, pod2)).To(Succeed())
@@ -270,6 +264,8 @@ var _ = Describe("#2005", func() {
 			[]rule.CheckResult{
 				{Status: rule.Failed, Message: "Image has not allowed prefix.", Target: rule.NewTarget("kind", "Deployment", "name", "foo", "namespace", "foo", "container", "foo", "imageRef", "eu.gcr.io/image@sha256:"+digest)},
 				{Status: rule.Failed, Message: "Image has not allowed prefix.", Target: rule.NewTarget("kind", "Deployment", "name", "foo", "namespace", "foo", "container", "bar", "imageRef", "eu.gcr.io/foo/image@sha256:"+digest)},
+				{Status: rule.Failed, Message: "Image has not allowed prefix.", Target: rule.NewTarget("kind", "DaemonSet", "name", "bar", "namespace", "foo", "container", "foo", "imageRef", "eu.gcr.io/image@sha256:"+digest)},
+				{Status: rule.Failed, Message: "Image has not allowed prefix.", Target: rule.NewTarget("kind", "DaemonSet", "name", "bar", "namespace", "foo", "container", "bar", "imageRef", "eu.gcr.io/foo/image@sha256:"+digest)},
 			},
 		))
 	})

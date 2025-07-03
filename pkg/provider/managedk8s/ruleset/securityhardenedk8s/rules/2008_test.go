@@ -338,12 +338,6 @@ var _ = Describe("#2008", func() {
 						Kind:       "Deployment",
 						Name:       "foo",
 					},
-					{
-						UID:        "2",
-						APIVersion: "apps/v1",
-						Kind:       "DaemonSet",
-						Name:       "bar",
-					},
 				},
 			},
 		}
@@ -367,10 +361,10 @@ var _ = Describe("#2008", func() {
 		pod2.Namespace = "foo"
 		pod2.OwnerReferences = []metav1.OwnerReference{
 			{
-				UID:        "1",
+				UID:        "2",
 				APIVersion: "apps/v1",
-				Kind:       "ReplicaSet",
-				Name:       "ReplicaSet",
+				Kind:       "DaemonSet",
+				Name:       "bar",
 			},
 		}
 		Expect(client.Create(ctx, pod2)).To(Succeed())
@@ -380,6 +374,7 @@ var _ = Describe("#2008", func() {
 		Expect(ruleResult.CheckResults).To(Equal(
 			[]rule.CheckResult{
 				{Status: rule.Passed, Message: "Pod does not use volumes of type hostPath.", Target: rule.NewTarget("kind", "Deployment", "name", "foo", "namespace", "foo")},
+				{Status: rule.Passed, Message: "Pod does not use volumes of type hostPath.", Target: rule.NewTarget("kind", "DaemonSet", "name", "bar", "namespace", "foo")},
 			},
 		))
 	})

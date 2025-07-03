@@ -465,12 +465,6 @@ var _ = Describe("#2003", func() {
 		pod2.Namespace = "foo"
 		pod2.OwnerReferences = []metav1.OwnerReference{
 			{
-				UID:        "1",
-				APIVersion: "apps/v1",
-				Kind:       "ReplicaSet",
-				Name:       "ReplicaSet",
-			},
-			{
 				UID:        "2",
 				APIVersion: "apps/v1",
 				Kind:       "DaemonSet",
@@ -484,6 +478,7 @@ var _ = Describe("#2003", func() {
 		Expect(ruleResult.CheckResults).To(Equal(
 			[]rule.CheckResult{
 				{Status: rule.Passed, Message: "Pod uses only allowed volume types.", Target: rule.NewTarget("kind", "Deployment", "name", "foo", "namespace", "foo")},
+				{Status: rule.Passed, Message: "Pod uses only allowed volume types.", Target: rule.NewTarget("kind", "DaemonSet", "name", "bar", "namespace", "foo")},
 			},
 		))
 	})
