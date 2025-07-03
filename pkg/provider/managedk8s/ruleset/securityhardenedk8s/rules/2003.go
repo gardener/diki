@@ -76,23 +76,30 @@ func (r *Rule2003) Severity() rule.SeverityLevel {
 func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 	pods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "PodList"))), nil
 	}
 
 	if len(pods) == 0 {
 		return rule.Result(r, rule.PassedCheckResult("The cluster does not have any Pods.", rule.NewTarget())), nil
 	}
 
+	filteredPods := kubeutils.FilterPodsByOwnerRef(pods)
+
 	allNamespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "namespaceList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NamespaceList"))), nil
+	}
+
+	replicaSets, err := kubeutils.GetReplicaSets(ctx, r.Client, "", labels.NewSelector(), 300)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ReplicaSetList"))), nil
 	}
 
 	var checkResults []rule.CheckResult
-	for _, pod := range pods {
+	for _, pod := range filteredPods {
 		var (
 			uses                    = false
-			podTarget               = rule.NewTarget("kind", "pod", "name", pod.Name, "namespace", pod.Namespace)
+			podTarget               = kubeutils.TargetWithPod(rule.NewTarget(), pod, replicaSets)
 			dikiPrivilegedPodLabels = map[string]string{
 				kubepod.LabelComplianceRoleKey: kubepod.LabelComplianceRolePrivPod,
 			}

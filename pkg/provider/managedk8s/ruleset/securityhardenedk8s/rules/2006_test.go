@@ -89,12 +89,12 @@ var _ = Describe("#2006", func() {
 			{
 				Status:  rule.Passed,
 				Message: "Role does not use \"*\" in policy rule resources.",
-				Target:  rule.NewTarget("kind", "role", "name", "foo", "namespace", "foo"),
+				Target:  rule.NewTarget("kind", "Role", "name", "foo", "namespace", "foo"),
 			},
 			{
 				Status:  rule.Passed,
 				Message: "Role does not use \"*\" in policy rule resources.",
-				Target:  rule.NewTarget("kind", "clusterRole", "name", "bar"),
+				Target:  rule.NewTarget("kind", "ClusterRole", "name", "bar"),
 			},
 		}
 
@@ -123,12 +123,12 @@ var _ = Describe("#2006", func() {
 			{
 				Status:  rule.Failed,
 				Message: "Role uses \"*\" in policy rule resources.",
-				Target:  rule.NewTarget("kind", "role", "name", "foo", "namespace", "foo"),
+				Target:  rule.NewTarget("kind", "Role", "name", "foo", "namespace", "foo"),
 			},
 			{
 				Status:  rule.Failed,
 				Message: "Role uses \"*\" in policy rule resources.",
-				Target:  rule.NewTarget("kind", "clusterRole", "name", "bar"),
+				Target:  rule.NewTarget("kind", "ClusterRole", "name", "bar"),
 			},
 		}
 
@@ -157,12 +157,12 @@ var _ = Describe("#2006", func() {
 			{
 				Status:  rule.Passed,
 				Message: "Role does not use \"*\" in policy rule resources.",
-				Target:  rule.NewTarget("kind", "role", "name", "foo", "namespace", "foo"),
+				Target:  rule.NewTarget("kind", "Role", "name", "foo", "namespace", "foo"),
 			},
 			{
 				Status:  rule.Failed,
 				Message: "Role uses \"*\" in policy rule resources.",
-				Target:  rule.NewTarget("kind", "clusterRole", "name", "bar"),
+				Target:  rule.NewTarget("kind", "ClusterRole", "name", "bar"),
 			},
 		}
 
@@ -216,12 +216,12 @@ var _ = Describe("#2006", func() {
 			{
 				Status:  rule.Accepted,
 				Message: "Role is accepted to use \"*\" in policy rule resources.",
-				Target:  rule.NewTarget("kind", "role", "name", "foo", "namespace", "foo"),
+				Target:  rule.NewTarget("kind", "Role", "name", "foo", "namespace", "foo"),
 			},
 			{
 				Status:  rule.Accepted,
 				Message: "justification foo",
-				Target:  rule.NewTarget("kind", "clusterRole", "name", "bar"),
+				Target:  rule.NewTarget("kind", "ClusterRole", "name", "bar"),
 			},
 		}
 

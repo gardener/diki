@@ -9,6 +9,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
@@ -96,39 +97,39 @@ var _ = Describe("#2001", func() {
 
 		Entry("should fail when securityContext is not set",
 			nil, validSecurityContext, rules.Options2001{}, false,
-			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "pod", "name", "foo", "namespace", "foo", "container", "test")},
+			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "foo", "container", "test")},
 		),
 		Entry("should fail when allowPrivilegeEscalation is not set",
 			&corev1.SecurityContext{}, validSecurityContext, rules.Options2001{}, false,
-			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "pod", "name", "foo", "namespace", "foo", "container", "test")},
+			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "foo", "container", "test")},
 		),
 		Entry("should fail when allowPrivilegeEscalation is set to true",
 			&corev1.SecurityContext{AllowPrivilegeEscalation: ptr.To(true)}, validSecurityContext, rules.Options2001{}, false,
-			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "pod", "name", "foo", "namespace", "foo", "container", "test")},
+			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "foo", "container", "test")},
 		),
 		Entry("should fail when allowPrivilegeEscalation is set to true in initContainer",
 			validSecurityContext, &corev1.SecurityContext{AllowPrivilegeEscalation: ptr.To(true)}, rules.Options2001{}, false,
-			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "pod", "name", "foo", "namespace", "foo", "container", "initTest")},
+			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "foo", "container", "initTest")},
 		),
 		Entry("should pass when allowPrivilegeEscalation is set to false",
 			validSecurityContext, validSecurityContext, rules.Options2001{}, false,
-			rule.CheckResult{Status: rule.Passed, Message: "Pod does not escalate privileges.", Target: rule.NewTarget("kind", "pod", "name", "foo", "namespace", "foo")},
+			rule.CheckResult{Status: rule.Passed, Message: "Pod does not escalate privileges.", Target: rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "foo")},
 		),
 		Entry("should skip when pod is diki privileged pod",
 			validSecurityContext, validSecurityContext, rules.Options2001{}, true,
-			rule.CheckResult{Status: rule.Skipped, Message: "Diki privileged pod requires privileged mode.", Target: rule.NewTarget("kind", "pod", "name", "foo", "namespace", "foo")},
+			rule.CheckResult{Status: rule.Skipped, Message: "Diki privileged pod requires privileged mode.", Target: rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "foo")},
 		),
 		Entry("should fail when privileged is set to true",
 			&corev1.SecurityContext{AllowPrivilegeEscalation: ptr.To(false), Privileged: ptr.To(true)}, validSecurityContext, rules.Options2001{}, false,
-			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "pod", "name", "foo", "namespace", "foo", "container", "test")},
+			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "foo", "container", "test")},
 		),
 		Entry("should fail when SYS_ADMIN capability is added",
 			&corev1.SecurityContext{AllowPrivilegeEscalation: ptr.To(false), Capabilities: &corev1.Capabilities{Add: []corev1.Capability{"SYS_ADMIN"}}}, validSecurityContext, rules.Options2001{}, false,
-			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "pod", "name", "foo", "namespace", "foo", "container", "test")},
+			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "foo", "container", "test")},
 		),
 		Entry("should fail when CAP_SYS_ADMIN capability is added",
 			&corev1.SecurityContext{AllowPrivilegeEscalation: ptr.To(false), Capabilities: &corev1.Capabilities{Add: []corev1.Capability{"CAP_SYS_ADMIN"}}}, validSecurityContext, rules.Options2001{}, false,
-			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "pod", "name", "foo", "namespace", "foo", "container", "test")},
+			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "foo", "container", "test")},
 		),
 		Entry("should pass when options are set",
 			&corev1.SecurityContext{AllowPrivilegeEscalation: ptr.To(true)}, validSecurityContext,
@@ -143,7 +144,64 @@ var _ = Describe("#2001", func() {
 					},
 				},
 			}, false,
-			rule.CheckResult{Status: rule.Accepted, Message: "foo justify", Target: rule.NewTarget("kind", "pod", "name", "foo", "namespace", "foo", "container", "test")},
+			rule.CheckResult{Status: rule.Accepted, Message: "foo justify", Target: rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "foo", "container", "test")},
 		),
 	)
+
+	It("should return correct targets when pods have owner references", func() {
+		r := &rules.Rule2001{Client: client, Options: &rules.Options2001{}}
+
+		replicaSet := &appsv1.ReplicaSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "foo",
+				Namespace: "foo",
+				UID:       "1",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: "apps/v1",
+						Kind:       "Deployment",
+						Name:       "foo",
+					},
+				},
+			},
+		}
+		Expect(client.Create(ctx, replicaSet)).To(Succeed())
+
+		pod1 := plainPod.DeepCopy()
+		pod1.Name = "foo-bar"
+		pod1.Namespace = "foo"
+		pod1.OwnerReferences = []metav1.OwnerReference{
+			{
+				UID:        "1",
+				APIVersion: "apps/v1",
+				Kind:       "ReplicaSet",
+				Name:       "ReplicaSet",
+			},
+		}
+		Expect(client.Create(ctx, pod1)).To(Succeed())
+
+		pod2 := plainPod.DeepCopy()
+		pod2.Name = "foo-baz"
+		pod2.Namespace = "foo"
+		pod2.OwnerReferences = []metav1.OwnerReference{
+			{
+				UID:        "2",
+				APIVersion: "apps/v1",
+				Kind:       "DaemonSet",
+				Name:       "bar",
+			},
+		}
+		Expect(client.Create(ctx, pod2)).To(Succeed())
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(ruleResult.CheckResults).To(Equal(
+			[]rule.CheckResult{
+				{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "Deployment", "name", "foo", "namespace", "foo", "container", "test")},
+				{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "Deployment", "name", "foo", "namespace", "foo", "container", "initTest")},
+				{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "DaemonSet", "name", "bar", "namespace", "foo", "container", "test")},
+				{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "DaemonSet", "name", "bar", "namespace", "foo", "container", "initTest")},
+			},
+		))
+	})
 })

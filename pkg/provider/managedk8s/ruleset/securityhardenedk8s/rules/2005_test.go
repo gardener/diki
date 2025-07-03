@@ -10,6 +10,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -92,8 +93,8 @@ var _ = Describe("#2005", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Image has not allowed prefix.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "foo", "imageRef", "eu.gcr.io/image@sha256:"+digest)),
-			rule.FailedCheckResult("Image has not allowed prefix.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "bar", "imageRef", "eu.gcr.io/foo/image@sha256:"+digest)),
+			rule.FailedCheckResult("Image has not allowed prefix.", rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "bar", "container", "foo", "imageRef", "eu.gcr.io/image@sha256:"+digest)),
+			rule.FailedCheckResult("Image has not allowed prefix.", rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "bar", "container", "bar", "imageRef", "eu.gcr.io/foo/image@sha256:"+digest)),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -126,8 +127,8 @@ var _ = Describe("#2005", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("Image has allowed prefix.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "foo", "imageRef", "eu.gcr.io/image@sha256:"+digest)),
-			rule.PassedCheckResult("Image has allowed prefix.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "bar", "imageRef", "eu.gcr.io/foo/image@sha256:"+digest)),
+			rule.PassedCheckResult("Image has allowed prefix.", rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "bar", "container", "foo", "imageRef", "eu.gcr.io/image@sha256:"+digest)),
+			rule.PassedCheckResult("Image has allowed prefix.", rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "bar", "container", "bar", "imageRef", "eu.gcr.io/foo/image@sha256:"+digest)),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -145,8 +146,8 @@ var _ = Describe("#2005", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "foo")),
-			rule.PassedCheckResult("Image has allowed prefix.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "bar", "imageRef", "eu.gcr.io/foo/image@sha256:"+digest)),
+			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "bar", "container", "foo")),
+			rule.PassedCheckResult("Image has allowed prefix.", rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "bar", "container", "bar", "imageRef", "eu.gcr.io/foo/image@sha256:"+digest)),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -174,9 +175,9 @@ var _ = Describe("#2005", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("Image has allowed prefix.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "foo", "imageRef", "eu.gcr.io/image@sha256:"+digest)),
-			rule.PassedCheckResult("Image has allowed prefix.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "bar", "imageRef", "eu.gcr.io/foo/image@sha256:"+digest)),
-			rule.FailedCheckResult("Image has not allowed prefix.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "initFoo", "imageRef", "eu.gcr/image@sha256:"+digest)),
+			rule.PassedCheckResult("Image has allowed prefix.", rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "bar", "container", "foo", "imageRef", "eu.gcr.io/image@sha256:"+digest)),
+			rule.PassedCheckResult("Image has allowed prefix.", rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "bar", "container", "bar", "imageRef", "eu.gcr.io/foo/image@sha256:"+digest)),
+			rule.FailedCheckResult("Image has not allowed prefix.", rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "bar", "container", "initFoo", "imageRef", "eu.gcr/image@sha256:"+digest)),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -204,12 +205,69 @@ var _ = Describe("#2005", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("Image has allowed prefix.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "foo", "imageRef", "eu.gcr.io/image@sha256:"+digest)),
-			rule.PassedCheckResult("Image has allowed prefix.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "bar", "imageRef", "eu.gcr.io/foo/image@sha256:"+digest)),
-			rule.FailedCheckResult("Image has not allowed prefix.", rule.NewTarget("kind", "pod", "name", "foo", "namespace", "bar", "container", "initFoo", "imageRef", "eu.gcr/image@sha256:"+digest)),
+			rule.PassedCheckResult("Image has allowed prefix.", rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "bar", "container", "foo", "imageRef", "eu.gcr.io/image@sha256:"+digest)),
+			rule.PassedCheckResult("Image has allowed prefix.", rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "bar", "container", "bar", "imageRef", "eu.gcr.io/foo/image@sha256:"+digest)),
+			rule.FailedCheckResult("Image has not allowed prefix.", rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "bar", "container", "initFoo", "imageRef", "eu.gcr/image@sha256:"+digest)),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+	})
+
+	It("should return correct targets when pods have owner references", func() {
+		r := &rules.Rule2005{Client: client, Options: &rules.Options2005{}}
+
+		replicaSet := &appsv1.ReplicaSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "foo",
+				Namespace: "foo",
+				UID:       "1",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: "apps/v1",
+						Kind:       "Deployment",
+						Name:       "foo",
+					},
+				},
+			},
+		}
+		Expect(client.Create(ctx, replicaSet)).To(Succeed())
+
+		pod1 := pod.DeepCopy()
+		pod1.Name = "foo-bar"
+		pod1.Namespace = "foo"
+		pod1.OwnerReferences = []metav1.OwnerReference{
+			{
+				UID:        "1",
+				APIVersion: "apps/v1",
+				Kind:       "ReplicaSet",
+				Name:       "ReplicaSet",
+			},
+		}
+		Expect(client.Create(ctx, pod1)).To(Succeed())
+
+		pod2 := pod.DeepCopy()
+		pod2.Name = "foo-baz"
+		pod2.Namespace = "foo"
+		pod2.OwnerReferences = []metav1.OwnerReference{
+			{
+				UID:        "2",
+				APIVersion: "apps/v1",
+				Kind:       "DaemonSet",
+				Name:       "bar",
+			},
+		}
+		Expect(client.Create(ctx, pod2)).To(Succeed())
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(ruleResult.CheckResults).To(Equal(
+			[]rule.CheckResult{
+				{Status: rule.Failed, Message: "Image has not allowed prefix.", Target: rule.NewTarget("kind", "Deployment", "name", "foo", "namespace", "foo", "container", "foo", "imageRef", "eu.gcr.io/image@sha256:"+digest)},
+				{Status: rule.Failed, Message: "Image has not allowed prefix.", Target: rule.NewTarget("kind", "Deployment", "name", "foo", "namespace", "foo", "container", "bar", "imageRef", "eu.gcr.io/foo/image@sha256:"+digest)},
+				{Status: rule.Failed, Message: "Image has not allowed prefix.", Target: rule.NewTarget("kind", "DaemonSet", "name", "bar", "namespace", "foo", "container", "foo", "imageRef", "eu.gcr.io/image@sha256:"+digest)},
+				{Status: rule.Failed, Message: "Image has not allowed prefix.", Target: rule.NewTarget("kind", "DaemonSet", "name", "bar", "namespace", "foo", "container", "bar", "imageRef", "eu.gcr.io/foo/image@sha256:"+digest)},
+			},
+		))
 	})
 
 	Describe("#ValidateOptions2005", func() {

@@ -9,6 +9,7 @@ import (
 	"context"
 
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -61,7 +62,7 @@ func (r *Rule2002) Severity() rule.SeverityLevel {
 func (r *Rule2002) Run(ctx context.Context) (rule.RuleResult, error) {
 	storageClasses, err := kubeutils.GetStorageClasses(ctx, r.Client, labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "storageClassList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "StorageClassList"))), nil
 	}
 
 	if len(storageClasses) == 0 {
@@ -71,7 +72,7 @@ func (r *Rule2002) Run(ctx context.Context) (rule.RuleResult, error) {
 	var checkResults []rule.CheckResult
 
 	for _, storageClass := range storageClasses {
-		target := rule.NewTarget("kind", "storageClass", "name", storageClass.Name)
+		target := kubeutils.TargetWithK8sObject(rule.NewTarget(), v1.TypeMeta{Kind: "StorageClass"}, storageClass.ObjectMeta)
 
 		if storageClass.ReclaimPolicy != nil && *storageClass.ReclaimPolicy == corev1.PersistentVolumeReclaimDelete {
 			checkResults = append(checkResults, rule.PassedCheckResult("StorageClass has a Delete ReclaimPolicy set.", target))
