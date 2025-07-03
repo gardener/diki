@@ -73,7 +73,7 @@ kind: PodSecurityConfiguration`
 		configMapData     = "configMapData"
 		deployment        *appsv1.Deployment
 		configMap         *corev1.ConfigMap
-		deployTarget      = rule.NewTarget("name", "kube-apiserver", "namespace", namespace, "kind", "deployment")
+		deployTarget      = rule.NewTarget("name", "kube-apiserver", "namespace", namespace, "kind", "Deployment")
 		podSecurityTarget = rule.NewTarget("kind", "PodSecurityConfiguration")
 		genericTarget     = rule.NewTarget()
 	)

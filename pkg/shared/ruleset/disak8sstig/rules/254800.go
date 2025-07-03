@@ -76,7 +76,7 @@ func (r *Rule254800) Run(ctx context.Context) (rule.RuleResult, error) {
 	if r.ContainerName != "" {
 		containerName = r.ContainerName
 	}
-	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
+	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "Deployment")
 
 	admissionControlConfigFileOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, "admission-control-config-file")
 	if err != nil {

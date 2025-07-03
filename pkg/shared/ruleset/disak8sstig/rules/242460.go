@@ -64,14 +64,14 @@ func (r *Rule242460) Run(ctx context.Context) (rule.RuleResult, error) {
 	target := rule.NewTarget()
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("namespace", r.Namespace, "kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "PodList"))), nil
 	}
 	var checkPods []corev1.Pod
 
 	for _, deploymentName := range deploymentNames {
 		pods, err := kubeutils.GetDeploymentPods(ctx, r.Client, deploymentName, r.Namespace)
 		if err != nil {
-			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target.With("kind", "podList")))
+			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), target))
 			continue
 		}
 
@@ -89,7 +89,7 @@ func (r *Rule242460) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "nodeList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "NodeList"))), nil
 	}
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
 	groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(checkPods, nodesAllocatablePods, target)
@@ -100,9 +100,16 @@ func (r *Rule242460) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 	image.WithOptionalTag(version.Get().GitVersion)
 
+	replicaSets, err := kubeutils.GetReplicaSets(ctx, r.Client, r.Namespace, labels.NewSelector(), 300)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", r.Namespace, "kind", "ReplicaSetList"))), nil
+	}
+
 	for nodeName, pods := range groupedPods {
-		podName := fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
-		execPodTarget := target.With("name", podName, "namespace", "kube-system", "kind", "pod")
+		var (
+			podName       = fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
+			execPodTarget = target.With("name", podName, "namespace", "kube-system", "kind", "Pod")
+		)
 
 		defer func() {
 			timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Second*30)
@@ -156,7 +163,7 @@ func (r *Rule242460) Run(ctx context.Context) (rule.RuleResult, error) {
 			for containerName, fileStats := range mappedFileStats {
 				for _, fileStat := range fileStats {
 
-					containerTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)
+					containerTarget := kubeutils.TargetWithPod(rule.NewTarget("containerName", containerName), pod, replicaSets)
 					exceedFilePermissions, err := intutils.ExceedFilePermissions(fileStat.Permissions, expectedFilePermissionsMax)
 					if err != nil {
 						checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), containerTarget))
