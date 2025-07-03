@@ -143,17 +143,35 @@ var _ = Describe("#242460", func() {
 		kubeAPIServerRS := plainReplicaSet.DeepCopy()
 		kubeAPIServerRS.Name = "kube-apiserver"
 		kubeAPIServerRS.UID = "12"
-		kubeAPIServerRS.OwnerReferences[0].UID = "11"
+		kubeAPIServerRS.OwnerReferences = []metav1.OwnerReference{
+			{
+				Kind: "Deployment",
+				Name: "kube-apiserver",
+				UID:  "11",
+			},
+		}
 
 		kubeControllerManagerRS := plainReplicaSet.DeepCopy()
 		kubeControllerManagerRS.Name = "kube-controller-manager"
 		kubeControllerManagerRS.UID = "22"
-		kubeControllerManagerRS.OwnerReferences[0].UID = "21"
+		kubeControllerManagerRS.OwnerReferences = []metav1.OwnerReference{
+			{
+				Kind: "Deployment",
+				Name: "kube-controller-manager",
+				UID:  "21",
+			},
+		}
 
 		kubeSchedulerRS := plainReplicaSet.DeepCopy()
 		kubeSchedulerRS.Name = "kube-scheduler"
 		kubeSchedulerRS.UID = "32"
-		kubeSchedulerRS.OwnerReferences[0].UID = "31"
+		kubeSchedulerRS.OwnerReferences = []metav1.OwnerReference{
+			{
+				Kind: "Deployment",
+				Name: "kube-scheduler",
+				UID:  "31",
+			},
+		}
 
 		plainPod = &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
@@ -208,17 +226,35 @@ var _ = Describe("#242460", func() {
 		kubeAPIServerPod = plainPod.DeepCopy()
 		kubeAPIServerPod.Name = "kube-apiserver"
 		kubeAPIServerPod.Labels["name"] = "kube-apiserver"
-		kubeAPIServerPod.OwnerReferences[0].UID = "12"
+		kubeAPIServerPod.OwnerReferences = []metav1.OwnerReference{
+			{
+				Kind:       "ReplicaSet",
+				UID:        "12",
+				APIVersion: "apps/v1",
+			},
+		}
 
 		kubeControllerManagerPod = plainPod.DeepCopy()
 		kubeControllerManagerPod.Name = "kube-controller-manager"
 		kubeControllerManagerPod.Labels["name"] = "kube-controller-manager"
-		kubeControllerManagerPod.OwnerReferences[0].UID = "22"
+		kubeControllerManagerPod.OwnerReferences = []metav1.OwnerReference{
+			{
+				Kind:       "ReplicaSet",
+				UID:        "22",
+				APIVersion: "apps/v1",
+			},
+		}
 
 		kubeSchedulerPod = plainPod.DeepCopy()
 		kubeSchedulerPod.Name = "kube-scheduler"
 		kubeSchedulerPod.Labels["name"] = "kube-scheduler"
-		kubeSchedulerPod.OwnerReferences[0].UID = "32"
+		kubeSchedulerPod.OwnerReferences = []metav1.OwnerReference{
+			{
+				Kind:       "ReplicaSet",
+				UID:        "32",
+				APIVersion: "apps/v1",
+			},
+		}
 
 		fooPod = plainPod.DeepCopy()
 		fooPod.Name = "foo"
@@ -303,40 +339,40 @@ var _ = Describe("#242460", func() {
 			[][]string{{mounts, compliantStats, mounts, compliantStats2, emptyMounts}},
 			[][]error{{nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.crt, permissions: 644")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.key, permissions: 400")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-controller-manager", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.key, permissions: 600")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-controller-manager", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file4.txt, permissions: 600")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "Deployment", "details", "fileName: /destination/file1.crt, permissions: 644")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "Deployment", "details", "fileName: /destination/bar/file2.key, permissions: 400")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-controller-manager", "namespace", "foo", "containerName", "test", "kind", "Deployment", "details", "fileName: /destination/file3.key, permissions: 600")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-controller-manager", "namespace", "foo", "containerName", "test", "kind", "Deployment", "details", "fileName: /destination/bar/file4.txt, permissions: 600")),
 			}),
 		Entry("should return failed checkResults when files have too wide permissions",
 			[][]string{{mounts, nonCompliantStats, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 664, expectedPermissionsMax: 644")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.key, permissions: 700, expectedPermissionsMax: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "Deployment", "details", "fileName: /destination/file1.key, permissions: 664, expectedPermissionsMax: 644")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "Deployment", "details", "fileName: /destination/bar/file2.key, permissions: 700, expectedPermissionsMax: 644")),
 			}),
 		Entry("should correctly return errored checkResults when commands error",
 			[][]string{{mounts, mounts, compliantStats2, emptyMounts}},
 			[][]error{{errors.New("foo"), nil, errors.New("bar"), nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242460-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242460-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
+				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242460-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
+				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242460-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
 			}),
 		Entry("should check files when GetMountedFilesStats errors",
 			[][]string{{mountsMulty, compliantStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, errors.New("bar"), nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242460-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.crt, permissions: 644")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.key, permissions: 400")),
+				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242460-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "Deployment", "details", "fileName: /destination/file1.crt, permissions: 644")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "Deployment", "details", "fileName: /destination/bar/file2.key, permissions: 400")),
 			}),
 		Entry("should correctly return all checkResults when commands error",
 			[][]string{{mounts, mounts, compliantStats2, emptyMounts}},
 			[][]error{{errors.New("foo"), nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242460-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-controller-manager", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.key, permissions: 600")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-controller-manager", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file4.txt, permissions: 600")),
+				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242460-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-controller-manager", "namespace", "foo", "containerName", "test", "kind", "Deployment", "details", "fileName: /destination/file3.key, permissions: 600")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-controller-manager", "namespace", "foo", "containerName", "test", "kind", "Deployment", "details", "fileName: /destination/bar/file4.txt, permissions: 600")),
 			}),
 	)
 })

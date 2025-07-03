@@ -105,11 +105,11 @@ var _ = Describe("#245541", func() {
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("Option streamingConnectionIdleTimeout set to allowed value.", rule.NewTarget("kind", "node", "name", "node1")),
-			rule.PassedCheckResult("Option streamingConnectionIdleTimeout set to allowed, but not recommended value (should be 5m).", rule.NewTarget("kind", "node", "name", "node2", "details", "streamingConnectionIdleTimeout set to 4h0m0s.")),
-			rule.FailedCheckResult("Option streamingConnectionIdleTimeout set to not allowed value.", rule.NewTarget("kind", "node", "name", "node3", "details", "streamingConnectionIdleTimeout set to 30s.")),
-			rule.FailedCheckResult("Option streamingConnectionIdleTimeout set to not allowed value.", rule.NewTarget("kind", "node", "name", "node4", "details", "streamingConnectionIdleTimeout set to 4h0m1s.")),
-			rule.FailedCheckResult("Option streamingConnectionIdleTimeout not set.", rule.NewTarget("kind", "node", "name", "node5")),
+			rule.PassedCheckResult("Option streamingConnectionIdleTimeout set to allowed value.", rule.NewTarget("kind", "Node", "name", "node1")),
+			rule.PassedCheckResult("Option streamingConnectionIdleTimeout set to allowed, but not recommended value (should be 5m).", rule.NewTarget("kind", "Node", "name", "node2", "details", "streamingConnectionIdleTimeout set to 4h0m0s.")),
+			rule.FailedCheckResult("Option streamingConnectionIdleTimeout set to not allowed value.", rule.NewTarget("kind", "Node", "name", "node3", "details", "streamingConnectionIdleTimeout set to 30s.")),
+			rule.FailedCheckResult("Option streamingConnectionIdleTimeout set to not allowed value.", rule.NewTarget("kind", "Node", "name", "node4", "details", "streamingConnectionIdleTimeout set to 4h0m1s.")),
+			rule.FailedCheckResult("Option streamingConnectionIdleTimeout not set.", rule.NewTarget("kind", "Node", "name", "node5")),
 		}
 
 		Expect(err).To(BeNil())

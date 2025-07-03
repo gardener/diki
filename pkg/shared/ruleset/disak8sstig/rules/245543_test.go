@@ -41,7 +41,7 @@ bar,for,bar,`
 		namespace  = "foo"
 
 		kapiDeployment *appsv1.Deployment
-		target         = rule.NewTarget("kind", "deployment", "name", "kube-apiserver", "namespace", namespace)
+		target         = rule.NewTarget("kind", "Deployment", "name", "kube-apiserver", "namespace", namespace)
 		options        = rules.Options245543{
 			AcceptedTokens: []struct {
 				User   string `yaml:"user"`

@@ -87,7 +87,7 @@ func (r *Rule245543) Run(ctx context.Context) (rule.RuleResult, error) {
 		},
 	}
 
-	target := rule.NewTarget("kind", "deployment", "name", deploymentName, "namespace", r.Namespace)
+	target := kubeutils.TargetWithK8sObject(rule.NewTarget(), metav1.TypeMeta{Kind: "Deployment"}, deployment.ObjectMeta)
 
 	if err := r.Client.Get(ctx, client.ObjectKeyFromObject(deployment), deployment); err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil

@@ -50,7 +50,7 @@ func (r *Rule245542) Run(ctx context.Context) (rule.RuleResult, error) {
 	if r.ContainerName != "" {
 		containerName = r.ContainerName
 	}
-	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
+	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "Deployment")
 
 	basicAuthFileOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, optName)
 	if err != nil {
