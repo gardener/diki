@@ -99,7 +99,6 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 			oldSelectorCheckResults []rule.CheckResult
 		)
 
-		filteredSeedPods := kubeutils.FilterPodsByOwnerRef(allSeedPods)
 		seedReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 		if err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "ReplicaSetList")))
@@ -108,7 +107,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 
 		for _, podSelector := range podOldSelectors {
 			var pods []corev1.Pod
-			for _, p := range filteredSeedPods {
+			for _, p := range allSeedPods {
 				if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.ControlPlaneNamespace {
 					pods = append(pods, p)
 				}
@@ -125,7 +124,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 		if len(checkPods) == 0 {
 			for _, podSelector := range podSelectors {
 				var pods []corev1.Pod
-				for _, p := range filteredSeedPods {
+				for _, p := range allSeedPods {
 					if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.ControlPlaneNamespace {
 						pods = append(pods, p)
 					}
@@ -149,14 +148,12 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 				continue
 			}
 
-			filteredPods := kubeutils.FilterPodsByOwnerRef(pods)
-
 			if len(pods) == 0 {
 				checkResults = append(checkResults, rule.ErroredCheckResult("pods not found for deployment", seedTarget.With("name", deploymentName, "kind", "Deployment", "namespace", r.ControlPlaneNamespace)))
 				continue
 			}
 
-			checkPods = append(checkPods, filteredPods...)
+			checkPods = append(checkPods, pods...)
 		}
 
 		if len(checkPods) > 0 {
@@ -164,7 +161,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "NodeList")))
 			} else {
-				nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(filteredSeedPods, nodes)
+				nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allSeedPods, nodes)
 				groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(checkPods, nodesAllocatablePods, seedTarget)
 				checkResults = append(checkResults, checks...)
 
@@ -178,7 +175,6 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	shootTarget := rule.NewTarget("cluster", "shoot")
 	allShootPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
-	filteredShootPods := kubeutils.FilterPodsByOwnerRef(allShootPods)
 
 	if err != nil {
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "PodList")))
@@ -196,7 +192,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "NodeList")))
 		return rule.Result(r, checkResults...), nil
 	}
-	shootNodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(filteredShootPods, shootNodes)
+	shootNodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allShootPods, shootNodes)
 
 	// kubelet check
 	selectedShootNodes, checks := kubeutils.SelectNodes(shootNodes, shootNodesAllocatablePods, nodeLabels)
@@ -218,7 +214,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	var pods []corev1.Pod
-	for _, p := range filteredShootPods {
+	for _, p := range allShootPods {
 		if kubeProxySelector.Matches(labels.Set(p.Labels)) {
 			pods = append(pods, p)
 		}

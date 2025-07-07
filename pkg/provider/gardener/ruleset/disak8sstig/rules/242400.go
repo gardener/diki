@@ -155,8 +155,6 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 			checkResults = append(checkResults, rule.ErroredCheckResult("kube-proxy pods not found", shootTarget.With("selector", kubeProxySelector.String())))
 		} else {
 
-			filteredPods := kubeutils.FilterPodsByOwnerRef(pods)
-
 			replicaSets, err := kubeutils.GetReplicaSets(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 			if err != nil {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "ReplicaSetList")))
@@ -167,8 +165,8 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 				}
 				image.WithOptionalTag(version.Get().GitVersion)
 
-				nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(filteredPods, nodes)
-				groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(filteredPods, nodesAllocatablePods, shootTarget)
+				nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(pods, nodes)
+				groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, shootTarget)
 				checkResults = append(checkResults, checks...)
 				for nodeName, pods := range groupedPods {
 					checkResults = append(checkResults,

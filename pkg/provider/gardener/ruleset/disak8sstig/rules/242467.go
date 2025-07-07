@@ -94,8 +94,6 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 			oldSelectorCheckResults []rule.CheckResult
 		)
 
-		filteredSeedPods := kubeutils.FilterPodsByOwnerRef(allSeedPods)
-
 		seedReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ControlPlaneClient, "", labels.NewSelector(), 300)
 		if err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "ReplicaSetList")))
@@ -103,7 +101,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 
 		for _, podSelector := range podOldSelectors {
 			var pods []corev1.Pod
-			for _, p := range filteredSeedPods {
+			for _, p := range allSeedPods {
 				if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.ControlPlaneNamespace {
 					pods = append(pods, p)
 				}
@@ -176,8 +174,6 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, checkResults...), nil
 	}
 
-	filteredShootPods := kubeutils.FilterPodsByOwnerRef(allShootPods)
-
 	shootReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "ReplicaSetList")))
@@ -189,7 +185,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "NodeList")))
 		return rule.Result(r, checkResults...), nil
 	}
-	shootNodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(filteredShootPods, shootNodes)
+	shootNodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allShootPods, shootNodes)
 
 	// kubelet check
 	selectedShootNodes, checks := kubeutils.SelectNodes(shootNodes, shootNodesAllocatablePods, nodeLabels)

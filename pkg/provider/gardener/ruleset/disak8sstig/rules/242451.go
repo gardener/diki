@@ -124,11 +124,9 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "ReplicaSetList")))
 		}
 
-		filteredSeedPods := kubeutils.FilterPodsByOwnerRef(allSeedPods)
-
 		for _, podSelector := range podOldSelectors {
 			var pods []corev1.Pod
-			for _, p := range filteredSeedPods {
+			for _, p := range allSeedPods {
 				if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.ControlPlaneNamespace {
 					pods = append(pods, p)
 				}
@@ -145,7 +143,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 		if len(checkPods) == 0 {
 			for _, podSelector := range podSelectors {
 				var pods []corev1.Pod
-				for _, p := range filteredSeedPods {
+				for _, p := range allSeedPods {
 					if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.ControlPlaneNamespace {
 						pods = append(pods, p)
 					}
@@ -169,14 +167,12 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 				continue
 			}
 
-			filteredPods := kubeutils.FilterPodsByOwnerRef(pods)
-
 			if len(pods) == 0 {
 				checkResults = append(checkResults, rule.ErroredCheckResult("pods not found for deployment", seedTarget.With("name", deploymentName, "kind", "Deployment", "namespace", r.ControlPlaneNamespace)))
 				continue
 			}
 
-			checkPods = append(checkPods, filteredPods...)
+			checkPods = append(checkPods, pods...)
 		}
 
 		if len(checkPods) > 0 {
@@ -202,8 +198,6 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "PodList")))
 		return rule.Result(r, checkResults...), nil
 	}
-
-	filteredShootPods := kubeutils.FilterPodsByOwnerRef(allShootPods)
 
 	shootReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
@@ -237,7 +231,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	var pods []corev1.Pod
-	for _, p := range filteredShootPods {
+	for _, p := range allShootPods {
 		if kubeProxySelector.Matches(labels.Set(p.Labels)) {
 			pods = append(pods, p)
 		}
