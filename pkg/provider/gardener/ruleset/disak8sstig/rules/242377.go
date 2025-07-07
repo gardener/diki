@@ -43,7 +43,7 @@ func (r *Rule242377) Run(ctx context.Context) (rule.RuleResult, error) {
 		ksName = "kube-scheduler"
 		option = "tls-min-version"
 	)
-	target := rule.NewTarget("cluster", "seed", "name", ksName, "namespace", r.Namespace, "kind", "deployment")
+	target := rule.NewTarget("cluster", "seed", "name", ksName, "namespace", r.Namespace, "kind", "Deployment")
 
 	optSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, ksName, ksName, r.Namespace, option)
 	if err != nil {
