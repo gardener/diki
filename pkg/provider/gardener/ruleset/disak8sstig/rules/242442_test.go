@@ -9,6 +9,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -239,7 +240,7 @@ var _ = Describe("#242442", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.ErroredCheckResult("containerStatus not found for container", rule.NewTarget("cluster", "seed", "container", "foo", "name", "seed-pod", "kind", "pod")),
+			rule.ErroredCheckResult("containerStatus not found for container", rule.NewTarget("cluster", "seed", "namespace", "foo", "container", "foo", "name", "seed-pod", "kind", "Pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
@@ -255,11 +256,67 @@ var _ = Describe("#242442", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("cluster", "seed", "container", "foo", "name", "seed-pod", "kind", "pod")),
-			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("cluster", "seed", "container", "foobar", "name", "seed-pod", "kind", "pod")),
-			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("cluster", "seed", "container", "initFoo", "name", "seed-pod", "kind", "pod")),
+			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("cluster", "seed", "namespace", "foo", "container", "foo", "name", "seed-pod", "kind", "Pod")),
+			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("cluster", "seed", "namespace", "foo", "container", "foobar", "name", "seed-pod", "kind", "Pod")),
+			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("cluster", "seed", "namespace", "foo", "container", "initFoo", "name", "seed-pod", "kind", "Pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+	})
+
+	It("should return correct targets when the pods have owner references", func() {
+		r := &rules.Rule242442{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace}
+
+		seedReplicaSet := &appsv1.ReplicaSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "seedReplicaSet",
+				UID:       "1",
+				Namespace: namespace,
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: "apps/v1",
+						Kind:       "Deployment",
+						Name:       "seedFoo",
+					},
+				},
+			},
+		}
+		Expect(fakeSeedClient.Create(ctx, seedReplicaSet)).To(Succeed())
+
+		seedPod1 := seedPod.DeepCopy()
+		seedPod1.Name = "seed-pod-1"
+		seedPod1.OwnerReferences = []metav1.OwnerReference{
+			{
+				UID:        "1",
+				APIVersion: "apps/v1",
+				Kind:       "ReplicaSet",
+				Name:       "ReplicaSet",
+			},
+		}
+		seedPod1.Status.ContainerStatuses[1].ImageID = ""
+		seedPod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image2@sha256:" + digest2
+		Expect(fakeSeedClient.Create(ctx, seedPod1)).To(Succeed())
+
+		seedPod2 := seedPod.DeepCopy()
+		seedPod2.Name = "seed-pod-2"
+		seedPod2.OwnerReferences = []metav1.OwnerReference{
+			{
+				UID:        "1",
+				APIVersion: "apps/v1",
+				Kind:       "ReplicaSet",
+				Name:       "ReplicaSet",
+			},
+		}
+		seedPod2.Status.ContainerStatuses[1].ImageID = ""
+		seedPod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image2@sha256:" + digest2
+		Expect(fakeSeedClient.Create(ctx, seedPod2)).To(Succeed())
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
+			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("cluster", "seed", "namespace", "foo", "container", "foo", "name", "seedFoo", "kind", "Deployment")),
+			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("cluster", "seed", "namespace", "foo", "container", "bar", "name", "seedFoo", "kind", "Deployment")),
+			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("cluster", "seed", "namespace", "foo", "container", "initFoo", "name", "seedFoo", "kind", "Deployment")),
+		}))
 	})
 })

@@ -10,6 +10,7 @@ import (
 
 	imageref "github.com/distribution/reference"
 	resourcesv1alpha1 "github.com/gardener/gardener/pkg/apis/resources/v1alpha1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
@@ -46,10 +47,17 @@ func (r *Rule242442) Severity() rule.SeverityLevel {
 func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 	seedPods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "seed", "namespace", r.ControlPlaneNamespace, "kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "seed", "namespace", r.ControlPlaneNamespace, "kind", "PodList"))), nil
 	}
 
-	checkResults := r.checkImages("seed", seedPods)
+	filteredSeedPods := kubeutils.FilterPodsByOwnerRef(seedPods)
+
+	seedReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, labels.NewSelector(), 300)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "seed", "namespace", r.ControlPlaneNamespace, "kind", "ReplicaSetList"))), nil
+	}
+
+	checkResults := r.checkImages("seed", filteredSeedPods, seedReplicaSets)
 
 	managedByGardenerReq, err := labels.NewRequirement(resourcesv1alpha1.ManagedBy, selection.Equals, []string{"gardener"})
 	if err != nil {
@@ -59,10 +67,17 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 	managedByGardenerSelector := labels.NewSelector().Add(*managedByGardenerReq)
 	shootPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", managedByGardenerSelector, 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "shoot", "kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "shoot", "kind", "PodList"))), nil
 	}
 
-	checkResults = append(checkResults, r.checkImages("shoot", shootPods)...)
+	filteredShootPods := kubeutils.FilterPodsByOwnerRef(shootPods)
+
+	shootReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "shoot", "kind", "ReplicaSetList"))), nil
+	}
+
+	checkResults = append(checkResults, r.checkImages("shoot", filteredShootPods, shootReplicaSets)...)
 
 	if len(checkResults) == 0 {
 		return rule.Result(r, rule.PassedCheckResult("All found images use current versions.", rule.Target{})), nil
@@ -71,7 +86,7 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 	return rule.Result(r, checkResults...), nil
 }
 
-func (r *Rule242442) checkImages(cluster string, pods []corev1.Pod) []rule.CheckResult {
+func (r *Rule242442) checkImages(cluster string, pods []corev1.Pod, replicaSets []appsv1.ReplicaSet) []rule.CheckResult {
 	var (
 		checkResults    []rule.CheckResult
 		podsByNamespace = map[string][]corev1.Pod{}
@@ -94,7 +109,7 @@ func (r *Rule242442) checkImages(cluster string, pods []corev1.Pod) []rule.Check
 					containerStatusIdx = slices.IndexFunc(containerStatuses, func(containerStatus corev1.ContainerStatus) bool {
 						return containerStatus.Name == container.Name
 					})
-					containerTarget = rule.NewTarget("cluster", cluster, "name", pod.Name, "container", container.Name, "kind", "pod")
+					containerTarget = kubeutils.TargetWithPod(rule.NewTarget("cluster", cluster, "container", container.Name), pod, replicaSets)
 				)
 
 				if containerStatusIdx < 0 {
