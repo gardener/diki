@@ -110,7 +110,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	// kubelet check
 	for _, node := range nodes {
-		target := shootTarget.With("kind", "Node", "name", node.Name)
+		target := kubeutils.TargetWithK8sObject(shootTarget, metav1.TypeMeta{Kind: "Node"}, node.ObjectMeta)
 		if !kubeutils.NodeReadyStatus(node) {
 			checkResults = append(checkResults, rule.WarningCheckResult("Node is not in Ready state.", target))
 			continue
