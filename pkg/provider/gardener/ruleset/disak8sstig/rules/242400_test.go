@@ -127,6 +127,7 @@ var _ = Describe("#242400", func() {
 				OwnerReferences: []metav1.OwnerReference{
 					{
 						Kind: "Node",
+						Name: "node",
 					},
 				},
 			},
@@ -250,18 +251,18 @@ var _ = Describe("#242400", func() {
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-apiserver", "namespace", "foo")),
-			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-controller-manager", "namespace", "foo")),
-			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-scheduler", "namespace", "foo")),
-			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("cluster", "shoot", "kind", "pod", "name", "pod1", "namespace", "kube-system")),
-			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("cluster", "shoot", "kind", "pod", "name", "pod2", "namespace", "kube-system")),
-			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "pod", "name", "pod3", "namespace", "kube-system")),
-			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "pod", "name", "pod4", "namespace", "kube-system")),
-			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("cluster", "shoot", "kind", "pod", "name", "pod5", "namespace", "kube-system")),
-			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("cluster", "shoot", "kind", "pod", "name", "pod6", "namespace", "kube-system")),
-			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
-			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node2")),
-			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node3")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("cluster", "seed", "kind", "Deployment", "name", "kube-apiserver", "namespace", "foo")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("cluster", "seed", "kind", "Deployment", "name", "kube-controller-manager", "namespace", "foo")),
+			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("cluster", "seed", "kind", "Deployment", "name", "kube-scheduler", "namespace", "foo")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("cluster", "shoot", "kind", "Node", "name", "node", "namespace", "kube-system")),
+			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("cluster", "shoot", "kind", "Node", "name", "node", "namespace", "kube-system")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "Node", "name", "node", "namespace", "kube-system")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "Node", "name", "node", "namespace", "kube-system")),
+			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("cluster", "shoot", "kind", "Node", "name", "node", "namespace", "kube-system")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("cluster", "shoot", "kind", "Node", "name", "node", "namespace", "kube-system")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "Node", "name", "node1")),
+			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("cluster", "shoot", "kind", "Node", "name", "node2")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("cluster", "shoot", "kind", "Node", "name", "node3")),
 		}
 
 		Expect(err).To(BeNil())
@@ -322,12 +323,12 @@ var _ = Describe("#242400", func() {
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.WarningCheckResult("Option featureGates.AllAlpha set more than once in container command.", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-apiserver", "namespace", "foo")),
-			rule.WarningCheckResult("Option featureGates.AllAlpha set to neither 'true' nor 'false'.", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-controller-manager", "namespace", "foo")),
-			rule.WarningCheckResult("Option featureGates.AllAlpha set more than once in container command.", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-scheduler", "namespace", "foo")),
-			rule.WarningCheckResult("Option featureGates.AllAlpha set more than once in container command.", rule.NewTarget("cluster", "shoot", "kind", "pod", "name", "pod1", "namespace", "kube-system")),
-			rule.ErroredCheckResult("option config set more than once in container command", rule.NewTarget("cluster", "shoot", "kind", "pod", "name", "pod2", "namespace", "kube-system")),
-			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
+			rule.WarningCheckResult("Option featureGates.AllAlpha set more than once in container command.", rule.NewTarget("cluster", "seed", "kind", "Deployment", "name", "kube-apiserver", "namespace", "foo")),
+			rule.WarningCheckResult("Option featureGates.AllAlpha set to neither 'true' nor 'false'.", rule.NewTarget("cluster", "seed", "kind", "Deployment", "name", "kube-controller-manager", "namespace", "foo")),
+			rule.WarningCheckResult("Option featureGates.AllAlpha set more than once in container command.", rule.NewTarget("cluster", "seed", "kind", "Deployment", "name", "kube-scheduler", "namespace", "foo")),
+			rule.WarningCheckResult("Option featureGates.AllAlpha set more than once in container command.", rule.NewTarget("cluster", "shoot", "kind", "Node", "name", "node", "namespace", "kube-system")),
+			rule.ErroredCheckResult("option config set more than once in container command", rule.NewTarget("cluster", "shoot", "kind", "Node", "name", "node", "namespace", "kube-system")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("cluster", "shoot", "kind", "Node", "name", "node1")),
 		}
 
 		Expect(err).To(BeNil())
@@ -356,11 +357,11 @@ var _ = Describe("#242400", func() {
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.ErroredCheckResult("deployments.apps \"kube-apiserver\" not found", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-apiserver", "namespace", "foo")),
-			rule.ErroredCheckResult("deployments.apps \"kube-controller-manager\" not found", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-controller-manager", "namespace", "foo")),
-			rule.ErroredCheckResult("deployments.apps \"kube-scheduler\" not found", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-scheduler", "namespace", "foo")),
+			rule.ErroredCheckResult("deployments.apps \"kube-apiserver\" not found", rule.NewTarget("cluster", "seed", "kind", "Deployment", "name", "kube-apiserver", "namespace", "foo")),
+			rule.ErroredCheckResult("deployments.apps \"kube-controller-manager\" not found", rule.NewTarget("cluster", "seed", "kind", "Deployment", "name", "kube-controller-manager", "namespace", "foo")),
+			rule.ErroredCheckResult("deployments.apps \"kube-scheduler\" not found", rule.NewTarget("cluster", "seed", "kind", "Deployment", "name", "kube-scheduler", "namespace", "foo")),
 			rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget("cluster", "shoot", "selector", "role=proxy")),
-			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("cluster", "shoot", "kind", "Node", "name", "node1")),
 		}
 
 		Expect(err).To(BeNil())
@@ -392,11 +393,11 @@ var _ = Describe("#242400", func() {
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.ErroredCheckResult("deployments.apps \"kube-apiserver\" not found", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-apiserver", "namespace", "foo")),
-			rule.ErroredCheckResult("deployments.apps \"kube-controller-manager\" not found", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-controller-manager", "namespace", "foo")),
-			rule.ErroredCheckResult("deployments.apps \"kube-scheduler\" not found", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-scheduler", "namespace", "foo")),
+			rule.ErroredCheckResult("deployments.apps \"kube-apiserver\" not found", rule.NewTarget("cluster", "seed", "kind", "Deployment", "name", "kube-apiserver", "namespace", "foo")),
+			rule.ErroredCheckResult("deployments.apps \"kube-controller-manager\" not found", rule.NewTarget("cluster", "seed", "kind", "Deployment", "name", "kube-controller-manager", "namespace", "foo")),
+			rule.ErroredCheckResult("deployments.apps \"kube-scheduler\" not found", rule.NewTarget("cluster", "seed", "kind", "Deployment", "name", "kube-scheduler", "namespace", "foo")),
 			rule.AcceptedCheckResult("kube-proxy check is skipped.", rule.NewTarget()),
-			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("cluster", "shoot", "kind", "node", "name", "node1")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("cluster", "shoot", "kind", "Node", "name", "node1")),
 		}
 
 		Expect(err).To(BeNil())
@@ -414,9 +415,9 @@ var _ = Describe("#242400", func() {
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.ErroredCheckResult("deployments.apps \"kube-apiserver\" not found", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-apiserver", "namespace", "foo")),
-			rule.ErroredCheckResult("deployments.apps \"kube-controller-manager\" not found", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-controller-manager", "namespace", "foo")),
-			rule.ErroredCheckResult("deployments.apps \"kube-scheduler\" not found", rule.NewTarget("cluster", "seed", "kind", "deployment", "name", "kube-scheduler", "namespace", "foo")),
+			rule.ErroredCheckResult("deployments.apps \"kube-apiserver\" not found", rule.NewTarget("cluster", "seed", "kind", "Deployment", "name", "kube-apiserver", "namespace", "foo")),
+			rule.ErroredCheckResult("deployments.apps \"kube-controller-manager\" not found", rule.NewTarget("cluster", "seed", "kind", "Deployment", "name", "kube-controller-manager", "namespace", "foo")),
+			rule.ErroredCheckResult("deployments.apps \"kube-scheduler\" not found", rule.NewTarget("cluster", "seed", "kind", "Deployment", "name", "kube-scheduler", "namespace", "foo")),
 			rule.WarningCheckResult("No nodes found.", rule.NewTarget("cluster", "shoot")),
 		}
 
