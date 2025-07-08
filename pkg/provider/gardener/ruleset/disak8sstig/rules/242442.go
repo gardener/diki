@@ -45,19 +45,22 @@ func (r *Rule242442) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
+	seedTarget := rule.NewTarget("cluster", "seed")
+	shootTarget := rule.NewTarget("cluster", "shoot")
+
 	seedPods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "seed", "namespace", r.ControlPlaneNamespace, "kind", "PodList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "PodList"))), nil
 	}
 
 	filteredSeedPods := kubeutils.FilterPodsByOwnerRef(seedPods)
 
 	seedReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "seed", "namespace", r.ControlPlaneNamespace, "kind", "ReplicaSetList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "ReplicaSetList"))), nil
 	}
 
-	checkResults := r.checkImages("seed", filteredSeedPods, seedReplicaSets)
+	checkResults := r.checkImages(seedTarget, filteredSeedPods, seedReplicaSets)
 
 	managedByGardenerReq, err := labels.NewRequirement(resourcesv1alpha1.ManagedBy, selection.Equals, []string{"gardener"})
 	if err != nil {
@@ -67,17 +70,17 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 	managedByGardenerSelector := labels.NewSelector().Add(*managedByGardenerReq)
 	shootPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", managedByGardenerSelector, 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "shoot", "kind", "PodList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "PodList"))), nil
 	}
 
 	filteredShootPods := kubeutils.FilterPodsByOwnerRef(shootPods)
 
 	shootReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("cluster", "shoot", "kind", "ReplicaSetList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "ReplicaSetList"))), nil
 	}
 
-	checkResults = append(checkResults, r.checkImages("shoot", filteredShootPods, shootReplicaSets)...)
+	checkResults = append(checkResults, r.checkImages(shootTarget, filteredShootPods, shootReplicaSets)...)
 
 	if len(checkResults) == 0 {
 		return rule.Result(r, rule.PassedCheckResult("All found images use current versions.", rule.Target{})), nil
@@ -86,7 +89,7 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 	return rule.Result(r, checkResults...), nil
 }
 
-func (r *Rule242442) checkImages(cluster string, pods []corev1.Pod, replicaSets []appsv1.ReplicaSet) []rule.CheckResult {
+func (r *Rule242442) checkImages(clusterTarget rule.Target, pods []corev1.Pod, replicaSets []appsv1.ReplicaSet) []rule.CheckResult {
 	var (
 		checkResults    []rule.CheckResult
 		podsByNamespace = map[string][]corev1.Pod{}
@@ -109,7 +112,7 @@ func (r *Rule242442) checkImages(cluster string, pods []corev1.Pod, replicaSets 
 					containerStatusIdx = slices.IndexFunc(containerStatuses, func(containerStatus corev1.ContainerStatus) bool {
 						return containerStatus.Name == container.Name
 					})
-					containerTarget = kubeutils.TargetWithPod(rule.NewTarget("cluster", cluster, "container", container.Name), pod, replicaSets)
+					containerTarget = kubeutils.TargetWithPod(clusterTarget.With("container", container.Name), pod, replicaSets)
 				)
 
 				if containerStatusIdx < 0 {
@@ -132,7 +135,7 @@ func (r *Rule242442) checkImages(cluster string, pods []corev1.Pod, replicaSets 
 
 				if ref, ok := images[imageBase]; ok && ref != imageRef {
 					if _, reported := reportedImages[imageBase]; !reported {
-						target := rule.NewTarget("cluster", cluster, "image", imageBase, "namespace", namespace)
+						target := clusterTarget.With("image", imageBase, "namespace", namespace)
 						reportedImages[imageBase] = struct{}{}
 						checkResults = append(checkResults, rule.FailedCheckResult("Image is used with more than one versions.", target))
 					}

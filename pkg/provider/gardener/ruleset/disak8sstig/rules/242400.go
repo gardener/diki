@@ -145,6 +145,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "PodList")))
 		return rule.Result(r, checkResults...), nil
 	}
+
 	var pods []corev1.Pod
 	for _, p := range allPods {
 		if kubeProxySelector.Matches(labels.Set(p.Labels)) {
