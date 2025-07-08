@@ -142,12 +142,24 @@ var _ = Describe("#242467", func() {
 		kubeAPIServerRS := plainReplicaSet.DeepCopy()
 		kubeAPIServerRS.Name = "virtual-garden-kube-apiserver"
 		kubeAPIServerRS.UID = "12"
-		kubeAPIServerRS.OwnerReferences[0].UID = "11"
+		kubeAPIServerRS.OwnerReferences[0] =
+			metav1.OwnerReference{
+				UID:        "11",
+				Kind:       "Deployment",
+				APIVersion: "apps/v1",
+				Name:       "virtual-garden-kube-apiserver",
+			}
 
 		kubeControllerManagerRS := plainReplicaSet.DeepCopy()
 		kubeControllerManagerRS.Name = "virtual-garden-kube-controller-manager"
 		kubeControllerManagerRS.UID = "22"
-		kubeControllerManagerRS.OwnerReferences[0].UID = "21"
+		kubeControllerManagerRS.OwnerReferences[0] =
+			metav1.OwnerReference{
+				UID:        "21",
+				Kind:       "Deployment",
+				APIVersion: "apps/v1",
+				Name:       "virtual-garden-kube-controller-manager",
+			}
 
 		plainPod = &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
@@ -203,21 +215,45 @@ var _ = Describe("#242467", func() {
 		etcdMainPod.Name = "1-pod"
 		etcdMainPod.Labels["name"] = "etcd"
 		etcdMainPod.Labels["app.kubernetes.io/part-of"] = "virtual-garden-etcd-main"
-		etcdMainPod.OwnerReferences[0].UID = "1"
+		etcdMainPod.OwnerReferences[0] =
+			metav1.OwnerReference{
+				UID:        "1",
+				Kind:       "DaemonSet",
+				APIVersion: "apps/v1",
+				Name:       "etcd-main",
+			}
 
 		etcdEventsPod = plainPod.DeepCopy()
 		etcdEventsPod.Name = "etcd-events"
 		etcdEventsPod.Labels["name"] = "etcd"
 		etcdEventsPod.Labels["app.kubernetes.io/part-of"] = "virtual-garden-etcd-events"
-		etcdEventsPod.OwnerReferences[0].UID = "2"
+		etcdEventsPod.OwnerReferences[0] =
+			metav1.OwnerReference{
+				UID:        "2",
+				Kind:       "DaemonSet",
+				APIVersion: "apps/v1",
+				Name:       "etcd-events",
+			}
 
 		kubeAPIServerPod = plainPod.DeepCopy()
 		kubeAPIServerPod.Name = "virtual-garden-kube-apiserver"
-		kubeAPIServerPod.OwnerReferences[0].UID = "12"
+		kubeAPIServerPod.OwnerReferences[0] =
+			metav1.OwnerReference{
+				UID:        "12",
+				Kind:       "Deployment",
+				APIVersion: "apps/v1",
+				Name:       "virtual-garden-kube-apiserver",
+			}
 
 		kubeControllerManagerPod = plainPod.DeepCopy()
 		kubeControllerManagerPod.Name = "virtual-garden-kube-controller-manager"
-		kubeControllerManagerPod.OwnerReferences[0].UID = "22"
+		kubeControllerManagerPod.OwnerReferences[0] =
+			metav1.OwnerReference{
+				UID:        "22",
+				Kind:       "Deployment",
+				APIVersion: "apps/v1",
+				Name:       "virtual-garden-kube-controller-manager",
+			}
 
 		fooPod = plainPod.DeepCopy()
 		fooPod.Name = "foo"
@@ -296,17 +332,17 @@ var _ = Describe("#242467", func() {
 			[][]string{{mounts, compliantStats, mounts, compliantStats2, emptyMounts, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 640")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.key, permissions: 600")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file1.key, permissions: 640")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file3.key, permissions: 600")),
 			}),
 		Entry("should return correct errored checkResults when old ETCD pods are partially found", false,
 			[][]string{{mounts, compliantStats, emptyMounts, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("pods not found", rule.NewTarget("selector", "instance=virtual-garden-etcd-events", "namespace", "foo")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 640")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file1.key, permissions: 640")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
 			}))
 
 	DescribeTable("Run cases",
@@ -335,38 +371,38 @@ var _ = Describe("#242467", func() {
 			[][]string{{mounts, compliantStats, mounts, compliantStats2, emptyMounts, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 640")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.key, permissions: 600")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file1.key, permissions: 640")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file3.key, permissions: 600")),
 			}),
 		Entry("should return failed checkResults when files have too wide permissions",
 			[][]string{{mounts, nonCompliantStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 644, expectedPermissionsMax: 640")),
-				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 700, expectedPermissionsMax: 640")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file1.key, permissions: 644, expectedPermissionsMax: 640")),
+				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/bar/file2.pem, permissions: 700, expectedPermissionsMax: 640")),
 			}),
 		Entry("should correctly return errored checkResults when commands error",
 			[][]string{{mounts, mounts, compliantStats2, emptyMounts, emptyMounts, emptyMounts}},
 			[][]error{{errors.New("foo"), nil, errors.New("bar"), nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242467-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242467-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
+				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242467-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
+				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242467-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
 			}),
 		Entry("should check files when GetMountedFilesStats errors",
 			[][]string{{mountsMulty, compliantStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, errors.New("bar"), nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242467-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, permissions: 640")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
+				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242467-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file1.key, permissions: 640")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
 			}),
 		Entry("should correctly return all checkResults when commands error",
 			[][]string{{mounts, mounts, compliantStats2, emptyMounts, emptyMounts, emptyMounts}},
 			[][]error{{errors.New("foo"), nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242467-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.key, permissions: 600")),
+				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242467-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
+				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file3.key, permissions: 600")),
 			}),
 	)
 })
