@@ -48,7 +48,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 	)
 
 	for deploymentName, containerName := range deployments {
-		target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
+		target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "Deployment")
 
 		fgOptions, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, "feature-gates")
 		if err != nil {
