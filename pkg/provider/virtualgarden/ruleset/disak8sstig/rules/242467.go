@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -70,7 +71,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "PodList"))), nil
 	}
 
 	var (
@@ -119,7 +120,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	for _, deploymentName := range deploymentNames {
 		pods, err := kubeutils.GetDeploymentPods(ctx, r.Client, deploymentName, r.Namespace)
 		if err != nil {
-			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList")))
+			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "PodList")))
 			continue
 		}
 
@@ -135,9 +136,14 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, checkResults...), nil
 	}
 
+	replicaSets, err := kubeutils.GetReplicaSets(ctx, r.Client, "", labels.NewSelector(), 300)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ReplicaSetList"))), nil
+	}
+
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "nodeList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NodeList"))), nil
 	}
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
 	groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(checkPods, nodesAllocatablePods, rule.NewTarget())
@@ -150,7 +156,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	for nodeName, pods := range groupedPods {
 		checkResults = append(checkResults,
-			r.checkPods(ctx, pods, nodeName, image.String(), expectedFilePermissionsMax)...)
+			r.checkPods(ctx, pods, replicaSets, nodeName, image.String(), expectedFilePermissionsMax)...)
 	}
 
 	return rule.Result(r, checkResults...), nil
@@ -159,13 +165,14 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 func (r *Rule242467) checkPods(
 	ctx context.Context,
 	pods []corev1.Pod,
+	replicaSets []appsv1.ReplicaSet,
 	nodeName, imageName string,
 	expectedFilePermissionsMax string,
 ) []rule.CheckResult {
 	var (
 		checkResults     []rule.CheckResult
 		podName          = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
-		execPodTarget    = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
+		execPodTarget    = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "Pod")
 		additionalLabels = map[string]string{pod.LabelInstanceID: r.InstanceID}
 	)
 
@@ -217,7 +224,7 @@ func (r *Rule242467) checkPods(
 					continue
 				}
 
-				containerTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)
+				containerTarget := kubeutils.TargetWithPod(rule.NewTarget("containerName", containerName), pod, replicaSets)
 				exceedFilePermissions, err := intutils.ExceedFilePermissions(fileStat.Permissions, expectedFilePermissionsMax)
 				if err != nil {
 					checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), containerTarget))

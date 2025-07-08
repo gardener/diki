@@ -27,7 +27,7 @@ var _ = Describe("#242400", func() {
 		plainDeployment *appsv1.Deployment
 		kapiDeployment  *appsv1.Deployment
 		kcmDeployment   *appsv1.Deployment
-		target          = rule.NewTarget("namespace", namespace, "kind", "deployment")
+		target          = rule.NewTarget("namespace", namespace, "kind", "Deployment")
 	)
 
 	BeforeEach(func() {
@@ -91,8 +91,8 @@ var _ = Describe("#242400", func() {
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("Option feature-gates.AllAlpha not set.", rule.NewTarget("kind", "deployment", "name", "virtual-garden-kube-apiserver", "namespace", "foo")),
-			rule.PassedCheckResult("Option feature-gates.AllAlpha set to allowed value.", rule.NewTarget("kind", "deployment", "name", "virtual-garden-kube-controller-manager", "namespace", "foo")),
+			rule.PassedCheckResult("Option feature-gates.AllAlpha not set.", rule.NewTarget("kind", "Deployment", "name", "virtual-garden-kube-apiserver", "namespace", "foo")),
+			rule.PassedCheckResult("Option feature-gates.AllAlpha set to allowed value.", rule.NewTarget("kind", "Deployment", "name", "virtual-garden-kube-controller-manager", "namespace", "foo")),
 		}
 
 		Expect(err).To(BeNil())
@@ -117,8 +117,8 @@ var _ = Describe("#242400", func() {
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.WarningCheckResult("Option feature-gates.AllAlpha set more than once in container command.", rule.NewTarget("kind", "deployment", "name", "virtual-garden-kube-apiserver", "namespace", "foo")),
-			rule.WarningCheckResult("Option feature-gates.AllAlpha set to neither 'true' nor 'false'.", rule.NewTarget("kind", "deployment", "name", "virtual-garden-kube-controller-manager", "namespace", "foo")),
+			rule.WarningCheckResult("Option feature-gates.AllAlpha set more than once in container command.", rule.NewTarget("kind", "Deployment", "name", "virtual-garden-kube-apiserver", "namespace", "foo")),
+			rule.WarningCheckResult("Option feature-gates.AllAlpha set to neither 'true' nor 'false'.", rule.NewTarget("kind", "Deployment", "name", "virtual-garden-kube-controller-manager", "namespace", "foo")),
 		}
 
 		Expect(err).To(BeNil())
@@ -146,8 +146,8 @@ var _ = Describe("#242400", func() {
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("Option feature-gates.AllAlpha not set.", rule.NewTarget("kind", "deployment", "name", "virtual-garden-kube-apiserver", "namespace", "foo")),
-			rule.PassedCheckResult("Option feature-gates.AllAlpha set to allowed value.", rule.NewTarget("kind", "deployment", "name", "virtual-garden-kube-controller-manager", "namespace", "foo")),
+			rule.PassedCheckResult("Option feature-gates.AllAlpha not set.", rule.NewTarget("kind", "Deployment", "name", "virtual-garden-kube-apiserver", "namespace", "foo")),
+			rule.PassedCheckResult("Option feature-gates.AllAlpha set to allowed value.", rule.NewTarget("kind", "Deployment", "name", "virtual-garden-kube-controller-manager", "namespace", "foo")),
 		}
 
 		Expect(err).To(BeNil())
