@@ -773,7 +773,7 @@ func SelectPodOfReferenceGroup(pods []corev1.Pod, nodesAllocatablePods map[strin
 	)
 
 	for _, pod := range pods {
-		podTarget := target.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
+		podTarget := target.With("name", pod.Name, "namespace", pod.Namespace, "kind", "Pod")
 
 		if pod.Spec.NodeName != "" {
 			if len(pod.OwnerReferences) == 0 {

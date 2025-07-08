@@ -2336,7 +2336,7 @@ readOnlyPort: 222
 				{
 					Status:  rule.Warning,
 					Message: "Pod not (yet) scheduled",
-					Target:  rule.NewTarget("name", "pod1", "namespace", "", "kind", "pod"),
+					Target:  rule.NewTarget("name", "pod1", "namespace", "", "kind", "Pod"),
 				},
 			}
 
@@ -2395,12 +2395,12 @@ readOnlyPort: 222
 				{
 					Status:  rule.Warning,
 					Message: "Pod cannot be tested since it is scheduled on a fully allocated node.",
-					Target:  rule.NewTarget("name", "pod2", "namespace", "", "kind", "pod", "node", "node2"),
+					Target:  rule.NewTarget("name", "pod2", "namespace", "", "kind", "Pod", "node", "node2"),
 				},
 				{
 					Status:  rule.Warning,
 					Message: "Pod cannot be tested since it is scheduled on a fully allocated node.",
-					Target:  rule.NewTarget("name", "pod3", "namespace", "", "kind", "pod", "node", "node1"),
+					Target:  rule.NewTarget("name", "pod3", "namespace", "", "kind", "Pod", "node", "node1"),
 				},
 				{
 					Status:  rule.Warning,
