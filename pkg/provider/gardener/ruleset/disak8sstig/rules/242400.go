@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -71,7 +72,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	// control plane check
 	for _, deploymentName := range deploymentNames {
-		target := seedTarget.With("name", deploymentName, "namespace", r.ControlPlaneNamespace, "kind", "deployment")
+		target := seedTarget.With("name", deploymentName, "namespace", r.ControlPlaneNamespace, "kind", "Deployment")
 
 		fgOptions, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.ControlPlaneClient, deploymentName, deploymentName, r.ControlPlaneNamespace, "feature-gates")
 		if err != nil {
@@ -98,7 +99,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	nodes, err := kubeutils.GetNodes(ctx, r.ClusterClient, 300)
 	if err != nil {
-		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "nodeList")))
+		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "NodeList")))
 		return rule.Result(r, checkResults...), nil
 	}
 
@@ -109,7 +110,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	// kubelet check
 	for _, node := range nodes {
-		target := shootTarget.With("kind", "node", "name", node.Name)
+		target := kubeutils.TargetWithK8sObject(shootTarget, metav1.TypeMeta{Kind: "Node"}, node.ObjectMeta)
 		if !kubeutils.NodeReadyStatus(node) {
 			checkResults = append(checkResults, rule.WarningCheckResult("Node is not in Ready state.", target))
 			continue
@@ -141,32 +142,41 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	allPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
-		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList")))
-	} else {
-		var pods []corev1.Pod
-		for _, p := range allPods {
-			if kubeProxySelector.Matches(labels.Set(p.Labels)) {
-				pods = append(pods, p)
-			}
-		}
+		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "PodList")))
+		return rule.Result(r, checkResults...), nil
+	}
 
-		if len(pods) == 0 {
-			checkResults = append(checkResults, rule.ErroredCheckResult("kube-proxy pods not found", shootTarget.With("selector", kubeProxySelector.String())))
-		} else {
-			image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
-			if err != nil {
-				return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
-			}
-			image.WithOptionalTag(version.Get().GitVersion)
-
-			nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
-			groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, shootTarget)
-			checkResults = append(checkResults, checks...)
-			for nodeName, pods := range groupedPods {
-				checkResults = append(checkResults,
-					r.checkKubeProxy(ctx, pods, nodeName, image.String())...)
-			}
+	var pods []corev1.Pod
+	for _, p := range allPods {
+		if kubeProxySelector.Matches(labels.Set(p.Labels)) {
+			pods = append(pods, p)
 		}
+	}
+
+	if len(pods) == 0 {
+		checkResults = append(checkResults, rule.ErroredCheckResult("kube-proxy pods not found", shootTarget.With("selector", kubeProxySelector.String())))
+		return rule.Result(r, checkResults...), nil
+	}
+
+	replicaSets, err := kubeutils.GetReplicaSets(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
+	if err != nil {
+		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "ReplicaSetList")))
+		return rule.Result(r, checkResults...), nil
+	}
+
+	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
+	if err != nil {
+		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
+	}
+
+	image.WithOptionalTag(version.Get().GitVersion)
+
+	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(pods, nodes)
+	groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, shootTarget)
+	checkResults = append(checkResults, checks...)
+	for nodeName, pods := range groupedPods {
+		checkResults = append(checkResults,
+			r.checkKubeProxy(ctx, pods, replicaSets, nodeName, image.String())...)
 	}
 
 	return rule.Result(r, checkResults...), nil
@@ -175,6 +185,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 func (r *Rule242400) checkKubeProxy(
 	ctx context.Context,
 	pods []corev1.Pod,
+	replicaSets []appsv1.ReplicaSet,
 	nodeName, imageName string,
 ) []rule.CheckResult {
 	const option = "featureGates.AllAlpha"
@@ -182,7 +193,7 @@ func (r *Rule242400) checkKubeProxy(
 		checkResults           []rule.CheckResult
 		additionalLabels       = map[string]string{pod.LabelInstanceID: r.InstanceID}
 		podName                = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
-		execPodTarget          = rule.NewTarget("cluster", "shoot", "name", podName, "namespace", "kube-system", "kind", "pod")
+		execPodTarget          = rule.NewTarget("cluster", "shoot", "name", podName, "namespace", "kube-system", "kind", "Pod")
 		kubeProxyContainerName = "kube-proxy"
 	)
 
@@ -222,7 +233,7 @@ func (r *Rule242400) checkKubeProxy(
 	})
 
 	for _, pod := range pods {
-		podTarget := rule.NewTarget("cluster", "shoot", "name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
+		podTarget := kubeutils.TargetWithPod(rule.NewTarget("cluster", "shoot"), pod, replicaSets)
 
 		rawKubeProxyCommand, err := kubeutils.GetContainerCommand(pod, kubeProxyContainerName)
 		if err != nil {

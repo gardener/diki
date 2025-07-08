@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -109,7 +110,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 	seedTarget := rule.NewTarget("cluster", "seed")
 	allSeedPods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, "", labels.NewSelector(), 300)
 	if err != nil {
-		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "podList")))
+		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "PodList")))
 	} else {
 		var (
 			checkPods               []corev1.Pod
@@ -117,6 +118,11 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 			podSelectors            = []labels.Selector{etcdMainSelector, etcdEventsSelector}
 			oldSelectorCheckResults []rule.CheckResult
 		)
+
+		seedReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ControlPlaneClient, "", labels.NewSelector(), 300)
+		if err != nil {
+			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "ReplicaSetList")))
+		}
 
 		for _, podSelector := range podOldSelectors {
 			var pods []corev1.Pod
@@ -157,7 +163,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 		for _, deploymentName := range deploymentNames {
 			pods, err := kubeutils.GetDeploymentPods(ctx, r.ControlPlaneClient, deploymentName, r.ControlPlaneNamespace)
 			if err != nil {
-				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "podList")))
+				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "PodList")))
 				continue
 			}
 
@@ -172,7 +178,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 		if len(checkPods) > 0 {
 			nodes, err := kubeutils.GetNodes(ctx, r.ControlPlaneClient, 300)
 			if err != nil {
-				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "nodeList")))
+				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "NodeList")))
 			} else {
 				nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allSeedPods, nodes)
 				groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(checkPods, nodesAllocatablePods, seedTarget)
@@ -180,7 +186,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 
 				for nodeName, pods := range groupedPods {
 					checkResults = append(checkResults,
-						r.checkPods(ctx, r.ControlPlaneClient, r.ControlPlanePodContext, pods, nodeName, image.String(), fileOwnerOptions, seedTarget)...)
+						r.checkPods(ctx, r.ControlPlaneClient, r.ControlPlanePodContext, pods, seedReplicaSets, nodeName, image.String(), fileOwnerOptions, seedTarget)...)
 				}
 			}
 		}
@@ -189,13 +195,18 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 	shootTarget := rule.NewTarget("cluster", "shoot")
 	allShootPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
-		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "podList")))
+		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "PodList")))
 		return rule.Result(r, checkResults...), nil
+	}
+
+	shootReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
+	if err != nil {
+		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "ReplicaSetList")))
 	}
 
 	shootNodes, err := kubeutils.GetNodes(ctx, r.ClusterClient, 300)
 	if err != nil {
-		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "nodeList")))
+		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "NodeList")))
 		return rule.Result(r, checkResults...), nil
 	}
 	shootNodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allShootPods, shootNodes)
@@ -234,7 +245,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 
 		for nodeName, pods := range groupedShootPods {
 			checkResults = append(checkResults,
-				r.checkPods(ctx, r.ClusterClient, r.ClusterPodContext, pods, nodeName, image.String(), fileOwnerOptions, shootTarget)...)
+				r.checkPods(ctx, r.ClusterClient, r.ClusterPodContext, pods, shootReplicaSets, nodeName, image.String(), fileOwnerOptions, shootTarget)...)
 		}
 	}
 
@@ -246,13 +257,14 @@ func (r *Rule242451) checkPods(
 	c client.Client,
 	pc pod.PodContext,
 	pods []corev1.Pod,
+	replicaSets []appsv1.ReplicaSet,
 	nodeName, imageName string,
 	options option.FileOwnerOptions,
 	target rule.Target) []rule.CheckResult {
 	var (
 		checkResults     []rule.CheckResult
 		podName          = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
-		execPodTarget    = target.With("name", podName, "namespace", "kube-system", "kind", "pod")
+		execPodTarget    = target.With("name", podName, "namespace", "kube-system", "kind", "Pod")
 		additionalLabels = map[string]string{pod.LabelInstanceID: r.InstanceID}
 	)
 
@@ -302,7 +314,7 @@ func (r *Rule242451) checkPods(
 			var (
 				delimiter       = "\t"
 				pkiDirs         = map[string]struct{}{}
-				containerTarget = target.With("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)
+				containerTarget = kubeutils.TargetWithPod(target.With("containerName", containerName), pod, replicaSets)
 			)
 
 			// We iterate through a files matching certain suffixes and we check their permissions
@@ -353,8 +365,8 @@ func (r *Rule242451) checkKubelet(
 		selectedFileStats []intutils.FileStats
 		pkiDirs           = map[string]struct{}{}
 		podName           = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
-		nodeTarget        = target.With("name", nodeName, "kind", "node")
-		execPodTarget     = target.With("name", podName, "namespace", "kube-system", "kind", "pod")
+		nodeTarget        = target.With("name", nodeName, "kind", "Node")
+		execPodTarget     = target.With("name", podName, "namespace", "kube-system", "kind", "Pod")
 		additionalLabels  = map[string]string{pod.LabelInstanceID: r.InstanceID}
 	)
 
