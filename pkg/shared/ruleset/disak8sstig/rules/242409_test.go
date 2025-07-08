@@ -27,7 +27,7 @@ var _ = Describe("#242409", func() {
 		namespace  = "foo"
 
 		kcmDeployment *appsv1.Deployment
-		target        = rule.NewTarget("name", "kube-controller-manager", "namespace", namespace, "kind", "deployment")
+		target        = rule.NewTarget("name", "kube-controller-manager", "namespace", namespace, "kind", "Deployment")
 	)
 
 	BeforeEach(func() {
