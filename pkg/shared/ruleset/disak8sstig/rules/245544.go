@@ -55,7 +55,7 @@ func (r *Rule245544) Run(ctx context.Context) (rule.RuleResult, error) {
 		containerName = r.ContainerName
 	}
 	var checkResults []rule.CheckResult
-	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "deployment")
+	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "Deployment")
 
 	kubeletClientCertificateOptionSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, certOptName)
 	if err != nil {
