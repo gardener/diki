@@ -59,7 +59,7 @@ func (r *Rule242415) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	seedReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", r.ControlPlaneNamespace, "kind", "ReplicaSetList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ReplicaSetList"))), nil
 	}
 
 	seedNamespaces, err := kubeutils.GetNamespaces(ctx, r.ControlPlaneClient)
@@ -77,7 +77,7 @@ func (r *Rule242415) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	shootReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", r.ControlPlaneNamespace, "kind", "ReplicaSetList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ReplicaSetList"))), nil
 	}
 
 	shootNamespaces, err := kubeutils.GetNamespaces(ctx, r.ClusterClient)

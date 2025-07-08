@@ -86,11 +86,6 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	allSeedPods, err := kubeutils.GetPods(ctx, r.ControlPlaneClient, "", labels.NewSelector(), 300)
 	if err != nil {
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "PodList")))
-		return rule.Result(r, checkResults...), nil
-	}
-
-	if err != nil {
-		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "PodList")))
 	} else {
 		var (
 			checkPods               []corev1.Pod
@@ -99,9 +94,9 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 			oldSelectorCheckResults []rule.CheckResult
 		)
 
-		seedReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
+		seedReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, labels.NewSelector(), 300)
 		if err != nil {
-			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "ReplicaSetList")))
+			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "ReplicaSetList")))
 			return rule.Result(r, checkResults...), nil
 		}
 
@@ -183,7 +178,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	shootReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
-		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "PodList")))
+		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "ReplicaSetList")))
 		return rule.Result(r, checkResults...), nil
 	}
 

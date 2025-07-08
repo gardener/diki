@@ -143,37 +143,39 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 	allPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "PodList")))
-	} else {
-		var pods []corev1.Pod
-		for _, p := range allPods {
-			if kubeProxySelector.Matches(labels.Set(p.Labels)) {
-				pods = append(pods, p)
-			}
+		return rule.Result(r, checkResults...), nil
+	}
+	var pods []corev1.Pod
+	for _, p := range allPods {
+		if kubeProxySelector.Matches(labels.Set(p.Labels)) {
+			pods = append(pods, p)
 		}
+	}
 
-		if len(pods) == 0 {
-			checkResults = append(checkResults, rule.ErroredCheckResult("kube-proxy pods not found", shootTarget.With("selector", kubeProxySelector.String())))
-		} else {
+	if len(pods) == 0 {
+		checkResults = append(checkResults, rule.ErroredCheckResult("kube-proxy pods not found", shootTarget.With("selector", kubeProxySelector.String())))
+		return rule.Result(r, checkResults...), nil
+	}
 
-			replicaSets, err := kubeutils.GetReplicaSets(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
-			if err != nil {
-				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "ReplicaSetList")))
-			} else {
-				image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
-				if err != nil {
-					return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
-				}
-				image.WithOptionalTag(version.Get().GitVersion)
+	replicaSets, err := kubeutils.GetReplicaSets(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
+	if err != nil {
+		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "ReplicaSetList")))
+		return rule.Result(r, checkResults...), nil
+	}
 
-				nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(pods, nodes)
-				groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, shootTarget)
-				checkResults = append(checkResults, checks...)
-				for nodeName, pods := range groupedPods {
-					checkResults = append(checkResults,
-						r.checkKubeProxy(ctx, pods, replicaSets, nodeName, image.String())...)
-				}
-			}
-		}
+	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
+	if err != nil {
+		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
+	}
+
+	image.WithOptionalTag(version.Get().GitVersion)
+
+	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(pods, nodes)
+	groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, shootTarget)
+	checkResults = append(checkResults, checks...)
+	for nodeName, pods := range groupedPods {
+		checkResults = append(checkResults,
+			r.checkKubeProxy(ctx, pods, replicaSets, nodeName, image.String())...)
 	}
 
 	return rule.Result(r, checkResults...), nil

@@ -94,7 +94,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 			oldSelectorCheckResults []rule.CheckResult
 		)
 
-		seedReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ControlPlaneClient, "", labels.NewSelector(), 300)
+		seedReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, labels.NewSelector(), 300)
 		if err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("namespace", r.ControlPlaneNamespace, "kind", "ReplicaSetList")))
 		}
