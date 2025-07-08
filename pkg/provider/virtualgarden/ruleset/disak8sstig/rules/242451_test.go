@@ -145,12 +145,24 @@ var _ = Describe("#242451", func() {
 		kubeAPIServerRS := plainReplicaSet.DeepCopy()
 		kubeAPIServerRS.Name = "virtual-garden-kube-apiserver"
 		kubeAPIServerRS.UID = "12"
-		kubeAPIServerRS.OwnerReferences[0].UID = "11"
+		kubeAPIServerRS.OwnerReferences[0] =
+			metav1.OwnerReference{
+				UID:        "11",
+				Kind:       "Deployment",
+				APIVersion: "apps/v1",
+				Name:       "virtual-garden-kube-apiserver",
+			}
 
 		kubeControllerManagerRS := plainReplicaSet.DeepCopy()
 		kubeControllerManagerRS.Name = "virtual-garden-kube-controller-manager"
 		kubeControllerManagerRS.UID = "22"
-		kubeControllerManagerRS.OwnerReferences[0].UID = "21"
+		kubeControllerManagerRS.OwnerReferences[0] =
+			metav1.OwnerReference{
+				UID:        "21",
+				Kind:       "Deployment",
+				APIVersion: "apps/v1",
+				Name:       "virtual-garden-kube-controller-manager",
+			}
 
 		plainPod = &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
@@ -206,21 +218,45 @@ var _ = Describe("#242451", func() {
 		etcdMainPod.Name = "1-pod"
 		etcdMainPod.Labels["name"] = "etcd"
 		etcdMainPod.Labels["app.kubernetes.io/part-of"] = "virtual-garden-etcd-main"
-		etcdMainPod.OwnerReferences[0].UID = "1"
+		etcdMainPod.OwnerReferences[0] =
+			metav1.OwnerReference{
+				UID:        "1",
+				Kind:       "DaemonSet",
+				APIVersion: "apps/v1",
+				Name:       "etcd-main",
+			}
 
 		etcdEventsPod = plainPod.DeepCopy()
 		etcdEventsPod.Name = "etcd-events"
 		etcdEventsPod.Labels["name"] = "etcd"
 		etcdEventsPod.Labels["app.kubernetes.io/part-of"] = "virtual-garden-etcd-events"
-		etcdEventsPod.OwnerReferences[0].UID = "2"
+		etcdEventsPod.OwnerReferences[0] =
+			metav1.OwnerReference{
+				UID:        "2",
+				Kind:       "DaemonSet",
+				APIVersion: "apps/v1",
+				Name:       "etcd-events",
+			}
 
 		kubeAPIServerPod = plainPod.DeepCopy()
 		kubeAPIServerPod.Name = "virtual-garden-kube-apiserver"
-		kubeAPIServerPod.OwnerReferences[0].UID = "12"
+		kubeAPIServerPod.OwnerReferences[0] =
+			metav1.OwnerReference{
+				UID:        "12",
+				Kind:       "Deployment",
+				APIVersion: "apps/v1",
+				Name:       "virtual-garden-kube-apiserver",
+			}
 
 		kubeControllerManagerPod = plainPod.DeepCopy()
 		kubeControllerManagerPod.Name = "virtual-garden-kube-controller-manager"
-		kubeControllerManagerPod.OwnerReferences[0].UID = "22"
+		kubeControllerManagerPod.OwnerReferences[0] =
+			metav1.OwnerReference{
+				UID:        "22",
+				Kind:       "Deployment",
+				APIVersion: "apps/v1",
+				Name:       "virtual-garden-kube-controller-manager",
+			}
 
 		fooPod = plainPod.DeepCopy()
 		fooPod.Name = "foo"
@@ -299,19 +335,19 @@ var _ = Describe("#242451", func() {
 			[][]string{{mounts, compliantFileStats, compliantDirStats, mounts, compliantFileStats2, compliantDirStats, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.crt, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file3.crt, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
 			}),
 		Entry("should return correct errored checkResults when old ETCD pods are partially found", nil, false,
 			[][]string{{mounts, compliantFileStats2, compliantDirStats, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("pods not found", rule.NewTarget("selector", "instance=virtual-garden-etcd-main", "namespace", "foo")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.crt, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file3.crt, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
 			}))
 
 	DescribeTable("Run cases",
@@ -341,19 +377,19 @@ var _ = Describe("#242451", func() {
 			[][]string{{mounts, compliantFileStats, compliantDirStats, mounts, compliantFileStats2, compliantDirStats, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.crt, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file3.crt, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
 			}),
 		Entry("should return failed checkResults when files do not have expected owners", nil,
 			[][]string{{mounts, nonCompliantFileStats, nonCompliantDirStats, emptyMounts, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerGroup: 1000, expectedOwnerGroups: [0]")),
-				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 2000, expectedOwnerUsers: [0]")),
-				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 65532, expectedOwnerUsers: [0]")),
+				rule.FailedCheckResult("File has unexpected owner group", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file1.key, ownerGroup: 1000, expectedOwnerGroups: [0]")),
+				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file2.pem, ownerUser: 2000, expectedOwnerUsers: [0]")),
+				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination, ownerUser: 65532, expectedOwnerUsers: [0]")),
 			}),
 		Entry("should return correct checkResults when options are used", &option.FileOwnerOptions{
 			ExpectedFileOwner: option.ExpectedOwner{
@@ -364,36 +400,36 @@ var _ = Describe("#242451", func() {
 			[][]string{{mounts, nonCompliantFileStats, nonCompliantDirStats, emptyMounts, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 1000")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 2000, ownerGroup: 0")),
-				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 65532, expectedOwnerUsers: [0 2000]")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 1000")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file2.pem, ownerUser: 2000, ownerGroup: 0")),
+				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination, ownerUser: 65532, expectedOwnerUsers: [0 2000]")),
 			}),
 		Entry("should correctly return errored checkResults when commands error", nil,
 			[][]string{{mounts, mounts, compliantFileStats2, mounts, compliantFileStats, "", emptyMounts}},
 			[][]error{{errors.New("foo"), nil, errors.New("bar"), nil, nil, errors.New("foo-bar"), nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "virtual-garden-kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "virtual-garden-kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
-				rule.ErroredCheckResult("foo-bar", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
+				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
+				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "virtual-garden-kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "Deployment", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "virtual-garden-kube-apiserver", "namespace", "foo", "containerName", "test", "kind", "Deployment", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
+				rule.ErroredCheckResult("foo-bar", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
 			}),
 		Entry("should check files when GetMountedFilesStats errors", nil,
 			[][]string{{mountsMulty, compliantFileStats, emptyMounts, compliantDirStats, emptyMounts, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, errors.New("bar"), nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
+				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
 			}),
 		Entry("should correctly return all checkResults when commands error", nil,
 			[][]string{{mounts, mounts, compliantFileStats2, compliantDirStats, emptyMounts, emptyMounts}},
 			[][]error{{errors.New("foo"), nil, nil, nil, nil, nil}},
 			[]rule.CheckResult{
-				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "pod")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination/file3.crt, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "pod", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
+				rule.ErroredCheckResult("foo", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file3.crt, ownerUser: 0, ownerGroup: 0")),
+				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
 			}),
 	)
 })
