@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/validation"
@@ -103,12 +104,17 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "PodList"))), nil
+	}
+
+	replicaSets, err := kubeutils.GetReplicaSets(ctx, r.Client, "", labels.NewSelector(), 300)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ReplicaSetList"))), nil
 	}
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "nodeList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NodeList"))), nil
 	}
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
 
@@ -145,14 +151,15 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	if len(pods) == 0 {
 		checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", rule.NewTarget("selector", kubeProxySelector.String())))
-	} else {
-		groupedShootPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.NewTarget())
-		checkResults = append(checkResults, checks...)
+		return rule.Result(r, checkResults...), nil
+	}
 
-		for nodeName, pods := range groupedShootPods {
-			checkResults = append(checkResults,
-				r.checkPods(ctx, pods, nodeName, image.String(), options)...)
-		}
+	groupedShootPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.NewTarget())
+	checkResults = append(checkResults, checks...)
+
+	for nodeName, pods := range groupedShootPods {
+		checkResults = append(checkResults,
+			r.checkPods(ctx, pods, replicaSets, nodeName, image.String(), options)...)
 	}
 
 	return rule.Result(r, checkResults...), nil
@@ -161,13 +168,14 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 func (r *Rule242451) checkPods(
 	ctx context.Context,
 	pods []corev1.Pod,
+	replicaSets []appsv1.ReplicaSet,
 	nodeName, imageName string,
 	options option.FileOwnerOptions,
 ) []rule.CheckResult {
 	var (
 		checkResults     []rule.CheckResult
 		podName          = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
-		execPodTarget    = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
+		execPodTarget    = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "Pod")
 		additionalLabels = map[string]string{pod.LabelInstanceID: r.InstanceID}
 	)
 
@@ -217,7 +225,7 @@ func (r *Rule242451) checkPods(
 			var (
 				delimiter       = "\t"
 				pkiDirs         = map[string]struct{}{}
-				containerTarget = rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod", "containerName", containerName)
+				containerTarget = kubeutils.TargetWithPod(rule.NewTarget("containerName", containerName), pod, replicaSets)
 			)
 
 			// We iterate through a files matching certain suffixes and we check their permissions
@@ -268,8 +276,8 @@ func (r *Rule242451) checkKubelet(
 		selectedFileStats []intutils.FileStats
 		pkiDirs           = map[string]struct{}{}
 		podName           = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
-		nodeTarget        = rule.NewTarget("name", nodeName, "kind", "node")
-		execPodTarget     = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
+		nodeTarget        = rule.NewTarget("name", nodeName, "kind", "Node")
+		execPodTarget     = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "Pod")
 		additionalLabels  = map[string]string{pod.LabelInstanceID: r.InstanceID}
 	)
 
