@@ -99,20 +99,37 @@ var _ = Describe("#242442", func() {
 		pod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:" + digest1
 		pod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest2
 		pod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest3
+		pod1.OwnerReferences = []metav1.OwnerReference{
+			{
+				APIVersion: "apps/v1",
+				Kind:       "Deployment",
+				Name:       "deployment",
+				UID:        "1",
+			},
+		}
 		Expect(client.Create(ctx, pod1)).To(Succeed())
+
 		pod2 := plainPod.DeepCopy()
 		pod2.Name = "pod2"
 		pod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image2@sha256:" + digest3
 		pod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image3@sha256:" + digest2
 		pod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:" + digest1
+		pod2.OwnerReferences = []metav1.OwnerReference{
+			{
+				APIVersion: "apps/v1",
+				Kind:       "Deployment",
+				Name:       "deployment",
+				UID:        "1",
+			},
+		}
 		Expect(client.Create(ctx, pod2)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "node", "name", "foo", "image", "eu.gcr.io/image2")),
-			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "node", "name", "foo", "image", "eu.gcr.io/image3")),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "Node", "name", "foo", "image", "eu.gcr.io/image2")),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "Node", "name", "foo", "image", "eu.gcr.io/image3")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -158,7 +175,7 @@ var _ = Describe("#242442", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "node", "name", "foo", "image", "eu.gcr.io/image10")),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "Node", "name", "foo", "image", "eu.gcr.io/image10")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -183,8 +200,8 @@ var _ = Describe("#242442", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "node", "name", "foo", "image", "localhost:7777/image1")),
-			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "node", "name", "foo", "image", "localhost:7777/image3")),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "Node", "name", "foo", "image", "localhost:7777/image1")),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "Node", "name", "foo", "image", "localhost:7777/image3")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -223,12 +240,14 @@ var _ = Describe("#242442", func() {
 				},
 			},
 		}
+
 		pod1 := plainPod.DeepCopy()
 		pod1.Name = "pod1"
 		pod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:" + digest1
 		pod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest2
 		pod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest3
 		Expect(client.Create(ctx, pod1)).To(Succeed())
+
 		pod2 := plainPod.DeepCopy()
 		pod2.Name = "pod2"
 		pod2.Labels["foo"] = "bar"
@@ -259,7 +278,7 @@ var _ = Describe("#242442", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.ErroredCheckResult("containerStatus not found for container", rule.NewTarget("container", "foo", "namespace", "foo", "name", "pod1", "kind", "pod")),
+			rule.ErroredCheckResult("containerStatus not found for container", rule.NewTarget("container", "foo", "namespace", "foo", "name", "pod1", "kind", "Pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -289,8 +308,8 @@ var _ = Describe("#242442", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("container", "foo", "namespace", "foo", "name", "pod1", "kind", "pod")),
-			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("container", "foobar", "namespace", "foo", "name", "pod1", "kind", "pod")),
+			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("container", "foo", "namespace", "foo", "name", "pod1", "kind", "Pod")),
+			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("container", "foobar", "namespace", "foo", "name", "pod1", "kind", "Pod")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))

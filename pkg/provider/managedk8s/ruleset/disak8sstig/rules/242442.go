@@ -66,7 +66,7 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	kubeProxyPods, err := kubeutils.GetPods(ctx, r.Client, "", kubeProxySelector, 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "PodList"))), nil
 	}
 
 	if len(kubeProxyPods) == 0 {
@@ -78,7 +78,7 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	for node, pods := range nodeKubeProxyPods {
-		target := rule.NewTarget("kind", "node", "name", node)
+		target := rule.NewTarget("kind", "Node", "name", node)
 		checkResults = append(checkResults, r.checkImages(pods, target)...)
 	}
 
@@ -102,7 +102,7 @@ func (r *Rule242442) checkImages(pods []corev1.Pod, target rule.Target) []rule.C
 				containerStatusIdx = slices.IndexFunc(containerStatuses, func(containerStatus corev1.ContainerStatus) bool {
 					return containerStatus.Name == container.Name
 				})
-				containerTarget = rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "container", container.Name, "kind", "pod")
+				containerTarget = rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "container", container.Name, "kind", "Pod")
 			)
 
 			if containerStatusIdx < 0 {
