@@ -2405,7 +2405,7 @@ readOnlyPort: 222
 				{
 					Status:  rule.Warning,
 					Message: "Reference group cannot be tested since all pods of the group are scheduled on a fully allocated node.",
-					Target:  rule.NewTarget("name", "", "uid", "1", "kind", "referenceGroup"),
+					Target:  rule.NewTarget("name", "", "uid", "1", "kind", "ReferenceGroup"),
 				},
 			}
 
