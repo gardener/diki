@@ -9,6 +9,7 @@ import (
 	"slices"
 
 	imageref "github.com/distribution/reference"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -45,10 +46,15 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 	reportedImages := map[string]struct{}{}
 	pods, err := kubeutils.GetPods(ctx, r.Client, r.Namespace, labels.NewSelector(), 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", r.Namespace, "kind", "podList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", r.Namespace, "kind", "PodList"))), nil
 	}
 
-	checkResults := r.checkImages(pods, images, reportedImages)
+	replicaSets, err := kubeutils.GetReplicaSets(ctx, r.Client, r.Namespace, labels.NewSelector(), 300)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", r.Namespace, "kind", "ReplicaSetList"))), nil
+	}
+
+	checkResults := r.checkImages(pods, replicaSets, images, reportedImages)
 	if len(checkResults) == 0 {
 		return rule.Result(r, rule.PassedCheckResult("All found images use current versions.", rule.Target{})), nil
 	}
@@ -56,7 +62,7 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 	return rule.Result(r, checkResults...), nil
 }
 
-func (r *Rule242442) checkImages(pods []corev1.Pod, images map[string]string, reportedImages map[string]struct{}) []rule.CheckResult {
+func (r *Rule242442) checkImages(pods []corev1.Pod, replicaSets []appsv1.ReplicaSet, images map[string]string, reportedImages map[string]struct{}) []rule.CheckResult {
 	var checkResults []rule.CheckResult
 	for _, pod := range pods {
 		for _, container := range slices.Concat(pod.Spec.Containers, pod.Spec.InitContainers) {
@@ -65,7 +71,7 @@ func (r *Rule242442) checkImages(pods []corev1.Pod, images map[string]string, re
 				containerStatusIdx = slices.IndexFunc(containerStatuses, func(containerStatus corev1.ContainerStatus) bool {
 					return containerStatus.Name == container.Name
 				})
-				containerTarget = rule.NewTarget("name", pod.Name, "container", container.Name, "kind", "pod")
+				containerTarget = kubeutils.TargetWithPod(rule.NewTarget("container", container.Name), pod, replicaSets)
 			)
 
 			if containerStatusIdx < 0 {

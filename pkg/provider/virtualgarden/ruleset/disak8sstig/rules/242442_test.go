@@ -162,13 +162,20 @@ var _ = Describe("#242442", func() {
 		pod.Status.ContainerStatuses[0].Name = "not-foo"
 		pod.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image2@sha256:" + digest1
 		pod.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image3@sha256:" + digest2
+		pod.OwnerReferences = []metav1.OwnerReference{
+			{
+				APIVersion: "apps/v1",
+				Kind:       "Deployment",
+				Name:       "deployment",
+			},
+		}
 		Expect(fakeClient.Create(ctx, pod)).To(Succeed())
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.ErroredCheckResult("containerStatus not found for container", rule.NewTarget("container", "foo", "name", "pod", "kind", "pod")),
+			rule.ErroredCheckResult("containerStatus not found for container", rule.NewTarget("container", "foo", "name", "deployment", "kind", "Deployment", "namespace", "foo")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -184,8 +191,8 @@ var _ = Describe("#242442", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("container", "foo", "name", "pod", "kind", "pod")),
-			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("container", "foobar", "name", "pod", "kind", "pod")),
+			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("container", "foo", "name", "pod", "kind", "Pod", "namespace", "foo")),
+			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("container", "foobar", "name", "pod", "kind", "Pod", "namespace", "foo")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
