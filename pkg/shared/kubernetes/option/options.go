@@ -18,12 +18,28 @@ type ClusterObjectSelector struct {
 
 // TODO: Implement new Option interface in this package with Validate method, which recieves field.Path.
 var _ option.Option = (*ClusterObjectSelector)(nil)
+var _ option.OptionWithFieldPath = (*ClusterObjectSelector)(nil)
 
 // Validate validates that option configurations are correctly defined.
 func (s *ClusterObjectSelector) Validate() field.ErrorList {
 	var (
 		allErrs  field.ErrorList
 		rootPath = field.NewPath("")
+	)
+
+	if len(s.MatchLabels) == 0 {
+		allErrs = append(allErrs, field.Required(rootPath.Child("matchLabels"), "must not be empty"))
+	}
+
+	allErrs = append(allErrs, metav1validation.ValidateLabels(s.MatchLabels, rootPath.Child("matchLabels"))...)
+
+	return allErrs
+}
+
+// ValidateWithPath validates that option configurations are correctly defined. It accepts an additional paremeter to which to append the erorred configuration's fields.
+func (s *ClusterObjectSelector) ValidateWithPath(rootPath field.Path) field.ErrorList {
+	var (
+		allErrs field.ErrorList
 	)
 
 	if len(s.MatchLabels) == 0 {
@@ -43,12 +59,32 @@ type NamespacedObjectSelector struct {
 
 // TODO: Implement new Option interface in this package with Validate method, which recieves field.Path.
 var _ option.Option = (*NamespacedObjectSelector)(nil)
+var _ option.OptionWithFieldPath = (*NamespacedObjectSelector)(nil)
 
 // Validate validates that option configurations are correctly defined.
 func (s *NamespacedObjectSelector) Validate() field.ErrorList {
 	var (
 		allErrs  field.ErrorList
 		rootPath = field.NewPath("")
+	)
+
+	if len(s.NamespaceMatchLabels) == 0 {
+		allErrs = append(allErrs, field.Required(rootPath.Child("namespaceMatchLabels"), "must not be empty"))
+	}
+
+	if len(s.MatchLabels) == 0 {
+		allErrs = append(allErrs, field.Required(rootPath.Child("matchLabels"), "must not be empty"))
+	}
+
+	allErrs = append(allErrs, metav1validation.ValidateLabels(s.NamespaceMatchLabels, rootPath.Child("namespaceMatchLabels"))...)
+	allErrs = append(allErrs, metav1validation.ValidateLabels(s.MatchLabels, rootPath.Child("matchLabels"))...)
+	return allErrs
+}
+
+// ValidateWithPath validates that option configurations are correctly defined. It accepts an additional paremeter to which to append the erorred configuration's fields.
+func (s *NamespacedObjectSelector) ValidateWithPath(rootPath field.Path) field.ErrorList {
+	var (
+		allErrs field.ErrorList
 	)
 
 	if len(s.NamespaceMatchLabels) == 0 {
