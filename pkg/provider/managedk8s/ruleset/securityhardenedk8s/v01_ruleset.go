@@ -7,7 +7,9 @@ package securityhardenedk8s
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/config"
@@ -15,6 +17,39 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
+
+func (r *Ruleset) validateV01RuleOptions(ruleIndices []string, ruleOptions map[string]config.RuleOptionsConfig, rootPath field.Path) error {
+
+	if err := validateV01Options[rules.Options2000](ruleOptions["2000"].Args, *rootPath.Index(slices.Index(ruleIndices, "2000")).Child("args")); err != nil {
+		return fmt.Errorf("rule option 2000 error: %s", err.Error())
+	}
+	if err := validateV01Options[rules.Options2001](ruleOptions["2001"].Args, *rootPath.Index(slices.Index(ruleIndices, "2001")).Child("args")); err != nil {
+		return fmt.Errorf("rule option 2001 error: %s", err.Error())
+	}
+	if err := validateV01Options[rules.Options2002](ruleOptions["2002"].Args, *rootPath.Index(slices.Index(ruleIndices, "2002")).Child("args")); err != nil {
+		return fmt.Errorf("rule option 2002 error: %s", err.Error())
+	}
+	if err := validateV01Options[rules.Options2003](ruleOptions["2003"].Args, *rootPath.Index(slices.Index(ruleIndices, "2003")).Child("args")); err != nil {
+		return fmt.Errorf("rule option 2003 error: %s", err.Error())
+	}
+	if err := validateV01Options[rules.Options2004](ruleOptions["2004"].Args, *rootPath.Index(slices.Index(ruleIndices, "2004")).Child("args")); err != nil {
+		return fmt.Errorf("rule option 2004 error: %s", err.Error())
+	}
+	if err := validateV01Options[rules.Options2005](ruleOptions["2005"].Args, *rootPath.Index(slices.Index(ruleIndices, "2005")).Child("args")); err != nil {
+		return fmt.Errorf("rule option 2005 error: %s", err.Error())
+	}
+	if err := validateV01Options[rules.Options2006](ruleOptions["2006"].Args, *rootPath.Index(slices.Index(ruleIndices, "2006")).Child("args")); err != nil {
+		return fmt.Errorf("rule option 2006 error: %s", err.Error())
+	}
+	if err := validateV01Options[rules.Options2007](ruleOptions["2007"].Args, *rootPath.Index(slices.Index(ruleIndices, "2007")).Child("args")); err != nil {
+		return fmt.Errorf("rule option 2007 error: %s", err.Error())
+	}
+	if err := validateV01Options[rules.Options2008](ruleOptions["2008"].Args, *rootPath.Index(slices.Index(ruleIndices, "2008")).Child("args")); err != nil {
+		return fmt.Errorf("rule option 2008 error: %s", err.Error())
+	}
+
+	return nil
+}
 
 func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
 	c, err := client.New(r.Config, client.Options{})
@@ -121,6 +156,32 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 	return r.AddRules(rules...)
 }
 
+func validateV01Options[O rules.RuleOption](options any, rootPath field.Path) error {
+	optionsByte, err := json.Marshal(options)
+	if err != nil {
+		return err
+	}
+
+	var parsedOptions O
+	if err := json.Unmarshal(optionsByte, &parsedOptions); err != nil {
+		return err
+	}
+
+	if val, ok := any(parsedOptions).(option.OptionWithFieldPath); ok {
+		if err := val.ValidateWithPath(rootPath).ToAggregate(); err != nil {
+			return err
+		}
+	}
+
+	if val, ok := any(parsedOptions).(option.Option); ok {
+		if err := val.Validate().ToAggregate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func parseV01Options[O rules.RuleOption](options any) (*O, error) {
 	optionsByte, err := json.Marshal(options)
 	if err != nil {
@@ -130,12 +191,6 @@ func parseV01Options[O rules.RuleOption](options any) (*O, error) {
 	var parsedOptions O
 	if err := json.Unmarshal(optionsByte, &parsedOptions); err != nil {
 		return nil, err
-	}
-
-	if val, ok := any(parsedOptions).(option.Option); ok {
-		if err := val.Validate().ToAggregate(); err != nil {
-			return nil, err
-		}
 	}
 
 	return &parsedOptions, nil
