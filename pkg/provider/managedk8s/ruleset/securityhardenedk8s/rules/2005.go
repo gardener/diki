@@ -20,9 +20,9 @@ import (
 )
 
 var (
-	_ rule.Rule          = &Rule2005{}
-	_ rule.Severity      = &Rule2005{}
-	_ disaoptions.Option = &Options2005{}
+	_ rule.Rule                       = &Rule2005{}
+	_ rule.Severity                   = &Rule2005{}
+	_ disaoptions.OptionWithFieldPath = &Options2005{}
 )
 
 type Rule2005 struct {
@@ -38,11 +38,11 @@ type AllowedImage struct {
 	Prefix string `json:"prefix" yaml:"prefix"`
 }
 
-// Validate validates that option configurations are correctly defined
-func (o Options2005) Validate() field.ErrorList {
+// ValidateWithPath validates that option configurations are correctly defined
+func (o Options2005) ValidateWithPath(rootPath field.Path) field.ErrorList {
 	var (
 		allErrs      field.ErrorList
-		allowImgPath = field.NewPath("allowedImages")
+		allowImgPath = rootPath.Child("allowedImages")
 	)
 
 	if len(o.AllowedImages) == 0 {

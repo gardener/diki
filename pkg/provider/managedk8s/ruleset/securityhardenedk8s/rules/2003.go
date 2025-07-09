@@ -22,9 +22,9 @@ import (
 )
 
 var (
-	_ rule.Rule          = &Rule2003{}
-	_ rule.Severity      = &Rule2003{}
-	_ disaoptions.Option = &Options2003{}
+	_ rule.Rule                       = &Rule2003{}
+	_ rule.Severity                   = &Rule2003{}
+	_ disaoptions.OptionWithFieldPath = &Options2003{}
 )
 
 type Options2003 struct {
@@ -36,20 +36,20 @@ type AcceptedPods2003 struct {
 	VolumeNames []string `json:"volumeNames" yaml:"volumeNames"`
 }
 
-// Validate validates that option configurations are correctly defined
-func (o Options2003) Validate() field.ErrorList {
+// ValidateWithPath validates that option configurations are correctly defined
+func (o Options2003) ValidateWithPath(rootPath field.Path) field.ErrorList {
 	var (
-		allErrs  field.ErrorList
-		rootPath = field.NewPath("acceptedPods")
+		allErrs          field.ErrorList
+		acceptedPodsPath = rootPath.Child("acceptedPods")
 	)
-	for _, p := range o.AcceptedPods {
-		allErrs = append(allErrs, p.Validate()...)
+	for pIdx, p := range o.AcceptedPods {
+		allErrs = append(allErrs, p.ValidateWithPath(*acceptedPodsPath.Index(pIdx))...)
 		if len(p.VolumeNames) == 0 {
-			allErrs = append(allErrs, field.Required(rootPath.Child("volumeNames"), "must not be empty"))
+			allErrs = append(allErrs, field.Required(acceptedPodsPath.Index(pIdx).Child("volumeNames"), "must not be empty"))
 		}
 		for i, volumeName := range p.VolumeNames {
 			if len(volumeName) == 0 {
-				allErrs = append(allErrs, field.Invalid(rootPath.Child("volumeNames").Index(i), volumeName, "must not be empty"))
+				allErrs = append(allErrs, field.Invalid(acceptedPodsPath.Index(pIdx).Child("volumeNames").Index(i), volumeName, "must not be empty"))
 			}
 		}
 	}

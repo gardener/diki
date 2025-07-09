@@ -24,9 +24,9 @@ import (
 )
 
 var (
-	_ rule.Rule          = &Rule2006{}
-	_ rule.Severity      = &Rule2006{}
-	_ disaoptions.Option = &Options2006{}
+	_ rule.Rule                       = &Rule2006{}
+	_ rule.Severity                   = &Rule2006{}
+	_ disaoptions.OptionWithFieldPath = &Options2006{}
 )
 
 type Rule2006 struct {
@@ -39,16 +39,16 @@ type Options2006 struct {
 	AcceptedClusterRoles []option.AcceptedClusterObject    `json:"acceptedClusterRoles" yaml:"acceptedClusterRoles"`
 }
 
-// Validate validates that option configurations are correctly defined.
-func (o Options2006) Validate() field.ErrorList {
+// ValidateWithPath validates that option configurations are correctly defined.
+func (o Options2006) ValidateWithPath(rootPath field.Path) field.ErrorList {
 	var allErrs field.ErrorList
 
-	for _, r := range o.AcceptedRoles {
-		allErrs = append(allErrs, r.Validate()...)
+	for rIdx, r := range o.AcceptedRoles {
+		allErrs = append(allErrs, r.ValidateWithPath(*rootPath.Child("acceptedRoles").Index(rIdx))...)
 	}
 
-	for _, c := range o.AcceptedClusterRoles {
-		allErrs = append(allErrs, c.Validate()...)
+	for cIdx, c := range o.AcceptedClusterRoles {
+		allErrs = append(allErrs, c.ValidateWithPath(*rootPath.Child("acceptedClusterRoles").Index(cIdx))...)
 	}
 
 	return allErrs

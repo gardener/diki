@@ -22,9 +22,9 @@ import (
 )
 
 var (
-	_ rule.Rule          = &Rule2004{}
-	_ rule.Severity      = &Rule2004{}
-	_ disaoptions.Option = &Options2004{}
+	_ rule.Rule                       = &Rule2004{}
+	_ rule.Severity                   = &Rule2004{}
+	_ disaoptions.OptionWithFieldPath = &Options2004{}
 )
 
 type Rule2004 struct {
@@ -36,12 +36,14 @@ type Options2004 struct {
 	AcceptedServices []option.AcceptedNamespacedObject `json:"acceptedServices" yaml:"acceptedServices"`
 }
 
-// Validate validates that option configurations are correctly defined
-func (o Options2004) Validate() field.ErrorList {
+// ValidateWithPath validates that option configurations are correctly defined
+func (o Options2004) ValidateWithPath(rootPath field.Path) field.ErrorList {
 	var allErrs field.ErrorList
 
-	for _, s := range o.AcceptedServices {
-		allErrs = append(allErrs, s.Validate()...)
+	acceptedServicesPath := rootPath.Child("acceptedServices")
+
+	for sIdx, s := range o.AcceptedServices {
+		allErrs = append(allErrs, s.ValidateWithPath(*acceptedServicesPath.Index(sIdx))...)
 	}
 
 	return allErrs
