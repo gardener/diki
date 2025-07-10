@@ -765,7 +765,7 @@ func SelectNodes(nodes []corev1.Node, nodesAllocatablePods map[string]int, label
 // Pods that do not have an owner reference will always be selected.
 // Pods will not be grouped to nodes, which have reached their allocation limit.
 // It tries to pick the pods in a way that fewer nodes will be selected.
-func SelectPodOfReferenceGroup(pods []corev1.Pod, nodesAllocatablePods map[string]int, target rule.Target) (map[string][]corev1.Pod, []rule.CheckResult) {
+func SelectPodOfReferenceGroup(pods []corev1.Pod, replicaSets []appsv1.ReplicaSet, nodesAllocatablePods map[string]int, target rule.Target) (map[string][]corev1.Pod, []rule.CheckResult) {
 	var (
 		checkResults            []rule.CheckResult
 		groupedPodsByNodes      = map[string][]corev1.Pod{}
@@ -773,7 +773,7 @@ func SelectPodOfReferenceGroup(pods []corev1.Pod, nodesAllocatablePods map[strin
 	)
 
 	for _, pod := range pods {
-		podTarget := target.With("name", pod.Name, "namespace", pod.Namespace, "kind", "Pod")
+		podTarget := TargetWithPod(rule.NewTarget(), pod, replicaSets)
 
 		if pod.Spec.NodeName != "" {
 			if len(pod.OwnerReferences) == 0 {

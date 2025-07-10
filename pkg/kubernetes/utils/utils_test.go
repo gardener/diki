@@ -2161,7 +2161,7 @@ readOnlyPort: 222
 				"node3": {*pod5},
 			}
 
-			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.Target{})
+			res, checkResult := utils.SelectPodOfReferenceGroup(pods, []appsv1.ReplicaSet{}, nodesAllocatablePods, rule.Target{})
 
 			Expect(res).To(Equal(expectedRes))
 			Expect(checkResult).To(HaveLen(0))
@@ -2210,7 +2210,7 @@ readOnlyPort: 222
 				"node2": {*pod2, *pod4},
 			}
 
-			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.Target{})
+			res, checkResult := utils.SelectPodOfReferenceGroup(pods, []appsv1.ReplicaSet{}, nodesAllocatablePods, rule.Target{})
 
 			Expect(res).To(Equal(expectedRes))
 			Expect(checkResult).To(HaveLen(0))
@@ -2264,7 +2264,7 @@ readOnlyPort: 222
 				"node3": {*pod3, *pod4},
 			}
 
-			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.Target{})
+			res, checkResult := utils.SelectPodOfReferenceGroup(pods, []appsv1.ReplicaSet{}, nodesAllocatablePods, rule.Target{})
 
 			Expect(res).To(Equal(expectedRes))
 			Expect(checkResult).To(HaveLen(0))
@@ -2318,7 +2318,7 @@ readOnlyPort: 222
 				"node3": {*pod3, *pod4},
 			}
 
-			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.Target{})
+			res, checkResult := utils.SelectPodOfReferenceGroup(pods, []appsv1.ReplicaSet{}, nodesAllocatablePods, rule.Target{})
 
 			Expect(res).To(Equal(expectedRes))
 			Expect(checkResult).To(HaveLen(0))
@@ -2336,11 +2336,11 @@ readOnlyPort: 222
 				{
 					Status:  rule.Warning,
 					Message: "Pod not (yet) scheduled",
-					Target:  rule.NewTarget("name", "pod1", "namespace", "", "kind", "Pod"),
+					Target:  rule.NewTarget("name", "pod1", "kind", "Pod"),
 				},
 			}
 
-			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.Target{})
+			res, checkResult := utils.SelectPodOfReferenceGroup(pods, []appsv1.ReplicaSet{}, nodesAllocatablePods, rule.Target{})
 
 			Expect(res).To(Equal(expectedRes))
 			Expect(checkResult).To(Equal(expectedCheckResults))
@@ -2395,12 +2395,12 @@ readOnlyPort: 222
 				{
 					Status:  rule.Warning,
 					Message: "Pod cannot be tested since it is scheduled on a fully allocated node.",
-					Target:  rule.NewTarget("name", "pod2", "namespace", "", "kind", "Pod", "node", "node2"),
+					Target:  rule.NewTarget("name", "pod2", "kind", "Pod", "node", "node2"),
 				},
 				{
 					Status:  rule.Warning,
 					Message: "Pod cannot be tested since it is scheduled on a fully allocated node.",
-					Target:  rule.NewTarget("name", "pod3", "namespace", "", "kind", "Pod", "node", "node1"),
+					Target:  rule.NewTarget("name", "pod3", "kind", "Pod", "node", "node1"),
 				},
 				{
 					Status:  rule.Warning,
@@ -2409,7 +2409,20 @@ readOnlyPort: 222
 				},
 			}
 
-			res, checkResult := utils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.Target{})
+			replicaSets := []appsv1.ReplicaSet{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						UID:  "1",
+						Name: "replicaSet",
+					},
+					TypeMeta: metav1.TypeMeta{
+						Kind:       "ReplicaSet",
+						APIVersion: "apps/v1",
+					},
+				},
+			}
+
+			res, checkResult := utils.SelectPodOfReferenceGroup(pods, replicaSets, nodesAllocatablePods, rule.Target{})
 
 			Expect(res).To(Equal(expectedRes))
 			Expect(checkResult).To(Equal(expectedCheckResults))
