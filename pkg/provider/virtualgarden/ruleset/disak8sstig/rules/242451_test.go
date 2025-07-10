@@ -297,59 +297,6 @@ var _ = Describe("#242451", func() {
 		}))
 	})
 
-	//TODO: Remove these describe table test cases once support for the instance labels is deprecated
-	DescribeTable("Run temporary instance label cases",
-		func(options *option.FileOwnerOptions, includeETCDMainPod bool, executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
-			if includeETCDMainPod {
-				oldSelectorETCDMainPod := etcdMainPod.DeepCopy()
-				delete(oldSelectorETCDMainPod.Labels, "app.kubernetes.io/part-of")
-				oldSelectorETCDMainPod.Labels["instance"] = "virtual-garden-etcd-main"
-				Expect(fakeClient.Create(ctx, oldSelectorETCDMainPod))
-			}
-
-			oldSelectorETCDEventsPod := etcdEventsPod.DeepCopy()
-			delete(oldSelectorETCDEventsPod.Labels, "app.kubernetes.io/part-of")
-			oldSelectorETCDEventsPod.Labels["instance"] = "virtual-garden-etcd-events"
-			Expect(fakeClient.Create(ctx, oldSelectorETCDEventsPod))
-
-			Expect(fakeClient.Create(ctx, kubeAPIServerPod)).To(Succeed())
-			Expect(fakeClient.Create(ctx, kubeControllerManagerPod)).To(Succeed())
-			Expect(fakeClient.Create(ctx, dikiPod)).To(Succeed())
-
-			fakePodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
-			r := &rules.Rule242451{
-				Logger:     testLogger,
-				InstanceID: instanceID,
-				Client:     fakeClient,
-				Namespace:  Namespace,
-				PodContext: fakePodContext,
-				Options:    options,
-			}
-
-			ruleResult, err := r.Run(ctx)
-
-			Expect(err).To(BeNil())
-			Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
-		},
-		Entry("should return passed checkResults from ETCD pods with old labels", nil, true,
-			[][]string{{mounts, compliantFileStats, compliantDirStats, mounts, compliantFileStats2, compliantDirStats, emptyMounts, emptyMounts}},
-			[][]error{{nil, nil, nil, nil, nil, nil, nil, nil}},
-			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file1.key, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-main", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file3.crt, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
-			}),
-		Entry("should return correct errored checkResults when old ETCD pods are partially found", nil, false,
-			[][]string{{mounts, compliantFileStats2, compliantDirStats, emptyMounts, emptyMounts}},
-			[][]error{{nil, nil, nil, nil, nil}},
-			[]rule.CheckResult{
-				rule.ErroredCheckResult("pods not found", rule.NewTarget("selector", "instance=virtual-garden-etcd-main", "namespace", "foo")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file3.crt, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination, ownerUser: 0, ownerGroup: 0")),
-			}))
-
 	DescribeTable("Run cases",
 		func(options *option.FileOwnerOptions, executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			Expect(fakeClient.Create(ctx, etcdMainPod)).To(Succeed())
