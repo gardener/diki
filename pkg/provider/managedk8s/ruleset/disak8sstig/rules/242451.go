@@ -154,7 +154,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, checkResults...), nil
 	}
 
-	groupedShootPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.NewTarget())
+	groupedShootPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, replicaSets, nodesAllocatablePods, rule.NewTarget())
 	checkResults = append(checkResults, checks...)
 
 	for nodeName, pods := range groupedShootPods {

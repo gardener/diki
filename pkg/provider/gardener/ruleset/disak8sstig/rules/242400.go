@@ -172,7 +172,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 	image.WithOptionalTag(version.Get().GitVersion)
 
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(pods, nodes)
-	groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, shootTarget)
+	groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, replicaSets, nodesAllocatablePods, shootTarget)
 	checkResults = append(checkResults, checks...)
 	for nodeName, pods := range groupedPods {
 		checkResults = append(checkResults,

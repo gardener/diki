@@ -146,7 +146,7 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NodeList"))), nil
 	}
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
-	groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(checkPods, nodesAllocatablePods, rule.NewTarget())
+	groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(checkPods, replicaSets, nodesAllocatablePods, rule.NewTarget())
 	checkResults = append(checkResults, checks...)
 	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
 	if err != nil {

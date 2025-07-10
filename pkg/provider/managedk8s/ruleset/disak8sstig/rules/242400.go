@@ -151,7 +151,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
-		groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.NewTarget())
+		groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, replicaSets, nodesAllocatablePods, rule.NewTarget())
 		checkResults = append(checkResults, checks...)
 		for nodeName, pods := range groupedPods {
 			checkResults = append(checkResults, r.checkKubeProxy(ctx, pods, replicaSets, nodeName, image.String())...)
