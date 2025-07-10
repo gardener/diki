@@ -62,17 +62,11 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
 		checkResults               []rule.CheckResult
 		expectedFilePermissionsMax = "644"
-		// TODO: Drop support for "instance" etcd label in a future release
-		// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
-		etcdMainOldSelector = labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
-		etcdMainSelector    = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
-		// TODO: Drop support for "instance" etcd label in a future release
-		// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
-		etcdEventsOldSelector = labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
-		etcdEventsSelector    = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
-		kubeProxySelector     = labels.SelectorFromSet(labels.Set{"role": "proxy"})
-		deploymentNames       = []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
-		nodeLabels            = []string{"worker.gardener.cloud/pool"}
+		etcdMainSelector           = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
+		etcdEventsSelector         = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
+		kubeProxySelector          = labels.SelectorFromSet(labels.Set{"role": "proxy"})
+		deploymentNames            = []string{"kube-apiserver", "kube-controller-manager", "kube-scheduler"}
+		nodeLabels                 = []string{"worker.gardener.cloud/pool"}
 	)
 
 	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
@@ -88,10 +82,8 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "PodList")))
 	} else {
 		var (
-			checkPods               []corev1.Pod
-			podOldSelectors         = []labels.Selector{etcdMainOldSelector, etcdEventsOldSelector}
-			podSelectors            = []labels.Selector{etcdMainSelector, etcdEventsSelector}
-			oldSelectorCheckResults []rule.CheckResult
+			checkPods    []corev1.Pod
+			podSelectors = []labels.Selector{etcdMainSelector, etcdEventsSelector}
 		)
 
 		seedReplicaSets, err := kubeutils.GetReplicaSets(ctx, r.ControlPlaneClient, r.ControlPlaneNamespace, labels.NewSelector(), 300)
@@ -100,7 +92,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 			return rule.Result(r, checkResults...), nil
 		}
 
-		for _, podSelector := range podOldSelectors {
+		for _, podSelector := range podSelectors {
 			var pods []corev1.Pod
 			for _, p := range allSeedPods {
 				if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.ControlPlaneNamespace {
@@ -109,31 +101,11 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 			}
 
 			if len(pods) == 0 {
-				oldSelectorCheckResults = append(oldSelectorCheckResults, rule.ErroredCheckResult("pods not found", seedTarget.With("namespace", r.ControlPlaneNamespace, "selector", podSelector.String())))
+				checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", seedTarget.With("namespace", r.ControlPlaneNamespace, "selector", podSelector.String())))
 				continue
 			}
 
 			checkPods = append(checkPods, pods...)
-		}
-
-		if len(checkPods) == 0 {
-			for _, podSelector := range podSelectors {
-				var pods []corev1.Pod
-				for _, p := range allSeedPods {
-					if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.ControlPlaneNamespace {
-						pods = append(pods, p)
-					}
-				}
-
-				if len(pods) == 0 {
-					checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", seedTarget.With("namespace", r.ControlPlaneNamespace, "selector", podSelector.String())))
-					continue
-				}
-
-				checkPods = append(checkPods, pods...)
-			}
-		} else {
-			checkResults = append(checkResults, oldSelectorCheckResults...)
 		}
 
 		for _, deploymentName := range deploymentNames {
