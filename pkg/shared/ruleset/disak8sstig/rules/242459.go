@@ -31,19 +31,13 @@ var (
 )
 
 type Rule242459 struct {
-	InstanceID string
-	Client     client.Client
-	Namespace  string
-	PodContext pod.PodContext
-	Logger     provider.Logger
-	// TODO: Drop support for "instance" etcd label in a future release
-	// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
-	ETCDMainOldSelector labels.Selector
-	ETCDMainSelector    labels.Selector
-	// TODO: Drop support for "instance" etcd label in a future release
-	// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
-	ETCDEventsOldSelector labels.Selector
-	ETCDEventsSelector    labels.Selector
+	InstanceID         string
+	Client             client.Client
+	Namespace          string
+	PodContext         pod.PodContext
+	Logger             provider.Logger
+	ETCDMainSelector   labels.Selector
+	ETCDEventsSelector labels.Selector
 }
 
 func (r *Rule242459) ID() string {
@@ -60,27 +54,13 @@ func (r *Rule242459) Severity() rule.SeverityLevel {
 
 func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
-		checkResults []rule.CheckResult
-		// TODO: Drop support for "instance" etcd label in a future release
-		// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
-		etcdMainOldSelector = labels.SelectorFromSet(labels.Set{"instance": "etcd-main"})
-		etcdMainSelector    = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
-		// TODO: Drop support for "instance" etcd label in a future release
-		// "instance" label is no longer in use for etcd-druid versions >= v0.23. ref: https://github.com/gardener/etcd-druid/pull/777
-		etcdEventsOldSelector = labels.SelectorFromSet(labels.Set{"instance": "etcd-events"})
-		etcdEventsSelector    = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
+		checkResults       []rule.CheckResult
+		etcdMainSelector   = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
+		etcdEventsSelector = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
 	)
-
-	if r.ETCDMainOldSelector != nil {
-		etcdMainOldSelector = r.ETCDMainOldSelector
-	}
 
 	if r.ETCDMainSelector != nil {
 		etcdMainSelector = r.ETCDMainSelector
-	}
-
-	if r.ETCDEventsOldSelector != nil {
-		etcdEventsOldSelector = r.ETCDEventsOldSelector
 	}
 
 	if r.ETCDEventsSelector != nil {
@@ -88,10 +68,8 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	var (
-		checkPods               []corev1.Pod
-		oldSelectorCheckResults []rule.CheckResult
-		checkOldPodSelectors    = []labels.Selector{etcdMainOldSelector, etcdEventsOldSelector}
-		checkPodSelectors       = []labels.Selector{etcdMainSelector, etcdEventsSelector}
+		checkPods         []corev1.Pod
+		checkPodSelectors = []labels.Selector{etcdMainSelector, etcdEventsSelector}
 	)
 
 	target := rule.NewTarget()
@@ -100,7 +78,7 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "PodList"))), nil
 	}
 
-	for _, podSelector := range checkOldPodSelectors {
+	for _, podSelector := range checkPodSelectors {
 		var pods []corev1.Pod
 		for _, p := range allPods {
 			if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
@@ -109,31 +87,11 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		if len(pods) == 0 {
-			oldSelectorCheckResults = append(oldSelectorCheckResults, rule.ErroredCheckResult("pods not found", target.With("namespace", r.Namespace, "selector", podSelector.String())))
+			checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", target.With("namespace", r.Namespace, "selector", podSelector.String())))
 			continue
 		}
 
 		checkPods = append(checkPods, pods...)
-	}
-
-	if len(checkPods) == 0 {
-		for _, podSelector := range checkPodSelectors {
-			var pods []corev1.Pod
-			for _, p := range allPods {
-				if podSelector.Matches(labels.Set(p.Labels)) && p.Namespace == r.Namespace {
-					pods = append(pods, p)
-				}
-			}
-
-			if len(pods) == 0 {
-				checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", target.With("namespace", r.Namespace, "selector", podSelector.String())))
-				continue
-			}
-
-			checkPods = append(checkPods, pods...)
-		}
-	} else {
-		checkResults = append(checkResults, oldSelectorCheckResults...)
 	}
 
 	if len(checkPods) == 0 {
