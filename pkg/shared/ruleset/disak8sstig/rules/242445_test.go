@@ -176,61 +176,6 @@ var _ = Describe("#242445", func() {
 		}))
 	})
 
-	//TODO: Remove these describe table test cases once support for the instance labels is deprecated
-	DescribeTable("Run temporary instance label cases",
-		func(options *option.FileOwnerOptions, includeETCDMainPod bool, executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
-			Expect(fakeClient.Create(ctx, Node)).To(Succeed())
-
-			if includeETCDMainPod {
-				oldSelectorETCDMainPod := etcdMainPod.DeepCopy()
-				delete(oldSelectorETCDMainPod.Labels, "app.kubernetes.io/part-of")
-				oldSelectorETCDMainPod.Labels["instance"] = "etcd-main"
-				Expect(fakeClient.Create(ctx, oldSelectorETCDMainPod))
-			}
-
-			oldSelectorETCDEventsPod := etcdEventsPod.DeepCopy()
-			delete(oldSelectorETCDEventsPod.Labels, "app.kubernetes.io/part-of")
-			oldSelectorETCDEventsPod.Labels["instance"] = "etcd-events"
-			Expect(fakeClient.Create(ctx, oldSelectorETCDEventsPod))
-
-			Expect(fakeClient.Create(ctx, fooPod)).To(Succeed())
-			Expect(fakeClient.Create(ctx, dikiPod)).To(Succeed())
-
-			fakePodContext = fakepod.NewFakeSimplePodContext(executeReturnString, executeReturnError)
-			r := &rules.Rule242445{
-				Logger:             testLogger,
-				InstanceID:         instanceID,
-				Client:             fakeClient,
-				Namespace:          Namespace,
-				PodContext:         fakePodContext,
-				Options:            options,
-				ETCDMainSelector:   mainSelector,
-				ETCDEventsSelector: eventsSelector,
-			}
-
-			ruleResult, err := r.Run(ctx)
-
-			Expect(err).To(BeNil())
-			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
-		},
-		Entry("should return passed checkResults from ETCD pods with old labels", nil, true,
-			[][]string{{mounts, compliantStats, mounts, compliantStats2}},
-			[][]error{{nil, nil, nil, nil}},
-			[]rule.CheckResult{
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "Pod", "details", "fileName: /destination/file1.crt, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "1-pod", "namespace", "foo", "containerName", "test", "kind", "Pod", "details", "fileName: /destination/bar/file2.key, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "Pod", "details", "fileName: /destination/file3.key, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "Pod", "details", "fileName: /destination/bar/file4.txt, ownerUser: 0, ownerGroup: 0")),
-			}),
-		Entry("should return correct errored checkResults when old ETCD pods are partially found", nil, false,
-			[][]string{{mounts, compliantStats2}},
-			[][]error{{nil, nil, nil, nil}},
-			[]rule.CheckResult{
-				rule.ErroredCheckResult("pods not found", rule.NewTarget("selector", "instance=etcd-main", "namespace", "foo")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "Pod", "details", "fileName: /destination/file3.key, ownerUser: 0, ownerGroup: 0")),
-				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "Pod", "details", "fileName: /destination/bar/file4.txt, ownerUser: 0, ownerGroup: 0")),
-			}))
-
 	DescribeTable("Run cases",
 		func(options *option.FileOwnerOptions, executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			Expect(fakeClient.Create(ctx, Node)).To(Succeed())
