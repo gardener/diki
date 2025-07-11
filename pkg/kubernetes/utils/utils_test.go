@@ -2352,7 +2352,10 @@ readOnlyPort: 222
 			pod1.Spec.NodeName = "node3"
 			pod1.OwnerReferences = []metav1.OwnerReference{
 				{
-					UID: types.UID("1"),
+					UID:        "1",
+					Name:       "deployment",
+					Kind:       "Deployment",
+					APIVersion: "apps/v1",
 				},
 			}
 
@@ -2369,7 +2372,10 @@ readOnlyPort: 222
 			pod4.Spec.NodeName = "node2"
 			pod4.OwnerReferences = []metav1.OwnerReference{
 				{
-					UID: types.UID("1"),
+					UID:        "1",
+					Name:       "deployment",
+					Kind:       "Deployment",
+					APIVersion: "apps/v1",
 				},
 			}
 
@@ -2378,7 +2384,10 @@ readOnlyPort: 222
 			pod5.Spec.NodeName = "node1"
 			pod5.OwnerReferences = []metav1.OwnerReference{
 				{
-					UID: types.UID("1"),
+					UID:        "1",
+					Name:       "deployment",
+					Kind:       "Deployment",
+					APIVersion: "apps/v1",
 				},
 			}
 
@@ -2405,7 +2414,7 @@ readOnlyPort: 222
 				{
 					Status:  rule.Warning,
 					Message: "Reference group cannot be tested since all pods of the group are scheduled on a fully allocated node.",
-					Target:  rule.NewTarget("name", "", "uid", "1", "kind", "ReferenceGroup"),
+					Target:  rule.NewTarget("name", "deployment", "kind", "Deployment"),
 				},
 			}
 

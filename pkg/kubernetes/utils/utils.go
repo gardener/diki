@@ -829,10 +829,10 @@ func SelectPodOfReferenceGroup(pods []corev1.Pod, replicaSets []appsv1.ReplicaSe
 		}
 
 		if maxAllocatablePods <= 0 {
-			referenceGroupTarget := target.With("name", pods[0].OwnerReferences[0].Name, "uid", string((pods[0].OwnerReferences[0].UID)), "kind", "ReferenceGroup")
+			podsTarget := TargetWithPod(target, pods[0], replicaSets)
 			checkResults = append(
 				checkResults,
-				rule.WarningCheckResult("Reference group cannot be tested since all pods of the group are scheduled on a fully allocated node.", referenceGroupTarget),
+				rule.WarningCheckResult("Reference group cannot be tested since all pods of the group are scheduled on a fully allocated node.", podsTarget),
 			)
 			continue
 		}
