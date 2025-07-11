@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/validation"
@@ -83,7 +84,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "nodeList"))), nil
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NodeList"))), nil
 	}
 
 	if len(nodes) == 0 {
@@ -92,7 +93,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	// kubelet check
 	for _, node := range nodes {
-		target := rule.NewTarget("kind", "node", "name", node.Name)
+		target := kubeutils.TargetWithK8sObject(rule.NewTarget(), metav1.TypeMeta{Kind: "Node"}, node.ObjectMeta)
 		if !kubeutils.NodeReadyStatus(node) {
 			checkResults = append(checkResults, rule.WarningCheckResult("Node is not in Ready state.", target))
 			continue
@@ -124,30 +125,36 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
-		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "podList")))
+		checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "PodList")))
+		return rule.Result(r, checkResults...), nil
+	}
+	var pods []corev1.Pod
+	for _, p := range allPods {
+		if kubeProxySelector.Matches(labels.Set(p.Labels)) {
+			pods = append(pods, p)
+		}
+	}
+
+	if len(pods) == 0 {
+		checkResults = append(checkResults, rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget("selector", kubeProxySelector.String())))
 	} else {
-		var pods []corev1.Pod
-		for _, p := range allPods {
-			if kubeProxySelector.Matches(labels.Set(p.Labels)) {
-				pods = append(pods, p)
-			}
+		image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
+		if err != nil {
+			return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
+		}
+		image.WithOptionalTag(version.Get().GitVersion)
+
+		replicaSets, err := kubeutils.GetReplicaSets(ctx, r.Client, "", labels.NewSelector(), 300)
+		if err != nil {
+			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ReplicaSetList")))
+			return rule.Result(r, checkResults...), nil
 		}
 
-		if len(pods) == 0 {
-			checkResults = append(checkResults, rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget("selector", kubeProxySelector.String())))
-		} else {
-			image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
-			if err != nil {
-				return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
-			}
-			image.WithOptionalTag(version.Get().GitVersion)
-
-			nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
-			groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, nodesAllocatablePods, rule.NewTarget())
-			checkResults = append(checkResults, checks...)
-			for nodeName, pods := range groupedPods {
-				checkResults = append(checkResults, r.checkKubeProxy(ctx, pods, nodeName, image.String())...)
-			}
+		nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
+		groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, replicaSets, nodesAllocatablePods, rule.NewTarget())
+		checkResults = append(checkResults, checks...)
+		for nodeName, pods := range groupedPods {
+			checkResults = append(checkResults, r.checkKubeProxy(ctx, pods, replicaSets, nodeName, image.String())...)
 		}
 	}
 
@@ -157,6 +164,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 func (r *Rule242400) checkKubeProxy(
 	ctx context.Context,
 	pods []corev1.Pod,
+	replicaSets []appsv1.ReplicaSet,
 	nodeName, imageName string,
 ) []rule.CheckResult {
 	const option = "featureGates.AllAlpha"
@@ -164,7 +172,7 @@ func (r *Rule242400) checkKubeProxy(
 		checkResults            []rule.CheckResult
 		additionalLabels        = map[string]string{pod.LabelInstanceID: r.InstanceID}
 		podName                 = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
-		execPodTarget           = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "pod")
+		execPodTarget           = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "Pod")
 		kubeProxyContainerNames = []string{"kube-proxy", "proxy"}
 	)
 
@@ -204,7 +212,7 @@ func (r *Rule242400) checkKubeProxy(
 	})
 
 	for _, pod := range pods {
-		podTarget := rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "pod")
+		podTarget := kubeutils.TargetWithPod(rule.NewTarget(), pod, replicaSets)
 
 		rawKubeProxyCommand, err := kubeutils.GetContainerCommand(pod, kubeProxyContainerNames...)
 		if err != nil {

@@ -9,6 +9,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -89,7 +90,7 @@ var _ = Describe("#242415", func() {
 			{
 				Status:  rule.Passed,
 				Message: "Pod does not use environment to inject secret.",
-				Target:  rule.NewTarget("name", "pod", "namespace", "foo", "kind", "pod"),
+				Target:  rule.NewTarget("name", "pod", "namespace", "foo", "kind", "Pod"),
 			},
 		}
 
@@ -117,7 +118,7 @@ var _ = Describe("#242415", func() {
 			{
 				Status:  rule.Failed,
 				Message: "Pod uses environment to inject secret.",
-				Target:  rule.NewTarget("name", "pod", "namespace", "foo", "kind", "pod", "container", "test", "details", "variableName: SECRET_TEST, keyRef: secret_test"),
+				Target:  rule.NewTarget("name", "pod", "namespace", "foo", "kind", "Pod", "container", "test", "details", "variableName: SECRET_TEST, keyRef: secret_test"),
 			},
 		}
 
@@ -150,7 +151,7 @@ var _ = Describe("#242415", func() {
 			{
 				Status:  rule.Failed,
 				Message: "Pod uses environment to inject secret.",
-				Target:  rule.NewTarget("name", "pod", "namespace", "foo", "kind", "pod", "container", "initFoo", "details", "variableName: SECRET_TEST, keyRef: secret_test"),
+				Target:  rule.NewTarget("name", "pod", "namespace", "foo", "kind", "Pod", "container", "initFoo", "details", "variableName: SECRET_TEST, keyRef: secret_test"),
 			},
 		}
 
@@ -191,10 +192,94 @@ var _ = Describe("#242415", func() {
 			{
 				Status:  rule.Accepted,
 				Message: "Pod accepted to use environment to inject secret.",
-				Target:  rule.NewTarget("name", "pod", "namespace", "foo", "kind", "pod", "container", "test", "details", "variableName: SECRET_TEST, keyRef: secret_test"),
+				Target:  rule.NewTarget("name", "pod", "namespace", "foo", "kind", "Pod", "container", "test", "details", "variableName: SECRET_TEST, keyRef: secret_test"),
 			},
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
+
+	It("should return correct targets when the pods have owner references", func() {
+		options = &option.Options242415{}
+
+		r := &rules.Rule242415{Client: fakeClient, Options: options}
+
+		Expect(fakeClient.Create(ctx, namespace)).To(Succeed())
+
+		replicaSet := appsv1.ReplicaSet{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "ReplicaSet",
+				APIVersion: "apps/v1",
+			},
+
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "replicaSet",
+				UID:       "1",
+				Namespace: namespaceName,
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: "apps/v1",
+						Kind:       "Deployment",
+						Name:       "deployment",
+					},
+				},
+			},
+		}
+		Expect(fakeClient.Create(ctx, &replicaSet)).To(Succeed())
+
+		pod1 := pod.DeepCopy()
+		pod1.Name = "pod1"
+		pod1.OwnerReferences = []metav1.OwnerReference{
+			{
+				UID:        "3",
+				Kind:       "Deployment",
+				APIVersion: "apps/v1",
+				Name:       "deployment",
+			},
+		}
+		Expect(fakeClient.Create(ctx, pod1)).To(Succeed())
+
+		pod2 := pod.DeepCopy()
+		pod2.Name = "pod2"
+		pod2.OwnerReferences = []metav1.OwnerReference{
+			{
+				UID:        "3",
+				Kind:       "Deployment",
+				APIVersion: "apps/v1",
+				Name:       "deployment",
+			},
+		}
+		Expect(fakeClient.Create(ctx, pod2)).To(Succeed())
+
+		pod3 := pod.DeepCopy()
+		pod3.Name = "pod3"
+		pod3.OwnerReferences = []metav1.OwnerReference{
+			{
+				UID:        "4",
+				Kind:       "DaemonSet",
+				APIVersion: "apps/v1",
+				Name:       "daemonSet",
+			},
+		}
+		Expect(fakeClient.Create(ctx, pod3)).To(Succeed())
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).ToNot(HaveOccurred())
+
+		expectedCheckResults := []rule.CheckResult{
+			{
+				Status:  rule.Passed,
+				Message: "Pod does not use environment to inject secret.",
+				Target:  rule.NewTarget("name", "deployment", "namespace", "foo", "kind", "Deployment"),
+			},
+			{
+				Status:  rule.Passed,
+				Message: "Pod does not use environment to inject secret.",
+				Target:  rule.NewTarget("name", "daemonSet", "namespace", "foo", "kind", "DaemonSet"),
+			},
+		}
+
+		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+	})
+
 })

@@ -181,7 +181,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 				checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "NodeList")))
 			} else {
 				nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allSeedPods, nodes)
-				groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(checkPods, nodesAllocatablePods, seedTarget)
+				groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(checkPods, seedReplicaSets, nodesAllocatablePods, seedTarget)
 				checkResults = append(checkResults, checks...)
 
 				for nodeName, pods := range groupedPods {
@@ -240,7 +240,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 	if len(pods) == 0 {
 		checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", shootTarget.With("selector", kubeProxySelector.String())))
 	} else {
-		groupedShootPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, shootNodesAllocatablePods, shootTarget)
+		groupedShootPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, shootReplicaSets, shootNodesAllocatablePods, shootTarget)
 		checkResults = append(checkResults, checks...)
 
 		for nodeName, pods := range groupedShootPods {

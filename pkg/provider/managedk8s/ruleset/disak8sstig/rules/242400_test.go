@@ -88,6 +88,7 @@ var _ = Describe("#242400", func() {
 				Namespace: "kube-system",
 				OwnerReferences: []metav1.OwnerReference{
 					{
+						Name: "node",
 						Kind: "Node",
 					},
 				},
@@ -172,14 +173,24 @@ var _ = Describe("#242400", func() {
 
 		pod7 := plainPod.DeepCopy()
 		pod7.Name = "pod7"
-		pod7.OwnerReferences[0].UID = "7"
+		pod7.OwnerReferences[0] =
+			metav1.OwnerReference{
+				UID:  "7",
+				Name: "daemonSet",
+				Kind: "DaemonSet",
+			}
 		pod7.Spec.NodeName = "node1"
 		pod7.Spec.Containers[0].Command = []string{"--flag1=value1", "--feature-gates=AllAlpha=true", "--feature-gates=AllAlpha=false"}
 		Expect(fakeClient.Create(ctx, pod7)).To(Succeed())
 
 		pod8 := plainPod.DeepCopy()
 		pod8.Name = "pod8"
-		pod8.OwnerReferences[0].UID = "8"
+		pod8.OwnerReferences[0] =
+			metav1.OwnerReference{
+				UID:  "8",
+				Name: "deployment",
+				Kind: "Deployment",
+			}
 		pod8.Spec.NodeName = "node1"
 		pod8.Spec.Containers[0].Command = []string{"--flag1=value1", "--config=/var/lib/config", "--config=/var/lib/config2"}
 		Expect(fakeClient.Create(ctx, pod8)).To(Succeed())
@@ -213,17 +224,17 @@ var _ = Describe("#242400", func() {
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("kind", "pod", "name", "pod1", "namespace", "kube-system")),
-			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("kind", "pod", "name", "pod2", "namespace", "kube-system")),
-			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("kind", "pod", "name", "pod3", "namespace", "kube-system")),
-			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("kind", "pod", "name", "pod4", "namespace", "kube-system")),
-			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("kind", "pod", "name", "pod5", "namespace", "kube-system")),
-			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("kind", "pod", "name", "pod6", "namespace", "kube-system")),
-			rule.WarningCheckResult("Option featureGates.AllAlpha set more than once in container command.", rule.NewTarget("kind", "pod", "name", "pod7", "namespace", "kube-system")),
-			rule.ErroredCheckResult("option config set more than once in container command", rule.NewTarget("kind", "pod", "name", "pod8", "namespace", "kube-system")),
-			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("kind", "node", "name", "node1")),
-			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("kind", "node", "name", "node2")),
-			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("kind", "node", "name", "node3")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("kind", "Node", "name", "node", "namespace", "kube-system")),
+			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("kind", "Node", "name", "node", "namespace", "kube-system")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("kind", "Node", "name", "node", "namespace", "kube-system")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("kind", "Node", "name", "node", "namespace", "kube-system")),
+			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("kind", "Node", "name", "node", "namespace", "kube-system")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("kind", "Node", "name", "node", "namespace", "kube-system")),
+			rule.WarningCheckResult("Option featureGates.AllAlpha set more than once in container command.", rule.NewTarget("kind", "DaemonSet", "name", "daemonSet", "namespace", "kube-system")),
+			rule.ErroredCheckResult("option config set more than once in container command", rule.NewTarget("kind", "Deployment", "name", "deployment", "namespace", "kube-system")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("kind", "Node", "name", "node1")),
+			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("kind", "Node", "name", "node2")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("kind", "Node", "name", "node3")),
 		}
 
 		Expect(err).To(BeNil())
@@ -283,9 +294,9 @@ var _ = Describe("#242400", func() {
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("kind", "pod", "name", "pod1", "namespace", "kube-system")),
-			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("kind", "pod", "name", "pod3", "namespace", "kube-system")),
-			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("kind", "node", "name", "node1")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("kind", "Node", "name", "node", "namespace", "kube-system")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("kind", "Node", "name", "node", "namespace", "kube-system")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("kind", "Node", "name", "node1")),
 		}
 
 		Expect(err).To(BeNil())
@@ -346,10 +357,10 @@ var _ = Describe("#242400", func() {
 		Expect(err).To(BeNil())
 
 		expectedResults := []rule.CheckResult{
-			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("kind", "node", "name", "node1")),
-			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("name", "pod1", "namespace", "kube-system", "kind", "pod")),
-			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("name", "pod2", "namespace", "kube-system", "kind", "pod")),
-			rule.ErroredCheckResult("pod does not contain a container with name in [kube-proxy proxy]", rule.NewTarget("name", "pod3", "namespace", "kube-system", "kind", "pod")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha set to allowed value.", rule.NewTarget("kind", "Node", "name", "node1")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("name", "node", "namespace", "kube-system", "kind", "Node")),
+			rule.FailedCheckResult("Option featureGates.AllAlpha set to not allowed value.", rule.NewTarget("name", "node", "namespace", "kube-system", "kind", "Node")),
+			rule.ErroredCheckResult("pod does not contain a container with name in [kube-proxy proxy]", rule.NewTarget("name", "node", "namespace", "kube-system", "kind", "Node")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedResults))
@@ -377,7 +388,7 @@ var _ = Describe("#242400", func() {
 
 		expectedCheckResults := []rule.CheckResult{
 			rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget("selector", "role=proxy")),
-			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("kind", "node", "name", "node1")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("kind", "Node", "name", "node1")),
 		}
 
 		Expect(err).To(BeNil())
@@ -411,7 +422,7 @@ var _ = Describe("#242400", func() {
 
 		expectedCheckResults := []rule.CheckResult{
 			rule.AcceptedCheckResult("kube-proxy check is skipped.", rule.NewTarget()),
-			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("kind", "node", "name", "node1")),
+			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("kind", "Node", "name", "node1")),
 		}
 
 		Expect(err).To(BeNil())

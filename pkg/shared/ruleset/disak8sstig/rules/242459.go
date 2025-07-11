@@ -144,19 +144,20 @@ func (r *Rule242459) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target.With("kind", "NodeList"))), nil
 	}
+
+	replicaSets, err := kubeutils.GetReplicaSets(ctx, r.Client, r.Namespace, labels.NewSelector(), 300)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", r.Namespace, "kind", "ReplicaSetList"))), nil
+	}
+
 	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
-	groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(checkPods, nodesAllocatablePods, target)
+	groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(checkPods, replicaSets, nodesAllocatablePods, target)
 	checkResults = append(checkResults, checks...)
 	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
 	if err != nil {
 		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
 	}
 	image.WithOptionalTag(version.Get().GitVersion)
-
-	replicaSets, err := kubeutils.GetReplicaSets(ctx, r.Client, r.Namespace, labels.NewSelector(), 300)
-	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("namespace", r.Namespace, "kind", "ReplicaSetList"))), nil
-	}
 
 	for nodeName, pods := range groupedPods {
 		var (
