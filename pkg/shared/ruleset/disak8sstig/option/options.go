@@ -18,6 +18,13 @@ type Option interface {
 	Validate() field.ErrorList
 }
 
+// OptionWithFieldPath represents an Option that can be validated in order to ensure
+// that configurations are correctly defined.
+// It accepts an additional field.Path parameter, to which to append the errored option's fields.
+type OptionWithFieldPath interface {
+	ValidateWithPath(rootPath field.Path) field.ErrorList
+}
+
 // PodSelector contains generalized options for matching entities by their attribute labels
 type PodSelector struct {
 	PodMatchLabels       map[string]string `json:"podMatchLabels" yaml:"podMatchLabels"`

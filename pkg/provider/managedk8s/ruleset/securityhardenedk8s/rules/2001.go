@@ -24,9 +24,9 @@ import (
 )
 
 var (
-	_ rule.Rule          = &Rule2001{}
-	_ rule.Severity      = &Rule2001{}
-	_ disaoptions.Option = &Options2001{}
+	_ rule.Rule                       = &Rule2001{}
+	_ rule.Severity                   = &Rule2001{}
+	_ disaoptions.OptionWithFieldPath = &Options2001{}
 )
 
 type Rule2001 struct {
@@ -38,12 +38,14 @@ type Options2001 struct {
 	AcceptedPods []option.AcceptedNamespacedObject `json:"acceptedPods" yaml:"acceptedPods"`
 }
 
-// Validate validates that option configurations are correctly defined
-func (o Options2001) Validate() field.ErrorList {
+// ValidateWithPath validates that option configurations are correctly defined
+func (o Options2001) ValidateWithPath(rootPath field.Path) field.ErrorList {
 	var allErrs field.ErrorList
 
-	for _, p := range o.AcceptedPods {
-		allErrs = append(allErrs, p.Validate()...)
+	acceptedPodsPath := rootPath.Child("acceptedPods")
+
+	for pIdx, p := range o.AcceptedPods {
+		allErrs = append(allErrs, p.ValidateWithPath(*acceptedPodsPath.Index(pIdx))...)
 	}
 
 	return allErrs

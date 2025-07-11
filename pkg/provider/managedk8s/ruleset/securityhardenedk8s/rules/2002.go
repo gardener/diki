@@ -22,9 +22,9 @@ import (
 )
 
 var (
-	_ rule.Rule          = &Rule2002{}
-	_ rule.Severity      = &Rule2002{}
-	_ disaoptions.Option = &Options2002{}
+	_ rule.Rule                       = &Rule2002{}
+	_ rule.Severity                   = &Rule2002{}
+	_ disaoptions.OptionWithFieldPath = &Options2002{}
 )
 
 type Rule2002 struct {
@@ -36,12 +36,14 @@ type Options2002 struct {
 	AcceptedStorageClasses []option.AcceptedClusterObject `json:"acceptedStorageClasses" yaml:"acceptedStorageClasses"`
 }
 
-// Validate validates that option configurations are correctly defined
-func (o Options2002) Validate() field.ErrorList {
+// ValidateWithPath validates that option configurations are correctly defined
+func (o Options2002) ValidateWithPath(rootPath field.Path) field.ErrorList {
 	var allErrs field.ErrorList
 
-	for _, sc := range o.AcceptedStorageClasses {
-		allErrs = append(allErrs, sc.Validate()...)
+	acceptedStorageClassesPath := rootPath.Child("acceptedStorageClasses")
+
+	for scIdx, sc := range o.AcceptedStorageClasses {
+		allErrs = append(allErrs, sc.ValidateWithPath(*acceptedStorageClassesPath.Index(scIdx))...)
 	}
 
 	return allErrs
