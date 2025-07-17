@@ -71,7 +71,7 @@ func (r *Ruleset) Version() string {
 }
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
-func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.Config, rootPath field.Path) (*Ruleset, error) {
+func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.Config, fldPath field.Path) (*Ruleset, error) {
 	ruleset, err := New(
 		WithVersion(rulesetConfig.Version),
 		WithConfig(managedConfig),
@@ -80,21 +80,19 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.C
 		return nil, err
 	}
 
-	ruleIndices := []string{}
-	ruleOptions := map[string]config.RuleOptionsConfig{}
-	for _, opt := range rulesetConfig.RuleOptions {
+	ruleOptions := map[string]config.IndexedRuleOptionsConfig{}
+	for index, opt := range rulesetConfig.RuleOptions {
 		if _, ok := ruleOptions[opt.RuleID]; ok {
 			return nil, fmt.Errorf("rule option for rule id: %s is already registered", opt.RuleID)
 		}
 
-		ruleOptions[opt.RuleID] = opt
-		ruleIndices = append(ruleIndices, opt.RuleID)
+		ruleOptions[opt.RuleID] = config.IndexedRuleOptionsConfig{Index: index, RuleOptionsConfig: opt}
 	}
 
 	switch rulesetConfig.Version {
 	case "v0.1.0":
-		if err := ruleset.validateV01RuleOptions(ruleIndices, ruleOptions, *rootPath.Child("ruleOptions")); err != nil {
-			return nil, err
+		if err := ruleset.validateV01RuleOptions(ruleOptions, *fldPath.Child("ruleOptions")); err != nil {
+			return nil, err.ToAggregate()
 		}
 		if err := ruleset.registerV01Rules(ruleOptions); err != nil {
 			return nil, err

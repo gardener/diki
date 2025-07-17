@@ -34,7 +34,7 @@ type ProviderResult struct {
 }
 
 // ProviderFromConfigFunc constructs a Provider from ProviderConfig.
-type ProviderFromConfigFunc func(conf config.ProviderConfig, rootPath field.Path) (Provider, error)
+type ProviderFromConfigFunc func(conf config.ProviderConfig, fldPath field.Path) (Provider, error)
 
 // MetadataFunc constructs a detailed Provider metadata object.
 type MetadataFunc func() metadata.ProviderDetailed
