@@ -274,7 +274,7 @@ var _ = Describe("#2005", func() {
 		It("should deny empty allowed images list", func() {
 			options := rules.Options2005{}
 
-			result := options.ValidateWithPath(*field.NewPath(""))
+			result := options.Validate(field.NewPath(""))
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
@@ -300,7 +300,7 @@ var _ = Describe("#2005", func() {
 				},
 			}
 
-			result := options.ValidateWithPath(*field.NewPath(""))
+			result := options.Validate(field.NewPath(""))
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{

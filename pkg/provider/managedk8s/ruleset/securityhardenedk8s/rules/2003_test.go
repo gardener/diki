@@ -528,7 +528,7 @@ var _ = Describe("#2003", func() {
 				},
 			}
 
-			result := options.ValidateWithPath(*field.NewPath(""))
+			result := options.Validate(field.NewPath(""))
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
