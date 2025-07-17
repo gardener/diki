@@ -37,7 +37,7 @@ var _ = Describe("options", func() {
 
 			var result field.ErrorList
 			for _, p := range attributes {
-				result = append(result, p.Validate()...)
+				result = append(result, p.Validate(field.NewPath(""))...)
 			}
 
 			Expect(result).To(ConsistOf(
@@ -102,7 +102,7 @@ var _ = Describe("options", func() {
 
 			var result field.ErrorList
 			for _, p := range attributes {
-				result = append(result, p.Validate()...)
+				result = append(result, p.Validate(field.NewPath(""))...)
 			}
 
 			Expect(result).To(ConsistOf(

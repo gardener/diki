@@ -52,6 +52,13 @@ type RuleOptionsConfig struct {
 	Args any `yaml:"args,omitempty"`
 }
 
+// IndexedRuleOptionsConfig represents per rule options and the index at which the option is configured in the YAML spec.
+type IndexedRuleOptionsConfig struct {
+	RuleOptionsConfig
+	// Index is the rule option's index in the file configuration
+	Index int
+}
+
 // RuleOptionSkipConfig represents options allowing a rule skip.
 type RuleOptionSkipConfig struct {
 	// Enabled determines if a rule should be skipped or not.
