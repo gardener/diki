@@ -42,10 +42,10 @@ type MachineImage struct {
 	AllowedClassifications []gardencorev1beta1.VersionClassification `json:"allowedClassifications" yaml:"allowedClassifications"`
 }
 
-func (o Options1002) Validate() field.ErrorList {
+func (o Options1002) Validate(_ *field.Path) field.ErrorList {
 	var (
 		allErrs                field.ErrorList
-		rootPath               = field.NewPath("machineImages")
+		fldPath                = field.NewPath("machineImages")
 		versionClassifications = []gardencorev1beta1.VersionClassification{
 			gardencorev1beta1.ClassificationPreview,
 			gardencorev1beta1.ClassificationSupported,
@@ -55,12 +55,12 @@ func (o Options1002) Validate() field.ErrorList {
 
 	for _, machineImage := range o.MachineImages {
 		if len(machineImage.Name) == 0 {
-			allErrs = append(allErrs, field.Required(rootPath.Child("name"), "must not be empty"))
+			allErrs = append(allErrs, field.Required(fldPath.Child("name"), "must not be empty"))
 		}
 
 		for _, c := range machineImage.AllowedClassifications {
 			if !slices.Contains(versionClassifications, c) {
-				allErrs = append(allErrs, field.NotSupported(rootPath.Child("allowedClassifications"), c, versionClassifications))
+				allErrs = append(allErrs, field.NotSupported(fldPath.Child("allowedClassifications"), c, versionClassifications))
 			}
 		}
 	}

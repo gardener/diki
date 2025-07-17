@@ -52,7 +52,7 @@ type Options242466 struct {
 
 var _ option.Option = (*Options242466)(nil)
 
-func (o Options242466) Validate() field.ErrorList {
+func (o Options242466) Validate(_ *field.Path) field.ErrorList {
 	allErrs := validation.ValidateLabels(o.KubeProxyMatchLabels, field.NewPath("kubeProxyMatchLabels"))
 	return append(allErrs, option.ValidateLabelNames(o.NodeGroupByLabels, field.NewPath("nodeGroupByLabels"))...)
 }

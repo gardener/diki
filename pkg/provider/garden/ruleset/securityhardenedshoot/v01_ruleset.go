@@ -122,7 +122,7 @@ func parseV01Options[O rules.RuleOption](options any) (*O, error) {
 	}
 
 	if val, ok := any(parsedOptions).(option.Option); ok {
-		if err := val.Validate().ToAggregate(); err != nil {
+		if err := val.Validate(nil).ToAggregate(); err != nil {
 			return nil, err
 		}
 	}

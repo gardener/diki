@@ -54,9 +54,9 @@ type Options242451 struct {
 
 var _ option.Option = (*Options242451)(nil)
 
-func (o Options242451) Validate() field.ErrorList {
+func (o Options242451) Validate(_ *field.Path) field.ErrorList {
 	if o.FileOwnerOptions != nil {
-		return o.FileOwnerOptions.Validate()
+		return o.FileOwnerOptions.Validate(nil)
 	}
 	return nil
 }

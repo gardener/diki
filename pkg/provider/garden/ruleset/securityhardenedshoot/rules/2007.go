@@ -34,7 +34,7 @@ type Options2007 struct {
 	MinPodSecurityStandardsProfile intkubeutils.PodSecurityStandardProfile `json:"minPodSecurityStandardsProfile" yaml:"minPodSecurityStandardsProfile"`
 }
 
-func (o Options2007) Validate() field.ErrorList {
+func (o Options2007) Validate(_ *field.Path) field.ErrorList {
 	if !slices.Contains([]intkubeutils.PodSecurityStandardProfile{intkubeutils.PSSProfileBaseline, intkubeutils.PSSProfilePrivileged, intkubeutils.PSSProfileRestricted}, o.MinPodSecurityStandardsProfile) {
 		return field.ErrorList{field.Invalid(field.NewPath("minPodSecurityStandardsProfile"), o.MinPodSecurityStandardsProfile, "must be one of 'restricted', 'baseline' or 'privileged'")}
 	}
