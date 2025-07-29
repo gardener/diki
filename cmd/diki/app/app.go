@@ -17,6 +17,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	cliflag "k8s.io/component-base/cli/flag"
 	"k8s.io/component-base/version"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -570,9 +571,11 @@ func readConfig(filePath string) (*config.DikiConfig, error) {
 
 func getProvidersFromConfig(c *config.DikiConfig, providerCreateFuncs map[string]provider.ProviderFromConfigFunc) (map[string]provider.Provider, error) {
 	providers := map[string]provider.Provider{}
-	for _, providerConfig := range c.Providers {
+	rootPath := field.NewPath("providers")
+
+	for providerIdx, providerConfig := range c.Providers {
 		if providerFunc, ok := providerCreateFuncs[providerConfig.ID]; ok {
-			p, err := providerFunc(providerConfig)
+			p, err := providerFunc(providerConfig, rootPath.Index(providerIdx))
 			if err != nil {
 				return nil, err
 			}
