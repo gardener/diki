@@ -39,10 +39,10 @@ type AllowedImage struct {
 }
 
 // Validate validates that option configurations are correctly defined
-func (o Options2005) Validate() field.ErrorList {
+func (o Options2005) Validate(fldPath *field.Path) field.ErrorList {
 	var (
 		allErrs      field.ErrorList
-		allowImgPath = field.NewPath("allowedImages")
+		allowImgPath = fldPath.Child("allowedImages")
 	)
 
 	if len(o.AllowedImages) == 0 {
