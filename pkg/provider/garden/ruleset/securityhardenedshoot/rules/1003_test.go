@@ -279,14 +279,14 @@ var _ = Describe("#1003", func() {
 				AllowedLakomScopes: []lakomapi.ScopeType{kubeSystemManagedByGardenerScope, kubeSystemScope, clusterScope},
 			}
 
-			result := options.Validate()
+			result := options.Validate(nil)
 			Expect(result).To(BeEmpty())
 		})
 		It("should error when options are incorrect", func() {
 			options := rules.Options1003{
 				AllowedLakomScopes: []lakomapi.ScopeType{kubeSystemScope, fakeScope, clusterScope},
 			}
-			result := options.Validate()
+			result := options.Validate(nil)
 			Expect(result).To(Equal(field.ErrorList{
 				{
 					Type:     field.ErrorTypeInvalid,

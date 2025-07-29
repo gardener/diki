@@ -290,7 +290,7 @@ var _ = Describe("#1001", func() {
 				},
 			}
 
-			result := options.Validate()
+			result := options.Validate(nil)
 			Expect(result).To(BeEmpty())
 		})
 		It("should error when options are incorrect", func() {
@@ -300,7 +300,7 @@ var _ = Describe("#1001", func() {
 					fakeClassification,
 				},
 			}
-			result := options.Validate()
+			result := options.Validate(nil)
 			Expect(result).To(Equal(field.ErrorList{
 				{
 					Type:     field.ErrorTypeNotSupported,

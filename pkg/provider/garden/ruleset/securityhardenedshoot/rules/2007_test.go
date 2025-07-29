@@ -269,7 +269,7 @@ var _ = Describe("#2007", func() {
 				MinPodSecurityStandardsProfile: "baseline",
 			}
 
-			result := options.Validate()
+			result := options.Validate(nil)
 
 			Expect(result).To(BeNil())
 		})
@@ -278,7 +278,7 @@ var _ = Describe("#2007", func() {
 				MinPodSecurityStandardsProfile: "foo",
 			}
 
-			result := options.Validate()
+			result := options.Validate(nil)
 
 			Expect(result).To(Equal(field.ErrorList{
 				{

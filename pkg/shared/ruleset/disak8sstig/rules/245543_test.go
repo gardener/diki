@@ -273,7 +273,7 @@ bar,for,bar,`
 				},
 			}
 
-			result := options.Validate()
+			result := options.Validate(nil)
 
 			Expect(result).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 				"Type":   Equal(field.ErrorTypeRequired),

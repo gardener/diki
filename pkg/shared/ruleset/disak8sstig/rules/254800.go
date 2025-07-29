@@ -46,7 +46,7 @@ type Options254800 struct {
 
 var _ option.Option = (*Options254800)(nil)
 
-func (o Options254800) Validate() field.ErrorList {
+func (o Options254800) Validate(_ *field.Path) field.ErrorList {
 	if !slices.Contains([]intkubeutils.PodSecurityStandardProfile{intkubeutils.PSSProfileBaseline, intkubeutils.PSSProfilePrivileged, intkubeutils.PSSProfileRestricted}, o.MinPodSecurityStandardsProfile) {
 		return field.ErrorList{field.Invalid(field.NewPath("minPodSecurityStandardsProfile"), o.MinPodSecurityStandardsProfile, "must be one of 'restricted', 'baseline' or 'privileged'")}
 	}

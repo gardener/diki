@@ -46,15 +46,15 @@ type AcceptedResources242383 struct {
 	Status        string `json:"status" yaml:"status"`
 }
 
-func (o Options242383) Validate() field.ErrorList {
+func (o Options242383) Validate(_ *field.Path) field.ErrorList {
 	var (
-		allErrs  field.ErrorList
-		rootPath = field.NewPath("acceptedResources")
+		allErrs field.ErrorList
+		fldPath = field.NewPath("acceptedResources")
 	)
 	for _, p := range o.AcceptedResources {
-		allErrs = append(allErrs, p.Validate()...)
+		allErrs = append(allErrs, p.Validate(nil)...)
 		if !slices.Contains([]string{"Passed", "Accepted"}, p.Status) && len(p.Status) > 0 {
-			allErrs = append(allErrs, field.Invalid(rootPath.Child("status"), p.Status, "must be one of 'Passed' or 'Accepted'"))
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("status"), p.Status, "must be one of 'Passed' or 'Accepted'"))
 		}
 	}
 	return allErrs
@@ -69,10 +69,10 @@ type ObjectSelector struct {
 
 var _ option.Option = (*ObjectSelector)(nil)
 
-func (s ObjectSelector) Validate() field.ErrorList {
+func (s ObjectSelector) Validate(_ *field.Path) field.ErrorList {
 	var (
 		allErrs          field.ErrorList
-		rootPath         = field.NewPath("acceptedResources")
+		fldPath          = field.NewPath("acceptedResources")
 		checkedResources = map[string][]string{
 			"v1":             {"Pod", "ReplicationController", "Service"},
 			"apps/v1":        {"Deployment", "DaemonSet", "ReplicaSet", "StatefulSet"},
@@ -82,21 +82,21 @@ func (s ObjectSelector) Validate() field.ErrorList {
 	)
 
 	if len(s.NamespaceMatchLabels) == 0 {
-		allErrs = append(allErrs, field.Required(rootPath.Child("namespaceMatchLabels"), "must not be empty"))
+		allErrs = append(allErrs, field.Required(fldPath.Child("namespaceMatchLabels"), "must not be empty"))
 	}
 
 	if len(s.MatchLabels) == 0 {
-		allErrs = append(allErrs, field.Required(rootPath.Child("matchLabels"), "must not be empty"))
+		allErrs = append(allErrs, field.Required(fldPath.Child("matchLabels"), "must not be empty"))
 	}
 
 	if kinds, ok := checkedResources[s.APIVersion]; !ok {
-		allErrs = append(allErrs, field.Invalid(rootPath.Child("apiVersion"), s.APIVersion, "not checked apiVersion"))
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("apiVersion"), s.APIVersion, "not checked apiVersion"))
 	} else if !slices.Contains(kinds, s.Kind) && s.Kind != "*" {
-		allErrs = append(allErrs, field.Invalid(rootPath.Child("kind"), s.Kind, fmt.Sprintf("not checked kind for apiVerion %s", s.APIVersion)))
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("kind"), s.Kind, fmt.Sprintf("not checked kind for apiVerion %s", s.APIVersion)))
 	}
 
-	allErrs = append(allErrs, metav1validation.ValidateLabels(s.MatchLabels, rootPath.Child("matchLabels"))...)
-	allErrs = append(allErrs, metav1validation.ValidateLabels(s.NamespaceMatchLabels, rootPath.Child("namespaceMatchLabels"))...)
+	allErrs = append(allErrs, metav1validation.ValidateLabels(s.MatchLabels, fldPath.Child("matchLabels"))...)
+	allErrs = append(allErrs, metav1validation.ValidateLabels(s.NamespaceMatchLabels, fldPath.Child("namespaceMatchLabels"))...)
 
 	return allErrs
 }
