@@ -8,13 +8,31 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/config"
+	internalconfig "github.com/gardener/diki/pkg/internal/config"
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/securityhardenedk8s/rules"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
+
+func (r *Ruleset) validateV01RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	allErrs = append(allErrs, validateV01Options[rules.Options2000](ruleOptions["2000"].Args, *fldPath.Index(ruleOptions["2000"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2001](ruleOptions["2001"].Args, *fldPath.Index(ruleOptions["2002"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2002](ruleOptions["2002"].Args, *fldPath.Index(ruleOptions["2002"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2003](ruleOptions["2003"].Args, *fldPath.Index(ruleOptions["2003"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2004](ruleOptions["2004"].Args, *fldPath.Index(ruleOptions["2004"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2005](ruleOptions["2005"].Args, *fldPath.Index(ruleOptions["2005"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2006](ruleOptions["2006"].Args, *fldPath.Index(ruleOptions["2006"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2007](ruleOptions["2007"].Args, *fldPath.Index(ruleOptions["2007"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2008](ruleOptions["2008"].Args, *fldPath.Index(ruleOptions["2008"].Index).Child("args"))...)
+
+	return allErrs
+}
 
 func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
 	c, err := client.New(r.Config, client.Options{})
@@ -121,6 +139,23 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 	return r.AddRules(rules...)
 }
 
+func validateV01Options[O rules.RuleOption](options any, fldPath field.Path) field.ErrorList {
+
+	parsedOptions, err := parseV01Options[O](options)
+
+	if err != nil {
+		return field.ErrorList{
+			field.InternalError(&fldPath, err),
+		}
+	}
+
+	if val, ok := any(parsedOptions).(option.Option); ok {
+		return val.Validate(&fldPath)
+	}
+
+	return nil
+}
+
 func parseV01Options[O rules.RuleOption](options any) (*O, error) {
 	optionsByte, err := json.Marshal(options)
 	if err != nil {
@@ -130,12 +165,6 @@ func parseV01Options[O rules.RuleOption](options any) (*O, error) {
 	var parsedOptions O
 	if err := json.Unmarshal(optionsByte, &parsedOptions); err != nil {
 		return nil, err
-	}
-
-	if val, ok := any(parsedOptions).(option.Option); ok {
-		if err := val.Validate().ToAggregate(); err != nil {
-			return nil, err
-		}
 	}
 
 	return &parsedOptions, nil
