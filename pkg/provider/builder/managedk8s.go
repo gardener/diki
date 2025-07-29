@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	"k8s.io/apimachinery/pkg/util/validation/field"
+
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/metadata"
 	"github.com/gardener/diki/pkg/provider"
@@ -18,18 +20,20 @@ import (
 )
 
 // ManagedK8SProviderFromConfig retuns a Provider from a [ProviderConfig].
-func ManagedK8SProviderFromConfig(conf config.ProviderConfig) (provider.Provider, error) {
+func ManagedK8SProviderFromConfig(conf config.ProviderConfig, rootPath *field.Path) (provider.Provider, error) {
 	p, err := managedk8s.FromGenericConfig(conf)
 	if err != nil {
 		return nil, err
 	}
+
+	rulesetsPath := rootPath.Child("rulesets")
 
 	setConfigDefaults(p.Config)
 	providerLogger := slog.Default().With("provider", p.ID())
 	setLoggerFunc := managedk8s.WithLogger(providerLogger)
 	setLoggerFunc(p)
 	rulesets := make([]ruleset.Ruleset, 0, len(conf.Rulesets))
-	for _, rulesetConfig := range conf.Rulesets {
+	for rulesetIdx, rulesetConfig := range conf.Rulesets {
 		switch rulesetConfig.ID {
 		case disak8sstig.RulesetID:
 			ruleset, err := disak8sstig.FromGenericConfig(rulesetConfig, p.AdditionalOpsPodLabels, p.Config)
@@ -40,7 +44,7 @@ func ManagedK8SProviderFromConfig(conf config.ProviderConfig) (provider.Provider
 			setLoggerDISA(ruleset)
 			rulesets = append(rulesets, ruleset)
 		case securityhardenedk8s.RulesetID:
-			ruleset, err := securityhardenedk8s.FromGenericConfig(rulesetConfig, p.Config)
+			ruleset, err := securityhardenedk8s.FromGenericConfig(rulesetConfig, p.Config, *rulesetsPath.Index(rulesetIdx))
 			if err != nil {
 				return nil, err
 			}
