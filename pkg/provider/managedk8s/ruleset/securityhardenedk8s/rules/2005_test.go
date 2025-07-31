@@ -274,12 +274,12 @@ var _ = Describe("#2005", func() {
 		It("should deny empty allowed images list", func() {
 			options := rules.Options2005{}
 
-			result := options.Validate(field.NewPath(""))
+			result := options.Validate(field.NewPath("foo"))
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("[].allowedImages"),
+					"Field":  Equal("foo.allowedImages"),
 					"Detail": Equal("must not be empty"),
 				})),
 			))
@@ -300,12 +300,12 @@ var _ = Describe("#2005", func() {
 				},
 			}
 
-			result := options.Validate(field.NewPath(""))
+			result := options.Validate(field.NewPath("foo"))
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("[].allowedImages[1].prefix"),
+					"Field":  Equal("foo.allowedImages[1].prefix"),
 					"Detail": Equal("must not be empty"),
 				})),
 			))

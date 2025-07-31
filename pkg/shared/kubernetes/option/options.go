@@ -20,10 +20,9 @@ type ClusterObjectSelector struct {
 var _ option.Option = (*ClusterObjectSelector)(nil)
 
 // Validate validates that option configurations are correctly defined.
-func (s *ClusterObjectSelector) Validate(_ *field.Path) field.ErrorList {
+func (s *ClusterObjectSelector) Validate(fldPath *field.Path) field.ErrorList {
 	var (
 		allErrs field.ErrorList
-		fldPath = field.NewPath("")
 	)
 
 	if len(s.MatchLabels) == 0 {
@@ -44,7 +43,7 @@ type NamespacedObjectSelector struct {
 // TODO: Implement new Option interface in this package with Validate method, which recieves field.Path.
 var _ option.Option = (*NamespacedObjectSelector)(nil)
 
-// Validate validates that option configurations are correctly defined. It accepts an additional paremeter to which to append the erorred configuration's fields.
+// Validate validates that option configurations are correctly defined. It accepts a [field.Path] parameter with the rootPath.
 func (s *NamespacedObjectSelector) Validate(fldPath *field.Path) field.ErrorList {
 	var (
 		allErrs field.ErrorList

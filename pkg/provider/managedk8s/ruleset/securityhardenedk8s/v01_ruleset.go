@@ -22,7 +22,7 @@ func (r *Ruleset) validateV01RuleOptions(ruleOptions map[string]internalconfig.I
 	allErrs := field.ErrorList{}
 
 	allErrs = append(allErrs, validateV01Options[rules.Options2000](ruleOptions["2000"].Args, *fldPath.Index(ruleOptions["2000"].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV01Options[rules.Options2001](ruleOptions["2001"].Args, *fldPath.Index(ruleOptions["2002"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2001](ruleOptions["2001"].Args, *fldPath.Index(ruleOptions["2001"].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV01Options[rules.Options2002](ruleOptions["2002"].Args, *fldPath.Index(ruleOptions["2002"].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV01Options[rules.Options2003](ruleOptions["2003"].Args, *fldPath.Index(ruleOptions["2003"].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV01Options[rules.Options2004](ruleOptions["2004"].Args, *fldPath.Index(ruleOptions["2004"].Index).Child("args"))...)
@@ -140,9 +140,7 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 }
 
 func validateV01Options[O rules.RuleOption](options any, fldPath field.Path) field.ErrorList {
-
 	parsedOptions, err := parseV01Options[O](options)
-
 	if err != nil {
 		return field.ErrorList{
 			field.InternalError(&fldPath, err),

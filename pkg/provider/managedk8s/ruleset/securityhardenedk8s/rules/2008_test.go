@@ -418,17 +418,17 @@ var _ = Describe("#2008", func() {
 				},
 			}
 
-			result := options.Validate(field.NewPath(""))
+			result := options.Validate(field.NewPath("foo"))
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("[].acceptedPods[0].volumeNames"),
+					"Field":  Equal("foo.acceptedPods[0].volumeNames"),
 					"Detail": Equal("must not be empty"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("[].acceptedPods[2].volumeNames[0]"),
+					"Field":    Equal("foo.acceptedPods[2].volumeNames[0]"),
 					"BadValue": Equal(""),
 					"Detail":   Equal("must not be empty"),
 				})),
