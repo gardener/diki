@@ -44,16 +44,16 @@ type AcceptedPods242417 struct {
 	Status        string `json:"status" yaml:"status"`
 }
 
-func (o Options242417) Validate() field.ErrorList {
+func (o Options242417) Validate(_ *field.Path) field.ErrorList {
 	var (
-		allErrs  field.ErrorList
-		rootPath = field.NewPath("acceptedPods")
+		allErrs field.ErrorList
+		fldPath = field.NewPath("acceptedPods")
 	)
 
 	for _, p := range o.AcceptedPods {
-		allErrs = append(allErrs, p.Validate()...)
+		allErrs = append(allErrs, p.Validate(nil)...)
 		if !slices.Contains([]string{"Passed", "Accepted"}, p.Status) && len(p.Status) > 0 {
-			allErrs = append(allErrs, field.Invalid(rootPath.Child("status"), p.Status, "must be one of 'Passed' or 'Accepted'"))
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("status"), p.Status, "must be one of 'Passed' or 'Accepted'"))
 		}
 	}
 

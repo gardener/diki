@@ -7,6 +7,8 @@ package provider
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/util/validation/field"
+
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/metadata"
 	"github.com/gardener/diki/pkg/rule"
@@ -32,7 +34,7 @@ type ProviderResult struct {
 }
 
 // ProviderFromConfigFunc constructs a Provider from ProviderConfig.
-type ProviderFromConfigFunc func(conf config.ProviderConfig) (Provider, error)
+type ProviderFromConfigFunc func(conf config.ProviderConfig, fldPath *field.Path) (Provider, error)
 
 // MetadataFunc constructs a detailed Provider metadata object.
 type MetadataFunc func() metadata.ProviderDetailed

@@ -45,7 +45,7 @@ type Options242407 struct {
 
 var _ option.Option = (*Options242407)(nil)
 
-func (o Options242407) Validate() field.ErrorList {
+func (o Options242407) Validate(_ *field.Path) field.ErrorList {
 	return option.ValidateLabelNames(o.NodeGroupByLabels, field.NewPath("nodeGroupByLabels"))
 }
 

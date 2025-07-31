@@ -37,11 +37,13 @@ type Options2004 struct {
 }
 
 // Validate validates that option configurations are correctly defined
-func (o Options2004) Validate() field.ErrorList {
+func (o Options2004) Validate(fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
 
-	for _, s := range o.AcceptedServices {
-		allErrs = append(allErrs, s.Validate()...)
+	acceptedServicesPath := fldPath.Child("acceptedServices")
+
+	for sIdx, s := range o.AcceptedServices {
+		allErrs = append(allErrs, s.Validate(acceptedServicesPath.Index(sIdx))...)
 	}
 
 	return allErrs

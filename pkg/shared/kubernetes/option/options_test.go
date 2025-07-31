@@ -37,25 +37,25 @@ var _ = Describe("options", func() {
 
 			var result field.ErrorList
 			for _, p := range attributes {
-				result = append(result, p.Validate()...)
+				result = append(result, p.Validate(field.NewPath("foo"))...)
 			}
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("[].matchLabels"),
+					"Field":    Equal("foo.matchLabels"),
 					"BadValue": Equal("bar."),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("[].matchLabels"),
+					"Field":    Equal("foo.matchLabels"),
 					"BadValue": Equal("at$a"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("[].matchLabels"),
+					"Field":  Equal("foo.matchLabels"),
 					"Detail": Equal("must not be empty"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("[].matchLabels"),
+					"Field":  Equal("foo.matchLabels"),
 					"Detail": Equal("must not be empty"),
 				}))))
 		})
@@ -102,46 +102,46 @@ var _ = Describe("options", func() {
 
 			var result field.ErrorList
 			for _, p := range attributes {
-				result = append(result, p.Validate()...)
+				result = append(result, p.Validate(field.NewPath("foo"))...)
 			}
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("[].namespaceMatchLabels"),
+					"Field":    Equal("foo.namespaceMatchLabels"),
 					"BadValue": Equal("_foo"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("[].matchLabels"),
+					"Field":    Equal("foo.matchLabels"),
 					"BadValue": Equal("bar."),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("[].namespaceMatchLabels"),
+					"Field":    Equal("foo.namespaceMatchLabels"),
 					"BadValue": Equal("fo?o"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("[].namespaceMatchLabels"),
+					"Field":    Equal("foo.namespaceMatchLabels"),
 					"BadValue": Equal("ba/r"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("[].matchLabels"),
+					"Field":    Equal("foo.matchLabels"),
 					"BadValue": Equal("at$a"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("[].namespaceMatchLabels"),
+					"Field":  Equal("foo.namespaceMatchLabels"),
 					"Detail": Equal("must not be empty"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("[].namespaceMatchLabels"),
+					"Field":  Equal("foo.namespaceMatchLabels"),
 					"Detail": Equal("must not be empty"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("[].matchLabels"),
+					"Field":  Equal("foo.matchLabels"),
 					"Detail": Equal("must not be empty"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("[].matchLabels"),
+					"Field":  Equal("foo.matchLabels"),
 					"Detail": Equal("must not be empty"),
 				}))))
 		})

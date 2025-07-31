@@ -41,15 +41,15 @@ type Options1003 struct {
 	AllowedLakomScopes []lakomapi.ScopeType `json:"allowedLakomScopes" yaml:"allowedLakomScopes"`
 }
 
-func (o Options1003) Validate() field.ErrorList {
+func (o Options1003) Validate(_ *field.Path) field.ErrorList {
 	var (
-		allErrs  field.ErrorList
-		rootPath = field.NewPath("minLakomScope")
+		allErrs field.ErrorList
+		fldPath = field.NewPath("minLakomScope")
 	)
 
 	for _, lakomScope := range o.AllowedLakomScopes {
 		if !lakomapi.AllowedScopes.Has(lakomScope) {
-			allErrs = append(allErrs, field.Invalid(rootPath, lakomScope, "must be valid Lakom Scope"))
+			allErrs = append(allErrs, field.Invalid(fldPath, lakomScope, "must be valid Lakom Scope"))
 		}
 	}
 

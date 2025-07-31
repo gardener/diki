@@ -37,19 +37,19 @@ type AcceptedPods2003 struct {
 }
 
 // Validate validates that option configurations are correctly defined
-func (o Options2003) Validate() field.ErrorList {
+func (o Options2003) Validate(fldPath *field.Path) field.ErrorList {
 	var (
-		allErrs  field.ErrorList
-		rootPath = field.NewPath("acceptedPods")
+		allErrs          field.ErrorList
+		acceptedPodsPath = fldPath.Child("acceptedPods")
 	)
-	for _, p := range o.AcceptedPods {
-		allErrs = append(allErrs, p.Validate()...)
+	for pIdx, p := range o.AcceptedPods {
+		allErrs = append(allErrs, p.Validate(acceptedPodsPath.Index(pIdx))...)
 		if len(p.VolumeNames) == 0 {
-			allErrs = append(allErrs, field.Required(rootPath.Child("volumeNames"), "must not be empty"))
+			allErrs = append(allErrs, field.Required(acceptedPodsPath.Index(pIdx).Child("volumeNames"), "must not be empty"))
 		}
 		for i, volumeName := range p.VolumeNames {
 			if len(volumeName) == 0 {
-				allErrs = append(allErrs, field.Invalid(rootPath.Child("volumeNames").Index(i), volumeName, "must not be empty"))
+				allErrs = append(allErrs, field.Invalid(acceptedPodsPath.Index(pIdx).Child("volumeNames").Index(i), volumeName, "must not be empty"))
 			}
 		}
 	}
