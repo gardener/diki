@@ -157,6 +157,38 @@ func (o Options242415) Validate(_ *field.Path) field.ErrorList {
 	return allErrs
 }
 
+var _ Option = (*AllowedImages242442)(nil)
+
+// AllowedImages242442 defines a slices of allowed container images for rule 242442
+type AllowedImages242442 struct {
+	AllowedImages []AllowedImage `json:"allowedImages" yaml:"allowedImages"`
+}
+
+// AllowedImage contains option specifications for accepted container images
+type AllowedImage struct {
+	Name string `json:"name" yaml:"name"`
+}
+
+// Validate validates that option configurations are correctly defined
+func (o AllowedImages242442) Validate() field.ErrorList {
+	var (
+		allErrs  field.ErrorList
+		rootPath = field.NewPath("allowedImages")
+	)
+
+	if len(o.AllowedImages) == 0 {
+		return field.ErrorList{field.Required(rootPath, "must not be empty")}
+	}
+
+	for i, a := range o.AllowedImages {
+		if len(a.Name) == 0 {
+			allErrs = append(allErrs, field.Required(rootPath.Index(i).Child("name"), "must not be empty"))
+		}
+	}
+
+	return allErrs
+}
+
 // ValidateLabelNames validates that label names a correctly defined
 func ValidateLabelNames(labelNames []string, fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
