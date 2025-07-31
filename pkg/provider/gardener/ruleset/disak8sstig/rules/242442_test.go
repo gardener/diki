@@ -17,6 +17,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var _ = Describe("#242442", func() {
@@ -30,6 +31,7 @@ var _ = Describe("#242442", func() {
 		digest1         = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 		digest2         = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b854"
 		digest3         = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b853"
+		options         *rules.Options242442
 	)
 
 	BeforeEach(func() {
@@ -122,6 +124,7 @@ var _ = Describe("#242442", func() {
 				},
 			},
 		}
+		options = &rules.Options242442{}
 	})
 
 	It("should return correct results when all images use only 1 version", func() {
@@ -262,6 +265,41 @@ var _ = Describe("#242442", func() {
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+	})
+
+	It("should return accepted results when the image is listed in the allowedImages options", func() {
+		options.AllowedImages = []option.AllowedImage{
+			{
+				Name: "localhost:7777/image1",
+			},
+		}
+		r := &rules.Rule242442{ClusterClient: fakeShootClient, ControlPlaneClient: fakeSeedClient, ControlPlaneNamespace: namespace, Options: options}
+		pod1 := shootPod.DeepCopy()
+		pod1.Name = "pod1"
+		pod1.Status.ContainerStatuses[1].ImageID = "localhost:7777/image1@sha256:" + digest2
+		pod1.Status.ContainerStatuses[0].ImageID = "localhost:7777/image1@sha256:" + digest1
+		pod1.Status.ContainerStatuses[2].ImageID = "localhost:7777/image10@sha256:" + digest3
+		pod1.Status.InitContainerStatuses[0].ImageID = "localhost:7777/image10@sha256:" + digest1
+		Expect(fakeShootClient.Create(ctx, pod1)).To(Succeed())
+
+		pod2 := seedPod.DeepCopy()
+		pod2.Name = "pod2"
+		pod2.Status.ContainerStatuses[0].ImageID = "localhost:7778/image2@sha256:" + digest3
+		pod2.Status.ContainerStatuses[1].ImageID = "localhost:7778/image3@sha256:" + digest1
+		pod2.Status.ContainerStatuses[2].ImageID = "localhost:7778/image3@sha256:" + digest3
+		pod2.Status.InitContainerStatuses[0].ImageID = "localhost:7777/image10@sha256:" + digest1
+		Expect(fakeSeedClient.Create(ctx, pod2)).To(Succeed())
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).To(BeNil())
+
+		Expect(ruleResult.CheckResults).To(Equal(
+			[]rule.CheckResult{
+				rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "seed", "image", "localhost:7778/image3", "namespace", seedPod.Namespace)),
+				rule.AcceptedCheckResult("Image is allowed to be deployed with more than one versions.", rule.NewTarget("cluster", "shoot", "image", "localhost:7777/image1", "namespace", shootPod.Namespace)),
+				rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "shoot", "image", "localhost:7777/image10", "namespace", shootPod.Namespace)),
+			},
+		))
 	})
 
 	It("should return correct targets when the pods have owner references", func() {
