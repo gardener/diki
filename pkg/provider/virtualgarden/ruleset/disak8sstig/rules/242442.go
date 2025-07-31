@@ -16,6 +16,7 @@ import (
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -27,7 +28,10 @@ var (
 type Rule242442 struct {
 	Client    client.Client
 	Namespace string
+	Options   *Options242442
 }
+
+type Options242442 option.AllowedImages242442
 
 func (r *Rule242442) ID() string {
 	return sharedrules.ID242442
@@ -95,7 +99,13 @@ func (r *Rule242442) checkImages(pods []corev1.Pod, replicaSets []appsv1.Replica
 			if ref, ok := images[imageBase]; ok && ref != imageRef {
 				if _, reported := reportedImages[imageBase]; !reported {
 					reportedImages[imageBase] = struct{}{}
-					checkResults = append(checkResults, rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("image", imageBase)))
+					if r.Options != nil && slices.ContainsFunc(r.Options.AllowedImages, func(allowedImage option.AllowedImage) bool {
+						return allowedImage.Name == imageBase
+					}) {
+						checkResults = append(checkResults, rule.AcceptedCheckResult("Image is allowed to be deployed with more than one versions.", rule.NewTarget("image", imageBase)))
+					} else {
+						checkResults = append(checkResults, rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("image", imageBase)))
+					}
 				}
 			} else {
 				images[imageBase] = imageRef
