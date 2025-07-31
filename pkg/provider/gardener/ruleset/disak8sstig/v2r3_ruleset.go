@@ -92,6 +92,10 @@ func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsCon
 	if err != nil {
 		return fmt.Errorf("rule option 242415 error: %s", err.Error())
 	}
+	opts242442, err := getV2R2OptionOrNil[rules.Options242442](ruleOptions[sharedrules.ID242442].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 242442 error: %s", err.Error())
+	}
 	opts242445, err := getV2R3OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedrules.ID242445].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242445 error: %s", err.Error())
@@ -409,7 +413,7 @@ func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsCon
 			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 		&sharedrules.Rule242438{Client: seedClient, Namespace: r.shootNamespace},
-		&rules.Rule242442{ClusterClient: shootClient, ControlPlaneClient: seedClient, ControlPlaneNamespace: r.shootNamespace},
+		&rules.Rule242442{ClusterClient: shootClient, ControlPlaneClient: seedClient, ControlPlaneNamespace: r.shootNamespace, Options: opts242442},
 		rule.NewSkipRule(
 			sharedrules.ID242443,
 			"Kubernetes must contain the latest updates as authorized by IAVMs, CTOs, DTMs, and STIGs.",
