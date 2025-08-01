@@ -35,6 +35,7 @@ anonymous:
   conditions:
   - path: /healthz
   - path: /livez
+  - path: /readyz
 `
 		enabledAnonymousAuthenticationConfigWithoutConditions = `apiVersion: apiserver.config.k8s.io/v1beta1
 kind: AuthenticationConfiguration
@@ -121,12 +122,12 @@ anonymous:
 	)
 
 	DescribeTable("Run cases for authentication-config flag",
-		func(container corev1.Container, modifyKAPIServer func(), expectedCheckResults []rule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
+		func(container corev1.Container, modifyKAPIServer func(), options *rules.Options242390, expectedCheckResults []rule.CheckResult, errorMatcher gomegatypes.GomegaMatcher) {
 			ksDeployment.Spec.Template.Spec.Containers = []corev1.Container{container}
 			modifyKAPIServer()
 			Expect(fakeClient.Create(ctx, ksDeployment)).To(Succeed())
 
-			r := &rules.Rule242390{Client: fakeClient, Namespace: namespace}
+			r := &rules.Rule242390{Client: fakeClient, Namespace: namespace, Options: options}
 			ruleResult, err := r.Run(ctx)
 			Expect(err).To(errorMatcher)
 
@@ -135,6 +136,7 @@ anonymous:
 		Entry("should warn if neither the anonymous-auth nor authentication-config options are set",
 			corev1.Container{Name: "kube-apiserver", Command: []string{}},
 			func() {},
+			nil,
 			[]rule.CheckResult{{Status: rule.Warning, Message: "Neither options anonymous-auth nor authentication-config have been set.", Target: target}},
 			BeNil()),
 		Entry("should warn if the authentication-config flag is set more than once",
@@ -143,6 +145,7 @@ anonymous:
 				Command: []string{"--authentication-config=/etc/foo/bar", "--authentication-config=/etc/foo/baz"},
 			},
 			func() {},
+			nil,
 			[]rule.CheckResult{{Status: rule.Warning, Message: "Option authentication-config has been set more than once in container command.", Target: target}},
 			BeNil()),
 		Entry("should error if the volume cannot be retrieved from the mount",
@@ -157,6 +160,7 @@ anonymous:
 				},
 			},
 			func() {},
+			nil,
 			[]rule.CheckResult{{Status: rule.Errored, Message: "deployment does not contain volume with name: authentication-config", Target: target}},
 			BeNil()),
 		Entry("should error if the configMap cannot be parsed",
@@ -193,6 +197,7 @@ anonymous:
 				}
 				Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
 			},
+			nil,
 			[]rule.CheckResult{{Status: rule.Errored, Message: "yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `foo` into v1beta1.AuthenticationConfiguration", Target: target}},
 			BeNil()),
 		Entry("should fail if the authentication configuration has anonymous authentication enabled unconditionally.",
@@ -229,6 +234,7 @@ anonymous:
 				}
 				Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
 			},
+			nil,
 			[]rule.CheckResult{{Status: rule.Failed, Message: "The authentication configuration has anonymous authentication enabled.", Target: target}},
 			BeNil()),
 		Entry("should fail if the authentication configuration has anonymous authentication enabled with conditions.",
@@ -265,6 +271,7 @@ anonymous:
 				}
 				Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
 			},
+			nil,
 			[]rule.CheckResult{{Status: rule.Failed, Message: "The authentication configuration has anonymous authentication enabled.", Target: target}},
 			BeNil()),
 		Entry("should pass if the authentication configuration has anonymous authentication disabled.",
@@ -301,7 +308,161 @@ anonymous:
 				}
 				Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
 			},
+			nil,
 			[]rule.CheckResult{{Status: rule.Passed, Message: "The authentication configuration has anonymous authentication disabled.", Target: target}},
+			BeNil()),
+		Entry("should be accepted if the enabled condition endpoints are configured in the rule options.",
+			corev1.Container{
+				Name:    "kube-apiserver",
+				Command: []string{"--authentication-config=/etc/foo/bar"},
+				VolumeMounts: []corev1.VolumeMount{
+					{
+						Name:      "authentication-config",
+						MountPath: "/etc/foo/bar",
+					},
+				},
+			},
+			func() {
+				ksDeployment.Spec.Template.Spec.Volumes = []corev1.Volume{{
+					Name: "authentication-config",
+					VolumeSource: corev1.VolumeSource{
+						ConfigMap: &corev1.ConfigMapVolumeSource{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "authentication-config",
+							},
+						},
+					},
+				}}
+
+				configMap := &corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "authentication-config",
+						Namespace: namespace,
+					},
+					Data: map[string]string{
+						"/etc/foo/bar": enabledAnonymousAuthenticationConfigWithConditions,
+					},
+				}
+				Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
+			},
+			&rules.Options242390{
+				AllowedEndpoints: []rules.AllowedEndpoint{
+					{
+						Path: "/healthz",
+					},
+					{
+						Path: "/readyz",
+					},
+					{
+						Path: "/livez",
+					},
+					{
+						Path: "/fooz",
+					},
+				},
+			},
+			[]rule.CheckResult{{Status: rule.Accepted, Message: "The authentication configuration is allowed to have anonymous authentication enabled.", Target: target}},
+			BeNil()),
+		Entry("should fail if an enabled condition endpoint is not configured in the rule options.",
+			corev1.Container{
+				Name:    "kube-apiserver",
+				Command: []string{"--authentication-config=/etc/foo/bar"},
+				VolumeMounts: []corev1.VolumeMount{
+					{
+						Name:      "authentication-config",
+						MountPath: "/etc/foo/bar",
+					},
+				},
+			},
+			func() {
+				ksDeployment.Spec.Template.Spec.Volumes = []corev1.Volume{{
+					Name: "authentication-config",
+					VolumeSource: corev1.VolumeSource{
+						ConfigMap: &corev1.ConfigMapVolumeSource{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "authentication-config",
+							},
+						},
+					},
+				}}
+
+				configMap := &corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "authentication-config",
+						Namespace: namespace,
+					},
+					Data: map[string]string{
+						"/etc/foo/bar": enabledAnonymousAuthenticationConfigWithConditions,
+					},
+				}
+				Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
+			},
+			&rules.Options242390{
+				AllowedEndpoints: []rules.AllowedEndpoint{
+					{
+						Path: "/healthz",
+					},
+					{
+						Path: "/barz",
+					},
+					{
+						Path: "/fooz",
+					},
+				},
+			},
+			[]rule.CheckResult{
+				{Status: rule.Failed, Message: "Anonymous authentication is not allowed for endpoint /livez of the kube-apiserver.", Target: target},
+				{Status: rule.Failed, Message: "Anonymous authentication is not allowed for endpoint /readyz of the kube-apiserver.", Target: target},
+			},
+			BeNil()),
+		Entry("should fail if anonymous authentication is enabled unconditionally and options are configured",
+			corev1.Container{
+				Name:    "kube-apiserver",
+				Command: []string{"--authentication-config=/etc/foo/bar"},
+				VolumeMounts: []corev1.VolumeMount{
+					{
+						Name:      "authentication-config",
+						MountPath: "/etc/foo/bar",
+					},
+				},
+			},
+			func() {
+				ksDeployment.Spec.Template.Spec.Volumes = []corev1.Volume{{
+					Name: "authentication-config",
+					VolumeSource: corev1.VolumeSource{
+						ConfigMap: &corev1.ConfigMapVolumeSource{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "authentication-config",
+							},
+						},
+					},
+				}}
+
+				configMap := &corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "authentication-config",
+						Namespace: namespace,
+					},
+					Data: map[string]string{
+						"/etc/foo/bar": enabledAnonymousAuthenticationConfigWithoutConditions,
+					},
+				}
+				Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
+			},
+			&rules.Options242390{
+				AllowedEndpoints: []rules.AllowedEndpoint{
+					{
+						Path: "/healthz",
+					},
+					{
+						Path: "/barz",
+					},
+					{
+						Path: "/fooz",
+					},
+				},
+			},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "The authentication configuration has anonymous authentication enabled.", Target: target}},
 			BeNil()),
 	)
 })
