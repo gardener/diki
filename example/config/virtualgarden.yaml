@@ -18,6 +18,11 @@ providers:               # contains information about known providers
     #   skip:
     #     enabled: true
     #     justification: "the whole rule is accepted for ... reasons"
+    # - ruleID: "242390"
+    #   args:
+    #     allowedEndpoints:
+    #     - path: /healthz
+    #     - path: /livez
     - ruleID: "242445"
       args:
         expectedFileOwner:
