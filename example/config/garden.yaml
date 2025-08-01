@@ -37,6 +37,11 @@ providers:       # contains information about known providers
     #     - KubeSystem
     #     - Cluster
     # - ruleID: "2000"
+    #   args:
+    #     allowedEndpoints:
+    #     - path: /readyz
+    #     - path: /healthz
+    # - ruleID: "2001"
     #   skip:
     #     enabled: true
     #     justification: "the whole rule is accepted for ... reasons"

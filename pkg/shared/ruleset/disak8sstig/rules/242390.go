@@ -7,20 +7,24 @@ package rules
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"gopkg.in/yaml.v3"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	apiserverv1beta1 "k8s.io/apiserver/pkg/apis/apiserver/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var (
 	_ rule.Rule     = &Rule242390{}
 	_ rule.Severity = &Rule242390{}
+	_ option.Option = &Options242390{}
 )
 
 type Rule242390 struct {
@@ -28,6 +32,34 @@ type Rule242390 struct {
 	Namespace      string
 	DeploymentName string
 	ContainerName  string
+	Options        *Options242390
+}
+
+type Options242390 struct {
+	AllowedEndpoints []AllowedEndpoint `yaml:"allowedEndpoints" json:"allowedEndpoints"`
+}
+
+type AllowedEndpoint struct {
+	Path string `yaml:"path" json:"path"`
+}
+
+func (o Options242390) Validate() field.ErrorList {
+	var (
+		allErrs              field.ErrorList
+		allowedEndpointsPath = field.NewPath("allowedEndpoints")
+	)
+
+	if len(o.AllowedEndpoints) == 0 {
+		return field.ErrorList{field.Required(allowedEndpointsPath, "must not be empty")}
+	}
+
+	for i, e := range o.AllowedEndpoints {
+		if len(e.Path) == 0 {
+			allErrs = append(allErrs, field.Required(allowedEndpointsPath.Index(i).Child("path"), "must not be empty"))
+		}
+	}
+
+	return allErrs
 }
 
 func (r *Rule242390) ID() string {
@@ -116,7 +148,26 @@ func (r *Rule242390) Run(ctx context.Context) (rule.RuleResult, error) {
 	case authConfig.Anonymous == nil:
 		return rule.Result(r, rule.FailedCheckResult("The authentication configuration does not explicitly disable anonymous authentication.", target)), nil
 	case authConfig.Anonymous != nil && authConfig.Anonymous.Enabled:
-		return rule.Result(r, rule.FailedCheckResult("The authentication configuration has anonymous authentication enabled.", target)), nil
+
+		if r.Options == nil || len(authConfig.Anonymous.Conditions) == 0 {
+			return rule.Result(r, rule.FailedCheckResult("The authentication configuration has anonymous authentication enabled.", target)), nil
+		}
+
+		var checkResults []rule.CheckResult
+
+		for _, condition := range authConfig.Anonymous.Conditions {
+			if !slices.ContainsFunc(r.Options.AllowedEndpoints, func(allowedPath AllowedEndpoint) bool {
+				return allowedPath.Path == condition.Path
+			}) {
+				checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Anonymous authentication is not allowed for endpoint %s of the kube-apiserver.", condition.Path), target))
+			}
+		}
+
+		if len(checkResults) == 0 {
+			return rule.Result(r, rule.AcceptedCheckResult("The authentication configuration is allowed to have anonymous authentication enabled.", target)), nil
+		}
+
+		return rule.Result(r, checkResults...), nil
 	default:
 		return rule.Result(r, rule.PassedCheckResult("The authentication configuration has anonymous authentication disabled.", target)), nil
 	}
