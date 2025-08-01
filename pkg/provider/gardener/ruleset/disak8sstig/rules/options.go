@@ -10,7 +10,8 @@ import (
 )
 
 type RuleOption interface {
-	option.Options242414 |
+	sharedrules.Options242390 |
+		option.Options242414 |
 		option.Options242415 |
 		Options242451 |
 		sharedrules.Options245543 |
