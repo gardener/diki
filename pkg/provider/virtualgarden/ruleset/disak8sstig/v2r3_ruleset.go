@@ -31,6 +31,10 @@ func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsCon
 	if err != nil {
 		return err
 	}
+	opts242390, err := getV2R2OptionOrNil[sharedrules.Options242390](ruleOptions[sharedrules.ID242390].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 242445 error: %s", err.Error())
+	}
 	opts242445, err := getV2R3OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedrules.ID242445].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242445 error: %s", err.Error())
@@ -163,6 +167,7 @@ func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsCon
 			Namespace:      ns,
 			DeploymentName: apiserverDeploymentName,
 			ContainerName:  apiserverContainerName,
+			Options:        opts242390,
 		},
 		rule.NewSkipRule(
 			sharedrules.ID242391,

@@ -12,16 +12,19 @@ import (
 	"gopkg.in/yaml.v3"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	apiserverv1beta1 "k8s.io/apiserver/pkg/apis/apiserver/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var (
 	_ rule.Rule     = &Rule242390{}
 	_ rule.Severity = &Rule242390{}
+	_ option.Option = &Options242390{}
 )
 
 type Rule242390 struct {
@@ -38,6 +41,25 @@ type Options242390 struct {
 
 type AllowedEndpoint struct {
 	Path string `yaml:"path" json:"path"`
+}
+
+func (o Options242390) Validate() field.ErrorList {
+	var (
+		allErrs              field.ErrorList
+		allowedEndpointsPath = field.NewPath("allowedEndpoints")
+	)
+
+	if len(o.AllowedEndpoints) == 0 {
+		return field.ErrorList{field.Required(allowedEndpointsPath, "must not be empty")}
+	}
+
+	for i, e := range o.AllowedEndpoints {
+		if len(e.Path) == 0 {
+			allErrs = append(allErrs, field.Required(allowedEndpointsPath.Index(i).Child("path"), "must not be empty"))
+		}
+	}
+
+	return allErrs
 }
 
 func (r *Rule242390) ID() string {

@@ -9,10 +9,12 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 	gomegatypes "github.com/onsi/gomega/types"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -465,4 +467,46 @@ anonymous:
 			[]rule.CheckResult{{Status: rule.Failed, Message: "The authentication configuration has anonymous authentication enabled.", Target: target}},
 			BeNil()),
 	)
+
+	Describe("#ValidateOptions242390", func() {
+		It("should deny empty allowed endpoints list", func() {
+			options := rules.Options242390{}
+
+			result := options.Validate()
+
+			Expect(result).To(ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("allowedEndpoints"),
+					"Detail": Equal("must not be empty"),
+				})),
+			))
+		})
+
+		It("should correctly validate options", func() {
+			options := rules.Options242390{
+				AllowedEndpoints: []rules.AllowedEndpoint{
+					{
+						Path: "/healthz",
+					},
+					{
+						Path: "",
+					},
+					{
+						Path: "/barz",
+					},
+				},
+			}
+
+			result := options.Validate()
+
+			Expect(result).To(ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("allowedEndpoints[1].path"),
+					"Detail": Equal("must not be empty"),
+				})),
+			))
+		})
+	})
 })
