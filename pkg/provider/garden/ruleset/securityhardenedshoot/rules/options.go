@@ -9,5 +9,6 @@ type RuleOption interface {
 		Options1001 |
 		Options1002 |
 		Options1003 |
+		Options2000 |
 		Options2007
 }

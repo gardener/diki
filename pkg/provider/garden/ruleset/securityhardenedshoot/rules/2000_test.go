@@ -11,8 +11,10 @@ import (
 	"github.com/gardener/gardener/pkg/client/kubernetes"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -367,4 +369,46 @@ kind: AuthenticationConfiguration
 			[]rule.CheckResult{{Status: rule.Failed, Message: "Anonymous authentication is enabled for the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")}},
 		),
 	)
+
+	Describe("#ValidateOptions2000", func() {
+		It("should deny empty allowed endpoints list", func() {
+			options := rules.Options2000{}
+
+			result := options.Validate()
+
+			Expect(result).To(ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("allowedEndpoints"),
+					"Detail": Equal("must not be empty"),
+				})),
+			))
+		})
+
+		It("should correctly validate options", func() {
+			options := rules.Options2000{
+				AllowedEndpoints: []rules.AllowedEndpoint{
+					{
+						Path: "/healthz",
+					},
+					{
+						Path: "",
+					},
+					{
+						Path: "/barz",
+					},
+				},
+			}
+
+			result := options.Validate()
+
+			Expect(result).To(ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("allowedEndpoints[1].path"),
+					"Detail": Equal("must not be empty"),
+				})),
+			))
+		})
+	})
 })
