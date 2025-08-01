@@ -7,6 +7,7 @@ package rules
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"gopkg.in/yaml.v3"
 	appsv1 "k8s.io/api/apps/v1"
@@ -28,6 +29,15 @@ type Rule242390 struct {
 	Namespace      string
 	DeploymentName string
 	ContainerName  string
+	Options        *Options242390
+}
+
+type Options242390 struct {
+	AllowedEndpoints []AllowedEndpoint `yaml:"allowedEndpoints" json:"allowedEndpoints"`
+}
+
+type AllowedEndpoint struct {
+	Path string `yaml:"path" json:"path"`
 }
 
 func (r *Rule242390) ID() string {
@@ -116,7 +126,26 @@ func (r *Rule242390) Run(ctx context.Context) (rule.RuleResult, error) {
 	case authConfig.Anonymous == nil:
 		return rule.Result(r, rule.FailedCheckResult("The authentication configuration does not explicitly disable anonymous authentication.", target)), nil
 	case authConfig.Anonymous != nil && authConfig.Anonymous.Enabled:
-		return rule.Result(r, rule.FailedCheckResult("The authentication configuration has anonymous authentication enabled.", target)), nil
+
+		if r.Options == nil || len(authConfig.Anonymous.Conditions) == 0 {
+			return rule.Result(r, rule.FailedCheckResult("The authentication configuration has anonymous authentication enabled.", target)), nil
+		}
+
+		var checkResults []rule.CheckResult
+
+		for _, condition := range authConfig.Anonymous.Conditions {
+			if !slices.ContainsFunc(r.Options.AllowedEndpoints, func(allowedPath AllowedEndpoint) bool {
+				return allowedPath.Path == condition.Path
+			}) {
+				checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Anonymous authentication is not allowed for endpoint %s of the kube-apiserver.", condition.Path), target))
+			}
+		}
+
+		if len(checkResults) == 0 {
+			return rule.Result(r, rule.AcceptedCheckResult("The authentication configuration is allowed to have anonymous authentication enabled.", target)), nil
+		}
+
+		return rule.Result(r, checkResults...), nil
 	default:
 		return rule.Result(r, rule.PassedCheckResult("The authentication configuration has anonymous authentication disabled.", target)), nil
 	}
