@@ -33,6 +33,6 @@ RUN mkdir -p ./bin ./usr/local/bin ./sbin ./lib ./tmp \
     && cp -d /usr/sbin/chroot ./sbin                 && echo "package chroot" \
     && cp -d /usr/local/bin/nerdctl ./usr/local/bin  && echo "package nerdctl"
 
-FROM scratch as diki-ops
+FROM scratch AS diki-ops
 WORKDIR /
 COPY --from=diki-ops-builder /volume .
