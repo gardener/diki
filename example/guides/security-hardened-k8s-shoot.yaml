@@ -38,6 +38,14 @@ providers:
           justification: "Gardener managed resources are accepted to use a wider range of volume types."
           volumeNames:
           - "*"
+    - ruleID: "2004"
+      args:
+        acceptedServices:
+        - matchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          namespaceMatchLabels:
+            resources.gardener.cloud/managed-by: gardener
+          justification: "Gardener managed services are accepted to of type NodePort."
     - ruleID: "2006"
       args:
         acceptedRoles:
