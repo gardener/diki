@@ -45,7 +45,7 @@ providers:
             resources.gardener.cloud/managed-by: gardener
           namespaceMatchLabels:
             resources.gardener.cloud/managed-by: gardener
-          justification: "Gardener managed services are accepted to of type NodePort."
+          justification: "Gardener managed services are accepted to be of type NodePort."
     - ruleID: "2006"
       args:
         acceptedRoles:
