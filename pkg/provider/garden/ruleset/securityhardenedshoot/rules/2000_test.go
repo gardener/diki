@@ -379,7 +379,7 @@ kind: AuthenticationConfiguration
 		It("should deny empty accepted endpoints list", func() {
 			options := rules.Options2000{}
 
-			result := options.Validate()
+			result := options.Validate(nil)
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
@@ -405,7 +405,7 @@ kind: AuthenticationConfiguration
 				},
 			}
 
-			result := options.Validate()
+			result := options.Validate(nil)
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{

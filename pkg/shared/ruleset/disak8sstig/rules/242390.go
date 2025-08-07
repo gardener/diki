@@ -43,10 +43,10 @@ type AcceptedEndpoint struct {
 	Path string `yaml:"path" json:"path"`
 }
 
-func (o Options242390) Validate() field.ErrorList {
+func (o Options242390) Validate(fldPath *field.Path) field.ErrorList {
 	var (
 		allErrs               field.ErrorList
-		acceptedEndpointsPath = field.NewPath("acceptedEndpoints")
+		acceptedEndpointsPath = fldPath.Child("acceptedEndpoints")
 	)
 
 	if len(o.AcceptedEndpoints) == 0 {
