@@ -56,6 +56,12 @@ linters:
         - disableStutteringCheck
       - name: increment-decrement
       - name: var-naming
+        # var-naming arguments are ordered https://github.com/mgechev/revive/blob/v1.11.0/RULES_DESCRIPTIONS.md#var-naming
+        arguments:
+        - []
+        - []
+        -
+          - skipPackageNameChecks: true
       - name: var-declaration
       # - name: package-comments
       - name: range
