@@ -76,6 +76,10 @@ func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsCon
 		return err
 	}
 
+	opts242390, err := getV2R2OptionOrNil[sharedrules.Options242390](ruleOptions[sharedrules.ID242390].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 242390 error: %s", err.Error())
+	}
 	opts242400, err := getV2R3OptionOrNil[option.KubeProxyOptions](ruleOptions[sharedrules.ID242400].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242400 error: %s", err.Error())
@@ -168,7 +172,7 @@ func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsCon
 		},
 		&sharedrules.Rule242388{Client: seedClient, Namespace: r.shootNamespace},
 		&sharedrules.Rule242389{Client: seedClient, Namespace: r.shootNamespace},
-		&sharedrules.Rule242390{Client: seedClient, Namespace: r.shootNamespace},
+		&sharedrules.Rule242390{Client: seedClient, Namespace: r.shootNamespace, Options: opts242390},
 		&sharedrules.Rule242391{
 			Client:       shootClient,
 			V1RESTClient: shootClientSet.CoreV1().RESTClient(),

@@ -23,6 +23,11 @@ providers:             # contains information about known providers
     #   skip:
     #     enabled: true
     #     justification: "the whole rule is accepted for ... reasons"
+    # - ruleID: "242390"
+    #   args:
+    #     acceptedEndpoints:
+    #     - path: /healthz
+    #     - path: /livez
     # - ruleID: "242400"
     #   args:
     #     kubeProxyDisabled: true # skip kube-proxy check
