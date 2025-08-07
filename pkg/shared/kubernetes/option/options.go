@@ -20,17 +20,16 @@ type ClusterObjectSelector struct {
 var _ option.Option = (*ClusterObjectSelector)(nil)
 
 // Validate validates that option configurations are correctly defined.
-func (s *ClusterObjectSelector) Validate() field.ErrorList {
+func (s *ClusterObjectSelector) Validate(fldPath *field.Path) field.ErrorList {
 	var (
-		allErrs  field.ErrorList
-		rootPath = field.NewPath("")
+		allErrs field.ErrorList
 	)
 
 	if len(s.MatchLabels) == 0 {
-		allErrs = append(allErrs, field.Required(rootPath.Child("matchLabels"), "must not be empty"))
+		allErrs = append(allErrs, field.Required(fldPath.Child("matchLabels"), "must not be empty"))
 	}
 
-	allErrs = append(allErrs, metav1validation.ValidateLabels(s.MatchLabels, rootPath.Child("matchLabels"))...)
+	allErrs = append(allErrs, metav1validation.ValidateLabels(s.MatchLabels, fldPath.Child("matchLabels"))...)
 
 	return allErrs
 }
@@ -44,23 +43,22 @@ type NamespacedObjectSelector struct {
 // TODO: Implement new Option interface in this package with Validate method, which recieves field.Path.
 var _ option.Option = (*NamespacedObjectSelector)(nil)
 
-// Validate validates that option configurations are correctly defined.
-func (s *NamespacedObjectSelector) Validate() field.ErrorList {
+// Validate validates that option configurations are correctly defined. It accepts a [field.Path] parameter with the rootPath.
+func (s *NamespacedObjectSelector) Validate(fldPath *field.Path) field.ErrorList {
 	var (
-		allErrs  field.ErrorList
-		rootPath = field.NewPath("")
+		allErrs field.ErrorList
 	)
 
 	if len(s.NamespaceMatchLabels) == 0 {
-		allErrs = append(allErrs, field.Required(rootPath.Child("namespaceMatchLabels"), "must not be empty"))
+		allErrs = append(allErrs, field.Required(fldPath.Child("namespaceMatchLabels"), "must not be empty"))
 	}
 
 	if len(s.MatchLabels) == 0 {
-		allErrs = append(allErrs, field.Required(rootPath.Child("matchLabels"), "must not be empty"))
+		allErrs = append(allErrs, field.Required(fldPath.Child("matchLabels"), "must not be empty"))
 	}
 
-	allErrs = append(allErrs, metav1validation.ValidateLabels(s.NamespaceMatchLabels, rootPath.Child("namespaceMatchLabels"))...)
-	allErrs = append(allErrs, metav1validation.ValidateLabels(s.MatchLabels, rootPath.Child("matchLabels"))...)
+	allErrs = append(allErrs, metav1validation.ValidateLabels(s.NamespaceMatchLabels, fldPath.Child("namespaceMatchLabels"))...)
+	allErrs = append(allErrs, metav1validation.ValidateLabels(s.MatchLabels, fldPath.Child("matchLabels"))...)
 	return allErrs
 }
 

@@ -39,11 +39,13 @@ type Options2001 struct {
 }
 
 // Validate validates that option configurations are correctly defined
-func (o Options2001) Validate() field.ErrorList {
+func (o Options2001) Validate(fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
 
-	for _, p := range o.AcceptedPods {
-		allErrs = append(allErrs, p.Validate()...)
+	acceptedPodsPath := fldPath.Child("acceptedPods")
+
+	for pIdx, p := range o.AcceptedPods {
+		allErrs = append(allErrs, p.Validate(acceptedPodsPath.Index(pIdx))...)
 	}
 
 	return allErrs

@@ -47,10 +47,10 @@ type Options242450 struct {
 
 var _ option.Option = (*Options242450)(nil)
 
-func (o Options242450) Validate() field.ErrorList {
+func (o Options242450) Validate(_ *field.Path) field.ErrorList {
 	allErrs := option.ValidateLabelNames(o.NodeGroupByLabels, field.NewPath("nodeGroupByLabels"))
 	if o.FileOwnerOptions != nil {
-		return append(allErrs, o.FileOwnerOptions.Validate()...)
+		return append(allErrs, o.FileOwnerOptions.Validate(nil)...)
 	}
 	return allErrs
 }

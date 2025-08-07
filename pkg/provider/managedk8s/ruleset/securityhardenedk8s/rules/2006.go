@@ -40,15 +40,15 @@ type Options2006 struct {
 }
 
 // Validate validates that option configurations are correctly defined.
-func (o Options2006) Validate() field.ErrorList {
+func (o Options2006) Validate(fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
 
-	for _, r := range o.AcceptedRoles {
-		allErrs = append(allErrs, r.Validate()...)
+	for rIdx, r := range o.AcceptedRoles {
+		allErrs = append(allErrs, r.Validate(fldPath.Child("acceptedRoles").Index(rIdx))...)
 	}
 
-	for _, c := range o.AcceptedClusterRoles {
-		allErrs = append(allErrs, c.Validate()...)
+	for cIdx, c := range o.AcceptedClusterRoles {
+		allErrs = append(allErrs, c.Validate(fldPath.Child("acceptedClusterRoles").Index(cIdx))...)
 	}
 
 	return allErrs

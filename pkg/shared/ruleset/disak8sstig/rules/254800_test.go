@@ -208,7 +208,7 @@ kind: PodSecurityConfiguration`
 				MinPodSecurityStandardsProfile: "baseline",
 			}
 
-			result := options.Validate()
+			result := options.Validate(nil)
 
 			Expect(result).To(BeNil())
 		})
@@ -217,7 +217,7 @@ kind: PodSecurityConfiguration`
 				MinPodSecurityStandardsProfile: "foo",
 			}
 
-			result := options.Validate()
+			result := options.Validate(nil)
 
 			Expect(result).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 				"Type":     Equal(field.ErrorTypeInvalid),

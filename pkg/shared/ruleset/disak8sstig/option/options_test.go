@@ -22,7 +22,7 @@ var _ = Describe("options", func() {
 					Groups: []string{"", "asd", "111"},
 				},
 			}
-			result := options.Validate()
+			result := options.Validate(nil)
 			Expect(result).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 				"Type":     Equal(field.ErrorTypeInvalid),
 				"Field":    Equal("expectedFileOwner.users"),
@@ -83,7 +83,7 @@ var _ = Describe("options", func() {
 
 			var result field.ErrorList
 			for _, p := range podAttributes {
-				result = append(result, p.Validate()...)
+				result = append(result, p.Validate(nil)...)
 			}
 
 			Expect(result).To(ConsistOf(
@@ -166,7 +166,7 @@ var _ = Describe("options", func() {
 				},
 			}
 
-			result := options.Validate()
+			result := options.Validate(nil)
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
@@ -211,7 +211,7 @@ var _ = Describe("options", func() {
 				},
 			}
 
-			result := options.Validate()
+			result := options.Validate(nil)
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{

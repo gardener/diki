@@ -42,7 +42,7 @@ type Options245543 struct {
 
 var _ option.Option = (*Options245543)(nil)
 
-func (o Options245543) Validate() field.ErrorList {
+func (o Options245543) Validate(_ *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
 	for _, acceptedToken := range o.AcceptedTokens {
 		if len(acceptedToken.User) == 0 {

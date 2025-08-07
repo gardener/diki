@@ -37,11 +37,13 @@ type Options2002 struct {
 }
 
 // Validate validates that option configurations are correctly defined
-func (o Options2002) Validate() field.ErrorList {
+func (o Options2002) Validate(fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
 
-	for _, sc := range o.AcceptedStorageClasses {
-		allErrs = append(allErrs, sc.Validate()...)
+	acceptedStorageClassesPath := fldPath.Child("acceptedStorageClasses")
+
+	for scIdx, sc := range o.AcceptedStorageClasses {
+		allErrs = append(allErrs, sc.Validate(acceptedStorageClassesPath.Index(scIdx))...)
 	}
 
 	return allErrs

@@ -453,7 +453,7 @@ var _ = Describe("#242383", func() {
 				},
 			}
 
-			result := options.Validate()
+			result := options.Validate(nil)
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{

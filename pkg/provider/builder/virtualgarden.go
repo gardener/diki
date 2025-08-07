@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	"k8s.io/apimachinery/pkg/util/validation/field"
+
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/metadata"
 	"github.com/gardener/diki/pkg/provider"
@@ -17,7 +19,7 @@ import (
 )
 
 // VirtualGardenProviderFromConfig retuns a Provider from a [ProviderConfig].
-func VirtualGardenProviderFromConfig(conf config.ProviderConfig) (provider.Provider, error) {
+func VirtualGardenProviderFromConfig(conf config.ProviderConfig, _ *field.Path) (provider.Provider, error) {
 	p, err := virtualgarden.FromGenericConfig(conf)
 	if err != nil {
 		return nil, err
