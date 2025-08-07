@@ -363,7 +363,11 @@ anonymous:
 					},
 				},
 			},
-			[]rule.CheckResult{{Status: rule.Accepted, Message: "The authentication configuration is accepted to have anonymous authentication enabled.", Target: target}},
+			[]rule.CheckResult{
+				{Status: rule.Accepted, Message: "Anonymous authentication is accepted for the specified endpoints of the kube-apiserver.", Target: target.With("details", "endpoint: /healthz")},
+				{Status: rule.Accepted, Message: "Anonymous authentication is accepted for the specified endpoints of the kube-apiserver.", Target: target.With("details", "endpoint: /livez")},
+				{Status: rule.Accepted, Message: "Anonymous authentication is accepted for the specified endpoints of the kube-apiserver.", Target: target.With("details", "endpoint: /readyz")},
+			},
 			BeNil()),
 		Entry("should fail if an enabled condition endpoint is not configured in the rule options.",
 			corev1.Container{
@@ -413,8 +417,9 @@ anonymous:
 				},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Anonymous authentication is not accepted for endpoint /livez of the kube-apiserver.", Target: target},
-				{Status: rule.Failed, Message: "Anonymous authentication is not accepted for endpoint /readyz of the kube-apiserver.", Target: target},
+				{Status: rule.Accepted, Message: "Anonymous authentication is accepted for the specified endpoints of the kube-apiserver.", Target: target.With("details", "endpoint: /healthz")},
+				{Status: rule.Failed, Message: "Anonymous authentication is enabled for specific endpoints of the kube-apiserver.", Target: target.With("details", "endpoint: /livez")},
+				{Status: rule.Failed, Message: "Anonymous authentication is enabled for specific endpoints of the kube-apiserver.", Target: target.With("details", "endpoint: /readyz")},
 			},
 			BeNil()),
 		Entry("should fail if anonymous authentication is enabled unconditionally and options are configured",

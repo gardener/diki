@@ -305,7 +305,11 @@ kind: AuthenticationConfiguration
 					},
 				},
 			},
-			[]rule.CheckResult{{Status: rule.Accepted, Message: "Anonymous authentication is accepted for the specified endpoints of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")}},
+			[]rule.CheckResult{
+				{Status: rule.Accepted, Message: "Anonymous authentication is accepted for the specified endpoints of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap", "details", "endpoint: /healthz")},
+				{Status: rule.Accepted, Message: "Anonymous authentication is accepted for the specified endpoints of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap", "details", "endpoint: /livez")},
+				{Status: rule.Accepted, Message: "Anonymous authentication is accepted for the specified endpoints of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap", "details", "endpoint: /readyz")},
+			},
 		),
 		Entry("should fail if the structured authentication's enabled conditions contain an endpoint that is not present in the rule options", func() {
 			authenticationConfigMap.Data = map[string]string{
@@ -338,8 +342,9 @@ kind: AuthenticationConfiguration
 				},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Anonymous authentication is not accepted for endpoint /healthz of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
-				{Status: rule.Failed, Message: "Anonymous authentication is not accepted for endpoint /readyz of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
+				{Status: rule.Failed, Message: "Anonymous authentication is enabled for specific endpoints of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap", "details", "endpoint: /healthz")},
+				{Status: rule.Accepted, Message: "Anonymous authentication is accepted for the specified endpoints of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap", "details", "endpoint: /livez")},
+				{Status: rule.Failed, Message: "Anonymous authentication is enabled for specific endpoints of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap", "details", "endpoint: /readyz")},
 			},
 		),
 		Entry("should fail if the structured authentication's enabled without conditions and options are still present", func() {

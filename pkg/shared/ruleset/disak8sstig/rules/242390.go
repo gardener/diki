@@ -156,15 +156,14 @@ func (r *Rule242390) Run(ctx context.Context) (rule.RuleResult, error) {
 		var checkResults []rule.CheckResult
 
 		for _, condition := range authConfig.Anonymous.Conditions {
-			if !slices.ContainsFunc(r.Options.AcceptedEndpoints, func(acceptedPath AcceptedEndpoint) bool {
+			endpointTarget := target.With("details", fmt.Sprintf("endpoint: %s", condition.Path))
+			if slices.ContainsFunc(r.Options.AcceptedEndpoints, func(acceptedPath AcceptedEndpoint) bool {
 				return acceptedPath.Path == condition.Path
 			}) {
-				checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Anonymous authentication is not accepted for endpoint %s of the kube-apiserver.", condition.Path), target))
+				checkResults = append(checkResults, rule.AcceptedCheckResult("Anonymous authentication is accepted for the specified endpoints of the kube-apiserver.", endpointTarget))
+			} else {
+				checkResults = append(checkResults, rule.FailedCheckResult("Anonymous authentication is enabled for specific endpoints of the kube-apiserver.", endpointTarget))
 			}
-		}
-
-		if len(checkResults) == 0 {
-			return rule.Result(r, rule.AcceptedCheckResult("The authentication configuration is accepted to have anonymous authentication enabled.", target)), nil
 		}
 
 		return rule.Result(r, checkResults...), nil
