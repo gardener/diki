@@ -105,9 +105,9 @@ anonymous:
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 		},
-		Entry("should pass when anonymous-auth is set to allowed value false",
+		Entry("should pass when anonymous-auth is set to accepted value false",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--anonymous-auth=false"}},
-			[]rule.CheckResult{{Status: rule.Passed, Message: "Option anonymous-auth set to allowed value.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Option anonymous-auth set to accepted value.", Target: target}},
 			BeNil()),
 		Entry("should warn when anonymous-auth is set more than once",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--anonymous-auth=false"}, Args: []string{"--anonymous-auth=true"}},
@@ -117,9 +117,9 @@ anonymous:
 			corev1.Container{Name: "not-kube-apiserver", Command: []string{"--anonymous-auth=false"}},
 			[]rule.CheckResult{{Status: rule.Errored, Message: "deployment: kube-apiserver does not contain container: kube-apiserver", Target: target}},
 			BeNil()),
-		Entry("should fail when anonymous-auth is set to not allowed value true",
+		Entry("should fail when anonymous-auth is set to not accepted value true",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--anonymous-auth=true"}},
-			[]rule.CheckResult{{Status: rule.Failed, Message: "Option anonymous-auth set to not allowed value.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Option anonymous-auth set to not accepted value.", Target: target}},
 			BeNil()),
 	)
 
@@ -348,7 +348,7 @@ anonymous:
 				Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
 			},
 			&rules.Options242390{
-				AllowedEndpoints: []rules.AllowedEndpoint{
+				AcceptedEndpoints: []rules.AcceptedEndpoint{
 					{
 						Path: "/healthz",
 					},
@@ -363,7 +363,7 @@ anonymous:
 					},
 				},
 			},
-			[]rule.CheckResult{{Status: rule.Accepted, Message: "The authentication configuration is allowed to have anonymous authentication enabled.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Accepted, Message: "The authentication configuration is accepted to have anonymous authentication enabled.", Target: target}},
 			BeNil()),
 		Entry("should fail if an enabled condition endpoint is not configured in the rule options.",
 			corev1.Container{
@@ -400,7 +400,7 @@ anonymous:
 				Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
 			},
 			&rules.Options242390{
-				AllowedEndpoints: []rules.AllowedEndpoint{
+				AcceptedEndpoints: []rules.AcceptedEndpoint{
 					{
 						Path: "/healthz",
 					},
@@ -413,8 +413,8 @@ anonymous:
 				},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Anonymous authentication is not allowed for endpoint /livez of the kube-apiserver.", Target: target},
-				{Status: rule.Failed, Message: "Anonymous authentication is not allowed for endpoint /readyz of the kube-apiserver.", Target: target},
+				{Status: rule.Failed, Message: "Anonymous authentication is not accepted for endpoint /livez of the kube-apiserver.", Target: target},
+				{Status: rule.Failed, Message: "Anonymous authentication is not accepted for endpoint /readyz of the kube-apiserver.", Target: target},
 			},
 			BeNil()),
 		Entry("should fail if anonymous authentication is enabled unconditionally and options are configured",
@@ -452,7 +452,7 @@ anonymous:
 				Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
 			},
 			&rules.Options242390{
-				AllowedEndpoints: []rules.AllowedEndpoint{
+				AcceptedEndpoints: []rules.AcceptedEndpoint{
 					{
 						Path: "/healthz",
 					},
@@ -469,7 +469,7 @@ anonymous:
 	)
 
 	Describe("#ValidateOptions242390", func() {
-		It("should deny empty allowed endpoints list", func() {
+		It("should deny empty accepted endpoints list", func() {
 			options := rules.Options242390{}
 
 			result := options.Validate()
@@ -477,7 +477,7 @@ anonymous:
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("allowedEndpoints"),
+					"Field":  Equal("acceptedEndpoints"),
 					"Detail": Equal("must not be empty"),
 				})),
 			))
@@ -485,7 +485,7 @@ anonymous:
 
 		It("should correctly validate options", func() {
 			options := rules.Options242390{
-				AllowedEndpoints: []rules.AllowedEndpoint{
+				AcceptedEndpoints: []rules.AcceptedEndpoint{
 					{
 						Path: "/healthz",
 					},
@@ -503,7 +503,7 @@ anonymous:
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("allowedEndpoints[1].path"),
+					"Field":  Equal("acceptedEndpoints[1].path"),
 					"Detail": Equal("must not be empty"),
 				})),
 			))

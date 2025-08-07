@@ -275,7 +275,7 @@ kind: AuthenticationConfiguration
 			nil,
 			[]rule.CheckResult{{Status: rule.Passed, Message: "Anonymous authentication is disabled for the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")}},
 		),
-		Entry("should be accepted if the structured authentication's conditions are present in the configured allowed endpoints", func() {
+		Entry("should be accepted if the structured authentication's conditions are present in the configured accepted endpoints", func() {
 			authenticationConfigMap.Data = map[string]string{
 				fileName: enabledAnonymousAuthenticationConfigWithConditions,
 			}
@@ -290,7 +290,7 @@ kind: AuthenticationConfiguration
 			}
 		},
 			&rules.Options2000{
-				AllowedEndpoints: []rules.AllowedEndpoint{
+				AcceptedEndpoints: []rules.AcceptedEndpoint{
 					{
 						Path: "/healthz",
 					},
@@ -305,7 +305,7 @@ kind: AuthenticationConfiguration
 					},
 				},
 			},
-			[]rule.CheckResult{{Status: rule.Accepted, Message: "Anonymous authentication is allowed for the specified endpoints of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")}},
+			[]rule.CheckResult{{Status: rule.Accepted, Message: "Anonymous authentication is accepted for the specified endpoints of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")}},
 		),
 		Entry("should fail if the structured authentication's enabled conditions contain an endpoint that is not present in the rule options", func() {
 			authenticationConfigMap.Data = map[string]string{
@@ -322,7 +322,7 @@ kind: AuthenticationConfiguration
 			}
 		},
 			&rules.Options2000{
-				AllowedEndpoints: []rules.AllowedEndpoint{
+				AcceptedEndpoints: []rules.AcceptedEndpoint{
 					{
 						Path: "/livez",
 					},
@@ -338,8 +338,8 @@ kind: AuthenticationConfiguration
 				},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Failed, Message: "Anonymous authentication is not allowed for endpoint /healthz of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
-				{Status: rule.Failed, Message: "Anonymous authentication is not allowed for endpoint /readyz of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
+				{Status: rule.Failed, Message: "Anonymous authentication is not accepted for endpoint /healthz of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
+				{Status: rule.Failed, Message: "Anonymous authentication is not accepted for endpoint /readyz of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
 			},
 		),
 		Entry("should fail if the structured authentication's enabled without conditions and options are still present", func() {
@@ -357,7 +357,7 @@ kind: AuthenticationConfiguration
 			}
 		},
 			&rules.Options2000{
-				AllowedEndpoints: []rules.AllowedEndpoint{
+				AcceptedEndpoints: []rules.AcceptedEndpoint{
 					{
 						Path: "/livez",
 					},
@@ -371,7 +371,7 @@ kind: AuthenticationConfiguration
 	)
 
 	Describe("#ValidateOptions2000", func() {
-		It("should deny empty allowed endpoints list", func() {
+		It("should deny empty accepted endpoints list", func() {
 			options := rules.Options2000{}
 
 			result := options.Validate()
@@ -379,7 +379,7 @@ kind: AuthenticationConfiguration
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("allowedEndpoints"),
+					"Field":  Equal("acceptedEndpoints"),
 					"Detail": Equal("must not be empty"),
 				})),
 			))
@@ -387,7 +387,7 @@ kind: AuthenticationConfiguration
 
 		It("should correctly validate options", func() {
 			options := rules.Options2000{
-				AllowedEndpoints: []rules.AllowedEndpoint{
+				AcceptedEndpoints: []rules.AcceptedEndpoint{
 					{
 						Path: "/healthz",
 					},
@@ -405,7 +405,7 @@ kind: AuthenticationConfiguration
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("allowedEndpoints[1].path"),
+					"Field":  Equal("acceptedEndpoints[1].path"),
 					"Detail": Equal("must not be empty"),
 				})),
 			))

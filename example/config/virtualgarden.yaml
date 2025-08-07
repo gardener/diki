@@ -20,7 +20,7 @@ providers:               # contains information about known providers
     #     justification: "the whole rule is accepted for ... reasons"
     # - ruleID: "242390"
     #   args:
-    #     allowedEndpoints:
+    #     acceptedEndpoints:
     #     - path: /healthz
     #     - path: /livez
     - ruleID: "242445"

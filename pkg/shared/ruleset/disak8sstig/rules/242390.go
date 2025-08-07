@@ -36,26 +36,26 @@ type Rule242390 struct {
 }
 
 type Options242390 struct {
-	AllowedEndpoints []AllowedEndpoint `yaml:"allowedEndpoints" json:"allowedEndpoints"`
+	AcceptedEndpoints []AcceptedEndpoint `yaml:"acceptedEndpoints" json:"acceptedEndpoints"`
 }
 
-type AllowedEndpoint struct {
+type AcceptedEndpoint struct {
 	Path string `yaml:"path" json:"path"`
 }
 
 func (o Options242390) Validate() field.ErrorList {
 	var (
-		allErrs              field.ErrorList
-		allowedEndpointsPath = field.NewPath("allowedEndpoints")
+		allErrs               field.ErrorList
+		acceptedEndpointsPath = field.NewPath("acceptedEndpoints")
 	)
 
-	if len(o.AllowedEndpoints) == 0 {
-		return field.ErrorList{field.Required(allowedEndpointsPath, "must not be empty")}
+	if len(o.AcceptedEndpoints) == 0 {
+		return field.ErrorList{field.Required(acceptedEndpointsPath, "must not be empty")}
 	}
 
-	for i, e := range o.AllowedEndpoints {
+	for i, e := range o.AcceptedEndpoints {
 		if len(e.Path) == 0 {
-			allErrs = append(allErrs, field.Required(allowedEndpointsPath.Index(i).Child("path"), "must not be empty"))
+			allErrs = append(allErrs, field.Required(acceptedEndpointsPath.Index(i).Child("path"), "must not be empty"))
 		}
 	}
 
@@ -102,9 +102,9 @@ func (r *Rule242390) Run(ctx context.Context) (rule.RuleResult, error) {
 		case len(optSlice) > 1:
 			return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in container command.", anonymousAuthOption), target)), nil
 		case optSlice[0] == "true":
-			return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not allowed value.", anonymousAuthOption), target)), nil
+			return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Option %s set to not accepted value.", anonymousAuthOption), target)), nil
 		case optSlice[0] == "false":
-			return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Option %s set to allowed value.", anonymousAuthOption), target)), nil
+			return rule.Result(r, rule.PassedCheckResult(fmt.Sprintf("Option %s set to accepted value.", anonymousAuthOption), target)), nil
 		default:
 			return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Option %s set to neither 'true' nor 'false'.", anonymousAuthOption), target)), nil
 		}
@@ -156,15 +156,15 @@ func (r *Rule242390) Run(ctx context.Context) (rule.RuleResult, error) {
 		var checkResults []rule.CheckResult
 
 		for _, condition := range authConfig.Anonymous.Conditions {
-			if !slices.ContainsFunc(r.Options.AllowedEndpoints, func(allowedPath AllowedEndpoint) bool {
-				return allowedPath.Path == condition.Path
+			if !slices.ContainsFunc(r.Options.AcceptedEndpoints, func(acceptedPath AcceptedEndpoint) bool {
+				return acceptedPath.Path == condition.Path
 			}) {
-				checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Anonymous authentication is not allowed for endpoint %s of the kube-apiserver.", condition.Path), target))
+				checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Anonymous authentication is not accepted for endpoint %s of the kube-apiserver.", condition.Path), target))
 			}
 		}
 
 		if len(checkResults) == 0 {
-			return rule.Result(r, rule.AcceptedCheckResult("The authentication configuration is allowed to have anonymous authentication enabled.", target)), nil
+			return rule.Result(r, rule.AcceptedCheckResult("The authentication configuration is accepted to have anonymous authentication enabled.", target)), nil
 		}
 
 		return rule.Result(r, checkResults...), nil

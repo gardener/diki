@@ -36,26 +36,26 @@ type Rule2000 struct {
 }
 
 type Options2000 struct {
-	AllowedEndpoints []AllowedEndpoint `yaml:"allowedEndpoints" json:"allowedEndpoints"`
+	AcceptedEndpoints []AcceptedEndpoint `yaml:"acceptedEndpoints" json:"acceptedEndpoints"`
 }
 
-type AllowedEndpoint struct {
+type AcceptedEndpoint struct {
 	Path string `yaml:"path" json:"path"`
 }
 
 func (o Options2000) Validate() field.ErrorList {
 	var (
-		allErrs              field.ErrorList
-		allowedEndpointsPath = field.NewPath("allowedEndpoints")
+		allErrs               field.ErrorList
+		acceptedEndpointsPath = field.NewPath("acceptedEndpoints")
 	)
 
-	if len(o.AllowedEndpoints) == 0 {
-		return field.ErrorList{field.Required(allowedEndpointsPath, "must not be empty")}
+	if len(o.AcceptedEndpoints) == 0 {
+		return field.ErrorList{field.Required(acceptedEndpointsPath, "must not be empty")}
 	}
 
-	for i, e := range o.AllowedEndpoints {
+	for i, e := range o.AcceptedEndpoints {
 		if len(e.Path) == 0 {
-			allErrs = append(allErrs, field.Required(allowedEndpointsPath.Index(i).Child("path"), "must not be empty"))
+			allErrs = append(allErrs, field.Required(acceptedEndpointsPath.Index(i).Child("path"), "must not be empty"))
 		}
 	}
 
@@ -128,15 +128,15 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 		var checkResults []rule.CheckResult
 
 		for _, condition := range authenticationConfig.Anonymous.Conditions {
-			if !slices.ContainsFunc(r.Options.AllowedEndpoints, func(allowedPath AllowedEndpoint) bool {
-				return allowedPath.Path == condition.Path
+			if !slices.ContainsFunc(r.Options.AcceptedEndpoints, func(acceptedPath AcceptedEndpoint) bool {
+				return acceptedPath.Path == condition.Path
 			}) {
-				checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Anonymous authentication is not allowed for endpoint %s of the kube-apiserver.", condition.Path), configMapTarget))
+				checkResults = append(checkResults, rule.FailedCheckResult(fmt.Sprintf("Anonymous authentication is not accepted for endpoint %s of the kube-apiserver.", condition.Path), configMapTarget))
 			}
 		}
 
 		if len(checkResults) == 0 {
-			return rule.Result(r, rule.AcceptedCheckResult("Anonymous authentication is allowed for the specified endpoints of the kube-apiserver.", configMapTarget)), nil
+			return rule.Result(r, rule.AcceptedCheckResult("Anonymous authentication is accepted for the specified endpoints of the kube-apiserver.", configMapTarget)), nil
 		}
 		return rule.Result(r, checkResults...), nil
 	default:

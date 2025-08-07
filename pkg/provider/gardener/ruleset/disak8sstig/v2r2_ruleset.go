@@ -78,7 +78,7 @@ func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsCon
 
 	opts242390, err := getV2R2OptionOrNil[sharedrules.Options242390](ruleOptions[sharedrules.ID242390].Args)
 	if err != nil {
-		return fmt.Errorf("rule option 242445 error: %s", err.Error())
+		return fmt.Errorf("rule option 242390 error: %s", err.Error())
 	}
 	opts242400, err := getV2R2OptionOrNil[option.KubeProxyOptions](ruleOptions[sharedrules.ID242400].Args)
 	if err != nil {

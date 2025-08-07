@@ -38,7 +38,7 @@ providers:       # contains information about known providers
     #     - Cluster
     # - ruleID: "2000"
     #   args:
-    #     allowedEndpoints:
+    #     acceptedEndpoints:
     #     - path: /readyz
     #     - path: /healthz
     # - ruleID: "2001"
