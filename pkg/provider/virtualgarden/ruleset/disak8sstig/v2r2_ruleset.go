@@ -31,6 +31,10 @@ func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsCon
 	if err != nil {
 		return err
 	}
+	opts242442, err := getV2R2OptionOrNil[rules.Options242442](ruleOptions[sharedrules.ID242442].Args)
+	if err != nil {
+		return fmt.Errorf("rule option 242442 error: %s", err.Error())
+	}
 	opts242445, err := getV2R2OptionOrNil[option.FileOwnerOptions](ruleOptions[sharedrules.ID242445].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242445 error: %s", err.Error())
@@ -462,6 +466,7 @@ func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsCon
 		&rules.Rule242442{
 			Client:    runtimeClient,
 			Namespace: ns,
+			Options:   opts242442,
 		},
 		rule.NewSkipRule(
 			sharedrules.ID242443,
