@@ -105,9 +105,9 @@ anonymous:
 
 			Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 		},
-		Entry("should pass when anonymous-auth is set to accepted value false",
+		Entry("should pass when anonymous-auth is set to allowed value false",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--anonymous-auth=false"}},
-			[]rule.CheckResult{{Status: rule.Passed, Message: "Option anonymous-auth set to accepted value.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Option anonymous-auth set to allowed value.", Target: target}},
 			BeNil()),
 		Entry("should warn when anonymous-auth is set more than once",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--anonymous-auth=false"}, Args: []string{"--anonymous-auth=true"}},
@@ -117,9 +117,9 @@ anonymous:
 			corev1.Container{Name: "not-kube-apiserver", Command: []string{"--anonymous-auth=false"}},
 			[]rule.CheckResult{{Status: rule.Errored, Message: "deployment: kube-apiserver does not contain container: kube-apiserver", Target: target}},
 			BeNil()),
-		Entry("should fail when anonymous-auth is set to not accepted value true",
+		Entry("should fail when anonymous-auth is set to not allowed value true",
 			corev1.Container{Name: "kube-apiserver", Command: []string{"--anonymous-auth=true"}},
-			[]rule.CheckResult{{Status: rule.Failed, Message: "Option anonymous-auth set to not accepted value.", Target: target}},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Option anonymous-auth set to not allowed value.", Target: target}},
 			BeNil()),
 	)
 

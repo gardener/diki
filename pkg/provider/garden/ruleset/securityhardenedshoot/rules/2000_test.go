@@ -275,7 +275,7 @@ kind: AuthenticationConfiguration
 			nil,
 			[]rule.CheckResult{{Status: rule.Passed, Message: "Anonymous authentication is disabled for the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")}},
 		),
-		Entry("should be accepted if the structured authentication's conditions are present in the configured accepted endpoints", func() {
+		Entry("should be accepted when anonymous authentication is enabled for accepted endpoints in options", func() {
 			authenticationConfigMap.Data = map[string]string{
 				fileName: enabledAnonymousAuthenticationConfigWithConditions,
 			}
@@ -311,7 +311,7 @@ kind: AuthenticationConfiguration
 				{Status: rule.Accepted, Message: "Anonymous authentication is accepted for the specified endpoints of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap", "details", "endpoint: /readyz")},
 			},
 		),
-		Entry("should fail if the structured authentication's enabled conditions contain an endpoint that is not present in the rule options", func() {
+		Entry("should be failed when anonymous authentication is enabled for not accepted endpoints in options", func() {
 			authenticationConfigMap.Data = map[string]string{
 				fileName: enabledAnonymousAuthenticationConfigWithConditions,
 			}
