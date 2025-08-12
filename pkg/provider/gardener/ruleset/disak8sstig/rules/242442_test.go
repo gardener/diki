@@ -267,7 +267,7 @@ var _ = Describe("#242442", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 
-	It("should return accepted results when the image is listed in the allowedImages options", func() {
+	It("should return warning results when the image is listed in the allowedImages options", func() {
 		options.AllowedImages = []option.AllowedImage{
 			{
 				Name: "localhost:7777/image1",
@@ -296,7 +296,7 @@ var _ = Describe("#242442", func() {
 		Expect(ruleResult.CheckResults).To(Equal(
 			[]rule.CheckResult{
 				rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "seed", "image", "localhost:7778/image3", "namespace", seedPod.Namespace)),
-				rule.AcceptedCheckResult("Image is allowed to be deployed with more than one versions.", rule.NewTarget("cluster", "shoot", "image", "localhost:7777/image1", "namespace", shootPod.Namespace)),
+				rule.WarningCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "shoot", "image", "localhost:7777/image1", "namespace", shootPod.Namespace)),
 				rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("cluster", "shoot", "image", "localhost:7777/image10", "namespace", shootPod.Namespace)),
 			},
 		))

@@ -102,7 +102,7 @@ func (r *Rule242442) checkImages(pods []corev1.Pod, replicaSets []appsv1.Replica
 					if r.Options != nil && slices.ContainsFunc(r.Options.AllowedImages, func(allowedImage option.AllowedImage) bool {
 						return allowedImage.Name == imageBase
 					}) {
-						checkResults = append(checkResults, rule.AcceptedCheckResult("Image is allowed to be deployed with more than one versions.", rule.NewTarget("image", imageBase)))
+						checkResults = append(checkResults, rule.WarningCheckResult("Image is used with more than one versions.", rule.NewTarget("image", imageBase)))
 					} else {
 						checkResults = append(checkResults, rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("image", imageBase)))
 					}

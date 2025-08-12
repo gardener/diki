@@ -199,7 +199,7 @@ var _ = Describe("#242442", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 
-	It("should return accepted results when the image is listed in the allowedImages option", func() {
+	It("should return warning results when the image is listed in the allowedImages option", func() {
 		r := &rules.Rule242442{Client: fakeClient, Namespace: namespace, Options: &rules.Options242442{
 			AllowedImages: []option.AllowedImage{
 				{
@@ -240,7 +240,7 @@ var _ = Describe("#242442", func() {
 
 		expectedCheckResults := []rule.CheckResult{
 			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("image", "localhost:7777/image1")),
-			rule.AcceptedCheckResult("Image is allowed to be deployed with more than one versions.", rule.NewTarget("image", "localhost:7777/image2")),
+			rule.WarningCheckResult("Image is used with more than one versions.", rule.NewTarget("image", "localhost:7777/image2")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))

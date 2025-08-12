@@ -316,7 +316,7 @@ var _ = Describe("#242442", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 
-	It("should return accepted results when the image is listed in the allowedImages option", func() {
+	It("should return warning results when the image is listed in the allowedImages option", func() {
 		r := &rules.Rule242442{Client: client, Options: &rules.Options242442{
 			AllowedImages242442: &option.AllowedImages242442{
 				AllowedImages: []option.AllowedImage{
@@ -359,7 +359,7 @@ var _ = Describe("#242442", func() {
 
 		expectedCheckResults := []rule.CheckResult{
 			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "Node", "name", "foo", "image", "eu.gcr.io/image1")),
-			rule.AcceptedCheckResult("Image is allowed to be deployed with more than one versions.", rule.NewTarget("kind", "Node", "name", "foo", "image", "eu.gcr.io/image2")),
+			rule.WarningCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "Node", "name", "foo", "image", "eu.gcr.io/image2")),
 			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "Node", "name", "foo", "image", "eu.gcr.io/image4")),
 		}
 
