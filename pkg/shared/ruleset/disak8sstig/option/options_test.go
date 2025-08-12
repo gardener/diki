@@ -263,7 +263,7 @@ var _ = Describe("options", func() {
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("allowedImages[1].name"),
+					"Field":  Equal("expectedVersionedImages[1].name"),
 					"Detail": Equal("must not be empty"),
 				})),
 			))
