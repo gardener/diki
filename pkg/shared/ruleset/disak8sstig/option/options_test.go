@@ -232,7 +232,7 @@ var _ = Describe("options", func() {
 		It("should deny empty allowed images list", func() {
 			options := option.AllowedImages242442{}
 
-			result := options.Validate()
+			result := options.Validate(nil)
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
@@ -258,7 +258,7 @@ var _ = Describe("options", func() {
 				},
 			}
 
-			result := options.Validate()
+			result := options.Validate(nil)
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
