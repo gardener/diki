@@ -157,30 +157,30 @@ func (o Options242415) Validate(_ *field.Path) field.ErrorList {
 	return allErrs
 }
 
-var _ Option = (*AllowedImages242442)(nil)
+var _ Option = (*Options242442)(nil)
 
-// AllowedImages242442 defines a slices of allowed container images for rule 242442
-type AllowedImages242442 struct {
-	AllowedImages []AllowedImage `json:"allowedImages" yaml:"allowedImages"`
+// Options242442 defines a slices of allowed container images for rule 242442
+type Options242442 struct {
+	ExpectedVersionedImages []ExpectedVersionedImage `json:"expectedVersionedImages" yaml:"expectedVersionedImages"`
 }
 
-// AllowedImage contains option specifications for accepted container images
-type AllowedImage struct {
+// ExpectedVersionedImage contains option specifications for accepted container images
+type ExpectedVersionedImage struct {
 	Name string `json:"name" yaml:"name"`
 }
 
 // Validate validates that option configurations are correctly defined
-func (o AllowedImages242442) Validate(fldPath *field.Path) field.ErrorList {
+func (o Options242442) Validate(fldPath *field.Path) field.ErrorList {
 	var (
 		allErrs  field.ErrorList
-		rootPath = fldPath.Child("allowedImages")
+		rootPath = fldPath.Child("expectedVersionedImages")
 	)
 
-	if len(o.AllowedImages) == 0 {
+	if len(o.ExpectedVersionedImages) == 0 {
 		return field.ErrorList{field.Required(rootPath, "must not be empty")}
 	}
 
-	for i, a := range o.AllowedImages {
+	for i, a := range o.ExpectedVersionedImages {
 		if len(a.Name) == 0 {
 			allErrs = append(allErrs, field.Required(rootPath.Index(i).Child("name"), "must not be empty"))
 		}

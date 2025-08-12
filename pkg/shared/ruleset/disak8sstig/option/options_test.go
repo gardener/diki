@@ -228,24 +228,24 @@ var _ = Describe("options", func() {
 		})
 	})
 
-	Describe("#ValidateAllowedImages242442", func() {
+	Describe("#ValidateOptions242442", func() {
 		It("should deny empty allowed images list", func() {
-			options := option.AllowedImages242442{}
+			options := option.Options242442{}
 
 			result := options.Validate(nil)
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("allowedImages"),
+					"Field":  Equal("expectedVersionedImages"),
 					"Detail": Equal("must not be empty"),
 				})),
 			))
 		})
 
 		It("should correctly validate options", func() {
-			options := option.AllowedImages242442{
-				AllowedImages: []option.AllowedImage{
+			options := option.Options242442{
+				ExpectedVersionedImages: []option.ExpectedVersionedImage{
 					{
 						Name: "foo",
 					},
