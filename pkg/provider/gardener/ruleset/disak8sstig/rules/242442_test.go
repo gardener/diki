@@ -31,7 +31,7 @@ var _ = Describe("#242442", func() {
 		digest1         = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 		digest2         = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b854"
 		digest3         = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b853"
-		options         *rules.Options242442
+		options         *option.Options242442
 	)
 
 	BeforeEach(func() {
@@ -124,7 +124,7 @@ var _ = Describe("#242442", func() {
 				},
 			},
 		}
-		options = &rules.Options242442{}
+		options = &option.Options242442{}
 	})
 
 	It("should return correct results when all images use only 1 version", func() {
@@ -268,7 +268,7 @@ var _ = Describe("#242442", func() {
 	})
 
 	It("should return warning results when the image is listed in the allowedImages options", func() {
-		options.AllowedImages = []option.AllowedImage{
+		options.ExpectedVersionedImages = []option.ExpectedVersionedImage{
 			{
 				Name: "localhost:7777/image1",
 			},

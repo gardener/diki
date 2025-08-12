@@ -13,7 +13,7 @@ type RuleOption interface {
 	sharedrules.Options242390 |
 		option.Options242414 |
 		option.Options242415 |
-		Options242442 |
+		option.Options242442 |
 		Options242451 |
 		sharedrules.Options245543 |
 		sharedrules.Options254800 |

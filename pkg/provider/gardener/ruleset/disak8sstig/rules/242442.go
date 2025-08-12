@@ -31,10 +31,8 @@ type Rule242442 struct {
 	ClusterClient         client.Client
 	ControlPlaneClient    client.Client
 	ControlPlaneNamespace string
-	Options               *Options242442
+	Options               *option.Options242442
 }
-
-type Options242442 option.AllowedImages242442
 
 func (r *Rule242442) ID() string {
 	return sharedrules.ID242442
@@ -142,7 +140,7 @@ func (r *Rule242442) checkImages(clusterTarget rule.Target, pods []corev1.Pod, r
 						target := clusterTarget.With("image", imageBase, "namespace", namespace)
 						reportedImages[imageBase] = struct{}{}
 
-						if r.Options != nil && slices.ContainsFunc(r.Options.AllowedImages, func(allowedImage option.AllowedImage) bool {
+						if r.Options != nil && slices.ContainsFunc(r.Options.ExpectedVersionedImages, func(allowedImage option.ExpectedVersionedImage) bool {
 							return allowedImage.Name == imageBase
 						}) {
 							checkResults = append(checkResults, rule.WarningCheckResult("Image is used with more than one versions.", target))

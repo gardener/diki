@@ -28,10 +28,8 @@ var (
 type Rule242442 struct {
 	Client    client.Client
 	Namespace string
-	Options   *Options242442
+	Options   *option.Options242442
 }
-
-type Options242442 option.AllowedImages242442
 
 func (r *Rule242442) ID() string {
 	return sharedrules.ID242442
@@ -99,7 +97,7 @@ func (r *Rule242442) checkImages(pods []corev1.Pod, replicaSets []appsv1.Replica
 			if ref, ok := images[imageBase]; ok && ref != imageRef {
 				if _, reported := reportedImages[imageBase]; !reported {
 					reportedImages[imageBase] = struct{}{}
-					if r.Options != nil && slices.ContainsFunc(r.Options.AllowedImages, func(allowedImage option.AllowedImage) bool {
+					if r.Options != nil && slices.ContainsFunc(r.Options.ExpectedVersionedImages, func(allowedImage option.ExpectedVersionedImage) bool {
 						return allowedImage.Name == imageBase
 					}) {
 						checkResults = append(checkResults, rule.WarningCheckResult("Image is used with more than one versions.", rule.NewTarget("image", imageBase)))
