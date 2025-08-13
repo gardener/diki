@@ -25,7 +25,7 @@ func NewLogr(logger *slog.Logger) logr.Logger {
 	return logr.New(Slogr{logger: logger})
 }
 
-// Enabled implmenents the [logr.LogSink] interface.
+// Enabled implements the [logr.LogSink] interface.
 func (s Slogr) Enabled(level int) bool {
 	return s.logger.Enabled(context.Background(), slog.Level(level))
 }
@@ -40,7 +40,7 @@ func (s Slogr) Info(_ int, msg string, keysAndValues ...any) {
 	s.logger.Info(msg, keysAndValues...)
 }
 
-// Init implments the [logr.LogSink] interface.
+// Init implements the [logr.LogSink] interface.
 func (s Slogr) Init(_ logr.RuntimeInfo) {
 }
 

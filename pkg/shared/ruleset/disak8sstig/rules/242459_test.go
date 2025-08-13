@@ -41,7 +41,7 @@ var _ = Describe("#242459", func() {
     "source": "/source3"
   }
 ]`
-		mountsMulty = `[
+		mountsMulti = `[
   {
     "destination": "/var/lib",
     "source": "/source1"
@@ -243,7 +243,7 @@ var _ = Describe("#242459", func() {
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "etcd-events", "namespace", "foo", "containerName", "test", "kind", "Pod", "details", "fileName: /source2/bar/file4.txt, permissions: 200")),
 			}),
 		Entry("should check files when GetMountedFilesStats errors",
-			[][]string{{mountsMulty, compliantStats, compliantStats2, emptyMounts, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
+			[][]string{{mountsMulti, compliantStats, compliantStats2, emptyMounts, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, nil, errors.New("bar"), nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242459-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),

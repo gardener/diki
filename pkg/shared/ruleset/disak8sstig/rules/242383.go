@@ -92,7 +92,7 @@ func (s ObjectSelector) Validate(_ *field.Path) field.ErrorList {
 	if kinds, ok := checkedResources[s.APIVersion]; !ok {
 		allErrs = append(allErrs, field.Invalid(fldPath.Child("apiVersion"), s.APIVersion, "not checked apiVersion"))
 	} else if !slices.Contains(kinds, s.Kind) && s.Kind != "*" {
-		allErrs = append(allErrs, field.Invalid(fldPath.Child("kind"), s.Kind, fmt.Sprintf("not checked kind for apiVerion %s", s.APIVersion)))
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("kind"), s.Kind, fmt.Sprintf("not checked kind for apiVersion %s", s.APIVersion)))
 	}
 
 	allErrs = append(allErrs, metav1validation.ValidateLabels(s.MatchLabels, fldPath.Child("matchLabels"))...)

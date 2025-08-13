@@ -211,7 +211,7 @@ bar,for,bar,`
 				},
 			},
 			BeNil()),
-		Entry("should fail when there are mor tha 1 tokens and at least 1 is not accepted.",
+		Entry("should fail when there are more than 1 tokens and at least 1 is not accepted.",
 			[]string{"--token-auth-file=foo/bar/static_tokens.csv"}, &options,
 			corev1.Volume{Name: "static-token", VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: "foo"}}},
 			&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: namespace}, Data: map[string][]byte{"static_tokens.csv": []byte(notAcceptedEntries)}},

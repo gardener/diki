@@ -44,7 +44,7 @@ var _ = Describe("#2002", func() {
 		}
 	})
 
-	DescribeTable("Run casees", func(updateFn func(), ruleOptions rules.Options2002, expectedCheckResults []rule.CheckResult) {
+	DescribeTable("Run cases", func(updateFn func(), ruleOptions rules.Options2002, expectedCheckResults []rule.CheckResult) {
 		updateFn()
 
 		r := rules.Rule2002{Client: client, Options: &ruleOptions}

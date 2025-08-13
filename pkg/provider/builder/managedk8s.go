@@ -19,7 +19,7 @@ import (
 	"github.com/gardener/diki/pkg/ruleset"
 )
 
-// ManagedK8SProviderFromConfig retuns a Provider from a [ProviderConfig].
+// ManagedK8SProviderFromConfig returns a Provider from a [ProviderConfig].
 func ManagedK8SProviderFromConfig(conf config.ProviderConfig, rootPath *field.Path) (provider.Provider, error) {
 	p, err := managedk8s.FromGenericConfig(conf)
 	if err != nil {

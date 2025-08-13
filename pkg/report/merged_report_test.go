@@ -274,7 +274,7 @@ var _ = Describe("merged report", func() {
 			Expect(err).To(BeNil())
 		})
 
-		It("should correctly merge 2 reports with differenct rulesets", func() {
+		It("should correctly merge 2 reports with different rulesets", func() {
 			simpleReport2.Providers[0].Rulesets[0].ID = "ruleset-bar"
 			simpleReport2.Providers[0].Rulesets[0].Name = "Ruleset Bar"
 			reports := []*report.Report{&simpleReport1, &simpleReport2}

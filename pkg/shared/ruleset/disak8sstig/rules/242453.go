@@ -143,7 +143,7 @@ func (r *Rule242453) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		if len(rawKubeletCommand) == 0 {
-			checkResults = append(checkResults, rule.ErroredCheckResult("kubelet command not retrived", execPodTarget))
+			checkResults = append(checkResults, rule.ErroredCheckResult("kubelet command not retrieved", execPodTarget))
 			continue
 		}
 

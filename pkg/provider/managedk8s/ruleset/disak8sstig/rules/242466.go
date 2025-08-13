@@ -266,7 +266,7 @@ func (r *Rule242466) checkKubelet(
 	}
 
 	if len(rawKubeletCommand) == 0 {
-		return []rule.CheckResult{rule.ErroredCheckResult("could not retrieve kubelet config: kubelet command not retrived", execPodTarget)}
+		return []rule.CheckResult{rule.ErroredCheckResult("could not retrieve kubelet config: kubelet command not retrieved", execPodTarget)}
 	}
 
 	kubeletConfig, err := kubeutils.GetKubeletConfig(ctx, podExecutor, rawKubeletCommand)

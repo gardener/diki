@@ -19,7 +19,7 @@ import (
 	"github.com/gardener/diki/pkg/ruleset"
 )
 
-// GardenerProviderFromConfig retuns a Provider from a ProviderConfig.
+// GardenerProviderFromConfig returns a Provider from a ProviderConfig.
 func GardenerProviderFromConfig(conf config.ProviderConfig, _ *field.Path) (provider.Provider, error) {
 	p, err := gardener.FromGenericConfig(conf)
 	if err != nil {

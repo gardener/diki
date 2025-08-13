@@ -32,7 +32,7 @@ func WithConfig(config *rest.Config) CreateOption {
 func WithNumberOfWorkers(numWorkers int) CreateOption {
 	return func(r *Ruleset) {
 		if numWorkers <= 0 {
-			panic("number of workers should be a possitive number")
+			panic("number of workers should be a positive number")
 		}
 		r.numWorkers = numWorkers
 	}

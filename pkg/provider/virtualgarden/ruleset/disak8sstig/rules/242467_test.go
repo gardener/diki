@@ -43,7 +43,7 @@ var _ = Describe("#242467", func() {
     "source": "/source"
   }
 ]`
-		mountsMulty = `[
+		mountsMulti = `[
   {
     "destination": "/destination",
     "source": "/destination"
@@ -339,7 +339,7 @@ var _ = Describe("#242467", func() {
 				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242467-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
 			}),
 		Entry("should check files when GetMountedFilesStats errors",
-			[][]string{{mountsMulty, compliantStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
+			[][]string{{mountsMulti, compliantStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, errors.New("bar"), nil, nil, nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242467-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),

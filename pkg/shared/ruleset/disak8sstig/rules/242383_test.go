@@ -446,7 +446,7 @@ var _ = Describe("#242383", func() {
 							APIVersion:           "fake",
 							Kind:                 "Service",
 							MatchLabels:          map[string]string{"foo": "?bar"},
-							NamespaceMatchLabels: map[string]string{"ba$r": "_foo"},
+							NamespaceMatchLabels: map[string]string{"bar$baz": "_foo"},
 						},
 						Status: "asd",
 					},
@@ -460,13 +460,13 @@ var _ = Describe("#242383", func() {
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("acceptedResources.kind"),
 					"BadValue": Equal("Deployment"),
-					"Detail":   Equal("not checked kind for apiVerion v1"),
+					"Detail":   Equal("not checked kind for apiVersion v1"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("acceptedResources.kind"),
 					"BadValue": Equal("Service"),
-					"Detail":   Equal("not checked kind for apiVerion apps/v1"),
+					"Detail":   Equal("not checked kind for apiVersion apps/v1"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
@@ -497,7 +497,7 @@ var _ = Describe("#242383", func() {
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("acceptedResources.namespaceMatchLabels"),
-					"BadValue": Equal("ba$r"),
+					"BadValue": Equal("bar$baz"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),

@@ -39,7 +39,7 @@ var _ = Describe("pod", func() {
 			spc, err := pod.NewSimplePodContext(fakeClient, fakeConfig, map[string]string{})
 			Expect(err).To(BeNil())
 
-			_, err = spc.Create(ctx, fakePodContructor(name, namespace, ""))
+			_, err = spc.Create(ctx, fakePodConstructor(name, namespace, ""))
 			Expect(err).To(BeNil())
 
 			pod := &corev1.Pod{
@@ -64,7 +64,7 @@ var _ = Describe("pod", func() {
 			})
 			Expect(err).To(BeNil())
 
-			_, err = spc.Create(ctx, fakePodContructor(name, namespace, ""))
+			_, err = spc.Create(ctx, fakePodConstructor(name, namespace, ""))
 			Expect(err).To(BeNil())
 
 			pod := &corev1.Pod{
@@ -91,7 +91,7 @@ var _ = Describe("pod", func() {
 			spc, err := pod.NewSimplePodContext(fakeClient, fakeConfig, map[string]string{})
 			Expect(err).To(BeNil())
 
-			_, err = spc.Create(ctx, fakePodContructor(name, namespace, ""))
+			_, err = spc.Create(ctx, fakePodConstructor(name, namespace, ""))
 			Expect(err).To(BeNil())
 
 			pod := &corev1.Pod{
@@ -120,7 +120,7 @@ var _ = Describe("pod", func() {
 	})
 })
 
-func fakePodContructor(name, namespace, nodeName string) func() *corev1.Pod {
+func fakePodConstructor(name, namespace, nodeName string) func() *corev1.Pod {
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
