@@ -316,16 +316,17 @@ var _ = Describe("#242442", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 
-	It("should return warning results when the image is listed in the allowedImages option", func() {
-		r := &rules.Rule242442{Client: client, Options: &rules.Options242442{
-			ImageSelector: &option.Options242442{
-				ExpectedVersionedImages: []option.ExpectedVersionedImage{
-					{
-						Name: "eu.gcr.io/image2",
+	It("hould return warning results when the image is listed in the expectedVersionedImages option", func() {
+		r := &rules.Rule242442{Client: client,
+			Options: &rules.Options242442{
+				ImageSelector: &option.Options242442{
+					ExpectedVersionedImages: []option.ExpectedVersionedImage{
+						{
+							Name: "eu.gcr.io/image2",
+						},
 					},
 				},
 			},
-		},
 		}
 
 		pod1 := plainPod.DeepCopy()

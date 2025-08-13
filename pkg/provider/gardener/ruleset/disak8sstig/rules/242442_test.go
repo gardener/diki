@@ -267,7 +267,7 @@ var _ = Describe("#242442", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 
-	It("should return warning results when the image is listed in the allowedImages options", func() {
+	It("should return warning results when the image is listed in the expectedVersionedImages options", func() {
 		options.ExpectedVersionedImages = []option.ExpectedVersionedImage{
 			{
 				Name: "localhost:7777/image1",

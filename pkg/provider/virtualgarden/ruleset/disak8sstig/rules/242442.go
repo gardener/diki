@@ -97,8 +97,8 @@ func (r *Rule242442) checkImages(pods []corev1.Pod, replicaSets []appsv1.Replica
 			if ref, ok := images[imageBase]; ok && ref != imageRef {
 				if _, reported := reportedImages[imageBase]; !reported {
 					reportedImages[imageBase] = struct{}{}
-					if r.Options != nil && slices.ContainsFunc(r.Options.ExpectedVersionedImages, func(allowedImage option.ExpectedVersionedImage) bool {
-						return allowedImage.Name == imageBase
+					if r.Options != nil && slices.ContainsFunc(r.Options.ExpectedVersionedImages, func(expectedImage option.ExpectedVersionedImage) bool {
+						return expectedImage.Name == imageBase
 					}) {
 						checkResults = append(checkResults, rule.WarningCheckResult("Image is used with more than one versions.", rule.NewTarget("image", imageBase)))
 					} else {

@@ -140,8 +140,8 @@ func (r *Rule242442) checkImages(clusterTarget rule.Target, pods []corev1.Pod, r
 						target := clusterTarget.With("image", imageBase, "namespace", namespace)
 						reportedImages[imageBase] = struct{}{}
 
-						if r.Options != nil && slices.ContainsFunc(r.Options.ExpectedVersionedImages, func(allowedImage option.ExpectedVersionedImage) bool {
-							return allowedImage.Name == imageBase
+						if r.Options != nil && slices.ContainsFunc(r.Options.ExpectedVersionedImages, func(expectedImage option.ExpectedVersionedImage) bool {
+							return expectedImage.Name == imageBase
 						}) {
 							checkResults = append(checkResults, rule.WarningCheckResult("Image is used with more than one versions.", target))
 						} else {

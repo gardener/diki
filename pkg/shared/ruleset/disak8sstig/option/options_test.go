@@ -229,7 +229,7 @@ var _ = Describe("options", func() {
 	})
 
 	Describe("#ValidateOptions242442", func() {
-		It("should deny empty allowed images list", func() {
+		It("should deny empty expected images list", func() {
 			options := option.Options242442{}
 
 			result := options.Validate(nil)

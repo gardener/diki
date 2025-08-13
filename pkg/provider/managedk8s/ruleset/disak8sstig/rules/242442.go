@@ -39,7 +39,9 @@ type Options242442 struct {
 var _ option.Option = (*Options242442)(nil)
 
 func (o Options242442) Validate(fldPath *field.Path) field.ErrorList {
-	return slices.Concat(validation.ValidateLabels(o.KubeProxyMatchLabels, fldPath.Child("kubeProxyMatchLabels")), o.ImageSelector.Validate(fldPath))
+	allErrs := validation.ValidateLabels(o.KubeProxyMatchLabels, fldPath.Child("kubeProxyMatchLabels"))
+	allErrs = append(allErrs, o.ImageSelector.Validate(fldPath)...)
+	return allErrs
 }
 
 func (r *Rule242442) ID() string {
@@ -127,8 +129,8 @@ func (r *Rule242442) checkImages(pods []corev1.Pod, target rule.Target) []rule.C
 			if ref, ok := images[imageBase]; ok && ref != imageRef {
 				if _, reported := reportedImages[imageBase]; !reported {
 					reportedImages[imageBase] = struct{}{}
-					if r.Options != nil && slices.ContainsFunc(r.Options.ImageSelector.ExpectedVersionedImages, func(allowedImage option.ExpectedVersionedImage) bool {
-						return allowedImage.Name == imageBase
+					if r.Options != nil && slices.ContainsFunc(r.Options.ImageSelector.ExpectedVersionedImages, func(expectedImage option.ExpectedVersionedImage) bool {
+						return expectedImage.Name == imageBase
 					}) {
 						checkResults = append(checkResults, rule.WarningCheckResult("Image is used with more than one versions.", target.With("image", imageBase)))
 					} else {
