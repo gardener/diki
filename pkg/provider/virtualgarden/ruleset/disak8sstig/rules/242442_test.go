@@ -200,13 +200,14 @@ var _ = Describe("#242442", func() {
 	})
 
 	It("hould return warning results when the image is listed in the expectedVersionedImages option", func() {
-		r := &rules.Rule242442{Client: fakeClient, Namespace: namespace, Options: &option.Options242442{
-			ExpectedVersionedImages: []option.ExpectedVersionedImage{
-				{
-					Name: "localhost:7777/image2",
+		r := &rules.Rule242442{Client: fakeClient, Namespace: namespace,
+			Options: &option.Options242442{
+				ExpectedVersionedImages: []option.ExpectedVersionedImage{
+					{
+						Name: "localhost:7777/image2",
+					},
 				},
 			},
-		},
 		}
 
 		pod1 := pod.DeepCopy()
