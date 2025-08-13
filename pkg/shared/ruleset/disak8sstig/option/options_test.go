@@ -227,4 +227,46 @@ var _ = Describe("options", func() {
 			))
 		})
 	})
+
+	Describe("#ValidateOptions242442", func() {
+		It("should deny empty expected images list", func() {
+			options := option.Options242442{}
+
+			result := options.Validate(nil)
+
+			Expect(result).To(ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("expectedVersionedImages"),
+					"Detail": Equal("must not be empty"),
+				})),
+			))
+		})
+
+		It("should correctly validate options", func() {
+			options := option.Options242442{
+				ExpectedVersionedImages: []option.ExpectedVersionedImage{
+					{
+						Name: "foo",
+					},
+					{
+						Name: "",
+					},
+					{
+						Name: "bar",
+					},
+				},
+			}
+
+			result := options.Validate(nil)
+
+			Expect(result).To(ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("expectedVersionedImages[1].name"),
+					"Detail": Equal("must not be empty"),
+				})),
+			))
+		})
+	})
 })

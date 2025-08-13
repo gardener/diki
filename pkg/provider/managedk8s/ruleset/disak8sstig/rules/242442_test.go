@@ -17,6 +17,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var _ = Describe("#242442", func() {
@@ -310,6 +311,57 @@ var _ = Describe("#242442", func() {
 		expectedCheckResults := []rule.CheckResult{
 			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("container", "foo", "namespace", "foo", "name", "pod1", "kind", "Pod")),
 			rule.WarningCheckResult("ImageID is empty in container status.", rule.NewTarget("container", "foobar", "namespace", "foo", "name", "pod1", "kind", "Pod")),
+		}
+
+		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+	})
+
+	It("should return warning results when the image is listed in the expectedVersionedImages option", func() {
+		r := &rules.Rule242442{Client: client,
+			Options: &rules.Options242442{
+				ImageSelector: &option.Options242442{
+					ExpectedVersionedImages: []option.ExpectedVersionedImage{
+						{
+							Name: "eu.gcr.io/image2",
+						},
+					},
+				},
+			},
+		}
+
+		pod1 := plainPod.DeepCopy()
+		pod1.Name = "pod1"
+		pod1.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:" + digest1
+		pod1.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image1@sha256:" + digest2
+		pod1.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image2@sha256:" + digest3
+		pod1.Spec.InitContainers = []corev1.Container{
+			{
+				Name: "initFoo",
+			},
+		}
+		pod1.Status.InitContainerStatuses = []corev1.ContainerStatus{
+			{
+				Name:    "initFoo",
+				ImageID: "eu.gcr.io/image2@sha256:" + digest2,
+			},
+		}
+		Expect(client.Create(ctx, pod1)).To(Succeed())
+
+		pod2 := plainPod.DeepCopy()
+		pod2.Name = "pod2"
+		pod2.Labels["foo"] = "bar"
+		pod2.Status.ContainerStatuses[0].ImageID = "eu.gcr.io/image1@sha256:" + digest3
+		pod2.Status.ContainerStatuses[1].ImageID = "eu.gcr.io/image4@sha256:" + digest2
+		pod2.Status.ContainerStatuses[2].ImageID = "eu.gcr.io/image4@sha256:" + digest1
+		Expect(client.Create(ctx, pod2)).To(Succeed())
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).To(BeNil())
+
+		expectedCheckResults := []rule.CheckResult{
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "Node", "name", "foo", "image", "eu.gcr.io/image1")),
+			rule.WarningCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "Node", "name", "foo", "image", "eu.gcr.io/image2")),
+			rule.FailedCheckResult("Image is used with more than one versions.", rule.NewTarget("kind", "Node", "name", "foo", "image", "eu.gcr.io/image4")),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))

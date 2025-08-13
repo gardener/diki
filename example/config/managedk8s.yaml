@@ -113,6 +113,9 @@ providers:                   # contains information about known providers
     #   args:
     #     kubeProxyMatchLabels:
     #       foo: bar
+    #     expectedVersionedImages:
+    #     - name: "eu.gcr.io/foo"
+    #     - name: "eu.gcr.io/bar"
     # - ruleID: "242447"
     #   args:
     #     kubeProxyMatchLabels:

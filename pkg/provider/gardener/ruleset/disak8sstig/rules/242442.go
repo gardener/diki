@@ -18,6 +18,7 @@ import (
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -30,6 +31,7 @@ type Rule242442 struct {
 	ClusterClient         client.Client
 	ControlPlaneClient    client.Client
 	ControlPlaneNamespace string
+	Options               *option.Options242442
 }
 
 func (r *Rule242442) ID() string {
@@ -137,7 +139,14 @@ func (r *Rule242442) checkImages(clusterTarget rule.Target, pods []corev1.Pod, r
 					if _, reported := reportedImages[imageBase]; !reported {
 						target := clusterTarget.With("image", imageBase, "namespace", namespace)
 						reportedImages[imageBase] = struct{}{}
-						checkResults = append(checkResults, rule.FailedCheckResult("Image is used with more than one versions.", target))
+
+						if r.Options != nil && slices.ContainsFunc(r.Options.ExpectedVersionedImages, func(expectedImage option.ExpectedVersionedImage) bool {
+							return expectedImage.Name == imageBase
+						}) {
+							checkResults = append(checkResults, rule.WarningCheckResult("Image is used with more than one versions.", target))
+						} else {
+							checkResults = append(checkResults, rule.FailedCheckResult("Image is used with more than one versions.", target))
+						}
 					}
 				} else {
 					images[imageBase] = imageRef

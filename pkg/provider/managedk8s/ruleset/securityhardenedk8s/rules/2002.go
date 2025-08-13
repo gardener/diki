@@ -36,7 +36,7 @@ type Options2002 struct {
 	AcceptedStorageClasses []option.AcceptedClusterObject `json:"acceptedStorageClasses" yaml:"acceptedStorageClasses"`
 }
 
-// Validate validates that option configurations are correctly defined
+// Validate validates that option configurations are correctly defined.
 func (o Options2002) Validate(fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
 

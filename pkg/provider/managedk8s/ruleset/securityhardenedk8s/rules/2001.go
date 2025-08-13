@@ -38,7 +38,7 @@ type Options2001 struct {
 	AcceptedPods []option.AcceptedNamespacedObject `json:"acceptedPods" yaml:"acceptedPods"`
 }
 
-// Validate validates that option configurations are correctly defined
+// Validate validates that option configurations are correctly defined.
 func (o Options2001) Validate(fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
 
