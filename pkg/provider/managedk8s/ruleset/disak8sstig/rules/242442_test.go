@@ -316,7 +316,7 @@ var _ = Describe("#242442", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 
-	It("hould return warning results when the image is listed in the expectedVersionedImages option", func() {
+	It("should return warning results when the image is listed in the expectedVersionedImages option", func() {
 		r := &rules.Rule242442{Client: client,
 			Options: &rules.Options242442{
 				ImageSelector: &option.Options242442{
