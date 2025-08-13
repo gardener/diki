@@ -160,7 +160,7 @@ func (spe *SimplePodExecutor) Execute(ctx context.Context, command string, comma
 
 	spdyExecutor, err := remotecommand.NewSPDYExecutor(spe.config, http.MethodPost, request.URL())
 	if err != nil {
-		return "", fmt.Errorf("failed to initialized the spdy command exector: %w", err)
+		return "", fmt.Errorf("failed to initialized the spdy command executor: %w", err)
 	}
 
 	executor, err := remotecommand.NewFallbackExecutor(websocketExecutor, spdyExecutor, func(err error) bool {

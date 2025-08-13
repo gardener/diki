@@ -50,7 +50,7 @@ var _ = Describe("options", func() {
 					PodMatchLabels:       map[string]string{"foo": "bar."},
 				},
 				{
-					NamespaceMatchLabels: map[string]string{"fo?o": "bar"},
+					NamespaceMatchLabels: map[string]string{"foo?baz": "bar"},
 					PodMatchLabels:       map[string]string{"foo": "bar"},
 				},
 				{
@@ -99,7 +99,7 @@ var _ = Describe("options", func() {
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("[].namespaceMatchLabels"),
-					"BadValue": Equal("fo?o"),
+					"BadValue": Equal("foo?baz"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("[].namespaceMatchLabels"),

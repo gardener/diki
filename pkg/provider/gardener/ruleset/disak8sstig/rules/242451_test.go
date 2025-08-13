@@ -44,7 +44,7 @@ var _ = Describe("#242451", func() {
     "source": "/source"
   }
 ]`
-		mountsMulty = `[
+		mountsMulti = `[
   {
     "destination": "/destination",
     "source": "/destination"
@@ -474,7 +474,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "Node", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 2000")),
 				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "Node", "details", "fileName: /destination, ownerUser: 65532, expectedOwnerUsers: [0 1000]")),
 			}),
-		Entry("should return accepted check result when kubeProxyDiabled option is set to true",
+		Entry("should return accepted check result when kubeProxyDisabled option is set to true",
 			rules.Options242451{
 				KubeProxyOptions: option.KubeProxyOptions{
 					KubeProxyDisabled: true,
@@ -518,7 +518,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.ErroredCheckResult("foo-bar", rule.NewTarget("cluster", "shoot", "name", "diki-242451-bbbbbbbbbb", "namespace", "kube-system", "kind", "Pod")),
 			}),
 		Entry("should check files when GetMountedFilesStats errors", nil,
-			[][]string{{mountsMulty, compliantStats, "", compliantDirStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
+			[][]string{{mountsMulti, compliantStats, "", compliantDirStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
 			[][]string{{kubeletPID, kubeletCommandCert, ""}, {emptyMounts}},
 			[][]error{{nil, nil, errors.New("bar"), nil, nil, nil, nil, nil}},
 			[][]error{{nil, nil, nil}, {nil}},

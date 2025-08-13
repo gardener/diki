@@ -96,7 +96,7 @@ const (
 	Warning Status = "Warning"
 	// Failed status indicates that a check reported a violation.
 	Failed Status = "Failed"
-	// Errored status indicates that an unexpected error occured during check execution.
+	// Errored status indicates that an unexpected error occurred during check execution.
 	Errored Status = "Errored"
 	// NotImplemented status indicates that a rule/check is not implemented.
 	NotImplemented Status = "Not Implemented"

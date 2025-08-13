@@ -1511,7 +1511,7 @@ var _ = Describe("utils", func() {
 			},
 			Entry("should return correct values for flag",
 				deploymentName, containerName, namespace, "foo", []string{"bar"}, BeNil()),
-			Entry("should return correct values for flag when there are more than 1 occurances",
+			Entry("should return correct values for flag when there are more than 1 occurrences",
 				deploymentName, containerName, namespace, "bar1", []string{"foo1", "foo3"}, BeNil()),
 			Entry("should return empty slice when the options is missing",
 				deploymentName, containerName, namespace, "foo5", nil, BeNil()),
@@ -1685,7 +1685,7 @@ var _ = Describe("utils", func() {
 				Expect(err).To(errorMatcher)
 				Expect(result).To(Equal(expectedResult))
 			},
-			Entry("should return cotainer command", "bar",
+			Entry("should return container command", "bar",
 				[]string{"/bin/sh", "-c", "exec", "kube-proxy"}, []string{"--kubeconfig=/var/lib/kube-proxy/kubeconfig"},
 				"/bin/sh -c exec kube-proxy --kubeconfig=/var/lib/kube-proxy/kubeconfig", BeNil()),
 			Entry("should return error when container is not found", "not-bar",
@@ -2167,7 +2167,7 @@ readOnlyPort: 222
 			Expect(checkResult).To(HaveLen(0))
 		})
 
-		It("should correclty select pods when reference groups are present", func() {
+		It("should correctly select pods when reference groups are present", func() {
 			pod1 := &corev1.Pod{}
 			pod1.Name = "pod1"
 			pod1.Spec.NodeName = "node3"
@@ -2216,7 +2216,7 @@ readOnlyPort: 222
 			Expect(checkResult).To(HaveLen(0))
 		})
 
-		It("should correclty select minimal groups", func() {
+		It("should correctly select minimal groups", func() {
 			pod1 := &corev1.Pod{}
 			pod1.Name = "pod1"
 			pod1.Spec.NodeName = "node2"

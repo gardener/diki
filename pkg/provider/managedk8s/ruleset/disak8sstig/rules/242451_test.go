@@ -43,7 +43,7 @@ var _ = Describe("#242451", func() {
     "source": "/source"
   }
 ]`
-		mountsMulty = `[
+		mountsMulti = `[
   {
     "destination": "/destination",
     "source": "/destination"
@@ -265,7 +265,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "node01", "kind", "Node", "details", "fileName: /var/lib/keys, ownerUser: 0, ownerGroup: 0")),
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "node01", "kind", "Node", "details", "fileName: /var/lib/certs, ownerUser: 0, ownerGroup: 0")),
 			}),
-		Entry("should check only nodes wtih labels",
+		Entry("should check only nodes with labels",
 			rules.Options242451{
 				NodeGroupByLabels: []string{"foo"},
 			},
@@ -297,7 +297,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("name", "node01", "kind", "Node", "details", "fileName: /destination/file2.pem, ownerUser: 0, ownerGroup: 2000")),
 				rule.FailedCheckResult("File has unexpected owner user", rule.NewTarget("name", "node01", "kind", "Node", "details", "fileName: /destination, ownerUser: 65532, expectedOwnerUsers: [0 1000]")),
 			}),
-		Entry("should return accepted check result when kubeProxyDiabled option is set to true",
+		Entry("should return accepted check result when kubeProxyDisabled option is set to true",
 			rules.Options242451{
 				KubeProxyOptions: option.KubeProxyOptions{
 					KubeProxyDisabled: true,
@@ -322,7 +322,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			}),
 		Entry("should check files when GetMountedFilesStats errors", nil,
 			[][]string{{kubeletPID, kubeletCommandCert, ""},
-				{mountsMulty, compliantStats, emptyMounts, compliantDirStats, emptyMounts, emptyMounts}},
+				{mountsMulti, compliantStats, emptyMounts, compliantDirStats, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, nil}, {nil, nil, errors.New("bar"), nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242451-bbbbbbbbbb", "namespace", "kube-system", "kind", "Pod")),

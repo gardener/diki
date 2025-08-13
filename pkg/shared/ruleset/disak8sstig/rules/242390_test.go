@@ -44,7 +44,7 @@ kind: AuthenticationConfiguration
 anonymous:
   enabled: true
 `
-		invalidAnoymousAuthenticationConfig = "foo"
+		invalidAnonymousAuthenticationConfig = "foo"
 	)
 
 	var (
@@ -194,7 +194,7 @@ anonymous:
 						Namespace: namespace,
 					},
 					Data: map[string]string{
-						"/etc/foo/bar": invalidAnoymousAuthenticationConfig,
+						"/etc/foo/bar": invalidAnonymousAuthenticationConfig,
 					},
 				}
 				Expect(fakeClient.Create(ctx, configMap)).To(Succeed())

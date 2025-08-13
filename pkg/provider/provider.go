@@ -39,7 +39,7 @@ type ProviderFromConfigFunc func(conf config.ProviderConfig, fldPath *field.Path
 // MetadataFunc constructs a detailed Provider metadata object.
 type MetadataFunc func() metadata.ProviderDetailed
 
-// ProviderOption constructs a pair of a configuarion and metadata function for a specific provider.
+// ProviderOption constructs a pair of a configuration and metadata function for a specific provider.
 type ProviderOption struct {
 	ProviderFromConfigFunc
 	MetadataFunc

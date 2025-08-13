@@ -18,7 +18,7 @@ import (
 	"github.com/gardener/diki/pkg/ruleset"
 )
 
-// VirtualGardenProviderFromConfig retuns a Provider from a [ProviderConfig].
+// VirtualGardenProviderFromConfig returns a Provider from a [ProviderConfig].
 func VirtualGardenProviderFromConfig(conf config.ProviderConfig, _ *field.Path) (provider.Provider, error) {
 	p, err := virtualgarden.FromGenericConfig(conf)
 	if err != nil {

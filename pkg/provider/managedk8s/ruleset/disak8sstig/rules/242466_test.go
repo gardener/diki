@@ -43,7 +43,7 @@ var _ = Describe("#242466", func() {
     "source": "/source"
   }
 ]`
-		mountsMulty = `[
+		mountsMulti = `[
   {
     "destination": "/destination",
     "source": "/destination"
@@ -249,7 +249,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "kube-proxy", "namespace", "foo", "containerName", "test", "kind", "Pod", "details", "fileName: /destination/bar/file2.pem, permissions: 400")),
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("name", "node01", "kind", "Node", "details", "fileName: /var/lib/certs/tls.crt, permissions: 644")),
 			}),
-		Entry("should check only nodes wtih labels",
+		Entry("should check only nodes with labels",
 			rules.Options242466{
 				NodeGroupByLabels: []string{"foo"},
 			},
@@ -261,7 +261,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.WarningCheckResult("Node is missing a label", rule.NewTarget("name", "node01", "kind", "Node", "label", "foo")),
 				rule.ErroredCheckResult("no allocatable nodes could be selected", rule.NewTarget()),
 			}),
-		Entry("should return accepted check result when kubeProxyDiabled option is set to true",
+		Entry("should return accepted check result when kubeProxyDisabled option is set to true",
 			rules.Options242466{
 				KubeProxyOptions: option.KubeProxyOptions{
 					KubeProxyDisabled: true,
@@ -283,7 +283,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			}),
 		Entry("should check files when GetMountedFilesStats errors", nil,
 			[][]string{{kubeletPID, kubeletCommandCert, "", compliantCertStats},
-				{mountsMulty, compliantStats, emptyMounts, emptyMounts}},
+				{mountsMulti, compliantStats, emptyMounts, emptyMounts}},
 			[][]error{{nil, nil, nil, nil}, {nil, nil, errors.New("bar"), nil, nil}},
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242466-bbbbbbbbbb", "namespace", "kube-system", "kind", "Pod")),

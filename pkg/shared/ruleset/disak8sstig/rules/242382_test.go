@@ -219,7 +219,7 @@ authorizers:
 			map[string]string{fileName: authzConfig},
 			[]rule.CheckResult{{Status: rule.Passed, Message: "AuthorizationConfiguration has expected start mode types set.", Target: authorizationConfigTarget}},
 			BeNil()),
-		Entry("should fail when AuthorizationConfiguration contains not allowd mode type AlwaysAllow", []string{},
+		Entry("should fail when AuthorizationConfiguration contains not allowed mode type AlwaysAllow", []string{},
 			[]string{"--authorization-config=/foo/bar/fileName.yaml"}, []string{},
 			map[string]string{fileName: notAllowedAuthzConfig},
 			[]rule.CheckResult{{Status: rule.Failed, Message: "AuthorizationConfiguration has not allowed mode type set.", Target: authorizationConfigTarget}},

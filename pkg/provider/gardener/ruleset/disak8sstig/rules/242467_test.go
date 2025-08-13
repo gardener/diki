@@ -44,7 +44,7 @@ var _ = Describe("#242467", func() {
     "source": "/source"
   }
 ]`
-		mountsMulty = `[
+		mountsMulti = `[
   {
     "destination": "/destination",
     "source": "/destination"
@@ -445,7 +445,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			[]rule.CheckResult{
 				rule.ErroredCheckResult("no '.key' files found in PKI directory", rule.NewTarget("cluster", "shoot", "name", "node01", "kind", "Node", "directory", "/var/lib/kubelet/pki")),
 			}),
-		Entry("should return accepted check result when kubeProxyDiabled option is set to true",
+		Entry("should return accepted check result when kubeProxyDisabled option is set to true",
 			[][]string{{mounts, nonCompliantStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
 			[][]string{{kubeletPID, kubeletCommand, "", nonCompliantStats}},
 			[][]error{{nil, nil, nil, nil, nil, nil}},
@@ -471,7 +471,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.ErroredCheckResult("foo-bar", rule.NewTarget("cluster", "shoot", "name", "diki-242467-bbbbbbbbbb", "namespace", "kube-system", "kind", "Pod")),
 			}),
 		Entry("should check files when GetMountedFilesStats errors",
-			[][]string{{mountsMulty, compliantStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
+			[][]string{{mountsMulti, compliantStats, emptyMounts, emptyMounts, emptyMounts, emptyMounts, emptyMounts}},
 			[][]string{{kubeletPID, kubeletCommandCert, "", compliantKeyStats}, {emptyMounts}},
 			[][]error{{nil, nil, errors.New("bar"), nil, nil, nil, nil}},
 			[][]error{{nil, nil, nil, nil}, {nil}}, nil,

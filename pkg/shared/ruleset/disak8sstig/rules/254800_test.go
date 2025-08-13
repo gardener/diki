@@ -188,7 +188,7 @@ kind: PodSecurityConfiguration`
 			map[string]string{fileName: admissionConfigWithPath, "podsecurity.yaml": podSecurityBaseline}, &rules.Options254800{MinPodSecurityStandardsProfile: "baseline"},
 			[]rule.CheckResult{{Status: rule.Passed, Message: "PodSecurity is properly configured", Target: podSecurityTarget}},
 			BeNil()),
-		Entry("should return faild checkResults when using baseline and expected is restricted",
+		Entry("should return failed checkResults when using baseline and expected is restricted",
 			[]string{"--admission-control-config-file=/foo/bar/fileName.yaml"},
 			map[string]string{fileName: admissionConfigWithPath, "podsecurity.yaml": podSecurityBaseline}, &rules.Options254800{MinPodSecurityStandardsProfile: "restricted"},
 			[]rule.CheckResult{{Status: rule.Failed, Message: "Enforce mode profile is less restrictive than the minimum Pod Security Standards profile allowed: restricted", Target: podSecurityTarget},

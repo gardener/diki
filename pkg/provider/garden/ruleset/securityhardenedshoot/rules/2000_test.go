@@ -64,7 +64,7 @@ anonymous:
   enabled: true
 `
 
-		nilAnonymusAuthenticationConfig = `apiVersion: apiserver.config.k8s.io/v1beta1
+		nilAnonymousAuthenticationConfig = `apiVersion: apiserver.config.k8s.io/v1beta1
 kind: AuthenticationConfiguration
 `
 	)
@@ -113,7 +113,7 @@ kind: AuthenticationConfiguration
 			nil,
 			[]rule.CheckResult{{Status: rule.Passed, Message: "Anonymous authentication is not enabled for the kube-apiserver.", Target: rule.NewTarget()}},
 		),
-		Entry("should pass when the enabledAnoymousAuthentication flag is set to false",
+		Entry("should pass when the enabledAnonymousAuthentication flag is set to false",
 			func() {
 				shoot.Spec.Kubernetes = gardencorev1beta1.Kubernetes{
 					KubeAPIServer: &gardencorev1beta1.KubeAPIServerConfig{
@@ -124,7 +124,7 @@ kind: AuthenticationConfiguration
 			nil,
 			[]rule.CheckResult{{Status: rule.Passed, Message: "Anonymous authentication is disabled for the kube-apiserver.", Target: rule.NewTarget()}},
 		),
-		Entry("should fail when the enabledAnoymousAuthentication flag is set to true",
+		Entry("should fail when the enabledAnonymousAuthentication flag is set to true",
 			func() {
 				shoot.Spec.Kubernetes = gardencorev1beta1.Kubernetes{
 					KubeAPIServer: &gardencorev1beta1.KubeAPIServerConfig{
@@ -135,7 +135,7 @@ kind: AuthenticationConfiguration
 			nil,
 			[]rule.CheckResult{{Status: rule.Failed, Message: "Anonymous authentication is enabled for the kube-apiserver.", Target: rule.NewTarget()}},
 		),
-		Entry("should pass when neither the enableAnonymousAuthentication nor the structuredAuthenticaton flags are set",
+		Entry("should pass when neither the enableAnonymousAuthentication nor the structuredAuthentication flags are set",
 			func() {
 				shoot.Spec.Kubernetes = gardencorev1beta1.Kubernetes{
 					KubeAPIServer: &gardencorev1beta1.KubeAPIServerConfig{
@@ -202,7 +202,7 @@ kind: AuthenticationConfiguration
 		Entry("should pass if the structuredAuthentication configuration does not have anonymous authentication config set",
 			func() {
 				authenticationConfigMap.Data = map[string]string{
-					fileName: nilAnonymusAuthenticationConfig,
+					fileName: nilAnonymousAuthenticationConfig,
 				}
 
 				Expect(fakeClient.Create(ctx, authenticationConfigMap)).To(Succeed())

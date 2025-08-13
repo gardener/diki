@@ -134,9 +134,9 @@ func (r *Rule245543) Run(ctx context.Context) (rule.RuleResult, error) {
 
 		// we strip " if present in both ends,
 		// because isTokenAccepted does not expect them
-		trimedGroups := strings.TrimSpace(token[3])
-		if len(trimedGroups) >= 2 && trimedGroups[0] == '"' && trimedGroups[len(trimedGroups)-1] == '"' {
-			token[3] = trimedGroups[1 : len(trimedGroups)-1]
+		trimmedGroups := strings.TrimSpace(token[3])
+		if len(trimmedGroups) >= 2 && trimmedGroups[0] == '"' && trimmedGroups[len(trimmedGroups)-1] == '"' {
+			token[3] = trimmedGroups[1 : len(trimmedGroups)-1]
 		}
 		tokens = append(tokens, token)
 	}

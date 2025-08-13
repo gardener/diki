@@ -30,7 +30,7 @@ spec:
 Shoot clusters should use a supported version of Kubernetes. This rule can be configured to accept specific version classifications.
 
 #### Fix
-Configure `supported` Kuberenetes version in the `spec.kubernetes.version` field.
+Configure `supported` Kubernetes version in the `spec.kubernetes.version` field.
 ``` yaml
 kind: Shoot
 apiVersion: core.gardener.cloud/v1beta1

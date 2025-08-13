@@ -126,7 +126,7 @@ func GetFileStatsByDir(
 
 // GetMountedFilesStats returns file stats grouped by container name for all
 // mounted files in a pod with the exception of files mounted at `/dev/termination-log` destination.
-// Host sources can be exluded by setting excludeSources.
+// Host sources can be excluded by setting excludeSources.
 func GetMountedFilesStats(
 	ctx context.Context,
 	podExecutorRootPath string,

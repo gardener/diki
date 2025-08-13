@@ -339,7 +339,7 @@ func NodeReadyStatus(node corev1.Node) bool {
 	return false
 }
 
-// GetContainerFromPod returns a container object with a specific cainerName, if such container is not present it retuns found=false
+// GetContainerFromPod returns a container object with a specific containerName, if such container is not present it returns found=false
 func GetContainerFromPod(pod *corev1.Pod, containerName string) (container corev1.Container, found bool) {
 	for _, container := range pod.Spec.Containers {
 		if container.Name == containerName {
@@ -349,7 +349,7 @@ func GetContainerFromPod(pod *corev1.Pod, containerName string) (container corev
 	return corev1.Container{}, false
 }
 
-// GetContainerFromDeployment returns a container object with a specific cainerName, if such container is not present it retuns found=false
+// GetContainerFromDeployment returns a container object with a specific containerName, if such container is not present it returns found=false
 func GetContainerFromDeployment(deployment *appsv1.Deployment, containerName string) (container corev1.Container, found bool) {
 	for _, container := range deployment.Spec.Template.Spec.Containers {
 		if container.Name == containerName {
@@ -359,7 +359,7 @@ func GetContainerFromDeployment(deployment *appsv1.Deployment, containerName str
 	return corev1.Container{}, false
 }
 
-// GetContainerFromStatefulSet returns a container object with a specific cainerName, if such container is not present it retuns found=false
+// GetContainerFromStatefulSet returns a container object with a specific containerName, if such container is not present it returns found=false
 func GetContainerFromStatefulSet(statefulSet *appsv1.StatefulSet, containerName string) (container corev1.Container, found bool) {
 	for _, container := range statefulSet.Spec.Template.Spec.Containers {
 		if container.Name == containerName {
@@ -369,7 +369,7 @@ func GetContainerFromStatefulSet(statefulSet *appsv1.StatefulSet, containerName 
 	return corev1.Container{}, false
 }
 
-// GetVolumeFromDeployment returns a volume object with a specific volumeName, if such volume is not present it retuns found=false
+// GetVolumeFromDeployment returns a volume object with a specific volumeName, if such volume is not present it returns found=false
 func GetVolumeFromDeployment(deployment *appsv1.Deployment, volumeName string) (volume corev1.Volume, found bool) {
 	for _, volume := range deployment.Spec.Template.Spec.Volumes {
 		if volume.Name == volumeName {
@@ -379,7 +379,7 @@ func GetVolumeFromDeployment(deployment *appsv1.Deployment, volumeName string) (
 	return corev1.Volume{}, false
 }
 
-// GetVolumeFromStatefulSet returns a volume object with a specific volumeName, if such volume is not present it retuns found=false
+// GetVolumeFromStatefulSet returns a volume object with a specific volumeName, if such volume is not present it returns found=false
 func GetVolumeFromStatefulSet(statefulSet *appsv1.StatefulSet, volumeName string) (volume corev1.Volume, found bool) {
 	for _, volume := range statefulSet.Spec.Template.Spec.Volumes {
 		if volume.Name == volumeName {

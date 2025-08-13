@@ -44,16 +44,6 @@ var _ = Describe("#242447", func() {
     "source": "/var/lib/kubeconfig"
   }
 ]`
-		mountsMulty = `[
-  {
-    "destination": "/destination",
-    "source": "/destination"
-  },
-  {
-    "destination": "/destination",
-    "source": "/destination"
-  }
-]`
 		emptyMounts                  = `[]`
 		compliantConfigStats         = "644\t0\t0\tregular file\t/var/lib/config\n"
 		nonCompliantConfigStats      = "664\t0\t0\tregular file\t/var/lib/config\n"
