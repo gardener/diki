@@ -35,7 +35,7 @@ func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsCon
 	if err != nil {
 		return fmt.Errorf("rule option 242390 error: %s", err.Error())
 	}
-	opts242442, err := getV2R2OptionOrNil[rules.Options242442](ruleOptions[sharedrules.ID242442].Args)
+	opts242442, err := getV2R2OptionOrNil[option.Options242442](ruleOptions[sharedrules.ID242442].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242442 error: %s", err.Error())
 	}
