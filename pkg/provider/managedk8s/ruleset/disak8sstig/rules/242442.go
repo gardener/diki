@@ -33,13 +33,13 @@ type Rule242442 struct {
 
 type Options242442 struct {
 	KubeProxyMatchLabels map[string]string `json:"kubeProxyMatchLabels" yaml:"kubeProxyMatchLabels"`
-	*option.Options242442
+	ImageSelector        *option.Options242442
 }
 
 var _ option.Option = (*Options242442)(nil)
 
-func (o Options242442) Validate(_ *field.Path) field.ErrorList {
-	return validation.ValidateLabels(o.KubeProxyMatchLabels, field.NewPath("kubeProxyMatchLabels"))
+func (o Options242442) Validate(fldPath *field.Path) field.ErrorList {
+	return slices.Concat(validation.ValidateLabels(o.KubeProxyMatchLabels, fldPath.Child("kubeProxyMatchLabels")), o.ImageSelector.Validate(fldPath))
 }
 
 func (r *Rule242442) ID() string {
@@ -127,7 +127,7 @@ func (r *Rule242442) checkImages(pods []corev1.Pod, target rule.Target) []rule.C
 			if ref, ok := images[imageBase]; ok && ref != imageRef {
 				if _, reported := reportedImages[imageBase]; !reported {
 					reportedImages[imageBase] = struct{}{}
-					if r.Options != nil && slices.ContainsFunc(r.Options.ExpectedVersionedImages, func(allowedImage option.ExpectedVersionedImage) bool {
+					if r.Options != nil && slices.ContainsFunc(r.Options.ImageSelector.ExpectedVersionedImages, func(allowedImage option.ExpectedVersionedImage) bool {
 						return allowedImage.Name == imageBase
 					}) {
 						checkResults = append(checkResults, rule.WarningCheckResult("Image is used with more than one versions.", target.With("image", imageBase)))
