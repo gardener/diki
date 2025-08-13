@@ -26,7 +26,7 @@ type PodSelector struct {
 
 var _ Option = (*PodSelector)(nil)
 
-// Validate validates that option configurations are correctly defined
+// Validate validates that option configurations are correctly defined.
 func (e PodSelector) Validate(_ *field.Path) field.ErrorList {
 	var (
 		allErrs field.ErrorList
@@ -59,7 +59,7 @@ type ExpectedOwner struct {
 	Groups []string `json:"groups" yaml:"groups"`
 }
 
-// Validate validates that option configurations are correctly defined
+// Validate validates that option configurations are correctly defined.
 func (o FileOwnerOptions) Validate(_ *field.Path) field.ErrorList {
 	var (
 		allErrs field.ErrorList
@@ -103,7 +103,7 @@ type AcceptedPods242414 struct {
 	Ports         []int32 `json:"ports" yaml:"ports"`
 }
 
-// Validate validates that option configurations are correctly defined
+// Validate validates that option configurations are correctly defined.
 func (o Options242414) Validate(_ *field.Path) field.ErrorList {
 	var (
 		allErrs field.ErrorList
@@ -137,7 +137,7 @@ type AcceptedPods242415 struct {
 	EnvironmentVariables []string `json:"environmentVariables" yaml:"environmentVariables"`
 }
 
-// Validate validates that option configurations are correctly defined
+// Validate validates that option configurations are correctly defined.
 func (o Options242415) Validate(_ *field.Path) field.ErrorList {
 	var (
 		allErrs field.ErrorList
@@ -159,17 +159,17 @@ func (o Options242415) Validate(_ *field.Path) field.ErrorList {
 
 var _ Option = (*Options242442)(nil)
 
-// Options242442 defines a slices of allowed container images for rule 242442
+// Options242442 defines a slice of expected container images for rule 242442.
 type Options242442 struct {
 	ExpectedVersionedImages []ExpectedVersionedImage `json:"expectedVersionedImages" yaml:"expectedVersionedImages"`
 }
 
-// ExpectedVersionedImage contains option specifications for accepted container images
+// ExpectedVersionedImage contains option specifications for expected to be versioned container images.
 type ExpectedVersionedImage struct {
 	Name string `json:"name" yaml:"name"`
 }
 
-// Validate validates that option configurations are correctly defined
+// Validate validates that option configurations are correctly defined.
 func (o Options242442) Validate(fldPath *field.Path) field.ErrorList {
 	var (
 		allErrs  field.ErrorList

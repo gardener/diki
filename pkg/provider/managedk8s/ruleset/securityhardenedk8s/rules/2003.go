@@ -36,7 +36,7 @@ type AcceptedPods2003 struct {
 	VolumeNames []string `json:"volumeNames" yaml:"volumeNames"`
 }
 
-// Validate validates that option configurations are correctly defined
+// Validate validates that option configurations are correctly defined.
 func (o Options2003) Validate(fldPath *field.Path) field.ErrorList {
 	var (
 		allErrs          field.ErrorList

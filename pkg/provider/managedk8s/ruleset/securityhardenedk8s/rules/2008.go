@@ -43,7 +43,7 @@ type AcceptedPods2008 struct {
 	Justification string   `json:"justification" yaml:"justification"`
 }
 
-// Validate validates that option configurations are correctly defined
+// Validate validates that option configurations are correctly defined.
 func (o Options2008) Validate(fldPath *field.Path) field.ErrorList {
 	var (
 		allErrs          field.ErrorList

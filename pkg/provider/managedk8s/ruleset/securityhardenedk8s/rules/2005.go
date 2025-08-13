@@ -38,7 +38,7 @@ type AllowedImage struct {
 	Prefix string `json:"prefix" yaml:"prefix"`
 }
 
-// Validate validates that option configurations are correctly defined
+// Validate validates that option configurations are correctly defined.
 func (o Options2005) Validate(fldPath *field.Path) field.ErrorList {
 	var (
 		allErrs      field.ErrorList
