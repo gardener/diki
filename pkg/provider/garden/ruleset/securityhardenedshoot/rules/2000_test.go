@@ -11,8 +11,10 @@ import (
 	"github.com/gardener/gardener/pkg/client/kubernetes"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -53,6 +55,7 @@ anonymous:
   conditions:
   - path: /healthz
   - path: /livez
+  - path: /readyz
 `
 
 		enabledAnonymousAuthenticationConfigWithoutConditions = `apiVersion: apiserver.config.k8s.io/v1beta1
@@ -82,29 +85,33 @@ kind: AuthenticationConfiguration
 				Namespace: shootNamespace,
 			},
 		}
+	})
+
+	// TODO (georgibaltiev): remove any references to the EnableAnonymousAuthentication field after it's removal
+	DescribeTable("Run cases", func(updateFn func(), options *rules.Options2000, expectedCheckResults []rule.CheckResult) {
+		updateFn()
 
 		r = &rules.Rule2000{
 			Client:         fakeClient,
 			ShootName:      shootName,
 			ShootNamespace: shootNamespace,
+			Options:        options,
 		}
-	})
 
-	// TODO (georgibaltiev): remove any references to the EnableAnonymousAuthentication field after it's removal
-	DescribeTable("Run cases", func(updateFn func(), expectedCheckResult rule.CheckResult) {
-		updateFn()
 		Expect(fakeClient.Create(ctx, shoot)).To(Succeed())
 		res, err := r.Run(ctx)
 		Expect(err).To(BeNil())
-		Expect(res).To(Equal(rule.RuleResult{RuleID: ruleID, RuleName: ruleName, Severity: severity, CheckResults: []rule.CheckResult{expectedCheckResult}}))
+		Expect(res).To(Equal(rule.RuleResult{RuleID: ruleID, RuleName: ruleName, Severity: severity, CheckResults: expectedCheckResults}))
 	},
 		Entry("should error when the shoot is not found",
 			func() { shoot.Name = "notFoo" },
-			rule.CheckResult{Status: rule.Errored, Message: "shoots.core.gardener.cloud \"foo\" not found", Target: rule.NewTarget("kind", "Shoot", "name", "foo", "namespace", "bar")},
+			nil,
+			[]rule.CheckResult{{Status: rule.Errored, Message: "shoots.core.gardener.cloud \"foo\" not found", Target: rule.NewTarget("kind", "Shoot", "name", "foo", "namespace", "bar")}},
 		),
 		Entry("should pass when kube-apiserver configuration is not set",
 			func() {},
-			rule.CheckResult{Status: rule.Passed, Message: "Anonymous authentication is not enabled for the kube-apiserver.", Target: rule.NewTarget()},
+			nil,
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Anonymous authentication is not enabled for the kube-apiserver.", Target: rule.NewTarget()}},
 		),
 		Entry("should pass when the enabledAnoymousAuthentication flag is set to false",
 			func() {
@@ -114,7 +121,8 @@ kind: AuthenticationConfiguration
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Passed, Message: "Anonymous authentication is disabled for the kube-apiserver.", Target: rule.NewTarget()},
+			nil,
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Anonymous authentication is disabled for the kube-apiserver.", Target: rule.NewTarget()}},
 		),
 		Entry("should fail when the enabledAnoymousAuthentication flag is set to true",
 			func() {
@@ -124,7 +132,8 @@ kind: AuthenticationConfiguration
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Failed, Message: "Anonymous authentication is enabled for the kube-apiserver.", Target: rule.NewTarget()},
+			nil,
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Anonymous authentication is enabled for the kube-apiserver.", Target: rule.NewTarget()}},
 		),
 		Entry("should pass when neither the enableAnonymousAuthentication nor the structuredAuthenticaton flags are set",
 			func() {
@@ -136,7 +145,8 @@ kind: AuthenticationConfiguration
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Passed, Message: "Anonymous authentication is not enabled for the kube-apiserver.", Target: rule.NewTarget()},
+			nil,
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Anonymous authentication is not enabled for the kube-apiserver.", Target: rule.NewTarget()}},
 		),
 		Entry("should error if the structuredAuthentication configMap is not present",
 			func() {
@@ -148,7 +158,8 @@ kind: AuthenticationConfiguration
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Errored, Message: "configmaps \"authentication-config\" not found", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
+			nil,
+			[]rule.CheckResult{{Status: rule.Errored, Message: "configmaps \"authentication-config\" not found", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")}},
 		),
 		Entry("should warn if the structured authentication config does not contain a config.yaml key",
 			func() {
@@ -166,7 +177,8 @@ kind: AuthenticationConfiguration
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Errored, Message: "configMap: authentication-config does not contain field: config.yaml in Data field", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
+			nil,
+			[]rule.CheckResult{{Status: rule.Errored, Message: "configMap: authentication-config does not contain field: config.yaml in Data field", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")}},
 		),
 		Entry("should error if the structuredAuthentication configMap contains an invalid value",
 			func() {
@@ -184,7 +196,8 @@ kind: AuthenticationConfiguration
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Errored, Message: "yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `foo` into v1beta1.AuthenticationConfiguration", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
+			nil,
+			[]rule.CheckResult{{Status: rule.Errored, Message: "yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `foo` into v1beta1.AuthenticationConfiguration", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")}},
 		),
 		Entry("should pass if the structuredAuthentication configuration does not have anonymous authentication config set",
 			func() {
@@ -202,7 +215,8 @@ kind: AuthenticationConfiguration
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Passed, Message: "Anonymous authentication is not enabled for the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
+			nil,
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Anonymous authentication is not enabled for the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")}},
 		),
 		Entry("should fail if the structuredAuthentication configuration has anonymous access enabled unconditionally",
 			func() {
@@ -220,7 +234,8 @@ kind: AuthenticationConfiguration
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Failed, Message: "Anonymous authentication is enabled for the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
+			nil,
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Anonymous authentication is enabled for the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")}},
 		),
 		Entry("should fail if the structured authentication config has anonymous access enabled with conditions",
 			func() {
@@ -238,7 +253,8 @@ kind: AuthenticationConfiguration
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Failed, Message: "Anonymous authentication is enabled for the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
+			nil,
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Anonymous authentication is enabled for the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")}},
 		),
 		Entry("should pass if the structured authentication config has anonymous access disabled",
 			func() {
@@ -256,7 +272,148 @@ kind: AuthenticationConfiguration
 					},
 				}
 			},
-			rule.CheckResult{Status: rule.Passed, Message: "Anonymous authentication is disabled for the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")},
+			nil,
+			[]rule.CheckResult{{Status: rule.Passed, Message: "Anonymous authentication is disabled for the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")}},
+		),
+		Entry("should be accepted when anonymous authentication is enabled for accepted endpoints in options", func() {
+			authenticationConfigMap.Data = map[string]string{
+				fileName: enabledAnonymousAuthenticationConfigWithConditions,
+			}
+			Expect(fakeClient.Create(ctx, authenticationConfigMap)).To(Succeed())
+
+			shoot.Spec.Kubernetes = gardencorev1beta1.Kubernetes{
+				KubeAPIServer: &gardencorev1beta1.KubeAPIServerConfig{
+					StructuredAuthentication: &gardencorev1beta1.StructuredAuthentication{
+						ConfigMapName: configMapName,
+					},
+				},
+			}
+		},
+			&rules.Options2000{
+				AcceptedEndpoints: []rules.AcceptedEndpoint{
+					{
+						Path: "/healthz",
+					},
+					{
+						Path: "/livez",
+					},
+					{
+						Path: "/readyz",
+					},
+					{
+						Path: "/fooz",
+					},
+				},
+			},
+			[]rule.CheckResult{
+				{Status: rule.Accepted, Message: "Anonymous authentication is accepted for the specified endpoints of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap", "details", "endpoint: /healthz")},
+				{Status: rule.Accepted, Message: "Anonymous authentication is accepted for the specified endpoints of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap", "details", "endpoint: /livez")},
+				{Status: rule.Accepted, Message: "Anonymous authentication is accepted for the specified endpoints of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap", "details", "endpoint: /readyz")},
+			},
+		),
+		Entry("should be failed when anonymous authentication is enabled for not accepted endpoints in options", func() {
+			authenticationConfigMap.Data = map[string]string{
+				fileName: enabledAnonymousAuthenticationConfigWithConditions,
+			}
+			Expect(fakeClient.Create(ctx, authenticationConfigMap)).To(Succeed())
+
+			shoot.Spec.Kubernetes = gardencorev1beta1.Kubernetes{
+				KubeAPIServer: &gardencorev1beta1.KubeAPIServerConfig{
+					StructuredAuthentication: &gardencorev1beta1.StructuredAuthentication{
+						ConfigMapName: configMapName,
+					},
+				},
+			}
+		},
+			&rules.Options2000{
+				AcceptedEndpoints: []rules.AcceptedEndpoint{
+					{
+						Path: "/livez",
+					},
+					{
+						Path: "/fooz",
+					},
+					{
+						Path: "/barzmak",
+					},
+					{
+						Path: "/bazz",
+					},
+				},
+			},
+			[]rule.CheckResult{
+				{Status: rule.Failed, Message: "Anonymous authentication is enabled for specific endpoints of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap", "details", "endpoint: /healthz")},
+				{Status: rule.Accepted, Message: "Anonymous authentication is accepted for the specified endpoints of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap", "details", "endpoint: /livez")},
+				{Status: rule.Failed, Message: "Anonymous authentication is enabled for specific endpoints of the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap", "details", "endpoint: /readyz")},
+			},
+		),
+		Entry("should fail if the structured authentication's enabled without conditions and options are still present", func() {
+			authenticationConfigMap.Data = map[string]string{
+				fileName: enabledAnonymousAuthenticationConfigWithoutConditions,
+			}
+			Expect(fakeClient.Create(ctx, authenticationConfigMap)).To(Succeed())
+
+			shoot.Spec.Kubernetes = gardencorev1beta1.Kubernetes{
+				KubeAPIServer: &gardencorev1beta1.KubeAPIServerConfig{
+					StructuredAuthentication: &gardencorev1beta1.StructuredAuthentication{
+						ConfigMapName: configMapName,
+					},
+				},
+			}
+		},
+			&rules.Options2000{
+				AcceptedEndpoints: []rules.AcceptedEndpoint{
+					{
+						Path: "/livez",
+					},
+					{
+						Path: "/healthz",
+					},
+				},
+			},
+			[]rule.CheckResult{{Status: rule.Failed, Message: "Anonymous authentication is enabled for the kube-apiserver.", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")}},
 		),
 	)
+
+	Describe("#ValidateOptions2000", func() {
+		It("should deny empty accepted endpoints list", func() {
+			options := rules.Options2000{}
+
+			result := options.Validate(nil)
+
+			Expect(result).To(ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("acceptedEndpoints"),
+					"Detail": Equal("must not be empty"),
+				})),
+			))
+		})
+
+		It("should correctly validate options", func() {
+			options := rules.Options2000{
+				AcceptedEndpoints: []rules.AcceptedEndpoint{
+					{
+						Path: "/healthz",
+					},
+					{
+						Path: "",
+					},
+					{
+						Path: "/barz",
+					},
+				},
+			}
+
+			result := options.Validate(nil)
+
+			Expect(result).To(ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("acceptedEndpoints[1].path"),
+					"Detail": Equal("must not be empty"),
+				})),
+			))
+		})
+	})
 })

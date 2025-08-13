@@ -7,27 +7,59 @@ package rules
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	apiserverv1beta1 "k8s.io/apiserver/pkg/apis/apiserver/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var (
 	_ rule.Rule     = &Rule2000{}
 	_ rule.Severity = &Rule2000{}
+	_ option.Option = &Options2000{}
 )
 
 type Rule2000 struct {
 	Client         client.Client
 	ShootName      string
 	ShootNamespace string
+	Options        *Options2000
+}
+
+type Options2000 struct {
+	AcceptedEndpoints []AcceptedEndpoint `yaml:"acceptedEndpoints" json:"acceptedEndpoints"`
+}
+
+type AcceptedEndpoint struct {
+	Path string `yaml:"path" json:"path"`
+}
+
+func (o Options2000) Validate(fldPath *field.Path) field.ErrorList {
+	var (
+		allErrs               field.ErrorList
+		acceptedEndpointsPath = fldPath.Child("acceptedEndpoints")
+	)
+
+	if len(o.AcceptedEndpoints) == 0 {
+		return field.ErrorList{field.Required(acceptedEndpointsPath, "must not be empty")}
+	}
+
+	for i, e := range o.AcceptedEndpoints {
+		if len(e.Path) == 0 {
+			allErrs = append(allErrs, field.Required(acceptedEndpointsPath.Index(i).Child("path"), "must not be empty"))
+		}
+	}
+
+	return allErrs
 }
 
 func (r *Rule2000) ID() string {
@@ -89,7 +121,25 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 	case authenticationConfig.Anonymous == nil:
 		return rule.Result(r, rule.PassedCheckResult("Anonymous authentication is not enabled for the kube-apiserver.", configMapTarget)), nil
 	case authenticationConfig.Anonymous.Enabled:
-		return rule.Result(r, rule.FailedCheckResult("Anonymous authentication is enabled for the kube-apiserver.", configMapTarget)), nil
+		if r.Options == nil || len(authenticationConfig.Anonymous.Conditions) == 0 {
+			return rule.Result(r, rule.FailedCheckResult("Anonymous authentication is enabled for the kube-apiserver.", configMapTarget)), nil
+		}
+
+		var checkResults []rule.CheckResult
+
+		for _, condition := range authenticationConfig.Anonymous.Conditions {
+			endpointTarget := configMapTarget.With("details", fmt.Sprintf("endpoint: %s", condition.Path))
+			if slices.ContainsFunc(r.Options.AcceptedEndpoints, func(acceptedPath AcceptedEndpoint) bool {
+				return acceptedPath.Path == condition.Path
+			}) {
+				checkResults = append(checkResults, rule.AcceptedCheckResult("Anonymous authentication is accepted for the specified endpoints of the kube-apiserver.", endpointTarget))
+			} else {
+				checkResults = append(checkResults, rule.FailedCheckResult("Anonymous authentication is enabled for specific endpoints of the kube-apiserver.", endpointTarget))
+			}
+
+		}
+
+		return rule.Result(r, checkResults...), nil
 	default:
 		return rule.Result(r, rule.PassedCheckResult("Anonymous authentication is disabled for the kube-apiserver.", configMapTarget)), nil
 	}
