@@ -31,9 +31,12 @@ clean:
 	@bash $(GARDENER_HACK_DIR)/clean.sh ./cmd/... ./pkg/...
 
 .PHONY: check
-check: $(GOIMPORTS) $(GOLANGCI_LINT)
+check: $(GOIMPORTS) $(GOLANGCI_LINT) $(TYPOS)
 	go vet ./...
 	@REPO_ROOT=$(REPO_ROOT) bash $(GARDENER_HACK_DIR)/check.sh --golangci-lint-config=./.golangci.yaml ./cmd/... ./pkg/...
+
+	@bash $(GARDENER_HACK_DIR)/check-typos.sh
+	@bash $(GARDENER_HACK_DIR)/check-file-names.sh
 
 .PHONY: tidy
 tidy:
