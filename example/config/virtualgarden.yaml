@@ -23,6 +23,11 @@ providers:               # contains information about known providers
     #     acceptedEndpoints:
     #     - path: /healthz
     #     - path: /livez
+    # - ruleID: "242442"
+    #   args:
+    #     expectedVersionedImages:
+    #     - name: "eu.gcr.io/foo"
+    #     - name: "eu.gcr.io/bar"
     - ruleID: "242445"
       args:
         expectedFileOwner:
