@@ -9,13 +9,25 @@ import (
 	"fmt"
 
 	gardenerk8s "github.com/gardener/gardener/pkg/client/kubernetes"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/config"
+	internalconfig "github.com/gardener/diki/pkg/internal/config"
 	"github.com/gardener/diki/pkg/provider/garden/ruleset/securityhardenedshoot/rules"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
+
+func (r *Ruleset) validateV01RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath field.Path) error {
+	allErrs := field.ErrorList{}
+
+	allErrs = append(allErrs, validateV01Options[rules.Options1000](ruleOptions["1000"].Args, *fldPath.Index(ruleOptions["1000"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2000](ruleOptions["2000"].Args, *fldPath.Index(ruleOptions["2000"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2000](ruleOptions["2007"].Args, *fldPath.Index(ruleOptions["2007"].Index).Child("args"))...)
+
+	return allErrs.ToAggregate()
+}
 
 func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
 	c, err := client.New(r.Config, client.Options{
@@ -115,6 +127,25 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 	return r.AddRules(rules...)
 }
 
+func validateV01Options[O rules.RuleOption](options any, fldPath field.Path) field.ErrorList {
+	parsedOptions, err := getV01OptionOrNil[O](options)
+	if err != nil {
+		return field.ErrorList{
+			field.InternalError(&fldPath, err),
+		}
+	}
+
+	if parsedOptions == nil {
+		return nil
+	}
+
+	if val, ok := any(parsedOptions).(option.Option); ok {
+		return val.Validate(&fldPath)
+	}
+
+	return nil
+}
+
 func parseV01Options[O rules.RuleOption](options any) (*O, error) {
 	optionsByte, err := json.Marshal(options)
 	if err != nil {
@@ -124,12 +155,6 @@ func parseV01Options[O rules.RuleOption](options any) (*O, error) {
 	var parsedOptions O
 	if err := json.Unmarshal(optionsByte, &parsedOptions); err != nil {
 		return nil, err
-	}
-
-	if val, ok := any(parsedOptions).(option.Option); ok {
-		if err := val.Validate(nil).ToAggregate(); err != nil {
-			return nil, err
-		}
 	}
 
 	return &parsedOptions, nil
