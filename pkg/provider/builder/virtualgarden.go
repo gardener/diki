@@ -19,21 +19,23 @@ import (
 )
 
 // VirtualGardenProviderFromConfig returns a Provider from a [ProviderConfig].
-func VirtualGardenProviderFromConfig(conf config.ProviderConfig, _ *field.Path) (provider.Provider, error) {
+func VirtualGardenProviderFromConfig(conf config.ProviderConfig, rootPath *field.Path) (provider.Provider, error) {
 	p, err := virtualgarden.FromGenericConfig(conf)
 	if err != nil {
 		return nil, err
 	}
+
+	rulesetsPath := rootPath.Child("rulesets")
 
 	setConfigDefaults(p.RuntimeConfig)
 	providerLogger := slog.Default().With("provider", p.ID())
 	setLoggerFunc := virtualgarden.WithLogger(providerLogger)
 	setLoggerFunc(p)
 	rulesets := make([]ruleset.Ruleset, 0, len(conf.Rulesets))
-	for _, rulesetConfig := range conf.Rulesets {
+	for rulesetIdx, rulesetConfig := range conf.Rulesets {
 		switch rulesetConfig.ID {
 		case disak8sstig.RulesetID:
-			ruleset, err := disak8sstig.FromGenericConfig(rulesetConfig, p.AdditionalOpsPodLabels, p.RuntimeConfig)
+			ruleset, err := disak8sstig.FromGenericConfig(rulesetConfig, p.AdditionalOpsPodLabels, p.RuntimeConfig, *rulesetsPath.Index(rulesetIdx))
 			if err != nil {
 				return nil, err
 			}

@@ -36,7 +36,7 @@ func ManagedK8SProviderFromConfig(conf config.ProviderConfig, rootPath *field.Pa
 	for rulesetIdx, rulesetConfig := range conf.Rulesets {
 		switch rulesetConfig.ID {
 		case disak8sstig.RulesetID:
-			ruleset, err := disak8sstig.FromGenericConfig(rulesetConfig, p.AdditionalOpsPodLabels, p.Config)
+			ruleset, err := disak8sstig.FromGenericConfig(rulesetConfig, p.AdditionalOpsPodLabels, p.Config, *rulesetsPath.Index(rulesetIdx))
 			if err != nil {
 				return nil, err
 			}
