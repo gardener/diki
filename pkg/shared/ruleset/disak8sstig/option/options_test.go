@@ -25,18 +25,18 @@ var _ = Describe("options", func() {
 			result := options.Validate(nil)
 			Expect(result).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 				"Type":     Equal(field.ErrorTypeInvalid),
-				"Field":    Equal("expectedFileOwner.users"),
+				"Field":    Equal("expectedFileOwner.users[0]"),
 				"BadValue": Equal("-1"),
 			})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInternal),
-					"Field":    Equal("expectedFileOwner.groups"),
+					"Field":    Equal("expectedFileOwner.groups[0]"),
 					"BadValue": BeNil(),
 					"Detail":   Equal("strconv.ParseInt: parsing \"\": invalid syntax"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeInternal),
-					"Field":  Equal("expectedFileOwner.groups"),
+					"Field":  Equal("expectedFileOwner.groups[1]"),
 					"Detail": Equal("strconv.ParseInt: parsing \"asd\": invalid syntax"),
 				})),
 			))
@@ -89,40 +89,40 @@ var _ = Describe("options", func() {
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("[].namespaceMatchLabels"),
+					"Field":    Equal("namespaceMatchLabels"),
 					"BadValue": Equal("_foo"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("[].podMatchLabels"),
+					"Field":    Equal("podMatchLabels"),
 					"BadValue": Equal("bar."),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("[].namespaceMatchLabels"),
+					"Field":    Equal("namespaceMatchLabels"),
 					"BadValue": Equal("foo?baz"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("[].namespaceMatchLabels"),
+					"Field":    Equal("namespaceMatchLabels"),
 					"BadValue": Equal("ba/r"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("[].podMatchLabels"),
+					"Field":    Equal("podMatchLabels"),
 					"BadValue": Equal("at$a"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("[].namespaceMatchLabels"),
+					"Field":  Equal("namespaceMatchLabels"),
 					"Detail": Equal("must not be empty"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("[].namespaceMatchLabels"),
+					"Field":  Equal("namespaceMatchLabels"),
 					"Detail": Equal("must not be empty"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("[].podMatchLabels"),
+					"Field":  Equal("podMatchLabels"),
 					"Detail": Equal("must not be empty"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("[].podMatchLabels"),
+					"Field":  Equal("podMatchLabels"),
 					"Detail": Equal("must not be empty"),
 				}))))
 		})
@@ -171,12 +171,12 @@ var _ = Describe("options", func() {
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("acceptedPods.ports"),
+					"Field":  Equal("acceptedPods[0].ports"),
 					"Detail": Equal("must not be empty"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedPods.ports"),
+					"Field":    Equal("acceptedPods[2].ports[0]"),
 					"BadValue": Equal(int32(-1)),
 					"Detail":   Equal("must not be lower than 0"),
 				})),
@@ -215,14 +215,14 @@ var _ = Describe("options", func() {
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("acceptedPods.environmentVariables"),
-					"Detail": Equal("must not be empty"),
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("acceptedPods[0].environmentVariables[0]"),
+					"BadValue": Equal("asd=dsa"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedPods.environmentVariables"),
-					"BadValue": Equal("asd=dsa"),
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("acceptedPods[1].environmentVariables"),
+					"Detail": Equal("must not be empty"),
 				})),
 			))
 		})
