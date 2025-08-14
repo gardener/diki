@@ -18,7 +18,7 @@ import (
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
-func (r *Ruleset) validateV01RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath field.Path) field.ErrorList {
+func (r *Ruleset) validateV01RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath field.Path) error {
 	allErrs := field.ErrorList{}
 
 	allErrs = append(allErrs, validateV01Options[rules.Options2000](ruleOptions["2000"].Args, *fldPath.Index(ruleOptions["2000"].Index).Child("args"))...)
@@ -31,7 +31,7 @@ func (r *Ruleset) validateV01RuleOptions(ruleOptions map[string]internalconfig.I
 	allErrs = append(allErrs, validateV01Options[rules.Options2007](ruleOptions["2007"].Args, *fldPath.Index(ruleOptions["2007"].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV01Options[rules.Options2008](ruleOptions["2008"].Args, *fldPath.Index(ruleOptions["2008"].Index).Child("args"))...)
 
-	return allErrs
+	return allErrs.ToAggregate()
 }
 
 func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
@@ -140,11 +140,15 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 }
 
 func validateV01Options[O rules.RuleOption](options any, fldPath field.Path) field.ErrorList {
-	parsedOptions, err := parseV01Options[O](options)
+	parsedOptions, err := getV01OptionOrNil[O](options)
 	if err != nil {
 		return field.ErrorList{
 			field.InternalError(&fldPath, err),
 		}
+	}
+
+	if parsedOptions == nil {
+		return nil
 	}
 
 	if val, ok := any(parsedOptions).(option.Option); ok {

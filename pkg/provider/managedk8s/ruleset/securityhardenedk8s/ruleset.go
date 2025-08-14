@@ -97,7 +97,7 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.C
 	switch rulesetConfig.Version {
 	case "v0.1.0":
 		if err := ruleset.validateV01RuleOptions(indexedRuleOptions, *fldPath.Child("ruleOptions")); err != nil {
-			return nil, err.ToAggregate()
+			return nil, err
 		}
 		if err := ruleset.registerV01Rules(ruleOptions); err != nil {
 			return nil, err
