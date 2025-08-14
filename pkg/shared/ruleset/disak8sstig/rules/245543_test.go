@@ -277,12 +277,12 @@ bar,for,bar,`
 
 			Expect(result).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 				"Type":   Equal(field.ErrorTypeRequired),
-				"Field":  Equal("acceptedTokens.users"),
+				"Field":  Equal("acceptedTokens[1].user"),
 				"Detail": Equal("must be set"),
 			})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("acceptedTokens.uid"),
+					"Field":  Equal("acceptedTokens[2].uid"),
 					"Detail": Equal("must be set"),
 				})),
 			))

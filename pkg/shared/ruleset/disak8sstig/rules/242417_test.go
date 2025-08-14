@@ -379,7 +379,7 @@ var _ = Describe("#242417", func() {
 
 			Expect(result).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 				"Type":     Equal(field.ErrorTypeInvalid),
-				"Field":    Equal("acceptedPods.status"),
+				"Field":    Equal("acceptedPods[2].status"),
 				"BadValue": Equal("fake"),
 				"Detail":   Equal("must be one of 'Passed' or 'Accepted'"),
 			})),
