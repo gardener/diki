@@ -473,13 +473,13 @@ var _ = Describe("#1002", func() {
 			Expect(result).To(Equal(field.ErrorList{
 				{
 					Type:     field.ErrorTypeRequired,
-					Field:    "machineImages.name",
+					Field:    "machineImages[0].name",
 					BadValue: "",
 					Detail:   "must not be empty",
 				},
 				{
 					Type:     field.ErrorTypeNotSupported,
-					Field:    "machineImages.allowedClassifications",
+					Field:    "machineImages[1].allowedClassifications[0]",
 					BadValue: fakeClassification,
 					Detail:   "supported values: \"preview\", \"supported\", \"deprecated\"",
 				},

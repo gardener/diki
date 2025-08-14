@@ -290,7 +290,7 @@ var _ = Describe("#1003", func() {
 			Expect(result).To(Equal(field.ErrorList{
 				{
 					Type:     field.ErrorTypeInvalid,
-					Field:    "minLakomScope",
+					Field:    "allowedLakomScopes[1]",
 					BadValue: fakeScope,
 					Detail:   "must be valid Lakom Scope",
 				},

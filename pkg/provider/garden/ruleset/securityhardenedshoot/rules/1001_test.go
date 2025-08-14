@@ -304,7 +304,7 @@ var _ = Describe("#1001", func() {
 			Expect(result).To(Equal(field.ErrorList{
 				{
 					Type:     field.ErrorTypeNotSupported,
-					Field:    "allowedClassifications",
+					Field:    "allowedClassifications[1]",
 					BadValue: fakeClassification,
 					Detail:   "supported values: \"preview\", \"supported\", \"deprecated\"",
 				},

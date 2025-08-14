@@ -276,7 +276,7 @@ var _ = Describe("#1000", func() {
 			Expect(result).To(Equal(field.ErrorList{
 				{
 					Type:     field.ErrorTypeRequired,
-					Field:    "extensions.type",
+					Field:    "extensions[1].type",
 					BadValue: "",
 					Detail:   "must not be empty",
 				},
