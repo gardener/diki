@@ -47,11 +47,14 @@ type AcceptedResources242383 struct {
 }
 
 func (o Options242383) Validate(fldPath *field.Path) field.ErrorList {
-	var allErrs field.ErrorList
+	var (
+		allErrs               field.ErrorList
+		acceptedResourcesPath = fldPath.Child("acceptedResources")
+	)
 	for aIdx, p := range o.AcceptedResources {
-		allErrs = append(allErrs, p.Validate(fldPath.Child("acceptedResources").Index(aIdx))...)
+		allErrs = append(allErrs, p.Validate(acceptedResourcesPath.Index(aIdx))...)
 		if !slices.Contains([]string{"Passed", "Accepted"}, p.Status) && len(p.Status) > 0 {
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("acceptedResources").Index(aIdx).Child("status"), p.Status, "must be one of 'Passed' or 'Accepted'"))
+			allErrs = append(allErrs, field.Invalid(acceptedResourcesPath.Index(aIdx).Child("status"), p.Status, "must be one of 'Passed' or 'Accepted'"))
 		}
 	}
 	return allErrs
