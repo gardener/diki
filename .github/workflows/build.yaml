@@ -76,7 +76,7 @@ jobs:
       - uses: gardener/cc-utils/.github/actions/setup-git-identity@master
       - name: run-verify
         run: |
-          set -eu
+          set -euo pipefail
           mkdir /tmp/blobs.d
           make verify-extended |& tee /tmp/blobs.d/verify-log.txt
           # verify calls `make sast-report`, which generates `gosec-report.sarif`
