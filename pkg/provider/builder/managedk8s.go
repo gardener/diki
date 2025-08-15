@@ -20,13 +20,13 @@ import (
 )
 
 // ManagedK8SProviderFromConfig returns a Provider from a [ProviderConfig].
-func ManagedK8SProviderFromConfig(conf config.ProviderConfig, rootPath *field.Path) (provider.Provider, error) {
+func ManagedK8SProviderFromConfig(conf config.ProviderConfig, fldPath *field.Path) (provider.Provider, error) {
 	p, err := managedk8s.FromGenericConfig(conf)
 	if err != nil {
 		return nil, err
 	}
 
-	rulesetsPath := rootPath.Child("rulesets")
+	rulesetsPath := fldPath.Child("rulesets")
 
 	setConfigDefaults(p.Config)
 	providerLogger := slog.Default().With("provider", p.ID())

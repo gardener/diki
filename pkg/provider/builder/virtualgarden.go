@@ -19,13 +19,13 @@ import (
 )
 
 // VirtualGardenProviderFromConfig returns a Provider from a [ProviderConfig].
-func VirtualGardenProviderFromConfig(conf config.ProviderConfig, rootPath *field.Path) (provider.Provider, error) {
+func VirtualGardenProviderFromConfig(conf config.ProviderConfig, fldPath *field.Path) (provider.Provider, error) {
 	p, err := virtualgarden.FromGenericConfig(conf)
 	if err != nil {
 		return nil, err
 	}
 
-	rulesetsPath := rootPath.Child("rulesets")
+	rulesetsPath := fldPath.Child("rulesets")
 
 	setConfigDefaults(p.RuntimeConfig)
 	providerLogger := slog.Default().With("provider", p.ID())
