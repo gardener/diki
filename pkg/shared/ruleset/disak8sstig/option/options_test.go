@@ -22,21 +22,21 @@ var _ = Describe("options", func() {
 					Groups: []string{"", "asd", "111"},
 				},
 			}
-			result := options.Validate(nil)
+			result := options.Validate(field.NewPath("foo"))
 			Expect(result).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 				"Type":     Equal(field.ErrorTypeInvalid),
-				"Field":    Equal("expectedFileOwner.users"),
+				"Field":    Equal("foo.expectedFileOwner.users[0]"),
 				"BadValue": Equal("-1"),
 			})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInternal),
-					"Field":    Equal("expectedFileOwner.groups"),
+					"Field":    Equal("foo.expectedFileOwner.groups[0]"),
 					"BadValue": BeNil(),
 					"Detail":   Equal("strconv.ParseInt: parsing \"\": invalid syntax"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeInternal),
-					"Field":  Equal("expectedFileOwner.groups"),
+					"Field":  Equal("foo.expectedFileOwner.groups[1]"),
 					"Detail": Equal("strconv.ParseInt: parsing \"asd\": invalid syntax"),
 				})),
 			))
@@ -83,46 +83,46 @@ var _ = Describe("options", func() {
 
 			var result field.ErrorList
 			for _, p := range podAttributes {
-				result = append(result, p.Validate(nil)...)
+				result = append(result, p.Validate(field.NewPath("foo"))...)
 			}
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("[].namespaceMatchLabels"),
+					"Field":    Equal("foo.namespaceMatchLabels"),
 					"BadValue": Equal("_foo"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("[].podMatchLabels"),
+					"Field":    Equal("foo.podMatchLabels"),
 					"BadValue": Equal("bar."),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("[].namespaceMatchLabels"),
+					"Field":    Equal("foo.namespaceMatchLabels"),
 					"BadValue": Equal("foo?baz"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("[].namespaceMatchLabels"),
+					"Field":    Equal("foo.namespaceMatchLabels"),
 					"BadValue": Equal("ba/r"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("[].podMatchLabels"),
+					"Field":    Equal("foo.podMatchLabels"),
 					"BadValue": Equal("at$a"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("[].namespaceMatchLabels"),
+					"Field":  Equal("foo.namespaceMatchLabels"),
 					"Detail": Equal("must not be empty"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("[].namespaceMatchLabels"),
+					"Field":  Equal("foo.namespaceMatchLabels"),
 					"Detail": Equal("must not be empty"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("[].podMatchLabels"),
+					"Field":  Equal("foo.podMatchLabels"),
 					"Detail": Equal("must not be empty"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("[].podMatchLabels"),
+					"Field":  Equal("foo.podMatchLabels"),
 					"Detail": Equal("must not be empty"),
 				}))))
 		})
@@ -166,17 +166,17 @@ var _ = Describe("options", func() {
 				},
 			}
 
-			result := options.Validate(nil)
+			result := options.Validate(field.NewPath("foo"))
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("acceptedPods.ports"),
+					"Field":  Equal("foo.acceptedPods[0].ports"),
 					"Detail": Equal("must not be empty"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedPods.ports"),
+					"Field":    Equal("foo.acceptedPods[2].ports[0]"),
 					"BadValue": Equal(int32(-1)),
 					"Detail":   Equal("must not be lower than 0"),
 				})),
@@ -211,18 +211,18 @@ var _ = Describe("options", func() {
 				},
 			}
 
-			result := options.Validate(nil)
+			result := options.Validate(field.NewPath("foo"))
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("acceptedPods.environmentVariables"),
-					"Detail": Equal("must not be empty"),
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("foo.acceptedPods[0].environmentVariables[0]"),
+					"BadValue": Equal("asd=dsa"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedPods.environmentVariables"),
-					"BadValue": Equal("asd=dsa"),
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("foo.acceptedPods[1].environmentVariables"),
+					"Detail": Equal("must not be empty"),
 				})),
 			))
 		})
@@ -232,12 +232,12 @@ var _ = Describe("options", func() {
 		It("should deny empty expected images list", func() {
 			options := option.Options242442{}
 
-			result := options.Validate(nil)
+			result := options.Validate(field.NewPath("foo"))
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("expectedVersionedImages"),
+					"Field":  Equal("foo.expectedVersionedImages"),
 					"Detail": Equal("must not be empty"),
 				})),
 			))
@@ -258,12 +258,12 @@ var _ = Describe("options", func() {
 				},
 			}
 
-			result := options.Validate(nil)
+			result := options.Validate(field.NewPath("foo"))
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("expectedVersionedImages[1].name"),
+					"Field":  Equal("foo.expectedVersionedImages[1].name"),
 					"Detail": Equal("must not be empty"),
 				})),
 			))

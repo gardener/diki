@@ -269,7 +269,7 @@ var _ = Describe("#2007", func() {
 				MinPodSecurityStandardsProfile: "baseline",
 			}
 
-			result := options.Validate(nil)
+			result := options.Validate(field.NewPath("foo"))
 
 			Expect(result).To(BeNil())
 		})
@@ -278,12 +278,12 @@ var _ = Describe("#2007", func() {
 				MinPodSecurityStandardsProfile: "foo",
 			}
 
-			result := options.Validate(nil)
+			result := options.Validate(field.NewPath("foo"))
 
 			Expect(result).To(Equal(field.ErrorList{
 				{
 					Type:     field.ErrorTypeInvalid,
-					Field:    "minPodSecurityStandardsProfile",
+					Field:    "foo.minPodSecurityStandardsProfile",
 					BadValue: intkubeutils.PodSecurityStandardProfile("foo"),
 					Detail:   "must be one of 'restricted', 'baseline' or 'privileged'",
 				},

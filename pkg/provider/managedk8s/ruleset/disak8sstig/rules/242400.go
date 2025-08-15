@@ -55,8 +55,8 @@ type Options242400 struct {
 
 var _ option.Option = (*Options242400)(nil)
 
-func (o Options242400) Validate(_ *field.Path) field.ErrorList {
-	return validation.ValidateLabels(o.KubeProxyMatchLabels, field.NewPath("kubeProxyMatchLabels"))
+func (o Options242400) Validate(fldPath *field.Path) field.ErrorList {
+	return validation.ValidateLabels(o.KubeProxyMatchLabels, fldPath.Child("kubeProxyMatchLabels"))
 }
 
 func (r *Rule242400) ID() string {

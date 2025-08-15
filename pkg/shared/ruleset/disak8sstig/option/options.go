@@ -27,10 +27,9 @@ type PodSelector struct {
 var _ Option = (*PodSelector)(nil)
 
 // Validate validates that option configurations are correctly defined.
-func (e PodSelector) Validate(_ *field.Path) field.ErrorList {
+func (e PodSelector) Validate(fldPath *field.Path) field.ErrorList {
 	var (
 		allErrs field.ErrorList
-		fldPath = field.NewPath("")
 	)
 
 	if len(e.NamespaceMatchLabels) == 0 {
@@ -60,30 +59,30 @@ type ExpectedOwner struct {
 }
 
 // Validate validates that option configurations are correctly defined.
-func (o FileOwnerOptions) Validate(_ *field.Path) field.ErrorList {
+func (o FileOwnerOptions) Validate(fldPath *field.Path) field.ErrorList {
 	var (
-		allErrs field.ErrorList
-		fldPath = field.NewPath("expectedFileOwner")
+		allErrs               field.ErrorList
+		expectedFileOwnerPath = fldPath.Child("expectedFileOwner")
 	)
-	for _, user := range o.ExpectedFileOwner.Users {
+	for uIdx, user := range o.ExpectedFileOwner.Users {
 		userID, err := strconv.ParseInt(user, 10, 64)
 		if err != nil {
-			allErrs = append(allErrs, field.InternalError(fldPath.Child("users"), err))
+			allErrs = append(allErrs, field.InternalError(expectedFileOwnerPath.Child("users").Index(uIdx), err))
 			continue
 		}
 		for _, msg := range validation.IsValidUserID(userID) {
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("users"), user, msg))
+			allErrs = append(allErrs, field.Invalid(expectedFileOwnerPath.Child("users").Index(uIdx), user, msg))
 		}
 	}
 
-	for _, group := range o.ExpectedFileOwner.Groups {
+	for gIdx, group := range o.ExpectedFileOwner.Groups {
 		groupID, err := strconv.ParseInt(group, 10, 64)
 		if err != nil {
-			allErrs = append(allErrs, field.InternalError(fldPath.Child("groups"), err))
+			allErrs = append(allErrs, field.InternalError(expectedFileOwnerPath.Child("groups").Index(gIdx), err))
 			continue
 		}
 		for _, msg := range validation.IsValidGroupID(groupID) {
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("groups"), group, msg))
+			allErrs = append(allErrs, field.Invalid(expectedFileOwnerPath.Child("groups").Index(gIdx), group, msg))
 		}
 	}
 	return allErrs
@@ -104,19 +103,19 @@ type AcceptedPods242414 struct {
 }
 
 // Validate validates that option configurations are correctly defined.
-func (o Options242414) Validate(_ *field.Path) field.ErrorList {
+func (o Options242414) Validate(fldPath *field.Path) field.ErrorList {
 	var (
-		allErrs field.ErrorList
-		fldPath = field.NewPath("acceptedPods")
+		allErrs          field.ErrorList
+		acceptedPodsPath = fldPath.Child("acceptedPods")
 	)
-	for _, p := range o.AcceptedPods {
-		allErrs = append(allErrs, p.Validate(nil)...)
+	for idx, p := range o.AcceptedPods {
+		allErrs = append(allErrs, p.Validate(acceptedPodsPath.Index(idx))...)
 		if len(p.Ports) == 0 {
-			allErrs = append(allErrs, field.Required(fldPath.Child("ports"), "must not be empty"))
+			allErrs = append(allErrs, field.Required(acceptedPodsPath.Index(idx).Child("ports"), "must not be empty"))
 		}
-		for _, port := range p.Ports {
+		for pIdx, port := range p.Ports {
 			if port < 0 {
-				allErrs = append(allErrs, field.Invalid(fldPath.Child("ports"), port, "must not be lower than 0"))
+				allErrs = append(allErrs, field.Invalid(acceptedPodsPath.Index(idx).Child("ports").Index(pIdx), port, "must not be lower than 0"))
 			}
 		}
 	}
@@ -138,19 +137,19 @@ type AcceptedPods242415 struct {
 }
 
 // Validate validates that option configurations are correctly defined.
-func (o Options242415) Validate(_ *field.Path) field.ErrorList {
+func (o Options242415) Validate(fldPath *field.Path) field.ErrorList {
 	var (
-		allErrs field.ErrorList
-		fldPath = field.NewPath("acceptedPods")
+		allErrs          field.ErrorList
+		acceptedPodsPath = fldPath.Child("acceptedPods")
 	)
-	for _, p := range o.AcceptedPods {
-		allErrs = append(allErrs, p.Validate(nil)...)
+	for idx, p := range o.AcceptedPods {
+		allErrs = append(allErrs, p.Validate(acceptedPodsPath.Index(idx))...)
 		if len(p.EnvironmentVariables) == 0 {
-			allErrs = append(allErrs, field.Required(fldPath.Child("environmentVariables"), "must not be empty"))
+			allErrs = append(allErrs, field.Required(acceptedPodsPath.Index(idx).Child("environmentVariables"), "must not be empty"))
 		}
-		for _, env := range p.EnvironmentVariables {
+		for eIdx, env := range p.EnvironmentVariables {
 			for _, msg := range validation.IsEnvVarName(env) {
-				allErrs = append(allErrs, field.Invalid(fldPath.Child("environmentVariables"), env, msg))
+				allErrs = append(allErrs, field.Invalid(acceptedPodsPath.Index(idx).Child("environmentVariables").Index(eIdx), env, msg))
 			}
 		}
 	}
@@ -172,17 +171,17 @@ type ExpectedVersionedImage struct {
 // Validate validates that option configurations are correctly defined.
 func (o Options242442) Validate(fldPath *field.Path) field.ErrorList {
 	var (
-		allErrs  field.ErrorList
-		rootPath = fldPath.Child("expectedVersionedImages")
+		allErrs                     field.ErrorList
+		expectedVersionedImagesPath = fldPath.Child("expectedVersionedImages")
 	)
 
 	if len(o.ExpectedVersionedImages) == 0 {
-		return field.ErrorList{field.Required(rootPath, "must not be empty")}
+		return field.ErrorList{field.Required(expectedVersionedImagesPath, "must not be empty")}
 	}
 
 	for i, a := range o.ExpectedVersionedImages {
 		if len(a.Name) == 0 {
-			allErrs = append(allErrs, field.Required(rootPath.Index(i).Child("name"), "must not be empty"))
+			allErrs = append(allErrs, field.Required(expectedVersionedImagesPath.Index(i).Child("name"), "must not be empty"))
 		}
 	}
 

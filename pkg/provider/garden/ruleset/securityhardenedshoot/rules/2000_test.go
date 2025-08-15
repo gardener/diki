@@ -379,12 +379,12 @@ kind: AuthenticationConfiguration
 		It("should deny empty accepted endpoints list", func() {
 			options := rules.Options2000{}
 
-			result := options.Validate(nil)
+			result := options.Validate(field.NewPath("foo"))
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("acceptedEndpoints"),
+					"Field":  Equal("foo.acceptedEndpoints"),
 					"Detail": Equal("must not be empty"),
 				})),
 			))
@@ -405,12 +405,12 @@ kind: AuthenticationConfiguration
 				},
 			}
 
-			result := options.Validate(nil)
+			result := options.Validate(field.NewPath("foo"))
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("acceptedEndpoints[1].path"),
+					"Field":  Equal("foo.acceptedEndpoints[1].path"),
 					"Detail": Equal("must not be empty"),
 				})),
 			))

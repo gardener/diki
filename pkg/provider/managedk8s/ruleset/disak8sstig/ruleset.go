@@ -11,10 +11,12 @@ import (
 	"log/slog"
 
 	"github.com/google/uuid"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/rest"
 	"k8s.io/utils/ptr"
 
 	"github.com/gardener/diki/pkg/config"
+	internalconfig "github.com/gardener/diki/pkg/internal/config"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
 	sharedruleset "github.com/gardener/diki/pkg/shared/ruleset"
@@ -85,7 +87,7 @@ func (r *Ruleset) Version() string {
 }
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
-func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabels map[string]string, managedConfig *rest.Config) (*Ruleset, error) {
+func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabels map[string]string, managedConfig *rest.Config, fldPath *field.Path) (*Ruleset, error) {
 	rulesetArgsByte, err := json.Marshal(rulesetConfig.Args)
 	if err != nil {
 		return nil, err
@@ -106,21 +108,32 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabel
 		return nil, err
 	}
 
-	ruleOptions := map[string]config.RuleOptionsConfig{}
-	for _, opt := range rulesetConfig.RuleOptions {
+	var (
+		ruleOptions        = make(map[string]config.RuleOptionsConfig)
+		indexedRuleOptions = make(map[string]internalconfig.IndexedRuleOptionsConfig)
+	)
+
+	for index, opt := range rulesetConfig.RuleOptions {
 		if _, ok := ruleOptions[opt.RuleID]; ok {
 			return nil, fmt.Errorf("rule option for rule id: %s is already registered", opt.RuleID)
 		}
 
 		ruleOptions[opt.RuleID] = opt
+		indexedRuleOptions[opt.RuleID] = internalconfig.IndexedRuleOptionsConfig{Index: index, RuleOptionsConfig: opt}
 	}
 
 	switch rulesetConfig.Version {
 	case "v2r2":
+		if err := ruleset.validateV2R2RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
+			return nil, err
+		}
 		if err := ruleset.registerV2R2Rules(ruleOptions); err != nil {
 			return nil, err
 		}
 	case "v2r3":
+		if err := ruleset.validateV2R3RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
+			return nil, err
+		}
 		if err := ruleset.registerV2R3Rules(ruleOptions); err != nil {
 			return nil, err
 		}

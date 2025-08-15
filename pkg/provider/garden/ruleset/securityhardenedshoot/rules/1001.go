@@ -37,10 +37,9 @@ type Options1001 struct {
 	AllowedClassifications []gardencorev1beta1.VersionClassification `json:"allowedClassifications" yaml:"allowedClassifications"`
 }
 
-func (o Options1001) Validate(_ *field.Path) field.ErrorList {
+func (o Options1001) Validate(fldPath *field.Path) field.ErrorList {
 	var (
 		allErrs                field.ErrorList
-		fldPath                = field.NewPath("allowedClassifications")
 		versionClassifications = []gardencorev1beta1.VersionClassification{
 			gardencorev1beta1.ClassificationPreview,
 			gardencorev1beta1.ClassificationSupported,
@@ -48,9 +47,9 @@ func (o Options1001) Validate(_ *field.Path) field.ErrorList {
 		}
 	)
 
-	for _, c := range o.AllowedClassifications {
+	for idx, c := range o.AllowedClassifications {
 		if !slices.Contains(versionClassifications, c) {
-			allErrs = append(allErrs, field.NotSupported(fldPath, c, versionClassifications))
+			allErrs = append(allErrs, field.NotSupported(fldPath.Child("allowedClassifications").Index(idx), c, versionClassifications))
 		}
 	}
 

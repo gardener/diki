@@ -33,15 +33,15 @@ type Extension struct {
 	Type string `json:"type" yaml:"type"`
 }
 
-func (o Options1000) Validate(_ *field.Path) field.ErrorList {
+func (o Options1000) Validate(fldPath *field.Path) field.ErrorList {
 	var (
-		allErrs field.ErrorList
-		fldPath = field.NewPath("extensions")
+		allErrs        field.ErrorList
+		extensionsPath = fldPath.Child("extensions")
 	)
 
-	for _, extension := range o.Extensions {
+	for idx, extension := range o.Extensions {
 		if len(extension.Type) == 0 {
-			allErrs = append(allErrs, field.Required(fldPath.Child("type"), "must not be empty"))
+			allErrs = append(allErrs, field.Required(extensionsPath.Index(idx).Child("type"), "must not be empty"))
 		}
 	}
 	return allErrs

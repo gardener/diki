@@ -40,7 +40,9 @@ var _ option.Option = (*Options242442)(nil)
 
 func (o Options242442) Validate(fldPath *field.Path) field.ErrorList {
 	allErrs := validation.ValidateLabels(o.KubeProxyMatchLabels, fldPath.Child("kubeProxyMatchLabels"))
-	allErrs = append(allErrs, o.ImageSelector.Validate(fldPath)...)
+	if o.ImageSelector != nil {
+		allErrs = append(allErrs, o.ImageSelector.Validate(fldPath)...)
+	}
 	return allErrs
 }
 

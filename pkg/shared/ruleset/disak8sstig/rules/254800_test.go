@@ -208,7 +208,7 @@ kind: PodSecurityConfiguration`
 				MinPodSecurityStandardsProfile: "baseline",
 			}
 
-			result := options.Validate(nil)
+			result := options.Validate(field.NewPath("foo"))
 
 			Expect(result).To(BeNil())
 		})
@@ -217,11 +217,11 @@ kind: PodSecurityConfiguration`
 				MinPodSecurityStandardsProfile: "foo",
 			}
 
-			result := options.Validate(nil)
+			result := options.Validate(field.NewPath("foo"))
 
 			Expect(result).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 				"Type":     Equal(field.ErrorTypeInvalid),
-				"Field":    Equal("minPodSecurityStandardsProfile"),
+				"Field":    Equal("foo.minPodSecurityStandardsProfile"),
 				"BadValue": Equal(intkubeutils.PodSecurityStandardProfile("foo")),
 				"Detail":   Equal("must be one of 'restricted', 'baseline' or 'privileged'"),
 			}))))

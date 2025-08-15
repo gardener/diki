@@ -290,7 +290,7 @@ var _ = Describe("#1001", func() {
 				},
 			}
 
-			result := options.Validate(nil)
+			result := options.Validate(field.NewPath("foo"))
 			Expect(result).To(BeEmpty())
 		})
 		It("should error when options are incorrect", func() {
@@ -300,11 +300,11 @@ var _ = Describe("#1001", func() {
 					fakeClassification,
 				},
 			}
-			result := options.Validate(nil)
+			result := options.Validate(field.NewPath("foo"))
 			Expect(result).To(Equal(field.ErrorList{
 				{
 					Type:     field.ErrorTypeNotSupported,
-					Field:    "allowedClassifications",
+					Field:    "foo.allowedClassifications[1]",
 					BadValue: fakeClassification,
 					Detail:   "supported values: \"preview\", \"supported\", \"deprecated\"",
 				},

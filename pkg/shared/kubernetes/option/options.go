@@ -16,7 +16,6 @@ type ClusterObjectSelector struct {
 	MatchLabels map[string]string `json:"matchLabels" yaml:"matchLabels"`
 }
 
-// TODO: Implement new Option interface in this package with Validate method, which receives field.Path.
 var _ option.Option = (*ClusterObjectSelector)(nil)
 
 // Validate validates that option configurations are correctly defined.
@@ -40,14 +39,11 @@ type NamespacedObjectSelector struct {
 	NamespaceMatchLabels map[string]string `json:"namespaceMatchLabels" yaml:"namespaceMatchLabels"`
 }
 
-// TODO: Implement new Option interface in this package with Validate method, which receives field.Path.
 var _ option.Option = (*NamespacedObjectSelector)(nil)
 
 // Validate validates that option configurations are correctly defined. It accepts a [field.Path] parameter with the rootPath.
 func (s *NamespacedObjectSelector) Validate(fldPath *field.Path) field.ErrorList {
-	var (
-		allErrs field.ErrorList
-	)
+	var allErrs field.ErrorList
 
 	if len(s.NamespaceMatchLabels) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("namespaceMatchLabels"), "must not be empty"))

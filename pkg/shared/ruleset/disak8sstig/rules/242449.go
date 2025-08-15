@@ -46,8 +46,8 @@ type Options242449 struct {
 
 var _ option.Option = (*Options242449)(nil)
 
-func (o Options242449) Validate(_ *field.Path) field.ErrorList {
-	return option.ValidateLabelNames(o.NodeGroupByLabels, field.NewPath("nodeGroupByLabels"))
+func (o Options242449) Validate(fldPath *field.Path) field.ErrorList {
+	return option.ValidateLabelNames(o.NodeGroupByLabels, fldPath.Child("nodeGroupByLabels"))
 }
 
 func (r *Rule242449) ID() string {

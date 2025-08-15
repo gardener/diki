@@ -20,13 +20,13 @@ import (
 )
 
 // ManagedK8SProviderFromConfig returns a Provider from a [ProviderConfig].
-func ManagedK8SProviderFromConfig(conf config.ProviderConfig, rootPath *field.Path) (provider.Provider, error) {
+func ManagedK8SProviderFromConfig(conf config.ProviderConfig, fldPath *field.Path) (provider.Provider, error) {
 	p, err := managedk8s.FromGenericConfig(conf)
 	if err != nil {
 		return nil, err
 	}
 
-	rulesetsPath := rootPath.Child("rulesets")
+	rulesetsPath := fldPath.Child("rulesets")
 
 	setConfigDefaults(p.Config)
 	providerLogger := slog.Default().With("provider", p.ID())
@@ -36,7 +36,7 @@ func ManagedK8SProviderFromConfig(conf config.ProviderConfig, rootPath *field.Pa
 	for rulesetIdx, rulesetConfig := range conf.Rulesets {
 		switch rulesetConfig.ID {
 		case disak8sstig.RulesetID:
-			ruleset, err := disak8sstig.FromGenericConfig(rulesetConfig, p.AdditionalOpsPodLabels, p.Config)
+			ruleset, err := disak8sstig.FromGenericConfig(rulesetConfig, p.AdditionalOpsPodLabels, p.Config, rulesetsPath.Index(rulesetIdx))
 			if err != nil {
 				return nil, err
 			}
@@ -44,7 +44,7 @@ func ManagedK8SProviderFromConfig(conf config.ProviderConfig, rootPath *field.Pa
 			setLoggerDISA(ruleset)
 			rulesets = append(rulesets, ruleset)
 		case securityhardenedk8s.RulesetID:
-			ruleset, err := securityhardenedk8s.FromGenericConfig(rulesetConfig, p.Config, *rulesetsPath.Index(rulesetIdx))
+			ruleset, err := securityhardenedk8s.FromGenericConfig(rulesetConfig, p.Config, rulesetsPath.Index(rulesetIdx))
 			if err != nil {
 				return nil, err
 			}

@@ -20,11 +20,13 @@ import (
 )
 
 // GardenerProviderFromConfig returns a Provider from a ProviderConfig.
-func GardenerProviderFromConfig(conf config.ProviderConfig, _ *field.Path) (provider.Provider, error) {
+func GardenerProviderFromConfig(conf config.ProviderConfig, fldPath *field.Path) (provider.Provider, error) {
 	p, err := gardener.FromGenericConfig(conf)
 	if err != nil {
 		return nil, err
 	}
+
+	rulesetsPath := fldPath.Child("rulesets")
 
 	setConfigDefaults(p.ShootConfig)
 	setConfigDefaults(p.SeedConfig)
@@ -32,10 +34,10 @@ func GardenerProviderFromConfig(conf config.ProviderConfig, _ *field.Path) (prov
 	setLoggerFunc := gardener.WithLogger(providerLogger)
 	setLoggerFunc(p)
 	rulesets := make([]ruleset.Ruleset, 0, len(conf.Rulesets))
-	for _, rulesetConfig := range conf.Rulesets {
+	for rulesetIdx, rulesetConfig := range conf.Rulesets {
 		switch rulesetConfig.ID {
 		case disak8sstig.RulesetID:
-			ruleset, err := disak8sstig.FromGenericConfig(rulesetConfig, p.AdditionalOpsPodLabels, p.ShootConfig, p.SeedConfig, p.Args.ShootNamespace)
+			ruleset, err := disak8sstig.FromGenericConfig(rulesetConfig, p.AdditionalOpsPodLabels, p.ShootConfig, p.SeedConfig, p.Args.ShootNamespace, rulesetsPath.Index(rulesetIdx))
 			if err != nil {
 				return nil, err
 			}
