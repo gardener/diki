@@ -10,11 +10,11 @@ import (
 	"fmt"
 	"log/slog"
 
-	internalconfig "github.com/gardener/diki/pkg/internal/config"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/rest"
 
 	"github.com/gardener/diki/pkg/config"
+	internalconfig "github.com/gardener/diki/pkg/internal/config"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
 	"github.com/gardener/diki/pkg/shared/provider"
