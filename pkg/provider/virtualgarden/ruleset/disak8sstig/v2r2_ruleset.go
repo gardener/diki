@@ -23,11 +23,11 @@ import (
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
-func validateV2R2Options[O rules.RuleOption](options any, fldPath field.Path) field.ErrorList {
+func validateV2R2Options[O rules.RuleOption](options any, fldPath *field.Path) field.ErrorList {
 	parsedOptions, err := getV2R2OptionOrNil[O](options)
 	if err != nil {
 		return field.ErrorList{
-			field.InternalError(&fldPath, err),
+			field.InternalError(fldPath, err),
 		}
 	}
 
@@ -36,13 +36,13 @@ func validateV2R2Options[O rules.RuleOption](options any, fldPath field.Path) fi
 	}
 
 	if val, ok := any(parsedOptions).(option.Option); ok {
-		return val.Validate(&fldPath)
+		return val.Validate(fldPath)
 	}
 
 	return nil
 }
 
-func (r *Ruleset) validateV2R2RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath field.Path) error {
+func (r *Ruleset) validateV2R2RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath *field.Path) error {
 	allErrs := field.ErrorList{}
 
 	allErrs = append(allErrs, validateV2R2Options[sharedrules.Options242390](ruleOptions[sharedrules.ID242390].Args, fldPath)...)

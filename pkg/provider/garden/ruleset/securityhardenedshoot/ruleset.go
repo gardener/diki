@@ -81,7 +81,7 @@ func (r *Ruleset) Version() string {
 }
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
-func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.Config, logger provider.Logger, fldPath field.Path) (*Ruleset, error) {
+func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.Config, logger provider.Logger, fldPath *field.Path) (*Ruleset, error) {
 	rulesetArgsByte, err := json.Marshal(rulesetConfig.Args)
 	if err != nil {
 		return nil, err
@@ -117,7 +117,7 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.C
 
 	switch rulesetConfig.Version {
 	case "v0.1.0":
-		if err := ruleset.validateV01RuleOptions(indexedRuleOptions, *fldPath.Child("ruleOptions")); err != nil {
+		if err := ruleset.validateV01RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
 			return nil, err
 		}
 		if err := ruleset.registerV01Rules(ruleOptions); err != nil {
@@ -129,14 +129,14 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.C
 		setLatestPatchVersion := WithVersion("v0.2.1")
 		setLatestPatchVersion(ruleset)
 
-		if err := ruleset.validateV02RuleOptions(indexedRuleOptions, *fldPath.Child("ruleOptions")); err != nil {
+		if err := ruleset.validateV02RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
 			return nil, err
 		}
 		if err := ruleset.registerV02Rules(ruleOptions); err != nil {
 			return nil, err
 		}
 	case "v0.2.1":
-		if err := ruleset.validateV02RuleOptions(indexedRuleOptions, *fldPath.Child("ruleOptions")); err != nil {
+		if err := ruleset.validateV02RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
 			return nil, err
 		}
 		if err := ruleset.registerV02Rules(ruleOptions); err != nil {

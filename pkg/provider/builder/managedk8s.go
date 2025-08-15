@@ -36,7 +36,7 @@ func ManagedK8SProviderFromConfig(conf config.ProviderConfig, fldPath *field.Pat
 	for rulesetIdx, rulesetConfig := range conf.Rulesets {
 		switch rulesetConfig.ID {
 		case disak8sstig.RulesetID:
-			ruleset, err := disak8sstig.FromGenericConfig(rulesetConfig, p.AdditionalOpsPodLabels, p.Config, *rulesetsPath.Index(rulesetIdx))
+			ruleset, err := disak8sstig.FromGenericConfig(rulesetConfig, p.AdditionalOpsPodLabels, p.Config, rulesetsPath.Index(rulesetIdx))
 			if err != nil {
 				return nil, err
 			}
@@ -44,7 +44,7 @@ func ManagedK8SProviderFromConfig(conf config.ProviderConfig, fldPath *field.Pat
 			setLoggerDISA(ruleset)
 			rulesets = append(rulesets, ruleset)
 		case securityhardenedk8s.RulesetID:
-			ruleset, err := securityhardenedk8s.FromGenericConfig(rulesetConfig, p.Config, *rulesetsPath.Index(rulesetIdx))
+			ruleset, err := securityhardenedk8s.FromGenericConfig(rulesetConfig, p.Config, rulesetsPath.Index(rulesetIdx))
 			if err != nil {
 				return nil, err
 			}

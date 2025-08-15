@@ -72,7 +72,7 @@ func (r *Ruleset) Version() string {
 }
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
-func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.Config, fldPath field.Path) (*Ruleset, error) {
+func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.Config, fldPath *field.Path) (*Ruleset, error) {
 	ruleset, err := New(
 		WithVersion(rulesetConfig.Version),
 		WithConfig(managedConfig),
@@ -96,7 +96,7 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.C
 
 	switch rulesetConfig.Version {
 	case "v0.1.0":
-		if err := ruleset.validateV01RuleOptions(indexedRuleOptions, *fldPath.Child("ruleOptions")); err != nil {
+		if err := ruleset.validateV01RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
 			return nil, err
 		}
 		if err := ruleset.registerV01Rules(ruleOptions); err != nil {

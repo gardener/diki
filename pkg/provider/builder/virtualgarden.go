@@ -35,7 +35,7 @@ func VirtualGardenProviderFromConfig(conf config.ProviderConfig, fldPath *field.
 	for rulesetIdx, rulesetConfig := range conf.Rulesets {
 		switch rulesetConfig.ID {
 		case disak8sstig.RulesetID:
-			ruleset, err := disak8sstig.FromGenericConfig(rulesetConfig, p.AdditionalOpsPodLabels, p.RuntimeConfig, *rulesetsPath.Index(rulesetIdx))
+			ruleset, err := disak8sstig.FromGenericConfig(rulesetConfig, p.AdditionalOpsPodLabels, p.RuntimeConfig, rulesetsPath.Index(rulesetIdx))
 			if err != nil {
 				return nil, err
 			}

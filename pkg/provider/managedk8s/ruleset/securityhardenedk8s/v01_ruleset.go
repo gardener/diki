@@ -18,18 +18,18 @@ import (
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
-func (r *Ruleset) validateV01RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath field.Path) error {
+func (r *Ruleset) validateV01RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath *field.Path) error {
 	allErrs := field.ErrorList{}
 
-	allErrs = append(allErrs, validateV01Options[rules.Options2000](ruleOptions["2000"].Args, *fldPath.Index(ruleOptions["2000"].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV01Options[rules.Options2001](ruleOptions["2001"].Args, *fldPath.Index(ruleOptions["2001"].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV01Options[rules.Options2002](ruleOptions["2002"].Args, *fldPath.Index(ruleOptions["2002"].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV01Options[rules.Options2003](ruleOptions["2003"].Args, *fldPath.Index(ruleOptions["2003"].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV01Options[rules.Options2004](ruleOptions["2004"].Args, *fldPath.Index(ruleOptions["2004"].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV01Options[rules.Options2005](ruleOptions["2005"].Args, *fldPath.Index(ruleOptions["2005"].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV01Options[rules.Options2006](ruleOptions["2006"].Args, *fldPath.Index(ruleOptions["2006"].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV01Options[rules.Options2007](ruleOptions["2007"].Args, *fldPath.Index(ruleOptions["2007"].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV01Options[rules.Options2008](ruleOptions["2008"].Args, *fldPath.Index(ruleOptions["2008"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2000](ruleOptions["2000"].Args, fldPath.Index(ruleOptions["2000"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2001](ruleOptions["2001"].Args, fldPath.Index(ruleOptions["2001"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2002](ruleOptions["2002"].Args, fldPath.Index(ruleOptions["2002"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2003](ruleOptions["2003"].Args, fldPath.Index(ruleOptions["2003"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2004](ruleOptions["2004"].Args, fldPath.Index(ruleOptions["2004"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2005](ruleOptions["2005"].Args, fldPath.Index(ruleOptions["2005"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2006](ruleOptions["2006"].Args, fldPath.Index(ruleOptions["2006"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2007](ruleOptions["2007"].Args, fldPath.Index(ruleOptions["2007"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2008](ruleOptions["2008"].Args, fldPath.Index(ruleOptions["2008"].Index).Child("args"))...)
 
 	return allErrs.ToAggregate()
 }
@@ -139,11 +139,11 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 	return r.AddRules(rules...)
 }
 
-func validateV01Options[O rules.RuleOption](options any, fldPath field.Path) field.ErrorList {
+func validateV01Options[O rules.RuleOption](options any, fldPath *field.Path) field.ErrorList {
 	parsedOptions, err := getV01OptionOrNil[O](options)
 	if err != nil {
 		return field.ErrorList{
-			field.InternalError(&fldPath, err),
+			field.InternalError(fldPath, err),
 		}
 	}
 
@@ -152,7 +152,7 @@ func validateV01Options[O rules.RuleOption](options any, fldPath field.Path) fie
 	}
 
 	if val, ok := any(parsedOptions).(option.Option); ok {
-		return val.Validate(&fldPath)
+		return val.Validate(fldPath)
 	}
 
 	return nil

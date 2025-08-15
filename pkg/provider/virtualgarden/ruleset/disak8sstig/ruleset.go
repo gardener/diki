@@ -87,7 +87,7 @@ func (r *Ruleset) Version() string {
 }
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
-func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabels map[string]string, runtimeConfig *rest.Config, fldPath field.Path) (*Ruleset, error) {
+func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabels map[string]string, runtimeConfig *rest.Config, fldPath *field.Path) (*Ruleset, error) {
 	rulesetArgsByte, err := json.Marshal(rulesetConfig.Args)
 	if err != nil {
 		return nil, err
@@ -124,14 +124,14 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabel
 
 	switch rulesetConfig.Version {
 	case "v2r2":
-		if err := ruleset.validateV2R2RuleOptions(indexedRuleOptions, *fldPath.Child("ruleOptions")); err != nil {
+		if err := ruleset.validateV2R2RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
 			return nil, err
 		}
 		if err := ruleset.registerV2R2Rules(ruleOptions); err != nil {
 			return nil, err
 		}
 	case "v2r3":
-		if err := ruleset.validateV2R3RuleOptions(indexedRuleOptions, *fldPath.Child("ruleOptions")); err != nil {
+		if err := ruleset.validateV2R3RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
 			return nil, err
 		}
 		if err := ruleset.registerV2R3Rules(ruleOptions); err != nil {
