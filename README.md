@@ -1,6 +1,7 @@
 # Diki
-[![REUSE status](https://api.reuse.software/badge/github.com/gardener/diki)](https://api.reuse.software/info/github.com/gardener/diki)
 
+[![REUSE status](https://api.reuse.software/badge/github.com/gardener/diki)](https://api.reuse.software/info/github.com/gardener/diki)
+[![Build](https://github.com/gardener/diki/actions/workflows/non-release.yaml/badge.svg)](https://github.com/gardener/diki/actions/workflows/non-release.yaml)
 [![gardener compliance checker](https://badgen.net/badge/gardener/compliance-checker/009f76)](https://github.com/gardener)
 [![status alpha](https://badgen.net/badge/status/alpha/d8624d)](https://badgen.net/badge/status/alpha/d8624d)
 [![license apache 2.0](https://badgen.net/badge/license/apache-2.0/8ab803)](https://opensource.org/licenses/Apache-2.0)
