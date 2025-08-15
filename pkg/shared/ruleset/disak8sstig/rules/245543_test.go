@@ -273,16 +273,16 @@ bar,for,bar,`
 				},
 			}
 
-			result := options.Validate(nil)
+			result := options.Validate(field.NewPath("foo"))
 
 			Expect(result).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 				"Type":   Equal(field.ErrorTypeRequired),
-				"Field":  Equal("acceptedTokens[1].user"),
+				"Field":  Equal("foo.acceptedTokens[1].user"),
 				"Detail": Equal("must be set"),
 			})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("acceptedTokens[2].uid"),
+					"Field":  Equal("foo.acceptedTokens[2].uid"),
 					"Detail": Equal("must be set"),
 				})),
 			))
