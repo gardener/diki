@@ -50,10 +50,10 @@ func (o Options242417) Validate(fldPath *field.Path) field.ErrorList {
 		acceptedPodsPath = fldPath.Child("acceptedPods")
 	)
 
-	for pIdx, p := range o.AcceptedPods {
-		allErrs = append(allErrs, p.Validate(acceptedPodsPath.Index(pIdx))...)
+	for idx, p := range o.AcceptedPods {
+		allErrs = append(allErrs, p.Validate(acceptedPodsPath.Index(idx))...)
 		if !slices.Contains([]string{"Passed", "Accepted"}, p.Status) && len(p.Status) > 0 {
-			allErrs = append(allErrs, field.Invalid(acceptedPodsPath.Index(pIdx).Child("status"), p.Status, "must be one of 'Passed' or 'Accepted'"))
+			allErrs = append(allErrs, field.Invalid(acceptedPodsPath.Index(idx).Child("status"), p.Status, "must be one of 'Passed' or 'Accepted'"))
 		}
 	}
 

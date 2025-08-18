@@ -54,9 +54,9 @@ func (o Options2008) Validate(fldPath *field.Path) field.ErrorList {
 		if len(p.VolumeNames) == 0 {
 			allErrs = append(allErrs, field.Required(acceptedPodsPath.Index(pIdx).Child("volumeNames"), "must not be empty"))
 		}
-		for i, volumeName := range p.VolumeNames {
+		for vIdx, volumeName := range p.VolumeNames {
 			if len(volumeName) == 0 {
-				allErrs = append(allErrs, field.Invalid(acceptedPodsPath.Index(pIdx).Child("volumeNames").Index(i), volumeName, "must not be empty"))
+				allErrs = append(allErrs, field.Invalid(acceptedPodsPath.Index(pIdx).Child("volumeNames").Index(vIdx), volumeName, "must not be empty"))
 			}
 		}
 	}

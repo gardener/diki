@@ -58,9 +58,9 @@ func (o Options1002) Validate(fldPath *field.Path) field.ErrorList {
 			allErrs = append(allErrs, field.Required(machineImagesPath.Index(idx).Child("name"), "must not be empty"))
 		}
 
-		for aIdx, c := range machineImage.AllowedClassifications {
+		for idx, c := range machineImage.AllowedClassifications {
 			if !slices.Contains(versionClassifications, c) {
-				allErrs = append(allErrs, field.NotSupported(machineImagesPath.Index(idx).Child("allowedClassifications").Index(aIdx), c, versionClassifications))
+				allErrs = append(allErrs, field.NotSupported(machineImagesPath.Index(idx).Child("allowedClassifications").Index(idx), c, versionClassifications))
 			}
 		}
 	}

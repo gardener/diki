@@ -42,8 +42,8 @@ func (o Options2004) Validate(fldPath *field.Path) field.ErrorList {
 
 	acceptedServicesPath := fldPath.Child("acceptedServices")
 
-	for sIdx, s := range o.AcceptedServices {
-		allErrs = append(allErrs, s.Validate(acceptedServicesPath.Index(sIdx))...)
+	for idx, s := range o.AcceptedServices {
+		allErrs = append(allErrs, s.Validate(acceptedServicesPath.Index(idx))...)
 	}
 
 	return allErrs

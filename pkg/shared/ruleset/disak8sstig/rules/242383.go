@@ -51,10 +51,10 @@ func (o Options242383) Validate(fldPath *field.Path) field.ErrorList {
 		allErrs               field.ErrorList
 		acceptedResourcesPath = fldPath.Child("acceptedResources")
 	)
-	for aIdx, p := range o.AcceptedResources {
-		allErrs = append(allErrs, p.Validate(acceptedResourcesPath.Index(aIdx))...)
-		if !slices.Contains([]string{"Passed", "Accepted"}, p.Status) && len(p.Status) > 0 {
-			allErrs = append(allErrs, field.Invalid(acceptedResourcesPath.Index(aIdx).Child("status"), p.Status, "must be one of 'Passed' or 'Accepted'"))
+	for idx, r := range o.AcceptedResources {
+		allErrs = append(allErrs, r.Validate(acceptedResourcesPath.Index(idx))...)
+		if !slices.Contains([]string{"Passed", "Accepted"}, r.Status) && len(r.Status) > 0 {
+			allErrs = append(allErrs, field.Invalid(acceptedResourcesPath.Index(idx).Child("status"), r.Status, "must be one of 'Passed' or 'Accepted'"))
 		}
 	}
 	return allErrs
