@@ -258,7 +258,7 @@ var _ = Describe("#1000", func() {
 				},
 			}
 
-			result := options.Validate(nil)
+			result := options.Validate(field.NewPath("foo"))
 			Expect(result).To(BeEmpty())
 		})
 		It("should error when options are incorrect", func() {
@@ -272,11 +272,11 @@ var _ = Describe("#1000", func() {
 					},
 				},
 			}
-			result := options.Validate(nil)
+			result := options.Validate(field.NewPath("foo"))
 			Expect(result).To(Equal(field.ErrorList{
 				{
 					Type:     field.ErrorTypeRequired,
-					Field:    "extensions.type",
+					Field:    "foo.extensions[1].type",
 					BadValue: "",
 					Detail:   "must not be empty",
 				},

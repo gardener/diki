@@ -9,9 +9,11 @@ import (
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/config"
+	internalconfig "github.com/gardener/diki/pkg/internal/config"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	"github.com/gardener/diki/pkg/provider/virtualgarden/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
@@ -20,6 +22,38 @@ import (
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/retryerrors"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
+
+func validateV2R3Options[O rules.RuleOption](options any, fldPath *field.Path) field.ErrorList {
+	parsedOptions, err := getV2R3OptionOrNil[O](options)
+	if err != nil {
+		return field.ErrorList{
+			field.InternalError(fldPath, err),
+		}
+	}
+
+	if parsedOptions == nil {
+		return nil
+	}
+
+	if val, ok := any(parsedOptions).(option.Option); ok {
+		return val.Validate(fldPath)
+	}
+
+	return nil
+}
+
+func (r *Ruleset) validateV2R3RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath *field.Path) error {
+	allErrs := field.ErrorList{}
+
+	allErrs = append(allErrs, validateV2R3Options[sharedrules.Options242390](ruleOptions[sharedrules.ID242390].Args, fldPath.Index(ruleOptions[sharedrules.ID242390].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R3Options[option.Options242442](ruleOptions[sharedrules.ID242442].Args, fldPath.Index(ruleOptions[sharedrules.ID242442].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R3Options[option.FileOwnerOptions](ruleOptions[sharedrules.ID242445].Args, fldPath.Index(ruleOptions[sharedrules.ID242445].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R3Options[option.FileOwnerOptions](ruleOptions[sharedrules.ID242446].Args, fldPath.Index(ruleOptions[sharedrules.ID242446].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R3Options[option.FileOwnerOptions](ruleOptions[sharedrules.ID242451].Args, fldPath.Index(ruleOptions[sharedrules.ID242445].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R3Options[sharedrules.Options245543](ruleOptions[sharedrules.ID245543].Args, fldPath.Index(ruleOptions[sharedrules.ID245543].Index).Child("args"))...)
+
+	return allErrs.ToAggregate()
+}
 
 func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
 	runtimeClient, err := client.New(r.RuntimeConfig, client.Options{})
@@ -31,11 +65,11 @@ func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsCon
 	if err != nil {
 		return err
 	}
-	opts242390, err := getV2R2OptionOrNil[sharedrules.Options242390](ruleOptions[sharedrules.ID242390].Args)
+	opts242390, err := getV2R3OptionOrNil[sharedrules.Options242390](ruleOptions[sharedrules.ID242390].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242390 error: %s", err.Error())
 	}
-	opts242442, err := getV2R2OptionOrNil[option.Options242442](ruleOptions[sharedrules.ID242442].Args)
+	opts242442, err := getV2R3OptionOrNil[option.Options242442](ruleOptions[sharedrules.ID242442].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242442 error: %s", err.Error())
 	}
@@ -756,12 +790,6 @@ func parseV2R3Options[O rules.RuleOption](options any) (*O, error) {
 	var parsedOptions O
 	if err := json.Unmarshal(optionsByte, &parsedOptions); err != nil {
 		return nil, err
-	}
-
-	if val, ok := any(parsedOptions).(option.Option); ok {
-		if err := val.Validate(nil).ToAggregate(); err != nil {
-			return nil, err
-		}
 	}
 
 	return &parsedOptions, nil

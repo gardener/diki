@@ -19,21 +19,23 @@ import (
 )
 
 // GardenProviderFromConfig returns a Provider from a [ProviderConfig].
-func GardenProviderFromConfig(conf config.ProviderConfig, _ *field.Path) (provider.Provider, error) {
+func GardenProviderFromConfig(conf config.ProviderConfig, fldPath *field.Path) (provider.Provider, error) {
 	p, err := garden.FromGenericConfig(conf)
 	if err != nil {
 		return nil, err
 	}
+
+	rulesetsPath := fldPath.Child("rulesets")
 
 	setConfigDefaults(p.Config)
 	providerLogger := slog.Default().With("provider", p.ID())
 	setLoggerFunc := garden.WithLogger(providerLogger)
 	setLoggerFunc(p)
 	rulesets := make([]ruleset.Ruleset, 0, len(conf.Rulesets))
-	for _, rulesetConfig := range conf.Rulesets {
+	for rulesetIdx, rulesetConfig := range conf.Rulesets {
 		switch rulesetConfig.ID {
 		case securityhardenedshoot.RulesetID:
-			ruleset, err := securityhardenedshoot.FromGenericConfig(rulesetConfig, p.Config, providerLogger)
+			ruleset, err := securityhardenedshoot.FromGenericConfig(rulesetConfig, p.Config, providerLogger, rulesetsPath.Index(rulesetIdx))
 			if err != nil {
 				return nil, err
 			}

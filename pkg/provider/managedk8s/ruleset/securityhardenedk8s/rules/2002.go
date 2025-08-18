@@ -42,8 +42,8 @@ func (o Options2002) Validate(fldPath *field.Path) field.ErrorList {
 
 	acceptedStorageClassesPath := fldPath.Child("acceptedStorageClasses")
 
-	for scIdx, sc := range o.AcceptedStorageClasses {
-		allErrs = append(allErrs, sc.Validate(acceptedStorageClassesPath.Index(scIdx))...)
+	for idx, sc := range o.AcceptedStorageClasses {
+		allErrs = append(allErrs, sc.Validate(acceptedStorageClassesPath.Index(idx))...)
 	}
 
 	return allErrs

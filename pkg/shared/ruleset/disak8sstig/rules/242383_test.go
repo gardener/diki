@@ -453,60 +453,60 @@ var _ = Describe("#242383", func() {
 				},
 			}
 
-			result := options.Validate(nil)
+			result := options.Validate(field.NewPath("foo"))
 
 			Expect(result).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedResources.kind"),
+					"Field":    Equal("foo.acceptedResources[2].kind"),
 					"BadValue": Equal("Deployment"),
 					"Detail":   Equal("not checked kind for apiVersion v1"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedResources.kind"),
+					"Field":    Equal("foo.acceptedResources[1].kind"),
 					"BadValue": Equal("Service"),
 					"Detail":   Equal("not checked kind for apiVersion apps/v1"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("acceptedResources.namespaceMatchLabels"),
+					"Field":  Equal("foo.acceptedResources[2].namespaceMatchLabels"),
 					"Detail": Equal("must not be empty"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("acceptedResources.matchLabels"),
+					"Field":  Equal("foo.acceptedResources[3].matchLabels"),
 					"Detail": Equal("must not be empty"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedResources.matchLabels"),
+					"Field":    Equal("foo.acceptedResources[2].matchLabels"),
 					"BadValue": Equal("-foo"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedResources.apiVersion"),
+					"Field":    Equal("foo.acceptedResources[4].apiVersion"),
 					"BadValue": Equal("fake"),
 					"Detail":   Equal("not checked apiVersion"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedResources.matchLabels"),
+					"Field":    Equal("foo.acceptedResources[4].matchLabels"),
 					"BadValue": Equal("?bar"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedResources.namespaceMatchLabels"),
+					"Field":    Equal("foo.acceptedResources[4].namespaceMatchLabels"),
 					"BadValue": Equal("bar$baz"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedResources.namespaceMatchLabels"),
+					"Field":    Equal("foo.acceptedResources[4].namespaceMatchLabels"),
 					"BadValue": Equal("_foo"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("acceptedResources.status"),
+					"Field":    Equal("foo.acceptedResources[4].status"),
 					"BadValue": Equal("asd"),
 					"Detail":   Equal("must be one of 'Passed' or 'Accepted'"),
 				})),

@@ -449,7 +449,7 @@ var _ = Describe("#1002", func() {
 				},
 			}
 
-			result := options.Validate(nil)
+			result := options.Validate(field.NewPath("foo"))
 			Expect(result).To(BeEmpty())
 		})
 		It("should error when options are incorrect", func() {
@@ -469,17 +469,17 @@ var _ = Describe("#1002", func() {
 					},
 				},
 			}
-			result := options.Validate(nil)
+			result := options.Validate(field.NewPath("foo"))
 			Expect(result).To(Equal(field.ErrorList{
 				{
 					Type:     field.ErrorTypeRequired,
-					Field:    "machineImages.name",
+					Field:    "foo.machineImages[0].name",
 					BadValue: "",
 					Detail:   "must not be empty",
 				},
 				{
 					Type:     field.ErrorTypeNotSupported,
-					Field:    "machineImages.allowedClassifications",
+					Field:    "foo.machineImages[1].allowedClassifications[0]",
 					BadValue: fakeClassification,
 					Detail:   "supported values: \"preview\", \"supported\", \"deprecated\"",
 				},

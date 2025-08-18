@@ -42,14 +42,14 @@ type Options245543 struct {
 
 var _ option.Option = (*Options245543)(nil)
 
-func (o Options245543) Validate(_ *field.Path) field.ErrorList {
+func (o Options245543) Validate(fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
-	for _, acceptedToken := range o.AcceptedTokens {
+	for idx, acceptedToken := range o.AcceptedTokens {
 		if len(acceptedToken.User) == 0 {
-			allErrs = append(allErrs, field.Required(field.NewPath("acceptedTokens.users"), "must be set"))
+			allErrs = append(allErrs, field.Required(fldPath.Child("acceptedTokens").Index(idx).Child("user"), "must be set"))
 		}
 		if len(acceptedToken.UID) == 0 {
-			allErrs = append(allErrs, field.Required(field.NewPath("acceptedTokens.uid"), "must be set"))
+			allErrs = append(allErrs, field.Required(fldPath.Child("acceptedTokens").Index(idx).Child("uid"), "must be set"))
 		}
 	}
 	return allErrs

@@ -46,15 +46,15 @@ type AcceptedResources242383 struct {
 	Status        string `json:"status" yaml:"status"`
 }
 
-func (o Options242383) Validate(_ *field.Path) field.ErrorList {
+func (o Options242383) Validate(fldPath *field.Path) field.ErrorList {
 	var (
-		allErrs field.ErrorList
-		fldPath = field.NewPath("acceptedResources")
+		allErrs               field.ErrorList
+		acceptedResourcesPath = fldPath.Child("acceptedResources")
 	)
-	for _, p := range o.AcceptedResources {
-		allErrs = append(allErrs, p.Validate(nil)...)
-		if !slices.Contains([]string{"Passed", "Accepted"}, p.Status) && len(p.Status) > 0 {
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("status"), p.Status, "must be one of 'Passed' or 'Accepted'"))
+	for idx, r := range o.AcceptedResources {
+		allErrs = append(allErrs, r.Validate(acceptedResourcesPath.Index(idx))...)
+		if !slices.Contains([]string{"Passed", "Accepted"}, r.Status) && len(r.Status) > 0 {
+			allErrs = append(allErrs, field.Invalid(acceptedResourcesPath.Index(idx).Child("status"), r.Status, "must be one of 'Passed' or 'Accepted'"))
 		}
 	}
 	return allErrs
@@ -69,10 +69,9 @@ type ObjectSelector struct {
 
 var _ option.Option = (*ObjectSelector)(nil)
 
-func (s ObjectSelector) Validate(_ *field.Path) field.ErrorList {
+func (s ObjectSelector) Validate(fldPath *field.Path) field.ErrorList {
 	var (
 		allErrs          field.ErrorList
-		fldPath          = field.NewPath("acceptedResources")
 		checkedResources = map[string][]string{
 			"v1":             {"Pod", "ReplicationController", "Service"},
 			"apps/v1":        {"Deployment", "DaemonSet", "ReplicaSet", "StatefulSet"},

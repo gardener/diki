@@ -10,9 +10,11 @@ import (
 	"fmt"
 	"log/slog"
 
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/rest"
 
 	"github.com/gardener/diki/pkg/config"
+	internalconfig "github.com/gardener/diki/pkg/internal/config"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
 	"github.com/gardener/diki/pkg/shared/provider"
@@ -79,7 +81,7 @@ func (r *Ruleset) Version() string {
 }
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
-func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.Config, logger provider.Logger) (*Ruleset, error) {
+func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.Config, logger provider.Logger, fldPath *field.Path) (*Ruleset, error) {
 	rulesetArgsByte, err := json.Marshal(rulesetConfig.Args)
 	if err != nil {
 		return nil, err
@@ -99,17 +101,25 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.C
 		return nil, err
 	}
 
-	ruleOptions := map[string]config.RuleOptionsConfig{}
-	for _, opt := range rulesetConfig.RuleOptions {
+	var (
+		indexedRuleOptions = make(map[string]internalconfig.IndexedRuleOptionsConfig)
+		ruleOptions        = make(map[string]config.RuleOptionsConfig)
+	)
+
+	for index, opt := range rulesetConfig.RuleOptions {
 		if _, ok := ruleOptions[opt.RuleID]; ok {
 			return nil, fmt.Errorf("rule option for rule id: %s is already registered", opt.RuleID)
 		}
 
 		ruleOptions[opt.RuleID] = opt
+		indexedRuleOptions[opt.RuleID] = internalconfig.IndexedRuleOptionsConfig{Index: index, RuleOptionsConfig: opt}
 	}
 
 	switch rulesetConfig.Version {
 	case "v0.1.0":
+		if err := ruleset.validateV01RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
+			return nil, err
+		}
 		if err := ruleset.registerV01Rules(ruleOptions); err != nil {
 			return nil, err
 		}
@@ -119,10 +129,16 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.C
 		setLatestPatchVersion := WithVersion("v0.2.1")
 		setLatestPatchVersion(ruleset)
 
+		if err := ruleset.validateV02RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
+			return nil, err
+		}
 		if err := ruleset.registerV02Rules(ruleOptions); err != nil {
 			return nil, err
 		}
 	case "v0.2.1":
+		if err := ruleset.validateV02RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
+			return nil, err
+		}
 		if err := ruleset.registerV02Rules(ruleOptions); err != nil {
 			return nil, err
 		}
