@@ -43,7 +43,7 @@ func GardenProviderFromConfig(conf config.ProviderConfig, fldPath *field.Path) (
 			setLoggerHardened(ruleset)
 			rulesets = append(rulesets, ruleset)
 		default:
-			return nil, fmt.Errorf("unknown ruleset identifier: %s", rulesetConfig.ID)
+			return nil, fmt.Errorf("unknown ruleset identifier: %s - use `diki show provider garden` to see all supported rulesets", rulesetConfig.ID)
 		}
 	}
 
