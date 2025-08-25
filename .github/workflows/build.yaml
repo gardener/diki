@@ -136,7 +136,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.25'
       - uses: gardener/cc-utils/.github/actions/trusted-checkout@master
       - uses: gardener/cc-utils/.github/actions/setup-git-identity@master
       - name: run-verify
