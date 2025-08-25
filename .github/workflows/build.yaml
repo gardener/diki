@@ -20,6 +20,71 @@ jobs:
     permissions:
       contents: read
 
+  diki-executables:
+    name: Build Diki-Executables
+    needs:
+      - prepare
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        args:
+          - os: linux
+            arch: amd64
+            runner: ubuntu-latest
+          - os: linux
+            arch: arm64
+            runner: ubuntu-24.04-arm
+          - os: darwin
+            arch: amd64
+            runner: ubuntu-latest
+          - os: darwin
+            arch: arm64
+            runner: ubuntu-24.04-arm
+          - os: windows
+            arch: amd64
+            runner: ubuntu-latest
+    runs-on: ${{ matrix.args.runner }}
+    steps:
+      - uses: gardener/cc-utils/.github/actions/trusted-checkout@master
+      - uses: gardener/cc-utils/.github/actions/import-commit@master
+        with:
+          commit-objects-artefact: ${{ needs.prepare.outputs.version-commit-artefact }}
+          after-import: rebase
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5  # v5.5.0
+        with:
+          go-version-file: 'go.mod'
+      - name: build-diki
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir /tmp/blobs.d
+          os=${{ matrix.args.os }}
+          arch=${{ matrix.args.arch }}
+          extension=${{ matrix.args.os == 'windows' && '.exe' || '' }}
+
+          GOOS=${{ matrix.args.os }} \
+          GOARCH=${{ matrix.args.arch }} \
+          GO111MODULE=on \
+            go build \
+              -ldflags "$(hack/get-build-ld-flags.sh)" \
+              -o "/tmp/blobs.d/diki-${os}-${arch}${extension}"  \
+              cmd/diki/main.go
+      - uses: gardener/cc-utils/.github/actions/export-ocm-fragments@master
+        with:
+          blobs-directory: /tmp/blobs.d
+          ocm-resources: |
+            name: diki
+            relation: local
+            type: executable
+            extraIdentity:
+              os: ${{ matrix.args.os }}
+              architecture: ${{ matrix.args.arch }}
+            access:
+              type: localBlob
+              localReference: diki-${{ matrix.args.os }}-${{ matrix.args.arch }}${{ matrix.args.os == 'windows' && '.exe' || '' }}
+
   oci-images:
     name: Build OCI-Images
     needs:

@@ -33,3 +33,34 @@ jobs:
       next-version: ${{ inputs.next-version }}
       next-version-callback-action-path:
       slack-channel-id: C9CEBQPGE # #sap-tech-gardener
+      assets: |
+        - name: diki-darwin-amd64
+          type: ocm-resource
+          id:
+            name: diki
+            os: darwin
+            architecture: amd64
+        - name: diki-darwin-arm64
+          type: ocm-resource
+          id:
+            name: diki
+            os: darwin
+            architecture: arm64
+        - name: diki-linux-amd64
+          type: ocm-resource
+          id:
+            name: diki
+            os: linux
+            architecture: amd64
+        - name: diki-linux-arm64
+          type: ocm-resource
+          id:
+            name: diki
+            os: linux
+            architecture: arm64
+        - name: diki-windows-amd64.exe
+          type: ocm-resource
+          id:
+            name: diki
+            os: windows
+            architecture: amd64
