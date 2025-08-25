@@ -52,7 +52,7 @@ func ManagedK8SProviderFromConfig(conf config.ProviderConfig, fldPath *field.Pat
 			setLoggerHardened(ruleset)
 			rulesets = append(rulesets, ruleset)
 		default:
-			return nil, fmt.Errorf("unknown ruleset identifier: %s", rulesetConfig.ID)
+			return nil, fmt.Errorf("unknown ruleset identifier: %s - use `diki show provider managedk8s` to see the provider's supported rulesets", rulesetConfig.ID)
 		}
 	}
 
