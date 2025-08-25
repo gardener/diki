@@ -62,13 +62,14 @@ jobs:
           mkdir /tmp/blobs.d
           os=${{ matrix.args.os }}
           arch=${{ matrix.args.arch }}
+          extension=${{ matrix.args.os == 'windows' && '.exe' || '' }}
 
           GOOS=${{ matrix.args.os }} \
           GOARCH=${{ matrix.args.arch }} \
           GO111MODULE=on \
             go build \
               -ldflags "$(hack/get-build-ld-flags.sh)" \
-              -o "/tmp/blobs.d/diki-${os}-${arch}${os:+.exe}"  \
+              -o "/tmp/blobs.d/diki-${os}-${arch}${extension}"  \
               cmd/diki/main.go
       - uses: gardener/cc-utils/.github/actions/export-ocm-fragments@master
         with:
