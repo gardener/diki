@@ -34,13 +34,13 @@ jobs:
             runner: ubuntu-latest
           - os: linux
             arch: arm64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04-arm
           - os: darwin
             arch: amd64
             runner: ubuntu-latest
           - os: darwin
             arch: arm64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04-arm
           - os: windows
             arch: amd64
             runner: ubuntu-latest
@@ -64,6 +64,7 @@ jobs:
           arch=${{ matrix.args.arch }}
           extension=${{ matrix.args.os == 'windows' && '.exe' || '' }}
 
+          CGO_ENABLED=0 \
           GOOS=${{ matrix.args.os }} \
           GOARCH=${{ matrix.args.arch }} \
           GO111MODULE=on \
