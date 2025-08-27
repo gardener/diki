@@ -34,13 +34,13 @@ jobs:
             runner: ubuntu-latest
           - os: linux
             arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-latest
           - os: darwin
             arch: amd64
             runner: ubuntu-latest
           - os: darwin
             arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-latest
           - os: windows
             arch: amd64
             runner: ubuntu-latest
