@@ -45,7 +45,7 @@ func GardenerProviderFromConfig(conf config.ProviderConfig, fldPath *field.Path)
 			setLoggerDISA(ruleset)
 			rulesets = append(rulesets, ruleset)
 		default:
-			return nil, fmt.Errorf("unknown ruleset identifier: %s - use `diki show provider gardener` to see the provider's supported rulesets", rulesetConfig.ID)
+			return nil, fmt.Errorf("unknown ruleset identifier: %s - use 'diki show provider gardener' to see the provider's supported rulesets", rulesetConfig.ID)
 		}
 	}
 

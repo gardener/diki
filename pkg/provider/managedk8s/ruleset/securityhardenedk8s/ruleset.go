@@ -103,7 +103,7 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.C
 			return nil, err
 		}
 	default:
-		return nil, fmt.Errorf("unknown ruleset %s version: %s - use `diki show provider managedk8s` to see the provider's supported rulesets", rulesetConfig.ID, rulesetConfig.Version)
+		return nil, fmt.Errorf("unknown ruleset %s version: %s - use 'diki show provider managedk8s' to see the provider's supported rulesets", rulesetConfig.ID, rulesetConfig.Version)
 	}
 
 	return ruleset, nil
