@@ -231,7 +231,7 @@ anonymous:
 						Namespace: namespace,
 					},
 					Data: map[string]string{
-						"/etc/foo/bar": enabledAnonymousAuthenticationConfigWithConditions,
+						"/etc/foo/bar": enabledAnonymousAuthenticationConfigWithoutConditions,
 					},
 				}
 				Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
@@ -268,13 +268,17 @@ anonymous:
 						Namespace: namespace,
 					},
 					Data: map[string]string{
-						"/etc/foo/bar": enabledAnonymousAuthenticationConfigWithoutConditions,
+						"/etc/foo/bar": enabledAnonymousAuthenticationConfigWithConditions,
 					},
 				}
 				Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
 			},
 			nil,
-			[]rule.CheckResult{{Status: rule.Failed, Message: "The authentication configuration has anonymous authentication enabled.", Target: target}},
+			[]rule.CheckResult{
+				{Status: rule.Failed, Message: "Anonymous authentication is enabled for specific endpoints of the kube-apiserver.", Target: target.With("details", "endpoint: /healthz")},
+				{Status: rule.Failed, Message: "Anonymous authentication is enabled for specific endpoints of the kube-apiserver.", Target: target.With("details", "endpoint: /livez")},
+				{Status: rule.Failed, Message: "Anonymous authentication is enabled for specific endpoints of the kube-apiserver.", Target: target.With("details", "endpoint: /readyz")},
+			},
 			BeNil()),
 		Entry("should pass if the authentication configuration has anonymous authentication disabled.",
 			corev1.Container{
