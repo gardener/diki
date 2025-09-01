@@ -38,7 +38,7 @@ var _ = Describe("options", func() {
 				},
 				{
 					LabelSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{"fo$o": "bar"},
+						MatchLabels: map[string]string{"foo$bar": "bar"},
 					},
 				},
 				{
@@ -85,7 +85,7 @@ var _ = Describe("options", func() {
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("foo.labelSelector.matchLabels"),
-					"BadValue": Equal("fo$o"),
+					"BadValue": Equal("foo$bar"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("foo.labelSelector.matchExpressions[0].operator"),
@@ -194,7 +194,7 @@ var _ = Describe("options", func() {
 				{},
 				{
 					NamespaceLabelSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{"fo$o": "bar"},
+						MatchLabels: map[string]string{"foo$bar": "bar"},
 					},
 					LabelSelector: &metav1.LabelSelector{
 						MatchExpressions: []metav1.LabelSelectorRequirement{
@@ -270,7 +270,7 @@ var _ = Describe("options", func() {
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("foo.namespaceLabelSelector.matchLabels"),
-					"BadValue": Equal("fo$o"),
+					"BadValue": Equal("foo$bar"),
 				}))))
 		})
 	})
