@@ -2,10 +2,7 @@ module github.com/gardener/diki
 
 go 1.25.0
 
-tool (
-	github.com/gardener/gardener/hack
-	github.com/gardener/gardener/hack/.ci
-)
+tool github.com/gardener/gardener/hack
 
 require (
 	github.com/Masterminds/semver/v3 v3.4.0

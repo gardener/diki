@@ -41,7 +41,6 @@ check: $(GOIMPORTS) $(GOLANGCI_LINT) $(TYPOS)
 .PHONY: tidy
 tidy:
 	@GO111MODULE=on go mod tidy
-	@mkdir -p $(REPO_ROOT)/.ci/hack && cp $(GARDENER_HACK_DIR)/.ci/* $(REPO_ROOT)/.ci/hack/ && chmod +xw $(REPO_ROOT)/.ci/hack/*
 	@cp $(GARDENER_HACK_DIR)/sast.sh $(HACK_DIR)/sast.sh && chmod +xw $(HACK_DIR)/sast.sh
 
 .PHONY: gen-styles
