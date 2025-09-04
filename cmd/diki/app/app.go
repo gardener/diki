@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"slices"
 
+	"github.com/go-logr/logr"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -22,7 +23,6 @@ import (
 	"k8s.io/component-base/version"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
-	"github.com/gardener/diki/cmd/internal/slogr"
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/metadata"
 	"github.com/gardener/diki/pkg/provider"
@@ -81,7 +81,7 @@ e.g. to check compliance of your hyperscaler accounts.`,
 		Short: "Run some rulesets and rules.",
 		Long:  "Run allows running rulesets and rules for the given provider(s).",
 		RunE: func(c *cobra.Command, _ []string) error {
-			return runCmd(c.Context(), providerCreateFuncs, opts, logger)
+			return runCmd(c.Context(), providerCreateFuncs, opts, handler)
 		},
 	}
 
@@ -407,10 +407,10 @@ func generateCmd(args []string, rootOpts reportOptions, opts generateOptions, lo
 	}
 }
 
-func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.ProviderFromConfigFunc, opts runOptions, logger *slog.Logger) error {
+func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.ProviderFromConfigFunc, opts runOptions, handler slog.Handler) error {
 	// Set logger for controller-runtime clients
-	logr := slogr.NewLogr(logger)
-	logf.SetLogger(logr)
+	logger := logr.FromSlogHandler(handler)
+	logf.SetLogger(logger)
 
 	dikiConfig, err := readConfig(opts.configFile)
 	if err != nil {
