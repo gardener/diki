@@ -81,7 +81,7 @@ e.g. to check compliance of your hyperscaler accounts.`,
 		Short: "Run some rulesets and rules.",
 		Long:  "Run allows running rulesets and rules for the given provider(s).",
 		RunE: func(c *cobra.Command, _ []string) error {
-			return runCmd(c.Context(), providerCreateFuncs, opts, handler)
+			return runCmd(c.Context(), providerCreateFuncs, opts, logger)
 		},
 	}
 
@@ -407,9 +407,9 @@ func generateCmd(args []string, rootOpts reportOptions, opts generateOptions, lo
 	}
 }
 
-func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.ProviderFromConfigFunc, opts runOptions, handler slog.Handler) error {
+func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.ProviderFromConfigFunc, opts runOptions, slogger *slog.Logger) error {
 	// Set logger for controller-runtime clients
-	logger := logr.FromSlogHandler(handler)
+	logger := logr.FromSlogHandler(slogger.Handler())
 	logf.SetLogger(logger)
 
 	dikiConfig, err := readConfig(opts.configFile)
