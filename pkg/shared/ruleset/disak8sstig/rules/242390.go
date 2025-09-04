@@ -148,7 +148,7 @@ func (r *Rule242390) Run(ctx context.Context) (rule.RuleResult, error) {
 	case authConfig.Anonymous == nil:
 		return rule.Result(r, rule.FailedCheckResult("The authentication configuration does not explicitly disable anonymous authentication.", target)), nil
 	case authConfig.Anonymous != nil && authConfig.Anonymous.Enabled:
-		if r.Options == nil || len(authConfig.Anonymous.Conditions) == 0 {
+		if len(authConfig.Anonymous.Conditions) == 0 {
 			return rule.Result(r, rule.FailedCheckResult("The authentication configuration has anonymous authentication enabled.", target)), nil
 		}
 
@@ -156,7 +156,7 @@ func (r *Rule242390) Run(ctx context.Context) (rule.RuleResult, error) {
 
 		for _, condition := range authConfig.Anonymous.Conditions {
 			endpointTarget := target.With("details", fmt.Sprintf("endpoint: %s", condition.Path))
-			if slices.ContainsFunc(r.Options.AcceptedEndpoints, func(acceptedPath AcceptedEndpoint) bool {
+			if r.Options != nil && slices.ContainsFunc(r.Options.AcceptedEndpoints, func(acceptedPath AcceptedEndpoint) bool {
 				return acceptedPath.Path == condition.Path
 			}) {
 				checkResults = append(checkResults, rule.AcceptedCheckResult("Anonymous authentication is accepted for the specified endpoints of the kube-apiserver.", endpointTarget))
