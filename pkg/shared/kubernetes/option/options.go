@@ -82,7 +82,7 @@ func (s *NamespacedObjectSelector) Validate(fldPath *field.Path) field.ErrorList
 		allErrs = append(allErrs, field.Required(fldPath, "both labelSelector and namespaceLabelSelector must be set"))
 	}
 	if usingLabelSelector && (len(s.MatchLabels) > 0 || len(s.NamespaceMatchLabels) > 0) {
-		allErrs = append(allErrs, field.Forbidden(fldPath, "matchlabels cannot be set when labelSelectors are used"))
+		allErrs = append(allErrs, field.Forbidden(fldPath, "matchLabels cannot be set when labelSelectors are used"))
 	}
 	if !usingLabelSelector && ((len(s.MatchLabels) == 0 && len(s.NamespaceMatchLabels) > 0) || (len(s.MatchLabels) > 0 && len(s.NamespaceMatchLabels) == 0)) {
 		allErrs = append(allErrs, field.Required(fldPath, "both matchLabels and namespaceMatchLabels must be set"))

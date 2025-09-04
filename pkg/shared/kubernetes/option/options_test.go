@@ -206,6 +206,24 @@ var _ = Describe("options", func() {
 						},
 					},
 				},
+				{
+					NamespaceLabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+					MatchLabels: map[string]string{"foo": "bar"},
+				},
+				{
+					NamespaceLabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+					NamespaceMatchLabels: map[string]string{"foo": "bar"},
+				},
 			}
 
 			var result field.ErrorList
@@ -271,6 +289,14 @@ var _ = Describe("options", func() {
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("foo.namespaceLabelSelector.matchLabels"),
 					"BadValue": Equal("foo$bar"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeForbidden),
+					"Field":  Equal("foo"),
+					"Detail": Equal("matchLabels cannot be set when labelSelectors are used"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeForbidden),
+					"Field":  Equal("foo"),
+					"Detail": Equal("matchLabels cannot be set when labelSelectors are used"),
 				}))))
 		})
 	})
