@@ -85,8 +85,8 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	// TODO (georgibaltiev): remove any references to the EnableAnonymousAuthentication field after it's removal
-	if shoot.Spec.Kubernetes.KubeAPIServer.EnableAnonymousAuthentication != nil { //nolint:staticcheck
-		if *shoot.Spec.Kubernetes.KubeAPIServer.EnableAnonymousAuthentication { //nolint:staticcheck
+	if shoot.Spec.Kubernetes.KubeAPIServer.EnableAnonymousAuthentication != nil {
+		if *shoot.Spec.Kubernetes.KubeAPIServer.EnableAnonymousAuthentication {
 			return rule.Result(r, rule.FailedCheckResult("Anonymous authentication is enabled for the kube-apiserver.", rule.NewTarget())), nil
 		}
 		return rule.Result(r, rule.PassedCheckResult("Anonymous authentication is disabled for the kube-apiserver.", rule.NewTarget())), nil
