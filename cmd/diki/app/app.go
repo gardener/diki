@@ -37,6 +37,9 @@ func NewDikiCommand(providerOptions map[string]provider.ProviderOption) *cobra.C
 	logger := slog.New(handler)
 	slog.SetDefault(logger)
 
+	// Set logger for controller-runtime clients
+	logf.SetLogger(logr.FromSlogHandler(handler))
+
 	providerCreateFuncs := map[string]provider.ProviderFromConfigFunc{}
 	for providerID, providerOption := range providerOptions {
 		providerCreateFuncs[providerID] = providerOption.ProviderFromConfigFunc
@@ -81,7 +84,7 @@ e.g. to check compliance of your hyperscaler accounts.`,
 		Short: "Run some rulesets and rules.",
 		Long:  "Run allows running rulesets and rules for the given provider(s).",
 		RunE: func(c *cobra.Command, _ []string) error {
-			return runCmd(c.Context(), providerCreateFuncs, opts, logger)
+			return runCmd(c.Context(), providerCreateFuncs, opts)
 		},
 	}
 
@@ -407,11 +410,7 @@ func generateCmd(args []string, rootOpts reportOptions, opts generateOptions, lo
 	}
 }
 
-func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.ProviderFromConfigFunc, opts runOptions, slogger *slog.Logger) error {
-	// Set logger for controller-runtime clients
-	logger := logr.FromSlogHandler(slogger.Handler())
-	logf.SetLogger(logger)
-
+func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.ProviderFromConfigFunc, opts runOptions) error {
 	dikiConfig, err := readConfig(opts.configFile)
 	if err != nil {
 		return err
