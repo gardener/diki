@@ -8,12 +8,15 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 )
 
 var _ = Describe("options", func() {
+	const labelSelectorOpFoo metav1.LabelSelectorOperator = "Foo"
+
 	Describe("#ValidateObjectSelector", func() {
 		It("should correctly validate labels", func() {
 			attributes := []option.ClusterObjectSelector{
@@ -33,6 +36,28 @@ var _ = Describe("options", func() {
 				{
 					MatchLabels: map[string]string{},
 				},
+				{
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo$bar": "bar"},
+					},
+				},
+				{
+					LabelSelector: &metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "foo",
+								Operator: labelSelectorOpFoo,
+								Values:   []string{"bar"},
+							},
+						},
+					},
+				},
+				{
+					MatchLabels: map[string]string{"foo": "bar"},
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+				},
 			}
 
 			var result field.ErrorList
@@ -51,15 +76,65 @@ var _ = Describe("options", func() {
 					"BadValue": Equal("at$a"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("foo.matchLabels"),
+					"Field":  Equal("foo.labelSelector"),
 					"Detail": Equal("must not be empty"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("foo.matchLabels"),
+					"Field":  Equal("foo.labelSelector"),
 					"Detail": Equal("must not be empty"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("foo.labelSelector.matchLabels"),
+					"BadValue": Equal("foo$bar"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("foo.labelSelector.matchExpressions[0].operator"),
+					"BadValue": Equal(labelSelectorOpFoo),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeForbidden),
+					"Field":  Equal("foo.matchLabels"),
+					"Detail": Equal("cannot be set when labelSelector is defined"),
 				}))))
 		})
 	})
+
+	DescribeTable("#MatchesObjectSelector", func(objectSelector option.ClusterObjectSelector, objectLabels map[string]string, expected bool) {
+		matches, err := objectSelector.Matches(objectLabels)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(matches).To(Equal(expected))
+	},
+		Entry("should match with valid labels",
+			option.ClusterObjectSelector{
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"foo": "bar"},
+				},
+				MatchLabels: map[string]string{"foo": "baz"},
+			},
+			map[string]string{"foo": "bar"}, true,
+		),
+		Entry("should not match with invalid labels",
+			option.ClusterObjectSelector{
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"foo": "baz"},
+				},
+				MatchLabels: map[string]string{"foo": "bar"},
+			},
+			map[string]string{"foo": "bar"}, false,
+		),
+		Entry("should match with matchLabels when labelSelector is not set",
+			option.ClusterObjectSelector{
+				MatchLabels: map[string]string{"foo": "bar"},
+			},
+			map[string]string{"foo": "bar"}, true,
+		),
+		Entry("should not match with matchLabels with invalid labels",
+			option.ClusterObjectSelector{
+				MatchLabels: map[string]string{"foo": "baz"},
+			},
+			map[string]string{"foo": "bar"}, false,
+		),
+	)
 
 	Describe("#ValidateNamespacedObjectSelector", func() {
 		It("should correctly validate labels", func() {
@@ -98,6 +173,57 @@ var _ = Describe("options", func() {
 					NamespaceMatchLabels: map[string]string{"foo": "bar"},
 					MatchLabels:          map[string]string{},
 				},
+				{
+					NamespaceLabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+				},
+				{
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+				},
+				{
+					NamespaceLabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+				},
+				{},
+				{
+					NamespaceLabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo$bar": "bar"},
+					},
+					LabelSelector: &metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "foo",
+								Operator: labelSelectorOpFoo,
+								Values:   []string{"bar"},
+							},
+						},
+					},
+				},
+				{
+					NamespaceLabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+					MatchLabels: map[string]string{"foo": "bar"},
+				},
+				{
+					NamespaceLabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+					NamespaceMatchLabels: map[string]string{"foo": "bar"},
+				},
 			}
 
 			var result field.ErrorList
@@ -129,21 +255,103 @@ var _ = Describe("options", func() {
 					"BadValue": Equal("at$a"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("foo.namespaceMatchLabels"),
-					"Detail": Equal("must not be empty"),
+					"Field":  Equal("foo"),
+					"Detail": Equal("both matchLabels and namespaceMatchLabels must be set"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("foo.namespaceMatchLabels"),
-					"Detail": Equal("must not be empty"),
+					"Field":  Equal("foo"),
+					"Detail": Equal("both matchLabels and namespaceMatchLabels must be set"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("foo.matchLabels"),
-					"Detail": Equal("must not be empty"),
+					"Field":  Equal("foo"),
+					"Detail": Equal("both matchLabels and namespaceMatchLabels must be set"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("foo.matchLabels"),
-					"Detail": Equal("must not be empty"),
+					"Field":  Equal("foo"),
+					"Detail": Equal("both matchLabels and namespaceMatchLabels must be set"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("foo"),
+					"Detail": Equal("both labelSelector and namespaceLabelSelector must be set"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("foo"),
+					"Detail": Equal("both labelSelector and namespaceLabelSelector must be set"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("foo"),
+					"Detail": Equal("both labelSelector and namespaceLabelSelector must be set"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("foo.labelSelector.matchExpressions[0].operator"),
+					"BadValue": Equal(labelSelectorOpFoo),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("foo.namespaceLabelSelector.matchLabels"),
+					"BadValue": Equal("foo$bar"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeForbidden),
+					"Field":  Equal("foo"),
+					"Detail": Equal("matchLabels cannot be set when labelSelectors are used"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeForbidden),
+					"Field":  Equal("foo"),
+					"Detail": Equal("matchLabels cannot be set when labelSelectors are used"),
 				}))))
 		})
 	})
+
+	DescribeTable("#MatchesNamespacedObjectSelector", func(namespacedObjectSelector option.NamespacedObjectSelector, objectLabels map[string]string, namespaceLabels map[string]string, expected bool) {
+		matches, err := namespacedObjectSelector.Matches(objectLabels, namespaceLabels)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(matches).To(Equal(expected))
+	},
+		Entry("should match with valid labels",
+			option.NamespacedObjectSelector{
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"foo": "bar"},
+				},
+				NamespaceLabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"bar": "foo"},
+				},
+				MatchLabels:          map[string]string{"foo": "baz"},
+				NamespaceMatchLabels: map[string]string{"baz": "foo"},
+			},
+			map[string]string{"foo": "bar", "foobar": "foo"}, map[string]string{"bar": "foo"}, true,
+		),
+		Entry("should not match with invalid labels",
+			option.NamespacedObjectSelector{
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"foo": "baz"},
+				},
+				NamespaceLabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"baz": "foo"},
+				},
+				MatchLabels:          map[string]string{"foo": "bar"},
+				NamespaceMatchLabels: map[string]string{"bar": "foo"},
+			},
+			map[string]string{"foo": "bar"}, map[string]string{"bar": "foo"}, false,
+		),
+		Entry("should match with matchLabels when labelSelector or namespaceLabelSelector is not set",
+			option.NamespacedObjectSelector{
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"foo": "baz"},
+				},
+				MatchLabels:          map[string]string{"foo": "bar"},
+				NamespaceMatchLabels: map[string]string{"bar": "foo"},
+			},
+			map[string]string{"foo": "bar", "foobar": "foo"}, map[string]string{"bar": "foo"}, true,
+		),
+		Entry("should not match with matchLabels with invalid labels",
+			option.NamespacedObjectSelector{
+				NamespaceLabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"baz": "foo"},
+				},
+				MatchLabels:          map[string]string{"foo": "bar"},
+				NamespaceMatchLabels: map[string]string{"bar": "foo"},
+			},
+			map[string]string{"foo": "bar"}, map[string]string{"baz": "foo"}, false,
+		),
+	)
 })
