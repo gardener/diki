@@ -50,7 +50,7 @@ func (r *Ruleset) validateV2R3RuleOptions(ruleOptions map[string]internalconfig.
 	allErrs = append(allErrs, validateV2R3Options[disaoption.Options242442](ruleOptions[sharedrules.ID242442].Args, fldPath.Index(ruleOptions[sharedrules.ID242442].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV2R3Options[disaoption.FileOwnerOptions](ruleOptions[sharedrules.ID242445].Args, fldPath.Index(ruleOptions[sharedrules.ID242445].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV2R3Options[disaoption.FileOwnerOptions](ruleOptions[sharedrules.ID242446].Args, fldPath.Index(ruleOptions[sharedrules.ID242446].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV2R3Options[disaoption.FileOwnerOptions](ruleOptions[sharedrules.ID242451].Args, fldPath.Index(ruleOptions[sharedrules.ID242445].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R3Options[disaoption.FileOwnerOptions](ruleOptions[sharedrules.ID242451].Args, fldPath.Index(ruleOptions[sharedrules.ID242451].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV2R3Options[sharedrules.Options245543](ruleOptions[sharedrules.ID245543].Args, fldPath.Index(ruleOptions[sharedrules.ID245543].Index).Child("args"))...)
 
 	return allErrs.ToAggregate()
