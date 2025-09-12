@@ -17,7 +17,8 @@ import (
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -33,7 +34,7 @@ type Rule242442 struct {
 
 type Options242442 struct {
 	KubeProxyMatchLabels map[string]string `json:"kubeProxyMatchLabels" yaml:"kubeProxyMatchLabels"`
-	ImageSelector        *option.Options242442
+	ImageSelector        *disaoption.Options242442
 }
 
 var _ option.Option = (*Options242442)(nil)
@@ -131,7 +132,7 @@ func (r *Rule242442) checkImages(pods []corev1.Pod, target rule.Target) []rule.C
 			if ref, ok := images[imageBase]; ok && ref != imageRef {
 				if _, reported := reportedImages[imageBase]; !reported {
 					reportedImages[imageBase] = struct{}{}
-					if r.Options != nil && r.Options.ImageSelector != nil && slices.ContainsFunc(r.Options.ImageSelector.ExpectedVersionedImages, func(expectedImage option.ExpectedVersionedImage) bool {
+					if r.Options != nil && r.Options.ImageSelector != nil && slices.ContainsFunc(r.Options.ImageSelector.ExpectedVersionedImages, func(expectedImage disaoption.ExpectedVersionedImage) bool {
 						return expectedImage.Name == imageBase
 					}) {
 						checkResults = append(checkResults, rule.WarningCheckResult("Image is used with more than one versions.", target.With("image", imageBase)))

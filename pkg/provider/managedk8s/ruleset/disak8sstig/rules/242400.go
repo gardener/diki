@@ -29,8 +29,9 @@ import (
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/images"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 	"github.com/gardener/diki/pkg/shared/provider"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -49,7 +50,7 @@ type Rule242400 struct {
 }
 
 type Options242400 struct {
-	option.KubeProxyOptions
+	disaoption.KubeProxyOptions
 	KubeProxyMatchLabels map[string]string `json:"kubeProxyMatchLabels" yaml:"kubeProxyMatchLabels"`
 }
 

@@ -20,13 +20,12 @@ import (
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
-	disaoptions "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var (
-	_ rule.Rule          = &Rule2001{}
-	_ rule.Severity      = &Rule2001{}
-	_ disaoptions.Option = &Options2001{}
+	_ rule.Rule     = &Rule2001{}
+	_ rule.Severity = &Rule2001{}
+	_ option.Option = &Options2001{}
 )
 
 type Rule2001 struct {

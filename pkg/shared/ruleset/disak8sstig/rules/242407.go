@@ -22,8 +22,9 @@ import (
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/images"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 	"github.com/gardener/diki/pkg/shared/provider"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var (
@@ -46,7 +47,7 @@ type Options242407 struct {
 var _ option.Option = (*Options242407)(nil)
 
 func (o Options242407) Validate(fldPath *field.Path) field.ErrorList {
-	return option.ValidateLabelNames(o.NodeGroupByLabels, fldPath.Child("nodeGroupByLabels"))
+	return disaoption.ValidateLabelNames(o.NodeGroupByLabels, fldPath.Child("nodeGroupByLabels"))
 }
 
 func (r *Rule242407) ID() string {

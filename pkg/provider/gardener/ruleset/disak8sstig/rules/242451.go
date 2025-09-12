@@ -26,8 +26,9 @@ import (
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/images"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 	"github.com/gardener/diki/pkg/shared/provider"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -48,8 +49,8 @@ type Rule242451 struct {
 }
 
 type Options242451 struct {
-	option.KubeProxyOptions
-	*option.FileOwnerOptions
+	disaoption.KubeProxyOptions
+	*disaoption.FileOwnerOptions
 }
 
 var _ option.Option = (*Options242451)(nil)
@@ -76,7 +77,7 @@ func (r *Rule242451) Severity() rule.SeverityLevel {
 func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
 		checkResults       []rule.CheckResult
-		fileOwnerOptions   option.FileOwnerOptions
+		fileOwnerOptions   disaoption.FileOwnerOptions
 		etcdMainSelector   = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-main"})
 		etcdEventsSelector = labels.SelectorFromSet(labels.Set{"app.kubernetes.io/part-of": "etcd-events"})
 		kubeProxySelector  = labels.SelectorFromSet(labels.Set{"role": "proxy"})
@@ -231,7 +232,7 @@ func (r *Rule242451) checkPods(
 	pods []corev1.Pod,
 	replicaSets []appsv1.ReplicaSet,
 	nodeName, imageName string,
-	options option.FileOwnerOptions,
+	options disaoption.FileOwnerOptions,
 	target rule.Target) []rule.CheckResult {
 	var (
 		checkResults     []rule.CheckResult
@@ -330,7 +331,7 @@ func (r *Rule242451) checkPods(
 func (r *Rule242451) checkKubelet(
 	ctx context.Context,
 	nodeName, imageName string,
-	options option.FileOwnerOptions,
+	options disaoption.FileOwnerOptions,
 	target rule.Target) []rule.CheckResult {
 	var (
 		checkResults      []rule.CheckResult

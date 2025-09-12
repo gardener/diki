@@ -10,13 +10,9 @@ import (
 	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-)
 
-// Option that can be validated in order to ensure
-// that configurations are correctly defined
-type Option interface {
-	Validate(fldPath *field.Path) field.ErrorList
-}
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+)
 
 // PodSelector contains generalized options for matching entities by their attribute labels
 type PodSelector struct {
@@ -24,7 +20,7 @@ type PodSelector struct {
 	NamespaceMatchLabels map[string]string `json:"namespaceMatchLabels" yaml:"namespaceMatchLabels"`
 }
 
-var _ Option = (*PodSelector)(nil)
+var _ option.Option = (*PodSelector)(nil)
 
 // Validate validates that option configurations are correctly defined.
 func (e PodSelector) Validate(fldPath *field.Path) field.ErrorList {
@@ -50,7 +46,7 @@ type FileOwnerOptions struct {
 	ExpectedFileOwner ExpectedOwner `json:"expectedFileOwner" yaml:"expectedFileOwner"`
 }
 
-var _ Option = (*FileOwnerOptions)(nil)
+var _ option.Option = (*FileOwnerOptions)(nil)
 
 // ExpectedOwner contains expected user and group owners
 type ExpectedOwner struct {
@@ -93,7 +89,7 @@ type Options242414 struct {
 	AcceptedPods []AcceptedPods242414 `json:"acceptedPods" yaml:"acceptedPods"`
 }
 
-var _ Option = (*Options242414)(nil)
+var _ option.Option = (*Options242414)(nil)
 
 // AcceptedPods242414 contains option specifications for accepted pods
 type AcceptedPods242414 struct {
@@ -127,7 +123,7 @@ type Options242415 struct {
 	AcceptedPods []AcceptedPods242415 `json:"acceptedPods" yaml:"acceptedPods"`
 }
 
-var _ Option = (*Options242415)(nil)
+var _ option.Option = (*Options242415)(nil)
 
 // AcceptedPods242415 contains option specifications for accepted pods
 type AcceptedPods242415 struct {
@@ -156,7 +152,7 @@ func (o Options242415) Validate(fldPath *field.Path) field.ErrorList {
 	return allErrs
 }
 
-var _ Option = (*Options242442)(nil)
+var _ option.Option = (*Options242442)(nil)
 
 // Options242442 defines a slice of expected container images for rule 242442.
 type Options242442 struct {

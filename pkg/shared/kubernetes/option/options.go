@@ -11,8 +11,13 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"github.com/gardener/diki/pkg/internal/utils"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
+
+// Option that can be validated in order to ensure
+// that configurations are correctly defined
+type Option interface {
+	Validate(fldPath *field.Path) field.ErrorList
+}
 
 // ClusterObjectSelector contains generalized options for matching entities by their attribute labels.
 type ClusterObjectSelector struct {
@@ -22,7 +27,7 @@ type ClusterObjectSelector struct {
 	LabelSelector *metav1.LabelSelector `json:"labelSelector" yaml:"labelSelector"`
 }
 
-var _ option.Option = (*ClusterObjectSelector)(nil)
+var _ Option = (*ClusterObjectSelector)(nil)
 
 // Validate validates that option configurations are correctly defined.
 func (s *ClusterObjectSelector) Validate(fldPath *field.Path) field.ErrorList {
@@ -68,7 +73,7 @@ type NamespacedObjectSelector struct {
 	NamespaceLabelSelector *metav1.LabelSelector `json:"namespaceLabelSelector" yaml:"namespaceLabelSelector"`
 }
 
-var _ option.Option = (*NamespacedObjectSelector)(nil)
+var _ Option = (*NamespacedObjectSelector)(nil)
 
 // Validate validates that option configurations are correctly defined. It accepts a [field.Path] parameter with the fldPath.
 func (s *NamespacedObjectSelector) Validate(fldPath *field.Path) field.ErrorList {
