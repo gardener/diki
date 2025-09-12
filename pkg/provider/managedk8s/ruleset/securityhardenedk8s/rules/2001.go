@@ -127,7 +127,9 @@ func (r *Rule2001) Run(ctx context.Context) (rule.RuleResult, error) {
 			containerTarget := podTarget.With("container", container.Name)
 
 			if container.SecurityContext == nil || allowsPrivilegeEscalation(*container.SecurityContext) {
-				if accepted, justification := r.accepted(pod.Labels, namespaces[pod.Namespace].Labels); accepted {
+				if accepted, justification, err := r.accepted(pod.Labels, namespaces[pod.Namespace].Labels); err != nil {
+					return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), err
+				} else if accepted {
 					msg := cmp.Or(justification, "Pod accepted to escalate privileges.")
 					podCheckResults = append(podCheckResults, rule.AcceptedCheckResult(msg, containerTarget))
 				} else {
@@ -144,17 +146,18 @@ func (r *Rule2001) Run(ctx context.Context) (rule.RuleResult, error) {
 	return rule.Result(r, checkResults...), nil
 }
 
-func (r *Rule2001) accepted(podLabels, namespaceLabels map[string]string) (bool, string) {
+func (r *Rule2001) accepted(podLabels, namespaceLabels map[string]string) (bool, string, error) {
 	if r.Options == nil {
-		return false, ""
+		return false, "", nil
 	}
 
 	for _, acceptedPod := range r.Options.AcceptedPods {
-		if utils.MatchLabels(podLabels, acceptedPod.MatchLabels) &&
-			utils.MatchLabels(namespaceLabels, acceptedPod.NamespaceMatchLabels) {
-			return true, acceptedPod.Justification
+		if matches, err := acceptedPod.Matches(podLabels, namespaceLabels); err != nil {
+			return false, "", err
+		} else if matches {
+			return true, acceptedPod.Justification, nil
 		}
 	}
 
-	return false, ""
+	return false, "", nil
 }

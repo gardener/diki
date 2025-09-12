@@ -14,7 +14,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
@@ -82,7 +81,9 @@ func (r *Rule2004) Run(ctx context.Context) (rule.RuleResult, error) {
 		serviceTarget := kubeutils.TargetWithK8sObject(rule.NewTarget(), v1.TypeMeta{Kind: "Service"}, service.ObjectMeta)
 
 		if service.Spec.Type == corev1.ServiceTypeNodePort {
-			if accepted, justification := r.accepted(service, namespaces[service.Namespace]); accepted {
+			if accepted, justification, err := r.accepted(service.Labels, namespaces[service.Namespace].Labels); err != nil {
+				return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), err
+			} else if accepted {
 				msg := cmp.Or(justification, "Service accepted to be of type NodePort.")
 				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, serviceTarget))
 			} else {
@@ -96,17 +97,18 @@ func (r *Rule2004) Run(ctx context.Context) (rule.RuleResult, error) {
 	return rule.Result(r, checkResults...), nil
 }
 
-func (r *Rule2004) accepted(service corev1.Service, namespace corev1.Namespace) (bool, string) {
+func (r *Rule2004) accepted(serviceLabels, namespaceLabels map[string]string) (bool, string, error) {
 	if r.Options == nil {
-		return false, ""
+		return false, "", nil
 	}
 
 	for _, acceptedService := range r.Options.AcceptedServices {
-		if utils.MatchLabels(service.Labels, acceptedService.MatchLabels) &&
-			utils.MatchLabels(namespace.Labels, acceptedService.NamespaceMatchLabels) {
-			return true, acceptedService.Justification
+		if matches, err := acceptedService.Matches(serviceLabels, namespaceLabels); err != nil {
+			return false, "", err
+		} else if matches {
+			return true, acceptedService.Justification, nil
 		}
 	}
 
-	return false, ""
+	return false, "", nil
 }

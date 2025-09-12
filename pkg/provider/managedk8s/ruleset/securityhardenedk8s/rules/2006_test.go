@@ -174,11 +174,15 @@ var _ = Describe("#2006", func() {
 			AcceptedRoles: []option.AcceptedNamespacedObject{
 				{
 					NamespacedObjectSelector: option.NamespacedObjectSelector{
-						MatchLabels: map[string]string{
-							"foo": "bar",
+						LabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
 						},
-						NamespaceMatchLabels: map[string]string{
-							"foo": "bar",
+						NamespaceLabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
 						},
 					},
 				},
