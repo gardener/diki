@@ -222,10 +222,10 @@ providers:                   # contains information about known providers
     #       - "volume-b"
     #     - labelSelector:
     #         matchLabels:
-    #           foo: bar
+    #           foo: baz
     #       namespaceLabelSelector:
     #         matchLabels:
-    #           foo: bar
+    #           foo: baz
     #       justification: "justification"
     #       volumeNames:
     #       - "*" # a wildcard can be used to match against all volumes in an accepted pod
