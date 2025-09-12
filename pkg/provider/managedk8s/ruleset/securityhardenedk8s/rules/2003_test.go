@@ -185,11 +185,15 @@ var _ = Describe("#2003", func() {
 					{
 						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
 							NamespacedObjectSelector: option.NamespacedObjectSelector{
-								NamespaceMatchLabels: map[string]string{
-									"foo": "bar",
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"podFoo": "podBar",
+									},
 								},
-								MatchLabels: map[string]string{
-									"podFoo": "podBar",
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"foo": "bar",
+									},
 								},
 							},
 							Justification: "justification 1",
@@ -273,11 +277,15 @@ var _ = Describe("#2003", func() {
 					{
 						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
 							NamespacedObjectSelector: option.NamespacedObjectSelector{
-								NamespaceMatchLabels: map[string]string{
-									"foo": "bar",
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"podFoo": "podBar",
+									},
 								},
-								MatchLabels: map[string]string{
-									"podFoo": "podBar",
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"foo": "bar",
+									},
 								},
 							},
 							Justification: "justification 1",
@@ -340,11 +348,15 @@ var _ = Describe("#2003", func() {
 					{
 						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
 							NamespacedObjectSelector: option.NamespacedObjectSelector{
-								NamespaceMatchLabels: map[string]string{
-									"label": "baz",
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"podFoo": "podBar",
+									},
 								},
-								MatchLabels: map[string]string{
-									"podFoo": "podBar",
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"label": "baz",
+									},
 								},
 							},
 							Justification: "justification 1",
@@ -407,11 +419,15 @@ var _ = Describe("#2003", func() {
 					{
 						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
 							NamespacedObjectSelector: option.NamespacedObjectSelector{
-								NamespaceMatchLabels: map[string]string{
-									"namespace": "foo",
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"pod": "bar",
+									},
 								},
-								MatchLabels: map[string]string{
-									"pod": "bar",
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"namespace": "foo",
+									},
 								},
 							},
 							Justification: "accepted wildcard",
@@ -490,11 +506,15 @@ var _ = Describe("#2003", func() {
 					{
 						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
 							NamespacedObjectSelector: option.NamespacedObjectSelector{
-								MatchLabels: map[string]string{
-									"foo": "bar",
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"foo": "bar",
+									},
 								},
-								NamespaceMatchLabels: map[string]string{
-									"foo": "bar",
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"foo": "bar",
+									},
 								},
 							},
 						},

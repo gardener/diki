@@ -122,8 +122,9 @@ func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 				volume.Projected == nil &&
 				volume.Secret == nil {
 				uses = true
-				accepted, justification := r.accepted(volume, pod, allNamespaces[pod.Namespace])
-				if accepted {
+				if accepted, justification, err := r.accepted(pod.Labels, allNamespaces[pod.Namespace].Labels, volume); err != nil {
+					return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), err
+				} else if accepted {
 					checkResults = append(checkResults, rule.AcceptedCheckResult(justification, volumeTarget))
 				} else {
 					checkResults = append(checkResults, rule.FailedCheckResult("Pod uses not allowed volume type.", volumeTarget))
@@ -138,18 +139,18 @@ func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 	return rule.Result(r, checkResults...), nil
 }
 
-func (r *Rule2003) accepted(volume corev1.Volume, pod corev1.Pod, namespace corev1.Namespace) (bool, string) {
+func (r *Rule2003) accepted(podLabels, namespaceLabels map[string]string, volume corev1.Volume) (bool, string, error) {
 	if r.Options == nil {
-		return false, ""
+		return false, "", nil
 	}
 
 	for _, acceptedPod := range r.Options.AcceptedPods {
-		if utils.MatchLabels(pod.Labels, acceptedPod.MatchLabels) && utils.MatchLabels(namespace.Labels, acceptedPod.NamespaceMatchLabels) {
-			if slices.Contains(acceptedPod.VolumeNames, "*") || slices.Contains(acceptedPod.VolumeNames, volume.Name) {
-				return true, acceptedPod.Justification
-			}
+		if matches, err := acceptedPod.Matches(podLabels, namespaceLabels); err != nil {
+			return false, "", err
+		} else if matches && (slices.Contains(acceptedPod.VolumeNames, "*") || slices.Contains(acceptedPod.VolumeNames, volume.Name)) {
+			return true, acceptedPod.Justification, nil
 		}
 	}
 
-	return false, ""
+	return false, "", nil
 }
