@@ -19,7 +19,8 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var (
@@ -39,7 +40,7 @@ type Options242417 struct {
 var _ option.Option = (*Options242417)(nil)
 
 type AcceptedPods242417 struct {
-	option.PodSelector
+	disaoption.PodSelector
 	Justification string `json:"justification" yaml:"justification"`
 	Status        string `json:"status" yaml:"status"`
 }
