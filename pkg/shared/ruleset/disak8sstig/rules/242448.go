@@ -26,8 +26,9 @@ import (
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/images"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 	"github.com/gardener/diki/pkg/shared/provider"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var (
@@ -45,7 +46,7 @@ type Rule242448 struct {
 
 type Options242448 struct {
 	KubeProxyMatchLabels map[string]string `json:"kubeProxyMatchLabels" yaml:"kubeProxyMatchLabels"`
-	*option.FileOwnerOptions
+	*disaoption.FileOwnerOptions
 }
 
 var _ option.Option = (*Options242448)(nil)
@@ -73,7 +74,7 @@ func (r *Rule242448) Severity() rule.SeverityLevel {
 func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
 		checkResults            []rule.CheckResult
-		options                 = option.FileOwnerOptions{}
+		options                 = disaoption.FileOwnerOptions{}
 		kubeProxySelector       = labels.SelectorFromSet(labels.Set{"role": "proxy"})
 		kubeProxyContainerNames = []string{"kube-proxy", "proxy"}
 	)

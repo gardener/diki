@@ -27,8 +27,9 @@ import (
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/images"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 	"github.com/gardener/diki/pkg/shared/provider"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -46,17 +47,17 @@ type Rule242451 struct {
 }
 
 type Options242451 struct {
-	option.KubeProxyOptions
+	disaoption.KubeProxyOptions
 	KubeProxyMatchLabels map[string]string `json:"kubeProxyMatchLabels" yaml:"kubeProxyMatchLabels"`
 	NodeGroupByLabels    []string          `json:"nodeGroupByLabels" yaml:"nodeGroupByLabels"`
-	*option.FileOwnerOptions
+	*disaoption.FileOwnerOptions
 }
 
 var _ option.Option = (*Options242451)(nil)
 
 func (o Options242451) Validate(fldPath *field.Path) field.ErrorList {
 	allErrs := validation.ValidateLabels(o.KubeProxyMatchLabels, fldPath.Child("kubeProxyMatchLabels"))
-	allErrs = append(allErrs, option.ValidateLabelNames(o.NodeGroupByLabels, fldPath.Child("nodeGroupByLabels"))...)
+	allErrs = append(allErrs, disaoption.ValidateLabelNames(o.NodeGroupByLabels, fldPath.Child("nodeGroupByLabels"))...)
 	if o.FileOwnerOptions != nil {
 		return append(allErrs, o.FileOwnerOptions.Validate(fldPath)...)
 	}
@@ -80,7 +81,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults      []rule.CheckResult
 		nodeLabels        []string
 		pods              []corev1.Pod
-		options           option.FileOwnerOptions
+		options           disaoption.FileOwnerOptions
 		kubeProxySelector = labels.SelectorFromSet(labels.Set{"role": "proxy"})
 	)
 
@@ -170,7 +171,7 @@ func (r *Rule242451) checkPods(
 	pods []corev1.Pod,
 	replicaSets []appsv1.ReplicaSet,
 	nodeName, imageName string,
-	options option.FileOwnerOptions,
+	options disaoption.FileOwnerOptions,
 ) []rule.CheckResult {
 	var (
 		checkResults     []rule.CheckResult
@@ -269,7 +270,7 @@ func (r *Rule242451) checkPods(
 func (r *Rule242451) checkKubelet(
 	ctx context.Context,
 	nodeName, imageName string,
-	options option.FileOwnerOptions) []rule.CheckResult {
+	options disaoption.FileOwnerOptions) []rule.CheckResult {
 	var (
 		delimiter         = "\t"
 		checkResults      []rule.CheckResult

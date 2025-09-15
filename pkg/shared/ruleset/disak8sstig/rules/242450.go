@@ -23,8 +23,9 @@ import (
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/images"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 	"github.com/gardener/diki/pkg/shared/provider"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var (
@@ -42,13 +43,13 @@ type Rule242450 struct {
 
 type Options242450 struct {
 	NodeGroupByLabels []string `json:"nodeGroupByLabels" yaml:"nodeGroupByLabels"`
-	*option.FileOwnerOptions
+	*disaoption.FileOwnerOptions
 }
 
 var _ option.Option = (*Options242450)(nil)
 
 func (o Options242450) Validate(fldPath *field.Path) field.ErrorList {
-	allErrs := option.ValidateLabelNames(o.NodeGroupByLabels, fldPath.Child("nodeGroupByLabels"))
+	allErrs := disaoption.ValidateLabelNames(o.NodeGroupByLabels, fldPath.Child("nodeGroupByLabels"))
 	if o.FileOwnerOptions != nil {
 		return append(allErrs, o.FileOwnerOptions.Validate(fldPath)...)
 	}
@@ -71,7 +72,7 @@ func (r *Rule242450) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
 		checkResults []rule.CheckResult
 		nodeLabels   []string
-		options      = option.FileOwnerOptions{}
+		options      = disaoption.FileOwnerOptions{}
 	)
 
 	if r.Options != nil {

@@ -15,7 +15,7 @@ import (
 	internalconfig "github.com/gardener/diki/pkg/internal/config"
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/securityhardenedk8s/rules"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 )
 
 func (r *Ruleset) validateV01RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath *field.Path) error {

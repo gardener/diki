@@ -26,8 +26,8 @@ import (
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/images"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 	"github.com/gardener/diki/pkg/shared/provider"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var (
