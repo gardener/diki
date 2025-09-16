@@ -108,7 +108,7 @@ func (r *Rule2006) Run(ctx context.Context) (rule.RuleResult, error) {
 
 		accepted, justification, err := r.acceptedRole(role.Labels, namespaces[role.Namespace].Labels)
 		if err != nil {
-			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), err
+			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 		}
 		checkResults = append(checkResults, checkRules(role.Rules, accepted, justification, target))
 	}
@@ -118,7 +118,7 @@ func (r *Rule2006) Run(ctx context.Context) (rule.RuleResult, error) {
 
 		accepted, justification, err := r.acceptedClusterRole(clusterRole.Labels)
 		if err != nil {
-			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), err
+			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 		}
 		checkResults = append(checkResults, checkRules(clusterRole.Rules, accepted, justification, target))
 	}

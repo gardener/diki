@@ -82,7 +82,7 @@ func (r *Rule2004) Run(ctx context.Context) (rule.RuleResult, error) {
 
 		if service.Spec.Type == corev1.ServiceTypeNodePort {
 			if accepted, justification, err := r.accepted(service.Labels, namespaces[service.Namespace].Labels); err != nil {
-				return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), err
+				return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 			} else if accepted {
 				msg := cmp.Or(justification, "Service accepted to be of type NodePort.")
 				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, serviceTarget))

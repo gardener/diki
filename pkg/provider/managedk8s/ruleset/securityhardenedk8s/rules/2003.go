@@ -123,7 +123,7 @@ func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 				volume.Secret == nil {
 				uses = true
 				if accepted, justification, err := r.accepted(pod.Labels, allNamespaces[pod.Namespace].Labels, volume); err != nil {
-					return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), err
+					return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 				} else if accepted {
 					checkResults = append(checkResults, rule.AcceptedCheckResult(justification, volumeTarget))
 				} else {

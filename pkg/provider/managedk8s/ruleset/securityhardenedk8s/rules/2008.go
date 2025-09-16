@@ -118,7 +118,7 @@ func (r *Rule2008) Run(ctx context.Context) (rule.RuleResult, error) {
 			if volume.HostPath != nil {
 				uses = true
 				if accepted, justification, err := r.accepted(pod.Labels, namespaces[pod.Namespace].Labels, volume.Name); err != nil {
-					return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), err
+					return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 				} else if accepted {
 					msg := cmp.Or(justification, "Pod accepted to use volume of type hostPath.")
 					checkResults = append(checkResults, rule.AcceptedCheckResult(msg, volumeTarget))

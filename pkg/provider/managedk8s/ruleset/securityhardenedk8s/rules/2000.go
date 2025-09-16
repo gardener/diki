@@ -127,7 +127,7 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 		} else {
 			accepted, justification, err := r.acceptedIngress(namespace.Labels)
 			if err != nil {
-				return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), err
+				return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 			}
 
 			acceptedTarget := target
@@ -155,7 +155,7 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 		} else {
 			accepted, justification, err := r.acceptedEgress(namespace.Labels)
 			if err != nil {
-				return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), err
+				return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 			}
 
 			acceptedTarget := target

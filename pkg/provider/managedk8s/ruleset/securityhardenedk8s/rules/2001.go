@@ -128,7 +128,7 @@ func (r *Rule2001) Run(ctx context.Context) (rule.RuleResult, error) {
 
 			if container.SecurityContext == nil || allowsPrivilegeEscalation(*container.SecurityContext) {
 				if accepted, justification, err := r.accepted(pod.Labels, namespaces[pod.Namespace].Labels); err != nil {
-					return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), err
+					return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 				} else if accepted {
 					msg := cmp.Or(justification, "Pod accepted to escalate privileges.")
 					podCheckResults = append(podCheckResults, rule.AcceptedCheckResult(msg, containerTarget))
