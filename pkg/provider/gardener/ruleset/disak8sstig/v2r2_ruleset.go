@@ -396,16 +396,14 @@ func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsCon
 			Options: &sharedrules.Options242417{
 				AcceptedPods: []sharedrules.AcceptedPods242417{
 					{
-						PodSelector: disaoption.PodSelector{
-							PodMatchLabels: map[string]string{
-								resourcesv1alpha1.ManagedBy: "gardener",
+						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+							NamespacedObjectSelector: option.NamespacedObjectSelector{
+								MatchLabels:          map[string]string{resourcesv1alpha1.ManagedBy: "gardener"},
+								NamespaceMatchLabels: map[string]string{"kubernetes.io/metadata.name": "kube-system"},
 							},
-							NamespaceMatchLabels: map[string]string{
-								"kubernetes.io/metadata.name": "kube-system",
-							},
+							Justification: "Gardener managed pods are not user pods",
 						},
-						Justification: "Gardener managed pods are not user pods",
-						Status:        "Passed",
+						Status: "Passed",
 					},
 				},
 			},

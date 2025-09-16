@@ -17,14 +17,15 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var _ = Describe("#242415", func() {
 	var (
 		fakeSeedClient     client.Client
 		fakeShootClient    client.Client
-		options            *option.Options242415
+		options            *disaoption.Options242415
 		seedPod            *corev1.Pod
 		shootPod           *corev1.Pod
 		ctx                = context.TODO()
@@ -90,7 +91,7 @@ var _ = Describe("#242415", func() {
 				},
 			},
 		}
-		options = &option.Options242415{}
+		options = &disaoption.Options242415{}
 	})
 
 	It("should return correct results when all pods pass", func() {
@@ -191,12 +192,18 @@ var _ = Describe("#242415", func() {
 	})
 
 	It("should return correct results when a pod has accepted environment variables", func() {
-		options = &option.Options242415{
-			AcceptedPods: []option.AcceptedPods242415{
+		options = &disaoption.Options242415{
+			AcceptedPods: []disaoption.AcceptedPods242415{
 				{
-					PodSelector: option.PodSelector{
-						PodMatchLabels:       map[string]string{"foo": "bar"},
-						NamespaceMatchLabels: map[string]string{"foo": "bar"},
+					AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+						NamespacedObjectSelector: option.NamespacedObjectSelector{
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"foo": "bar"},
+							},
+							NamespaceLabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"foo": "bar"},
+							},
+						},
 					},
 					EnvironmentVariables: []string{"SECRET_TEST"},
 				},

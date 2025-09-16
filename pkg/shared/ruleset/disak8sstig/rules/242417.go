@@ -15,12 +15,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/gardener/diki/pkg/internal/utils"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
-	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var (
@@ -40,9 +38,8 @@ type Options242417 struct {
 var _ option.Option = (*Options242417)(nil)
 
 type AcceptedPods242417 struct {
-	disaoption.PodSelector
-	Justification string `json:"justification" yaml:"justification"`
-	Status        string `json:"status" yaml:"status"`
+	option.AcceptedNamespacedObject
+	Status string `json:"status" yaml:"status"`
 }
 
 func (o Options242417) Validate(fldPath *field.Path) field.ErrorList {
@@ -109,22 +106,28 @@ func (r *Rule242417) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		for _, pod := range filteredPods {
-			target := kubeutils.TargetWithPod(rule.NewTarget(), pod, replicaSets)
+			var (
+				accepted    bool
+				msg, status string
+				target      = kubeutils.TargetWithPod(rule.NewTarget(), pod, replicaSets)
+			)
 
-			acceptedPodIdx := slices.IndexFunc(acceptedPods, func(acceptedPod AcceptedPods242417) bool {
-				return utils.MatchLabels(pod.Labels, acceptedPod.PodMatchLabels) &&
-					utils.MatchLabels(allNamespaces[namespace].Labels, acceptedPod.NamespaceMatchLabels)
-			})
+			for _, acceptedPod := range acceptedPods {
+				if matches, err := acceptedPod.Matches(pod.Labels, allNamespaces[namespace].Labels); err != nil {
+					return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), err
+				} else if matches {
+					accepted = true
+					msg = strings.TrimSpace(acceptedPod.Justification)
+					status = strings.TrimSpace(acceptedPod.Status)
+					break
+				}
+			}
 
-			if acceptedPodIdx < 0 {
+			if !accepted {
 				checkResults = append(checkResults, rule.FailedCheckResult("Found user pods in system namespaces.", target))
 				continue
 			}
 
-			acceptedPod := r.Options.AcceptedPods[acceptedPodIdx]
-
-			msg := strings.TrimSpace(acceptedPod.Justification)
-			status := strings.TrimSpace(acceptedPod.Status)
 			switch status {
 			case "Passed":
 				if len(msg) == 0 {

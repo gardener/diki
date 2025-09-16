@@ -15,7 +15,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
@@ -60,12 +59,15 @@ func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NamespaceList"))), nil
 	}
-	checkResults := r.checkPods(filteredPods, replicaSets, namespaces)
+	checkResults, err := r.checkPods(filteredPods, replicaSets, namespaces)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), err
+	}
 
 	return rule.Result(r, checkResults...), nil
 }
 
-func (r *Rule242414) checkPods(pods []corev1.Pod, replicaSets []appsv1.ReplicaSet, namespaces map[string]corev1.Namespace) []rule.CheckResult {
+func (r *Rule242414) checkPods(pods []corev1.Pod, replicaSets []appsv1.ReplicaSet, namespaces map[string]corev1.Namespace) ([]rule.CheckResult, error) {
 	var checkResults []rule.CheckResult
 	for _, pod := range pods {
 		var (
@@ -76,7 +78,9 @@ func (r *Rule242414) checkPods(pods []corev1.Pod, replicaSets []appsv1.ReplicaSe
 			for _, port := range container.Ports {
 				if port.HostPort != 0 && port.HostPort < 1024 {
 					target := target.With("container", container.Name, "details", fmt.Sprintf("port: %d", port.HostPort))
-					if accepted, justification := r.accepted(pod.Labels, namespaces[pod.Namespace].Labels, port.HostPort); accepted {
+					if accepted, justification, err := r.accepted(pod.Labels, namespaces[pod.Namespace].Labels, port.HostPort); err != nil {
+						return nil, err
+					} else if accepted {
 						msg := cmp.Or(justification, "Pod accepted to have containers using hostPort < 1024.")
 						podCheckResults = append(podCheckResults, rule.AcceptedCheckResult(msg, target))
 					} else {
@@ -90,24 +94,25 @@ func (r *Rule242414) checkPods(pods []corev1.Pod, replicaSets []appsv1.ReplicaSe
 		}
 		checkResults = append(checkResults, podCheckResults...)
 	}
-	return checkResults
+	return checkResults, nil
 }
 
-func (r *Rule242414) accepted(podLabels, namespaceLabels map[string]string, hostPort int32) (bool, string) {
+func (r *Rule242414) accepted(podLabels, namespaceLabels map[string]string, hostPort int32) (bool, string, error) {
 	if r.Options == nil {
-		return false, ""
+		return false, "", nil
 	}
 
 	for _, acceptedPod := range r.Options.AcceptedPods {
-		if utils.MatchLabels(podLabels, acceptedPod.PodMatchLabels) &&
-			utils.MatchLabels(namespaceLabels, acceptedPod.NamespaceMatchLabels) {
+		if matches, err := acceptedPod.Matches(podLabels, namespaceLabels); err != nil {
+			return false, "", err
+		} else if matches {
 			for _, acceptedHostPort := range acceptedPod.Ports {
 				if acceptedHostPort == hostPort {
-					return true, acceptedPod.Justification
+					return true, acceptedPod.Justification, nil
 				}
 			}
 		}
 	}
 
-	return false, ""
+	return false, "", nil
 }

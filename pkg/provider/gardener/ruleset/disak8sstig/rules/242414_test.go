@@ -16,14 +16,15 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var _ = Describe("#242414", func() {
 	var (
 		fakeSeedClient     client.Client
 		fakeShootClient    client.Client
-		options            option.Options242414
+		options            disaoption.Options242414
 		seedPod            *corev1.Pod
 		shootPod           *corev1.Pod
 		ctx                = context.TODO()
@@ -183,22 +184,34 @@ var _ = Describe("#242414", func() {
 	})
 
 	It("should return correct results when options are present", func() {
-		options = option.Options242414{
-			AcceptedPods: []option.AcceptedPods242414{
+		options = disaoption.Options242414{
+			AcceptedPods: []disaoption.AcceptedPods242414{
 				{
-					PodSelector: option.PodSelector{
-						PodMatchLabels:       map[string]string{"foo": "bar"},
-						NamespaceMatchLabels: map[string]string{"foo": "not-bar"},
+					AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+						NamespacedObjectSelector: option.NamespacedObjectSelector{
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"foo": "bar"},
+							},
+							NamespaceLabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"foo": "not-bar"},
+							},
+						},
 					},
 					Ports: []int32{58},
 				},
 				{
-					PodSelector: option.PodSelector{
-						PodMatchLabels:       map[string]string{"foo": "bar"},
-						NamespaceMatchLabels: map[string]string{"foo": "bar"},
+					AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+						NamespacedObjectSelector: option.NamespacedObjectSelector{
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"foo": "bar"},
+							},
+							NamespaceLabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"foo": "bar"},
+							},
+						},
+						Justification: "foo justify",
 					},
-					Justification: "foo justify",
-					Ports:         []int32{53},
+					Ports: []int32{53},
 				},
 			},
 		}
