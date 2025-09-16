@@ -45,20 +45,24 @@ providers:
     - ruleID: "242414"
       args:
         acceptedPods:
-        - podMatchLabels:
-            k8s-app: node-local-dns
-          namespaceMatchLabels:
-            kubernetes.io/metadata.name: kube-system
+        - labelSelector:
+            matchLabels:
+              k8s-app: node-local-dns
+          namespaceLabelSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
           justification: "Node local dns requires port 53 in order to operate properly."
           ports:
           - 53
     - ruleID: "242417"
       args:
         acceptedPods:
-        - podMatchLabels:
-            resources.gardener.cloud/managed-by: gardener
-          namespaceMatchLabels:
-            kubernetes.io/metadata.name: kube-system
+        - labelSelector:
+            matchLabels:
+              resources.gardener.cloud/managed-by: gardener
+          namespaceLabelSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
           justification: "Pods managed by Gardener are not considered as user pods."
     - ruleID: "242449"
       args:

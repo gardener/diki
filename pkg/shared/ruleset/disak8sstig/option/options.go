@@ -14,33 +14,6 @@ import (
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 )
 
-// PodSelector contains generalized options for matching entities by their attribute labels
-type PodSelector struct {
-	PodMatchLabels       map[string]string `json:"podMatchLabels" yaml:"podMatchLabels"`
-	NamespaceMatchLabels map[string]string `json:"namespaceMatchLabels" yaml:"namespaceMatchLabels"`
-}
-
-var _ option.Option = (*PodSelector)(nil)
-
-// Validate validates that option configurations are correctly defined.
-func (e PodSelector) Validate(fldPath *field.Path) field.ErrorList {
-	var (
-		allErrs field.ErrorList
-	)
-
-	if len(e.NamespaceMatchLabels) == 0 {
-		allErrs = append(allErrs, field.Required(fldPath.Child("namespaceMatchLabels"), "must not be empty"))
-	}
-
-	if len(e.PodMatchLabels) == 0 {
-		allErrs = append(allErrs, field.Required(fldPath.Child("podMatchLabels"), "must not be empty"))
-	}
-
-	allErrs = append(allErrs, metav1validation.ValidateLabels(e.NamespaceMatchLabels, fldPath.Child("namespaceMatchLabels"))...)
-	allErrs = append(allErrs, metav1validation.ValidateLabels(e.PodMatchLabels, fldPath.Child("podMatchLabels"))...)
-	return allErrs
-}
-
 // FileOwnerOptions contains expected user and group owners for files
 type FileOwnerOptions struct {
 	ExpectedFileOwner ExpectedOwner `json:"expectedFileOwner" yaml:"expectedFileOwner"`
@@ -93,9 +66,8 @@ var _ option.Option = (*Options242414)(nil)
 
 // AcceptedPods242414 contains option specifications for accepted pods
 type AcceptedPods242414 struct {
-	PodSelector
-	Justification string  `json:"justification" yaml:"justification"`
-	Ports         []int32 `json:"ports" yaml:"ports"`
+	option.AcceptedNamespacedObject
+	Ports []int32 `json:"ports" yaml:"ports"`
 }
 
 // Validate validates that option configurations are correctly defined.
@@ -127,8 +99,7 @@ var _ option.Option = (*Options242415)(nil)
 
 // AcceptedPods242415 contains option specifications for accepted pods
 type AcceptedPods242415 struct {
-	PodSelector
-	Justification        string   `json:"justification" yaml:"justification"`
+	option.AcceptedNamespacedObject
 	EnvironmentVariables []string `json:"environmentVariables" yaml:"environmentVariables"`
 }
 

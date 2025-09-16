@@ -8,16 +8,18 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var _ = Describe("options", func() {
 	Describe("#ValidateFileOwnerOptions", func() {
 		It("should correctly validate options", func() {
-			options := option.FileOwnerOptions{
-				ExpectedFileOwner: option.ExpectedOwner{
+			options := disaoption.FileOwnerOptions{
+				ExpectedFileOwner: disaoption.ExpectedOwner{
 					Users:  []string{"-1", "0", "100"},
 					Groups: []string{"", "asd", "111"},
 				},
@@ -42,123 +44,44 @@ var _ = Describe("options", func() {
 			))
 		})
 	})
-	Describe("#ValidatePodSelector", func() {
-		It("should correctly validate labels", func() {
-			podAttributes := []option.PodSelector{
-				{
-					NamespaceMatchLabels: map[string]string{"_foo": "bar"},
-					PodMatchLabels:       map[string]string{"foo": "bar."},
-				},
-				{
-					NamespaceMatchLabels: map[string]string{"foo?baz": "bar"},
-					PodMatchLabels:       map[string]string{"foo": "bar"},
-				},
-				{
-					NamespaceMatchLabels: map[string]string{"foo": "bar"},
-					PodMatchLabels:       map[string]string{"at_ta": "bar"},
-				},
-				{
-					NamespaceMatchLabels: map[string]string{"this": "is_a"},
-					PodMatchLabels:       map[string]string{"Valid": "label-pair"},
-				},
-				{
-					NamespaceMatchLabels: map[string]string{"foo": "ba/r"},
-					PodMatchLabels:       map[string]string{"at$a": "bar"},
-				},
-				{
-					NamespaceMatchLabels: map[string]string{"label": "value"},
-				},
-				{
-					PodMatchLabels: map[string]string{"label": "value"},
-				},
-				{
-					NamespaceMatchLabels: map[string]string{},
-					PodMatchLabels:       map[string]string{"at_ta": "bar"},
-				},
-				{
-					NamespaceMatchLabels: map[string]string{"foo": "bar"},
-					PodMatchLabels:       map[string]string{},
-				},
-			}
-
-			var result field.ErrorList
-			for _, p := range podAttributes {
-				result = append(result, p.Validate(field.NewPath("foo"))...)
-			}
-
-			Expect(result).To(ConsistOf(
-				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("foo.namespaceMatchLabels"),
-					"BadValue": Equal("_foo"),
-				})),
-				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("foo.podMatchLabels"),
-					"BadValue": Equal("bar."),
-				})), PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("foo.namespaceMatchLabels"),
-					"BadValue": Equal("foo?baz"),
-				})), PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("foo.namespaceMatchLabels"),
-					"BadValue": Equal("ba/r"),
-				})), PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("foo.podMatchLabels"),
-					"BadValue": Equal("at$a"),
-				})), PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("foo.namespaceMatchLabels"),
-					"Detail": Equal("must not be empty"),
-				})), PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("foo.namespaceMatchLabels"),
-					"Detail": Equal("must not be empty"),
-				})), PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("foo.podMatchLabels"),
-					"Detail": Equal("must not be empty"),
-				})), PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("foo.podMatchLabels"),
-					"Detail": Equal("must not be empty"),
-				}))))
-		})
-	})
 	Describe("#ValidateOptions242414", func() {
 		It("should correctly validate options", func() {
-			options := option.Options242414{
-				AcceptedPods: []option.AcceptedPods242414{
+			options := disaoption.Options242414{
+				AcceptedPods: []disaoption.AcceptedPods242414{
 					{
-						PodSelector: option.PodSelector{
-							PodMatchLabels: map[string]string{
-								"foo": "bar",
-							},
-							NamespaceMatchLabels: map[string]string{
-								"foo": "bar",
+						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+							NamespacedObjectSelector: option.NamespacedObjectSelector{
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"foo": "bar"},
+								},
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"foo": "bar"},
+								},
 							},
 						},
 					},
 					{
-						PodSelector: option.PodSelector{
-							PodMatchLabels: map[string]string{
-								"foo": "bar",
-							},
-							NamespaceMatchLabels: map[string]string{
-								"foo": "bar",
+						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+							NamespacedObjectSelector: option.NamespacedObjectSelector{
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"foo": "bar"},
+								},
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"foo": "bar"},
+								},
 							},
 						},
 						Ports: []int32{0, 100},
 					},
 					{
-						PodSelector: option.PodSelector{
-							PodMatchLabels: map[string]string{
-								"foo": "bar",
-							},
-							NamespaceMatchLabels: map[string]string{
-								"foo": "bar",
+						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+							NamespacedObjectSelector: option.NamespacedObjectSelector{
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"foo": "bar"},
+								},
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"foo": "bar"},
+								},
 							},
 						},
 						Ports: []int32{-1},
@@ -185,26 +108,30 @@ var _ = Describe("options", func() {
 	})
 	Describe("#ValidateOptions242415", func() {
 		It("should correctly validate options", func() {
-			options := option.Options242415{
-				AcceptedPods: []option.AcceptedPods242415{
+			options := disaoption.Options242415{
+				AcceptedPods: []disaoption.AcceptedPods242415{
 					{
-						PodSelector: option.PodSelector{
-							PodMatchLabels: map[string]string{
-								"foo": "bar",
-							},
-							NamespaceMatchLabels: map[string]string{
-								"foo": "bar",
+						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+							NamespacedObjectSelector: option.NamespacedObjectSelector{
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"foo": "bar"},
+								},
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"foo": "bar"},
+								},
 							},
 						},
 						EnvironmentVariables: []string{"asd=dsa"},
 					},
 					{
-						PodSelector: option.PodSelector{
-							PodMatchLabels: map[string]string{
-								"foo": "bar",
-							},
-							NamespaceMatchLabels: map[string]string{
-								"foo": "bar",
+						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+							NamespacedObjectSelector: option.NamespacedObjectSelector{
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"foo": "bar"},
+								},
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"foo": "bar"},
+								},
 							},
 						},
 					},
@@ -230,7 +157,7 @@ var _ = Describe("options", func() {
 
 	Describe("#ValidateOptions242442", func() {
 		It("should deny empty expected images list", func() {
-			options := option.Options242442{}
+			options := disaoption.Options242442{}
 
 			result := options.Validate(field.NewPath("foo"))
 
@@ -244,8 +171,8 @@ var _ = Describe("options", func() {
 		})
 
 		It("should correctly validate options", func() {
-			options := option.Options242442{
-				ExpectedVersionedImages: []option.ExpectedVersionedImage{
+			options := disaoption.Options242442{
+				ExpectedVersionedImages: []disaoption.ExpectedVersionedImage{
 					{
 						Name: "foo",
 					},

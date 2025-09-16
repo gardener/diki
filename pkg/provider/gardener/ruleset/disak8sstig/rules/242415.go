@@ -15,7 +15,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
@@ -66,7 +65,10 @@ func (r *Rule242415) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), seedTarget.With("kind", "NamespaceList"))), nil
 	}
-	checkResults := r.checkPods(filteredSeedPods, seedNamespaces, seedReplicaSets, seedTarget)
+	checkResults, err := r.checkPods(filteredSeedPods, seedNamespaces, seedReplicaSets, seedTarget)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+	}
 
 	shootPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
 	if err != nil {
@@ -84,12 +86,16 @@ func (r *Rule242415) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), shootTarget.With("kind", "NamespaceList"))), nil
 	}
-	checkResults = append(checkResults, r.checkPods(filteredShootPods, shootNamespaces, shootReplicaSets, shootTarget)...)
+	shootCheckResults, err := r.checkPods(filteredShootPods, shootNamespaces, shootReplicaSets, shootTarget)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+	}
+	checkResults = append(checkResults, shootCheckResults...)
 
 	return rule.Result(r, checkResults...), nil
 }
 
-func (r *Rule242415) checkPods(pods []corev1.Pod, namespaces map[string]corev1.Namespace, replicaSets []appsv1.ReplicaSet, clusterTarget rule.Target) []rule.CheckResult {
+func (r *Rule242415) checkPods(pods []corev1.Pod, namespaces map[string]corev1.Namespace, replicaSets []appsv1.ReplicaSet, clusterTarget rule.Target) ([]rule.CheckResult, error) {
 	var checkResults []rule.CheckResult
 	for _, pod := range pods {
 		var (
@@ -100,7 +106,9 @@ func (r *Rule242415) checkPods(pods []corev1.Pod, namespaces map[string]corev1.N
 			for _, env := range container.Env {
 				if env.ValueFrom != nil && env.ValueFrom.SecretKeyRef != nil {
 					containerTarget := target.With("container", container.Name, "details", fmt.Sprintf("variableName: %s, keyRef: %s", env.Name, env.ValueFrom.SecretKeyRef.Key))
-					if accepted, justification := r.accepted(pod.Labels, namespaces[pod.Namespace].Labels, env.Name); accepted {
+					if accepted, justification, err := r.accepted(pod.Labels, namespaces[pod.Namespace].Labels, env.Name); err != nil {
+						return nil, err
+					} else if accepted {
 						msg := cmp.Or(justification, "Pod accepted to use environment to inject secret.")
 						podCheckResults = append(podCheckResults, rule.AcceptedCheckResult(msg, containerTarget))
 					} else {
@@ -114,24 +122,25 @@ func (r *Rule242415) checkPods(pods []corev1.Pod, namespaces map[string]corev1.N
 		}
 		checkResults = append(checkResults, podCheckResults...)
 	}
-	return checkResults
+	return checkResults, nil
 }
 
-func (r *Rule242415) accepted(podLabels, namespaceLabels map[string]string, environmentVariable string) (bool, string) {
+func (r *Rule242415) accepted(podLabels, namespaceLabels map[string]string, environmentVariable string) (bool, string, error) {
 	if r.Options == nil {
-		return false, ""
+		return false, "", nil
 	}
 
 	for _, acceptedPod := range r.Options.AcceptedPods {
-		if utils.MatchLabels(podLabels, acceptedPod.PodMatchLabels) &&
-			utils.MatchLabels(namespaceLabels, acceptedPod.NamespaceMatchLabels) {
+		if matches, err := acceptedPod.Matches(podLabels, namespaceLabels); err != nil {
+			return false, "", err
+		} else if matches {
 			for _, acceptedEnvironmentVariable := range acceptedPod.EnvironmentVariables {
 				if acceptedEnvironmentVariable == environmentVariable {
-					return true, acceptedPod.Justification
+					return true, acceptedPod.Justification, nil
 				}
 			}
 		}
 	}
 
-	return false, ""
+	return false, "", nil
 }

@@ -19,6 +19,7 @@ import (
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -52,19 +53,35 @@ var _ = Describe("#242383", func() {
 		options = &rules.Options242383{
 			AcceptedResources: []rules.AcceptedResources242383{
 				{
-					ObjectSelector: rules.ObjectSelector{
-						APIVersion:           "v1",
-						Kind:                 "Pod",
-						MatchLabels:          map[string]string{},
-						NamespaceMatchLabels: map[string]string{"random_1": "value_1"},
+					AcceptedObjectSelector: rules.AcceptedObjectSelector{
+						APIVersion: "v1",
+						Kind:       "Pod",
+						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+							NamespacedObjectSelector: option.NamespacedObjectSelector{
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{},
+								},
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"random_1": "value_1"},
+								},
+							},
+						},
 					},
 				},
 				{
-					ObjectSelector: rules.ObjectSelector{
-						APIVersion:           "v1",
-						Kind:                 "Pod",
-						MatchLabels:          map[string]string{},
-						NamespaceMatchLabels: map[string]string{"random_2": "value_2"},
+					AcceptedObjectSelector: rules.AcceptedObjectSelector{
+						APIVersion: "v1",
+						Kind:       "Pod",
+						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+							NamespacedObjectSelector: option.NamespacedObjectSelector{
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{},
+								},
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"random_2": "value_2"},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -130,9 +147,9 @@ var _ = Describe("#242383", func() {
 		pod4.Labels["compliance.gardener.cloud/role"] = "diki-privileged-pod"
 		Expect(fakeClient.Create(ctx, pod4)).To(Succeed())
 
-		options.AcceptedResources[0].MatchLabels["label"] = "value"
+		options.AcceptedResources[0].LabelSelector.MatchLabels["label"] = "value"
 		options.AcceptedResources[0].Status = "Passed"
-		options.AcceptedResources[1].MatchLabels["label"] = "value"
+		options.AcceptedResources[1].LabelSelector.MatchLabels["label"] = "value"
 		options.AcceptedResources[1].Status = "Passed"
 		r := &rules.Rule242383{
 			Client:  fakeClient,
@@ -356,30 +373,46 @@ var _ = Describe("#242383", func() {
 		pod4.Labels["compliance.gardener.cloud/role"] = "diki-privileged-pod"
 		Expect(fakeClient.Create(ctx, pod4)).To(Succeed())
 
-		options.AcceptedResources[0].MatchLabels["foo"] = "bar"
-		options.AcceptedResources[0].MatchLabels["bar"] = "foo"
+		options.AcceptedResources[0].LabelSelector.MatchLabels["foo"] = "bar"
+		options.AcceptedResources[0].LabelSelector.MatchLabels["bar"] = "foo"
 		options.AcceptedResources[0].Status = "Accepted"
 		options.AcceptedResources[0].Justification = "Accept pod."
 
-		options.AcceptedResources[1].MatchLabels["foo"] = "bar"
-		options.AcceptedResources[1].MatchLabels["bar"] = "foo"
+		options.AcceptedResources[1].LabelSelector.MatchLabels["foo"] = "bar"
+		options.AcceptedResources[1].LabelSelector.MatchLabels["bar"] = "foo"
 		options.AcceptedResources[1].Status = "Accepted"
 		options.AcceptedResources[1].Justification = "Accept pod."
 
 		options.AcceptedResources = append(options.AcceptedResources, rules.AcceptedResources242383{
-			ObjectSelector: rules.ObjectSelector{
-				APIVersion:           "v1",
-				Kind:                 "*",
-				MatchLabels:          map[string]string{"foo": "bar"},
-				NamespaceMatchLabels: map[string]string{"random_2": "value_2"},
+			AcceptedObjectSelector: rules.AcceptedObjectSelector{
+				APIVersion: "v1",
+				Kind:       "*",
+				AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+					NamespacedObjectSelector: option.NamespacedObjectSelector{
+						LabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{"foo": "bar"},
+						},
+						NamespaceLabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{"random_2": "value_2"},
+						},
+					},
+				},
 			},
 		})
 		options.AcceptedResources = append(options.AcceptedResources, rules.AcceptedResources242383{
-			ObjectSelector: rules.ObjectSelector{
-				APIVersion:           "v1",
-				Kind:                 "*",
-				MatchLabels:          map[string]string{"foo-bar": "bar"},
-				NamespaceMatchLabels: map[string]string{"random_1": "value_1"},
+			AcceptedObjectSelector: rules.AcceptedObjectSelector{
+				APIVersion: "v1",
+				Kind:       "*",
+				AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+					NamespacedObjectSelector: option.NamespacedObjectSelector{
+						LabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{"foo-bar": "bar"},
+						},
+						NamespaceLabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{"random_1": "value_1"},
+						},
+					},
+				},
 			},
 			Status: "fake",
 		})
@@ -406,47 +439,87 @@ var _ = Describe("#242383", func() {
 			options = &rules.Options242383{
 				AcceptedResources: []rules.AcceptedResources242383{
 					{
-						ObjectSelector: rules.ObjectSelector{
-							APIVersion:           "v1",
-							Kind:                 "Pod",
-							MatchLabels:          map[string]string{"bar": "foo"},
-							NamespaceMatchLabels: map[string]string{"foo": "bar"},
+						AcceptedObjectSelector: rules.AcceptedObjectSelector{
+							APIVersion: "v1",
+							Kind:       "Pod",
+							AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+								NamespacedObjectSelector: option.NamespacedObjectSelector{
+									LabelSelector: &metav1.LabelSelector{
+										MatchLabels: map[string]string{"bar": "foo"},
+									},
+									NamespaceLabelSelector: &metav1.LabelSelector{
+										MatchLabels: map[string]string{"foo": "bar"},
+									},
+								},
+							},
 						},
 						Status: "Passed",
 					},
 					{
-						ObjectSelector: rules.ObjectSelector{
-							APIVersion:           "apps/v1",
-							Kind:                 "Service",
-							MatchLabels:          map[string]string{"bar": "foo"},
-							NamespaceMatchLabels: map[string]string{"foo": "bar"},
+						AcceptedObjectSelector: rules.AcceptedObjectSelector{
+							APIVersion: "apps/v1",
+							Kind:       "Service",
+							AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+								NamespacedObjectSelector: option.NamespacedObjectSelector{
+									LabelSelector: &metav1.LabelSelector{
+										MatchLabels: map[string]string{"bar": "foo"},
+									},
+									NamespaceLabelSelector: &metav1.LabelSelector{
+										MatchLabels: map[string]string{"foo": "bar"},
+									},
+								},
+							},
 						},
 						Status: "Passed",
 					},
 					{
-						ObjectSelector: rules.ObjectSelector{
-							APIVersion:           "v1",
-							Kind:                 "Deployment",
-							MatchLabels:          map[string]string{"-foo": "bar"},
-							NamespaceMatchLabels: map[string]string{},
+						AcceptedObjectSelector: rules.AcceptedObjectSelector{
+							APIVersion: "v1",
+							Kind:       "Deployment",
+							AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+								NamespacedObjectSelector: option.NamespacedObjectSelector{
+									LabelSelector: &metav1.LabelSelector{
+										MatchLabels: map[string]string{"-foo": "bar"},
+									},
+									NamespaceLabelSelector: &metav1.LabelSelector{
+										MatchLabels: map[string]string{},
+									},
+								},
+							},
 						},
 						Status: "Accepted",
 					},
 					{
-						ObjectSelector: rules.ObjectSelector{
-							APIVersion:           "v1",
-							Kind:                 "Service",
-							MatchLabels:          map[string]string{},
-							NamespaceMatchLabels: map[string]string{"foo": "bar"},
+						AcceptedObjectSelector: rules.AcceptedObjectSelector{
+							APIVersion: "v1",
+							Kind:       "Service",
+							AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+								NamespacedObjectSelector: option.NamespacedObjectSelector{
+									LabelSelector: &metav1.LabelSelector{
+										MatchLabels: map[string]string{},
+									},
+									NamespaceLabelSelector: &metav1.LabelSelector{
+										MatchLabels: map[string]string{"foo": "bar"},
+									},
+								},
+							},
 						},
 						Status: "Accepted",
 					},
 					{
-						ObjectSelector: rules.ObjectSelector{
-							APIVersion:           "fake",
-							Kind:                 "Service",
-							MatchLabels:          map[string]string{"foo": "?bar"},
-							NamespaceMatchLabels: map[string]string{"bar$baz": "_foo"},
+						AcceptedObjectSelector: rules.AcceptedObjectSelector{
+							APIVersion: "fake",
+							Kind:       "Service",
+							AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+								NamespacedObjectSelector: option.NamespacedObjectSelector{
+									LabelSelector: &metav1.LabelSelector{
+										MatchLabels: map[string]string{"foo": "?bar"},
+									},
+									NamespaceLabelSelector: &metav1.LabelSelector{
+										MatchLabels: map[string]string{"bar$baz": "_foo"},
+									},
+								},
+							},
 						},
 						Status: "asd",
 					},
@@ -469,18 +542,8 @@ var _ = Describe("#242383", func() {
 					"Detail":   Equal("not checked kind for apiVersion apps/v1"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("foo.acceptedResources[2].namespaceMatchLabels"),
-					"Detail": Equal("must not be empty"),
-				})),
-				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("foo.acceptedResources[3].matchLabels"),
-					"Detail": Equal("must not be empty"),
-				})),
-				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("foo.acceptedResources[2].matchLabels"),
+					"Field":    Equal("foo.acceptedResources[2].labelSelector.matchLabels"),
 					"BadValue": Equal("-foo"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
@@ -491,17 +554,17 @@ var _ = Describe("#242383", func() {
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("foo.acceptedResources[4].matchLabels"),
+					"Field":    Equal("foo.acceptedResources[4].labelSelector.matchLabels"),
 					"BadValue": Equal("?bar"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("foo.acceptedResources[4].namespaceMatchLabels"),
+					"Field":    Equal("foo.acceptedResources[4].namespaceLabelSelector.matchLabels"),
 					"BadValue": Equal("bar$baz"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("foo.acceptedResources[4].namespaceMatchLabels"),
+					"Field":    Equal("foo.acceptedResources[4].namespaceLabelSelector.matchLabels"),
 					"BadValue": Equal("_foo"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
