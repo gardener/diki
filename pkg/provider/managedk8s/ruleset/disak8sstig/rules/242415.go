@@ -67,7 +67,7 @@ func (r *Rule242415) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	checkResults, err := r.checkPods(filteredPods, replicaSets, namespaces)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), err
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 	}
 
 	return rule.Result(r, checkResults...), nil

@@ -114,7 +114,7 @@ func (r *Rule242417) Run(ctx context.Context) (rule.RuleResult, error) {
 
 			for _, acceptedPod := range acceptedPods {
 				if matches, err := acceptedPod.Matches(pod.Labels, allNamespaces[namespace].Labels); err != nil {
-					return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), err
+					return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 				} else if matches {
 					accepted = true
 					msg = strings.TrimSpace(acceptedPod.Justification)

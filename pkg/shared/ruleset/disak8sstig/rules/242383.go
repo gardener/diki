@@ -173,7 +173,7 @@ func (r *Rule242383) Run(ctx context.Context) (rule.RuleResult, error) {
 
 			for _, acceptedResource := range acceptedResources {
 				if matches, err := acceptedResource.Matches(p.Labels, allNamespaces[namespace].Labels); err != nil {
-					return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), err
+					return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 				} else if matches && p.APIVersion == acceptedResource.APIVersion &&
 					(acceptedResource.Kind == "*" || p.Kind == acceptedResource.Kind) {
 					accepted = true

@@ -69,7 +69,7 @@ func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 	checkResults, err := r.checkPods(filteredSeedPods, seedReplicaSets, seedNamespaces, seedTarget)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), err
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 	}
 
 	shootPods, err := kubeutils.GetPods(ctx, r.ClusterClient, "", labels.NewSelector(), 300)
@@ -89,7 +89,7 @@ func (r *Rule242414) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 	shootCheckResults, err := r.checkPods(filteredShootPods, shootReplicaSets, shootNamespaces, shootTarget)
 	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), err
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 	}
 	checkResults = append(checkResults, shootCheckResults...)
 
