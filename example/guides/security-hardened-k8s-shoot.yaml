@@ -14,8 +14,9 @@ providers:
     - ruleID: "2000"
       args:
         acceptedNamespaces:
-        - matchLabels:
-            resources.gardener.cloud/managed-by: gardener
+        - labelSelector:
+            matchLabels:
+              resources.gardener.cloud/managed-by: gardener
           justification: "Gardener managed namespaces are accepted to allow traffic by default."
           acceptedTraffic:
             ingress: true
@@ -23,66 +24,82 @@ providers:
     - ruleID: "2001"
       args:
         acceptedPods:
-        - matchLabels:
-            resources.gardener.cloud/managed-by: gardener
-          namespaceMatchLabels:
-            resources.gardener.cloud/managed-by: gardener
+        - labelSelector:
+            matchLabels:
+              resources.gardener.cloud/managed-by: gardener
+          namespaceLabelSelector:
+            matchLabels:
+              resources.gardener.cloud/managed-by: gardener
           justification: "Gardener managed resources are accepted to allow privilege escalation."
     - ruleID: "2003"
       args:
         acceptedPods:
-        - matchLabels:
-            resources.gardener.cloud/managed-by: gardener
-          namespaceMatchLabels:
-            resources.gardener.cloud/managed-by: gardener
+        - labelSelector:
+            matchLabels:
+              resources.gardener.cloud/managed-by: gardener
+          namespaceLabelSelector:
+            matchLabels:
+              resources.gardener.cloud/managed-by: gardener
           justification: "Gardener managed resources are accepted to use a wider range of volume types."
           volumeNames:
           - "*"
     - ruleID: "2004"
       args:
         acceptedServices:
-        - matchLabels:
-            resources.gardener.cloud/managed-by: gardener
-          namespaceMatchLabels:
-            resources.gardener.cloud/managed-by: gardener
+        - labelSelector:
+            matchLabels:
+              resources.gardener.cloud/managed-by: gardener
+          namespaceLabelSelector:
+            matchLabels:
+              resources.gardener.cloud/managed-by: gardener
           justification: "Gardener managed services are accepted to be of type NodePort."
     - ruleID: "2006"
       args:
         acceptedRoles:
-        - matchLabels:
-            resources.gardener.cloud/managed-by: gardener
-          namespaceMatchLabels:
-            resources.gardener.cloud/managed-by: gardener
+        - labelSelector:
+            matchLabels:
+              resources.gardener.cloud/managed-by: gardener
+          namespaceLabelSelector:
+            matchLabels:
+              resources.gardener.cloud/managed-by: gardener
           justification: "Roles managed by Gardener are accepted to use wildcards in RBAC resources."
         acceptedClusterRoles:
-        - matchLabels:
-            resources.gardener.cloud/managed-by: gardener
+        - labelSelector:
+            matchLabels:
+              resources.gardener.cloud/managed-by: gardener
           justification: "ClusterRoles managed by Gardener are accepted to use wildcards in RBAC resources."
-        - matchLabels:
-             kubernetes.io/bootstrapping: rbac-defaults
+        - labelSelector:
+            matchLabels:
+              kubernetes.io/bootstrapping: rbac-defaults
           justification: "Kubernetes default ClusterRoles are accepted to use wildcards in RBAC resources."
     - ruleID: "2007"
       args:
         acceptedRoles:
-        - matchLabels:
-            resources.gardener.cloud/managed-by: gardener
-          namespaceMatchLabels:
-            resources.gardener.cloud/managed-by: gardener
+        - labelSelector:
+            matchLabels:
+              resources.gardener.cloud/managed-by: gardener
+          namespaceLabelSelector:
+            matchLabels:
+              resources.gardener.cloud/managed-by: gardener
           justification: "Roles managed by Gardener are accepted to use wildcards in RBAC verbs."
         acceptedClusterRoles:
-        - matchLabels:
+        - labelSelector:
+            matchLabels:
             resources.gardener.cloud/managed-by: gardener
           justification: "ClusterRoles managed by Gardener are accepted to use wildcards in RBAC verbs."
-        - matchLabels:
-             kubernetes.io/bootstrapping: rbac-defaults
+        - labelSelector:
+            matchLabels:
+              kubernetes.io/bootstrapping: rbac-defaults
           justification: "Kubernetes default ClusterRoles are accepted to use wildcards in RBAC verbs."
     - ruleID: "2008"
       args:
         acceptedPods:
-        - matchLabels:
-            resources.gardener.cloud/managed-by: gardener
-          namespaceMatchLabels:
-            resources.gardener.cloud/managed-by: gardener
+        - labelSelector:
+            matchLabels:
+              resources.gardener.cloud/managed-by: gardener
+          namespaceLabelSelector:
+            matchLabels:
+              resources.gardener.cloud/managed-by: gardener
           justification: "Gardener managed resources are accepted to use a wider range of volume types."
           volumeNames:
           - "*"

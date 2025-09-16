@@ -80,7 +80,7 @@ func (r *Rule2002) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		if accepted, justification, err := r.accepted(storageClass.Labels); err != nil {
-			return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), err
+			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 		} else if accepted {
 			msg := cmp.Or(justification, "StorageClass accepted to not have Delete ReclaimPolicy.")
 			checkResults = append(checkResults, rule.AcceptedCheckResult(msg, target))

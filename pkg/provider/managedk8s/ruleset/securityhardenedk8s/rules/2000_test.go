@@ -36,8 +36,10 @@ var _ = Describe("#2000", func() {
 				{
 					AcceptedClusterObject: option.AcceptedClusterObject{
 						ClusterObjectSelector: option.ClusterObjectSelector{
-							MatchLabels: map[string]string{
-								"ns": "lease",
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"ns": "lease",
+								},
 							},
 						},
 					},
@@ -48,8 +50,10 @@ var _ = Describe("#2000", func() {
 				{
 					AcceptedClusterObject: option.AcceptedClusterObject{
 						ClusterObjectSelector: option.ClusterObjectSelector{
-							MatchLabels: map[string]string{
-								"foo": "bar",
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"foo": "bar",
+								},
 							},
 						},
 						Justification: "justification foo",
@@ -62,8 +66,10 @@ var _ = Describe("#2000", func() {
 				{
 					AcceptedClusterObject: option.AcceptedClusterObject{
 						ClusterObjectSelector: option.ClusterObjectSelector{
-							MatchLabels: map[string]string{
-								"role": "test1",
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"role": "test1",
+								},
 							},
 						},
 						Justification: "justification test",
@@ -75,8 +81,10 @@ var _ = Describe("#2000", func() {
 				{
 					AcceptedClusterObject: option.AcceptedClusterObject{
 						ClusterObjectSelector: option.ClusterObjectSelector{
-							MatchLabels: map[string]string{
-								"role": "test4",
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"role": "test4",
+								},
 							},
 						},
 						Justification: "justification test 4",

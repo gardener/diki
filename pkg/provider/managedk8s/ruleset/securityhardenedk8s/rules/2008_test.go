@@ -192,15 +192,23 @@ var _ = Describe("#2008", func() {
 			AcceptedPods: []rules.AcceptedPods2008{
 				{
 					NamespacedObjectSelector: option.NamespacedObjectSelector{
-						MatchLabels:          map[string]string{"foo": "bar"},
-						NamespaceMatchLabels: map[string]string{"foo": "not-bar"},
+						LabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{"foo": "bar"},
+						},
+						NamespaceLabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{"foo": "not-bar"},
+						},
 					},
 					VolumeNames: []string{"bar"},
 				},
 				{
 					NamespacedObjectSelector: option.NamespacedObjectSelector{
-						MatchLabels:          map[string]string{"foo": "bar"},
-						NamespaceMatchLabels: map[string]string{"foo": "bar"},
+						LabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{"foo": "bar"},
+						},
+						NamespaceLabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{"foo": "bar"},
+						},
 					},
 					Justification: "foo justify",
 					VolumeNames:   []string{"foo"},
@@ -260,11 +268,11 @@ var _ = Describe("#2008", func() {
 			AcceptedPods: []rules.AcceptedPods2008{
 				{
 					NamespacedObjectSelector: option.NamespacedObjectSelector{
-						NamespaceMatchLabels: map[string]string{
-							"namespace": "foo",
+						LabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{"pod": "bar"},
 						},
-						MatchLabels: map[string]string{
-							"pod": "bar",
+						NamespaceLabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{"namespace": "foo"},
 						},
 					},
 					Justification: "accepted wildcard",
@@ -385,32 +393,32 @@ var _ = Describe("#2008", func() {
 				AcceptedPods: []rules.AcceptedPods2008{
 					{
 						NamespacedObjectSelector: option.NamespacedObjectSelector{
-							MatchLabels: map[string]string{
-								"foo": "bar",
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"foo": "bar"},
 							},
-							NamespaceMatchLabels: map[string]string{
-								"foo": "bar",
+							NamespaceLabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"foo": "bar"},
 							},
 						},
 					},
 					{
 						NamespacedObjectSelector: option.NamespacedObjectSelector{
-							MatchLabels: map[string]string{
-								"foo": "bar",
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"foo": "bar"},
 							},
-							NamespaceMatchLabels: map[string]string{
-								"foo": "bar",
+							NamespaceLabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"foo": "bar"},
 							},
 						},
 						VolumeNames: []string{"foo"},
 					},
 					{
 						NamespacedObjectSelector: option.NamespacedObjectSelector{
-							MatchLabels: map[string]string{
-								"foo": "bar",
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"foo": "bar"},
 							},
-							NamespaceMatchLabels: map[string]string{
-								"foo": "bar",
+							NamespaceLabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"foo": "bar"},
 							},
 						},
 						VolumeNames: []string{""},

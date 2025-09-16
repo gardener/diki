@@ -9,7 +9,6 @@ import (
 	"context"
 	"slices"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -117,7 +116,9 @@ func (r *Rule2008) Run(ctx context.Context) (rule.RuleResult, error) {
 			volumeTarget := podTarget.With("volume", volume.Name)
 			if volume.HostPath != nil {
 				uses = true
-				if accepted, justification := r.accepted(pod, namespaces[pod.Namespace], volume.Name); accepted {
+				if accepted, justification, err := r.accepted(pod.Labels, namespaces[pod.Namespace].Labels, volume.Name); err != nil {
+					return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+				} else if accepted {
 					msg := cmp.Or(justification, "Pod accepted to use volume of type hostPath.")
 					checkResults = append(checkResults, rule.AcceptedCheckResult(msg, volumeTarget))
 				} else {
@@ -132,19 +133,18 @@ func (r *Rule2008) Run(ctx context.Context) (rule.RuleResult, error) {
 	return rule.Result(r, checkResults...), nil
 }
 
-func (r *Rule2008) accepted(pod corev1.Pod, namespace corev1.Namespace, volumeName string) (bool, string) {
+func (r *Rule2008) accepted(podLabels, namespaceLabels map[string]string, volumeName string) (bool, string, error) {
 	if r.Options == nil {
-		return false, ""
+		return false, "", nil
 	}
 
 	for _, acceptedPod := range r.Options.AcceptedPods {
-		if utils.MatchLabels(pod.Labels, acceptedPod.MatchLabels) &&
-			utils.MatchLabels(namespace.Labels, acceptedPod.NamespaceMatchLabels) {
-			if slices.Contains(acceptedPod.VolumeNames, "*") || slices.Contains(acceptedPod.VolumeNames, volumeName) {
-				return true, acceptedPod.Justification
-			}
+		if matches, err := acceptedPod.Matches(podLabels, namespaceLabels); err != nil {
+			return false, "", err
+		} else if matches && (slices.Contains(acceptedPod.VolumeNames, "*") || slices.Contains(acceptedPod.VolumeNames, volumeName)) {
+			return true, acceptedPod.Justification, nil
 		}
 	}
 
-	return false, ""
+	return false, "", nil
 }

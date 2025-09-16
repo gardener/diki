@@ -9,14 +9,12 @@ import (
 	"context"
 	"strings"
 
-	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
@@ -107,45 +105,54 @@ func (r *Rule2006) Run(ctx context.Context) (rule.RuleResult, error) {
 	for _, role := range roles {
 		target := kubeutils.TargetWithK8sObject(rule.NewTarget(), v1.TypeMeta{Kind: "Role"}, role.ObjectMeta)
 
-		accepted, justification := r.acceptedRole(role, namespaces[role.Namespace])
+		accepted, justification, err := r.acceptedRole(role.Labels, namespaces[role.Namespace].Labels)
+		if err != nil {
+			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+		}
 		checkResults = append(checkResults, checkRules(role.Rules, accepted, justification, target))
 	}
 
 	for _, clusterRole := range clusterRoles {
 		target := kubeutils.TargetWithK8sObject(rule.NewTarget(), v1.TypeMeta{Kind: "ClusterRole"}, clusterRole.ObjectMeta)
 
-		accepted, justification := r.acceptedClusterRole(clusterRole)
+		accepted, justification, err := r.acceptedClusterRole(clusterRole.Labels)
+		if err != nil {
+			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+		}
 		checkResults = append(checkResults, checkRules(clusterRole.Rules, accepted, justification, target))
 	}
 
 	return rule.Result(r, checkResults...), nil
 }
 
-func (r *Rule2006) acceptedRole(role rbacv1.Role, namespace corev1.Namespace) (bool, string) {
+func (r *Rule2006) acceptedRole(roleLabels, namespaceLabels map[string]string) (bool, string, error) {
 	if r.Options == nil {
-		return false, ""
+		return false, "", nil
 	}
 
 	for _, acceptedRole := range r.Options.AcceptedRoles {
-		if utils.MatchLabels(role.Labels, acceptedRole.MatchLabels) &&
-			utils.MatchLabels(namespace.Labels, acceptedRole.NamespaceMatchLabels) {
-			return true, acceptedRole.Justification
+		if matches, err := acceptedRole.Matches(roleLabels, namespaceLabels); err != nil {
+			return false, "", err
+		} else if matches {
+			return true, acceptedRole.Justification, nil
 		}
 	}
 
-	return false, ""
+	return false, "", nil
 }
 
-func (r *Rule2006) acceptedClusterRole(clusterRole rbacv1.ClusterRole) (bool, string) {
+func (r *Rule2006) acceptedClusterRole(clusterRoleLabels map[string]string) (bool, string, error) {
 	if r.Options == nil {
-		return false, ""
+		return false, "", nil
 	}
 
-	for _, acceptedClusterRoles := range r.Options.AcceptedClusterRoles {
-		if utils.MatchLabels(clusterRole.Labels, acceptedClusterRoles.MatchLabels) {
-			return true, acceptedClusterRoles.Justification
+	for _, acceptedClusterRole := range r.Options.AcceptedClusterRoles {
+		if matches, err := acceptedClusterRole.Matches(clusterRoleLabels); err != nil {
+			return false, "", err
+		} else if matches {
+			return true, acceptedClusterRole.Justification, nil
 		}
 	}
 
-	return false, ""
+	return false, "", nil
 }
