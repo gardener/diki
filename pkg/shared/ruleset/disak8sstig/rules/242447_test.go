@@ -14,7 +14,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -22,6 +21,7 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -158,7 +158,6 @@ var _ = Describe("#242447", func() {
 	It("should return errored result when kube-proxy pods cannot be found", func() {
 		Expect(fakeClient.Create(ctx, Node)).To(Succeed())
 		Expect(fakeClient.Create(ctx, fooPod)).To(Succeed())
-		kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
 		fakePodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
 		r := &rules.Rule242447{
 			Logger:     testLogger,
@@ -170,7 +169,7 @@ var _ = Describe("#242447", func() {
 		ruleResult, err := r.Run(ctx)
 		Expect(err).To(BeNil())
 		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
-			rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget("selector", kubeProxySelector.String())),
+			rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget()),
 		}))
 	})
 
@@ -243,7 +242,7 @@ var _ = Describe("#242447", func() {
 	})
 
 	DescribeTable("Run cases",
-		func(options rules.Options242447, executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
+		func(options *option.ClusterObjectSelector, executeReturnString [][]string, executeReturnError [][]error, expectedCheckResults []rule.CheckResult) {
 			Expect(fakeClient.Create(ctx, Node)).To(Succeed())
 			Expect(fakeClient.Create(ctx, kubeProxyPod1)).To(Succeed())
 			Expect(fakeClient.Create(ctx, kubeProxyPod2)).To(Succeed())
@@ -257,7 +256,7 @@ var _ = Describe("#242447", func() {
 				InstanceID: instanceID,
 				Client:     fakeClient,
 				PodContext: fakePodContext,
-				Options:    &options,
+				Options:    options,
 			}
 
 			ruleResult, err := r.Run(ctx)
@@ -284,9 +283,9 @@ var _ = Describe("#242447", func() {
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("name", "kube-proxy2", "namespace", "kube-system", "kind", "DaemonSet", "details", "fileName: /var/lib/kubeconfig2, permissions: 606, expectedPermissionsMax: 644")),
 			}),
 		Entry("should check only pod with matched labels",
-			rules.Options242447{
-				KubeProxyMatchLabels: map[string]string{
-					"component": "kube-proxy",
+			&option.ClusterObjectSelector{
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"component": "kube-proxy"},
 				},
 			},
 			[][]string{{mounts, compliantConfigStats, compliantKubeconfigStats}},
