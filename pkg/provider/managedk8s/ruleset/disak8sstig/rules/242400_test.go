@@ -28,7 +28,8 @@ import (
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -270,8 +271,14 @@ var _ = Describe("#242400", func() {
 		Expect(fakeClient.Create(ctx, pod3)).To(Succeed())
 
 		options := rules.Options242400{
-			KubeProxyMatchLabels: map[string]string{
-				"foo": "bar",
+			KubeProxy: disaoption.KubeProxyOptions{
+				ClusterObjectSelector: &option.ClusterObjectSelector{
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"foo": "bar",
+						},
+					},
+				},
 			},
 		}
 
@@ -387,7 +394,7 @@ var _ = Describe("#242400", func() {
 		ruleResult, err := r.Run(ctx)
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget("selector", "role=proxy")),
+			rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget()),
 			rule.PassedCheckResult("Option featureGates.AllAlpha not set.", rule.NewTarget("kind", "Node", "name", "node1")),
 		}
 
@@ -413,8 +420,8 @@ var _ = Describe("#242400", func() {
 			PodContext:   fakePodContext,
 			V1RESTClient: fakeRESTClient,
 			Options: &rules.Options242400{
-				KubeProxyOptions: option.KubeProxyOptions{
-					KubeProxyDisabled: true,
+				KubeProxy: disaoption.KubeProxyOptions{
+					Disabled: true,
 				},
 			},
 		}

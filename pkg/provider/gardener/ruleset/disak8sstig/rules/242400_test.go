@@ -386,8 +386,10 @@ var _ = Describe("#242400", func() {
 			ControlPlaneClient:    fakeControlPlaneClient,
 			ControlPlaneNamespace: controlPlaneNamespace,
 			ClusterV1RESTClient:   fakeRESTClient,
-			Options: &option.KubeProxyOptions{
-				KubeProxyDisabled: true,
+			Options: &rules.Options242400{
+				option.KubeProxyOptionsWithoutSelectors{
+					Disabled: true,
+				},
 			},
 		}
 		ruleResult, err := r.Run(ctx)

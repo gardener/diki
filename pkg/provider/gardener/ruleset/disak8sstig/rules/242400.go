@@ -16,6 +16,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/rest"
 	"k8s.io/component-base/version"
 	"k8s.io/utils/ptr"
@@ -27,8 +28,9 @@ import (
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/images"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 	"github.com/gardener/diki/pkg/shared/provider"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -44,8 +46,18 @@ type Rule242400 struct {
 	ClusterV1RESTClient   rest.Interface
 	ClusterPodContext     pod.PodContext
 	ControlPlaneNamespace string
-	Options               *option.KubeProxyOptions
+	Options               *Options242400
 	Logger                provider.Logger
+}
+
+type Options242400 struct {
+	KubeProxy disaoption.KubeProxyOptionsWithoutSelectors `json:"kubeProxy" yaml:"kubeProxy"`
+}
+
+var _ option.Option = (*Options242400)(nil)
+
+func (o Options242400) Validate(fldPath *field.Path) field.ErrorList {
+	return o.KubeProxy.Validate(fldPath.Child("kubeProxy"))
 }
 
 func (r *Rule242400) ID() string {
@@ -135,7 +147,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	// kube-proxy check
-	if r.Options != nil && r.Options.KubeProxyDisabled {
+	if r.Options != nil && r.Options.KubeProxy.Disabled {
 		checkResults = append(checkResults, rule.AcceptedCheckResult("kube-proxy check is skipped.", rule.NewTarget()))
 		return rule.Result(r, checkResults...), nil
 	}
