@@ -15,7 +15,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/component-base/version"
@@ -47,15 +46,14 @@ type Rule242467 struct {
 }
 
 type Options242467 struct {
-	disaoption.KubeProxyOptions
-	KubeProxyMatchLabels map[string]string `json:"kubeProxyMatchLabels" yaml:"kubeProxyMatchLabels"`
-	NodeGroupByLabels    []string          `json:"nodeGroupByLabels" yaml:"nodeGroupByLabels"`
+	KubeProxy         disaoption.KubeProxyOptions `json:"kubeProxy" yaml:"kubeProxy"`
+	NodeGroupByLabels []string                    `json:"nodeGroupByLabels" yaml:"nodeGroupByLabels"`
 }
 
 var _ option.Option = (*Options242467)(nil)
 
 func (o Options242467) Validate(fldPath *field.Path) field.ErrorList {
-	allErrs := validation.ValidateLabels(o.KubeProxyMatchLabels, fldPath.Child("kubeProxyMatchLabels"))
+	allErrs := o.KubeProxy.Validate(fldPath.Child("kubeProxy"))
 	return append(allErrs, disaoption.ValidateLabelNames(o.NodeGroupByLabels, fldPath.Child("nodeGroupByLabels"))...)
 }
 
@@ -77,15 +75,20 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 		nodeLabels                 []string
 		pods                       []corev1.Pod
 		expectedFilePermissionsMax = "640"
-		kubeProxySelector          = labels.SelectorFromSet(labels.Set{"role": "proxy"})
 	)
 
 	if r.Options != nil {
-		if len(r.Options.KubeProxyMatchLabels) > 0 {
-			kubeProxySelector = labels.SelectorFromSet(labels.Set(r.Options.KubeProxyMatchLabels))
-		}
 		if r.Options.NodeGroupByLabels != nil {
 			nodeLabels = slices.Clone(r.Options.NodeGroupByLabels)
+		}
+	} else {
+		r.Options = &Options242467{}
+	}
+	if r.Options.KubeProxy.ClusterObjectSelector == nil {
+		r.Options.KubeProxy.ClusterObjectSelector = &option.ClusterObjectSelector{
+			LabelSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"role": "proxy"},
+			},
 		}
 	}
 
@@ -125,19 +128,22 @@ func (r *Rule242467) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	// kube-proxy check
-	if r.Options != nil && r.Options.KubeProxyDisabled {
+	if r.Options.KubeProxy.Disabled {
 		checkResults = append(checkResults, rule.AcceptedCheckResult("kube-proxy check is skipped.", rule.NewTarget()))
 		return rule.Result(r, checkResults...), nil
 	}
 
 	for _, p := range allPods {
-		if kubeProxySelector.Matches(labels.Set(p.Labels)) {
+		if matches, err := r.Options.KubeProxy.Matches(p.Labels); err != nil {
+			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget()))
+			return rule.Result(r, checkResults...), nil
+		} else if matches {
 			pods = append(pods, p)
 		}
 	}
 
 	if len(pods) == 0 {
-		checkResults = append(checkResults, rule.ErroredCheckResult("pods not found", rule.NewTarget("selector", kubeProxySelector.String())))
+		checkResults = append(checkResults, rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget()))
 		return rule.Result(r, checkResults...), nil
 	}
 
