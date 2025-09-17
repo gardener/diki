@@ -11,15 +11,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
-	"github.com/gardener/diki/pkg/shared/kubernetes/option"
-	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	k8soption "github.com/gardener/diki/pkg/shared/kubernetes/option"
+	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var _ = Describe("options", func() {
 	Describe("#ValidateFileOwnerOptions", func() {
 		It("should correctly validate options", func() {
-			options := disaoption.FileOwnerOptions{
-				ExpectedFileOwner: disaoption.ExpectedOwner{
+			options := option.FileOwnerOptions{
+				ExpectedFileOwner: option.ExpectedOwner{
 					Users:  []string{"-1", "0", "100"},
 					Groups: []string{"", "asd", "111"},
 				},
@@ -46,11 +46,11 @@ var _ = Describe("options", func() {
 	})
 	Describe("#ValidateOptions242414", func() {
 		It("should correctly validate options", func() {
-			options := disaoption.Options242414{
-				AcceptedPods: []disaoption.AcceptedPods242414{
+			options := option.Options242414{
+				AcceptedPods: []option.AcceptedPods242414{
 					{
-						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
-							NamespacedObjectSelector: option.NamespacedObjectSelector{
+						AcceptedNamespacedObject: k8soption.AcceptedNamespacedObject{
+							NamespacedObjectSelector: k8soption.NamespacedObjectSelector{
 								LabelSelector: &metav1.LabelSelector{
 									MatchLabels: map[string]string{"foo": "bar"},
 								},
@@ -61,8 +61,8 @@ var _ = Describe("options", func() {
 						},
 					},
 					{
-						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
-							NamespacedObjectSelector: option.NamespacedObjectSelector{
+						AcceptedNamespacedObject: k8soption.AcceptedNamespacedObject{
+							NamespacedObjectSelector: k8soption.NamespacedObjectSelector{
 								LabelSelector: &metav1.LabelSelector{
 									MatchLabels: map[string]string{"foo": "bar"},
 								},
@@ -74,8 +74,8 @@ var _ = Describe("options", func() {
 						Ports: []int32{0, 100},
 					},
 					{
-						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
-							NamespacedObjectSelector: option.NamespacedObjectSelector{
+						AcceptedNamespacedObject: k8soption.AcceptedNamespacedObject{
+							NamespacedObjectSelector: k8soption.NamespacedObjectSelector{
 								LabelSelector: &metav1.LabelSelector{
 									MatchLabels: map[string]string{"foo": "bar"},
 								},
@@ -108,11 +108,11 @@ var _ = Describe("options", func() {
 	})
 	Describe("#ValidateOptions242415", func() {
 		It("should correctly validate options", func() {
-			options := disaoption.Options242415{
-				AcceptedPods: []disaoption.AcceptedPods242415{
+			options := option.Options242415{
+				AcceptedPods: []option.AcceptedPods242415{
 					{
-						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
-							NamespacedObjectSelector: option.NamespacedObjectSelector{
+						AcceptedNamespacedObject: k8soption.AcceptedNamespacedObject{
+							NamespacedObjectSelector: k8soption.NamespacedObjectSelector{
 								LabelSelector: &metav1.LabelSelector{
 									MatchLabels: map[string]string{"foo": "bar"},
 								},
@@ -124,8 +124,8 @@ var _ = Describe("options", func() {
 						EnvironmentVariables: []string{"asd=dsa"},
 					},
 					{
-						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
-							NamespacedObjectSelector: option.NamespacedObjectSelector{
+						AcceptedNamespacedObject: k8soption.AcceptedNamespacedObject{
+							NamespacedObjectSelector: k8soption.NamespacedObjectSelector{
 								LabelSelector: &metav1.LabelSelector{
 									MatchLabels: map[string]string{"foo": "bar"},
 								},
@@ -157,7 +157,7 @@ var _ = Describe("options", func() {
 
 	Describe("#ValidateOptions242442", func() {
 		It("should deny empty expected images list", func() {
-			options := disaoption.Options242442{}
+			options := option.Options242442{}
 
 			result := options.Validate(field.NewPath("foo"))
 
@@ -171,8 +171,8 @@ var _ = Describe("options", func() {
 		})
 
 		It("should correctly validate options", func() {
-			options := disaoption.Options242442{
-				ExpectedVersionedImages: []disaoption.ExpectedVersionedImage{
+			options := option.Options242442{
+				ExpectedVersionedImages: []option.ExpectedVersionedImage{
 					{
 						Name: "foo",
 					},
@@ -194,6 +194,55 @@ var _ = Describe("options", func() {
 					"Detail": Equal("must not be empty"),
 				})),
 			))
+		})
+	})
+	Describe("#ValidateKubeProxyOptions", func() {
+		It("should validate correctly when ClusterObjectSelector is nil", func() {
+			options := option.KubeProxyOptions{}
+
+			result := options.Validate(field.NewPath("foo"))
+
+			Expect(result).To(BeEmpty())
+		})
+
+		It("should fail when ClusterObjectSelector is not valid", func() {
+			options := option.KubeProxyOptions{
+				ClusterObjectSelector: &k8soption.ClusterObjectSelector{
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"foo": "bar",
+						},
+					},
+					MatchLabels: map[string]string{
+						"foo": "bar",
+					},
+				},
+			}
+
+			result := options.Validate(field.NewPath("foo"))
+
+			Expect(result).To(ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeForbidden),
+					"Field":  Equal("foo.matchLabels"),
+					"Detail": Equal("cannot be set when labelSelector is defined"),
+				})),
+			))
+		})
+		It("should succeed when ClusterObjectSelector is valid", func() {
+			options := option.KubeProxyOptions{
+				ClusterObjectSelector: &k8soption.ClusterObjectSelector{
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"foo": "bar",
+						},
+					},
+				},
+			}
+
+			result := options.Validate(field.NewPath("foo"))
+
+			Expect(result).To(BeEmpty())
 		})
 	})
 })
