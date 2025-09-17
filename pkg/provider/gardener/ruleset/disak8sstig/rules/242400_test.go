@@ -387,7 +387,7 @@ var _ = Describe("#242400", func() {
 			ControlPlaneNamespace: controlPlaneNamespace,
 			ClusterV1RESTClient:   fakeRESTClient,
 			Options: &rules.Options242400{
-				option.KubeProxyOptionsWithoutSelectors{
+				KubeProxy: option.KubeProxyOptionsWithoutSelectors{
 					Disabled: true,
 				},
 			},

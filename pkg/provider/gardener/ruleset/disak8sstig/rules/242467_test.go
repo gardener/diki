@@ -451,7 +451,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			[][]error{{nil, nil, nil, nil, nil, nil}},
 			[][]error{{nil, nil, nil, nil}},
 			&rules.Options242467{
-				option.KubeProxyOptionsWithoutSelectors{
+				KubeProxy: option.KubeProxyOptionsWithoutSelectors{
 					Disabled: true,
 				},
 			},
