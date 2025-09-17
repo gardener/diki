@@ -49,17 +49,18 @@ type Rule242451 struct {
 }
 
 type Options242451 struct {
-	disaoption.KubeProxyOptions
+	KubeProxy disaoption.KubeProxyOptionsWithoutSelectors `json:"kubeProxy" yaml:"kubeProxy"`
 	*disaoption.FileOwnerOptions
 }
 
 var _ option.Option = (*Options242451)(nil)
 
 func (o Options242451) Validate(fldPath *field.Path) field.ErrorList {
+	allErrors := o.KubeProxy.Validate(fldPath.Child("kubeProxy"))
 	if o.FileOwnerOptions != nil {
-		return o.FileOwnerOptions.Validate(fldPath)
+		allErrors = append(allErrors, o.FileOwnerOptions.Validate(fldPath)...)
 	}
-	return nil
+	return allErrors
 }
 
 func (r *Rule242451) ID() string {
@@ -198,7 +199,7 @@ func (r *Rule242451) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	// kube-proxy check
-	if r.Options != nil && r.Options.KubeProxyDisabled {
+	if r.Options != nil && r.Options.KubeProxy.Disabled {
 		checkResults = append(checkResults, rule.AcceptedCheckResult("kube-proxy check is skipped.", shootTarget))
 		return rule.Result(r, checkResults...), nil
 	}
