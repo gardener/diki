@@ -11,13 +11,13 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var _ = Describe("#242442", func() {
@@ -236,8 +236,10 @@ var _ = Describe("#242442", func() {
 		r := &rules.Rule242442{
 			Client: client,
 			Options: &rules.Options242442{
-				KubeProxyMatchLabels: map[string]string{
-					"foo": "bar",
+				KubeProxy: &option.ClusterObjectSelector{
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
 				},
 			},
 		}
@@ -285,14 +287,13 @@ var _ = Describe("#242442", func() {
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
 	It("should return errored result when kube-proxy pods cannot be found", func() {
-		kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
 		r := &rules.Rule242442{Client: client}
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget("selector", kubeProxySelector.String())),
+			rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget()),
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
@@ -319,8 +320,8 @@ var _ = Describe("#242442", func() {
 	It("should return warning results when the image is listed in the expectedVersionedImages option", func() {
 		r := &rules.Rule242442{Client: client,
 			Options: &rules.Options242442{
-				ImageSelector: &option.Options242442{
-					ExpectedVersionedImages: []option.ExpectedVersionedImage{
+				ImageSelector: &disaoption.Options242442{
+					ExpectedVersionedImages: []disaoption.ExpectedVersionedImage{
 						{
 							Name: "eu.gcr.io/image2",
 						},
