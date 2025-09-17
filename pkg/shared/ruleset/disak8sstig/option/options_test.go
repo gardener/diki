@@ -8,8 +8,10 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
+	k8soption "github.com/gardener/diki/pkg/shared/kubernetes/option"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
@@ -267,6 +269,55 @@ var _ = Describe("options", func() {
 					"Detail": Equal("must not be empty"),
 				})),
 			))
+		})
+	})
+	Describe("#ValidateKubeProxyOptions", func() {
+		It("should validate correctly when ClusterObjectSelector is nil", func() {
+			options := option.KubeProxyOptions{}
+
+			result := options.Validate(field.NewPath("foo"))
+
+			Expect(result).To(BeEmpty())
+		})
+
+		It("should fail when ClusterObjectSelector is not valid", func() {
+			options := option.KubeProxyOptions{
+				ClusterObjectSelector: &k8soption.ClusterObjectSelector{
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"foo": "bar",
+						},
+					},
+					MatchLabels: map[string]string{
+						"foo": "bar",
+					},
+				},
+			}
+
+			result := options.Validate(field.NewPath("foo"))
+
+			Expect(result).To(ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeForbidden),
+					"Field":  Equal("foo.matchLabels"),
+					"Detail": Equal("cannot be set when labelSelector is defined"),
+				})),
+			))
+		})
+		It("should succeed when ClusterObjectSelector is valid", func() {
+			options := option.KubeProxyOptions{
+				ClusterObjectSelector: &k8soption.ClusterObjectSelector{
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"foo": "bar",
+						},
+					},
+				},
+			}
+
+			result := options.Validate(field.NewPath("foo"))
+
+			Expect(result).To(BeEmpty())
 		})
 	})
 })

@@ -10,7 +10,7 @@ import (
 
 	imageref "github.com/distribution/reference"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/validation"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -33,14 +33,17 @@ type Rule242442 struct {
 }
 
 type Options242442 struct {
-	KubeProxyMatchLabels map[string]string `json:"kubeProxyMatchLabels" yaml:"kubeProxyMatchLabels"`
-	ImageSelector        *disaoption.Options242442
+	KubeProxy     *option.ClusterObjectSelector `json:"kubeProxy" yaml:"kubeProxy"`
+	ImageSelector *disaoption.Options242442
 }
 
 var _ option.Option = (*Options242442)(nil)
 
 func (o Options242442) Validate(fldPath *field.Path) field.ErrorList {
-	allErrs := validation.ValidateLabels(o.KubeProxyMatchLabels, fldPath.Child("kubeProxyMatchLabels"))
+	var allErrs field.ErrorList
+	if o.KubeProxy != nil {
+		allErrs = append(allErrs, o.KubeProxy.Validate(fldPath)...)
+	}
 	if o.ImageSelector != nil {
 		allErrs = append(allErrs, o.ImageSelector.Validate(fldPath)...)
 	}
@@ -61,13 +64,21 @@ func (r *Rule242442) Severity() rule.SeverityLevel {
 
 func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
+		err               error
 		checkResults      []rule.CheckResult
 		nodeKubeProxyPods = map[string][]corev1.Pod{}
 		kubeProxySelector = labels.SelectorFromSet(labels.Set{"role": "proxy"})
 	)
 
-	if r.Options != nil && len(r.Options.KubeProxyMatchLabels) > 0 {
-		kubeProxySelector = labels.SelectorFromSet(labels.Set(r.Options.KubeProxyMatchLabels))
+	if r.Options != nil && r.Options.KubeProxy != nil {
+		if r.Options.KubeProxy.LabelSelector != nil {
+			kubeProxySelector, err = metav1.LabelSelectorAsSelector(r.Options.KubeProxy.LabelSelector)
+			if err != nil {
+				return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+			}
+		} else {
+			kubeProxySelector = labels.SelectorFromSet(r.Options.KubeProxy.MatchLabels)
+		}
 	}
 
 	kubeProxyPods, err := kubeutils.GetPods(ctx, r.Client, "", kubeProxySelector, 300)
@@ -76,7 +87,7 @@ func (r *Rule242442) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	if len(kubeProxyPods) == 0 {
-		return rule.Result(r, rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget("selector", kubeProxySelector.String()))), nil
+		return rule.Result(r, rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget())), nil
 	}
 
 	for _, pod := range kubeProxyPods {

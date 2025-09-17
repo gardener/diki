@@ -476,8 +476,8 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			}),
 		Entry("should return accepted check result when kubeProxyDisabled option is set to true",
 			rules.Options242451{
-				KubeProxyOptions: option.KubeProxyOptions{
-					KubeProxyDisabled: true,
+				KubeProxy: option.KubeProxyOptionsWithoutSelectors{
+					Disabled: true,
 				},
 			},
 			[][]string{{mounts, compliantStats, compliantDirStats, mounts, compliantStats2, compliantDirStats, emptyMounts, emptyMounts, emptyMounts}},
