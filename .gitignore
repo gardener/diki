@@ -23,3 +23,7 @@ testbin
 
 # gosec
 gosec-report.sarif
+
+# Visual Studio Code settings
+.vscode/
+

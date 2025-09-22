@@ -10,6 +10,9 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
+
+	"k8s.io/client-go/tools/clientcmd"
 
 	"k8s.io/client-go/rest"
 
@@ -43,6 +46,12 @@ type providerArgs struct {
 	AdditionalOpsPodLabels map[string]string `json:"additionalOpsPodLabels" yaml:"additionalOpsPodLabels"`
 	KubeconfigPath         string            `json:"kubeconfigPath" yaml:"kubeconfigPath"`
 }
+
+type ConfigOptions struct {
+	ConfigGetter inClusterConfigGetter
+}
+
+type inClusterConfigGetter func() (*rest.Config, error)
 
 var _ provider.Provider = &Provider{}
 
@@ -126,7 +135,7 @@ func (p *Provider) Metadata() map[string]string {
 }
 
 // FromGenericConfig creates a Provider from ProviderConfig.
-func FromGenericConfig(providerConf config.ProviderConfig) (*Provider, error) {
+func FromGenericConfig(providerConf config.ProviderConfig, options ConfigOptions) (*Provider, error) {
 	providerArgsByte, err := json.Marshal(providerConf.Args)
 	if err != nil {
 		return nil, err
@@ -137,7 +146,7 @@ func FromGenericConfig(providerConf config.ProviderConfig) (*Provider, error) {
 		return nil, err
 	}
 
-	kubeconfig, err := kubeutils.RESTConfigFromFile(providerArgs.KubeconfigPath)
+	kubeconfig, err := loadConfig(providerArgs, options)
 	if err != nil {
 		return nil, err
 	}
@@ -163,4 +172,49 @@ func (p *Provider) Logger() sharedprovider.Logger {
 		p.logger = slog.Default().With("provider", p.ID())
 	}
 	return p.logger
+}
+
+func loadConfig(providerArgs providerArgs, options ConfigOptions) (config *rest.Config, err error) {
+
+	var kubeconfig *rest.Config
+
+	// Check if a kubeconfig path is provided via the provider args in the configuration file.
+	if len(providerArgs.KubeconfigPath) > 0 {
+		kubeconfig, err = kubeutils.RESTConfigFromFile(providerArgs.KubeconfigPath)
+		if err == nil {
+			fmt.Print("kubeconfig path from args: ", providerArgs.KubeconfigPath)
+			fmt.Print("kubeconfig: ", kubeconfig)
+			return kubeconfig, nil
+		}
+	}
+
+	// If no kubeconfigPath is set in the provider args,
+	// check if a kubeconfig path is provided via the KUBECONFIG environment variable.
+	kubeconfigPath := os.Getenv(clientcmd.RecommendedConfigPathEnvVar)
+	if len(kubeconfigPath) > 0 {
+		kubeconfig, err = kubeutils.RESTConfigFromFile(kubeconfigPath)
+		if err == nil {
+			fmt.Print("kubeconfig from env: ", providerArgs.KubeconfigPath)
+			fmt.Print("kubeconfig: ", kubeconfig)
+			return kubeconfig, nil
+		}
+	}
+
+	// If no kubeconfigPath is set in the provider args or via the KUBECONFIG environment variable,
+	//  try to use in-cluster configuration.
+	if options.ConfigGetter != nil {
+		kubeconfig, err = options.ConfigGetter()
+	} else {
+		kubeconfig, err = rest.InClusterConfig()
+	}
+	if err == nil {
+		fmt.Print("kubeconfig from Cluster")
+		fmt.Print("kubeconfig: ", kubeconfig)
+		kubeconfig.CAData, err = os.ReadFile(kubeconfig.CAFile)
+		if err == nil {
+			return kubeconfig, nil
+		}
+	}
+
+	return nil, err
 }
