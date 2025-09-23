@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+// SPDX-FileCopyrightText: 2025 SAP SE or an SAP affiliate company and Gardener contributors
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -7,11 +7,12 @@ package managedk8s_test
 import (
 	"os"
 
-	"github.com/gardener/diki/pkg/config"
-	"github.com/gardener/diki/pkg/provider/managedk8s"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/client-go/rest"
+
+	"github.com/gardener/diki/pkg/config"
+	"github.com/gardener/diki/pkg/provider/managedk8s"
 )
 
 // minimal valid kubeconfig for testing
@@ -60,7 +61,7 @@ LrtUc5/X9UqSg9YPiQ2qj55Ge5TKMC3FPQnmQpxK6gCMezmBgagcf7tn
 -----END CERTIFICATE-----
 `
 
-var _ = Describe("managedk8s.provider", func() {
+var _ = Describe("managedk8s", func() {
 	var (
 		id, name   string
 		kubeconfig *rest.Config
@@ -75,7 +76,7 @@ var _ = Describe("managedk8s.provider", func() {
 	})
 
 	Describe("#New", func() {
-		It("should return correct provider object when correct values are used.", func() {
+		It("should return correct provider object when correct values are used", func() {
 			provider, err := managedk8s.New(managedk8s.WithID(id), managedk8s.WithName(name), managedk8s.WithConfig(kubeconfig))
 
 			Expect(provider.ID()).To(Equal(id))
@@ -89,23 +90,16 @@ var _ = Describe("managedk8s.provider", func() {
 			tmpKubeconfig string
 			origEnv       string
 			restoreEnv    func()
-			options       managedk8s.ConfigOptions
 		)
 
 		BeforeEach(func() {
-			// Backup and restore KUBECONFIG env var
 			origEnv = os.Getenv("KUBECONFIG")
 			restoreEnv = func() {
-				os.Setenv("KUBECONFIG", origEnv)
+				_ = os.Setenv("KUBECONFIG", origEnv)
 			}
-			// Create a temp kubeconfig file
 			tmpKubeconfig = GinkgoT().TempDir() + "/kubeconfig"
-			os.WriteFile(tmpKubeconfig, []byte(testKubeconfig), 0644)
+			_ = os.WriteFile(tmpKubeconfig, []byte(testKubeconfig), 0600)
 
-			// Set empty config options
-			options = managedk8s.ConfigOptions{
-				ConfigGetter: nil,
-			}
 		})
 
 		AfterEach(func() {
@@ -127,7 +121,7 @@ var _ = Describe("managedk8s.provider", func() {
 				},
 			}
 
-			provider, err := managedk8s.FromGenericConfig(providerConf, options)
+			provider, err := managedk8s.FromGenericConfig(providerConf)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(provider.ID()).To(Equal("id"))
 			Expect(provider.Name()).To(Equal("name"))
@@ -143,8 +137,8 @@ var _ = Describe("managedk8s.provider", func() {
 					"foo": "bar",
 				},
 			}
-			os.Setenv("KUBECONFIG", tmpKubeconfig)
-			provider, err := managedk8s.FromGenericConfig(providerConf, options)
+			_ = os.Setenv("KUBECONFIG", tmpKubeconfig)
+			provider, err := managedk8s.FromGenericConfig(providerConf)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(provider.ID()).To(Equal("id"))
 			Expect(provider.Name()).To(Equal("name"))
@@ -158,8 +152,9 @@ var _ = Describe("managedk8s.provider", func() {
 				Name: "name",
 				Args: "not-a-map",
 			}
-			_, err := managedk8s.FromGenericConfig(providerConf, options)
+			provider, err := managedk8s.FromGenericConfig(providerConf)
 			Expect(err).To(HaveOccurred())
+			Expect(provider).To(BeNil())
 		})
 
 		It("should return error if kubeconfig path is invalid", func() {
@@ -171,8 +166,9 @@ var _ = Describe("managedk8s.provider", func() {
 				Name: "name",
 				Args: args,
 			}
-			_, err := managedk8s.FromGenericConfig(providerConf, options)
+			provider, err := managedk8s.FromGenericConfig(providerConf)
 			Expect(err).To(HaveOccurred())
+			Expect(provider).To(BeNil())
 		})
 
 		It("should return valid in-cluster config", func() {
@@ -183,24 +179,59 @@ var _ = Describe("managedk8s.provider", func() {
 
 			// Create a temp cert file
 			tmpCertFile := GinkgoT().TempDir() + "/ca.crt"
-			os.WriteFile(tmpCertFile, []byte(cert), 0644)
+			_ = os.WriteFile(tmpCertFile, []byte(cert), 0600)
 
-			options.ConfigGetter = func() (*rest.Config, error) {
+			defer func() {
+				managedk8s.SetInClusterConfigFunc(rest.InClusterConfig)
+			}()
+
+			managedk8s.SetInClusterConfigFunc(func() (*rest.Config, error) {
 				return &rest.Config{
 					Host: "in-cluster",
 					TLSClientConfig: rest.TLSClientConfig{
 						CAFile: tmpCertFile,
 					},
 				}, nil
-			}
-			provider, err := managedk8s.FromGenericConfig(providerConf, options)
+			})
+			provider, err := managedk8s.FromGenericConfig(providerConf)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(provider.ID()).To(Equal("id"))
 			Expect(provider.Name()).To(Equal("name"))
 			Expect(provider.Config).NotTo(BeNil())
 
 		})
+		It("should return error if in-cluster config cannot be loaded", func() {
+			providerConf := config.ProviderConfig{
+				ID:   "id",
+				Name: "name",
+			}
+			provider, err := managedk8s.FromGenericConfig(providerConf)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(ContainSubstring("failed to load in-cluster configuration")))
+			Expect(provider).To(BeNil())
+		})
+		It("should return error if in-cluster config has invalid CA file", func() {
+			providerConf := config.ProviderConfig{
+				ID:   "id",
+				Name: "name",
+			}
 
+			defer func() {
+				managedk8s.SetInClusterConfigFunc(rest.InClusterConfig)
+			}()
+
+			managedk8s.SetInClusterConfigFunc(func() (*rest.Config, error) {
+				return &rest.Config{
+					Host: "in-cluster",
+					TLSClientConfig: rest.TLSClientConfig{
+						CAFile: "/does/not/exist",
+					},
+				}, nil
+			})
+			provider, err := managedk8s.FromGenericConfig(providerConf)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(ContainSubstring("failed to read CA file")))
+			Expect(provider).To(BeNil())
+		})
 	})
-
 })

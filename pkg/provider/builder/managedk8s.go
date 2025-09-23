@@ -21,10 +21,7 @@ import (
 
 // ManagedK8SProviderFromConfig returns a Provider from a [ProviderConfig].
 func ManagedK8SProviderFromConfig(conf config.ProviderConfig, fldPath *field.Path) (provider.Provider, error) {
-	options := managedk8s.ConfigOptions{
-		ConfigGetter: nil,
-	}
-	p, err := managedk8s.FromGenericConfig(conf, options)
+	p, err := managedk8s.FromGenericConfig(conf)
 	if err != nil {
 		return nil, err
 	}

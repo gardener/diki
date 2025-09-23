@@ -12,9 +12,8 @@ import (
 	"log/slog"
 	"os"
 
-	"k8s.io/client-go/tools/clientcmd"
-
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/gardener/diki/pkg/config"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
@@ -47,11 +46,9 @@ type providerArgs struct {
 	KubeconfigPath         string            `json:"kubeconfigPath" yaml:"kubeconfigPath"`
 }
 
-type ConfigOptions struct {
-	ConfigGetter inClusterConfigGetter
-}
-
 type inClusterConfigGetter func() (*rest.Config, error)
+
+var inClusterConfigFunc inClusterConfigGetter = rest.InClusterConfig
 
 var _ provider.Provider = &Provider{}
 
@@ -135,7 +132,7 @@ func (p *Provider) Metadata() map[string]string {
 }
 
 // FromGenericConfig creates a Provider from ProviderConfig.
-func FromGenericConfig(providerConf config.ProviderConfig, options ConfigOptions) (*Provider, error) {
+func FromGenericConfig(providerConf config.ProviderConfig) (*Provider, error) {
 	providerArgsByte, err := json.Marshal(providerConf.Args)
 	if err != nil {
 		return nil, err
@@ -146,7 +143,7 @@ func FromGenericConfig(providerConf config.ProviderConfig, options ConfigOptions
 		return nil, err
 	}
 
-	kubeconfig, err := loadConfig(providerArgs, options)
+	kubeconfig, err := loadConfig(providerArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -174,47 +171,37 @@ func (p *Provider) Logger() sharedprovider.Logger {
 	return p.logger
 }
 
-func loadConfig(providerArgs providerArgs, options ConfigOptions) (config *rest.Config, err error) {
+func loadConfig(providerArgs providerArgs) (config *rest.Config, err error) {
 
-	var kubeconfig *rest.Config
-
+	switch {
 	// Check if a kubeconfig path is provided via the provider args in the configuration file.
-	if len(providerArgs.KubeconfigPath) > 0 {
-		kubeconfig, err = kubeutils.RESTConfigFromFile(providerArgs.KubeconfigPath)
-		if err == nil {
-			fmt.Print("kubeconfig path from args: ", providerArgs.KubeconfigPath)
-			fmt.Print("kubeconfig: ", kubeconfig)
-			return kubeconfig, nil
+	case len(providerArgs.KubeconfigPath) > 0:
+		restConfig, err := kubeutils.RESTConfigFromFile(providerArgs.KubeconfigPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load kubeconfig from path %s: %w", providerArgs.KubeconfigPath, err)
 		}
-	}
+		return restConfig, nil
 
 	// If no kubeconfigPath is set in the provider args,
 	// check if a kubeconfig path is provided via the KUBECONFIG environment variable.
-	kubeconfigPath := os.Getenv(clientcmd.RecommendedConfigPathEnvVar)
-	if len(kubeconfigPath) > 0 {
-		kubeconfig, err = kubeutils.RESTConfigFromFile(kubeconfigPath)
-		if err == nil {
-			fmt.Print("kubeconfig from env: ", providerArgs.KubeconfigPath)
-			fmt.Print("kubeconfig: ", kubeconfig)
-			return kubeconfig, nil
+	case len(os.Getenv(clientcmd.RecommendedConfigPathEnvVar)) > 0:
+		restConfig, err := kubeutils.RESTConfigFromFile(os.Getenv(clientcmd.RecommendedConfigPathEnvVar))
+		if err != nil {
+			return nil, fmt.Errorf("failed to load kubeconfig from path %s: %w", os.Getenv(clientcmd.RecommendedConfigPathEnvVar), err)
 		}
-	}
+		return restConfig, nil
 
-	// If no kubeconfigPath is set in the provider args or via the KUBECONFIG environment variable,
-	//  try to use in-cluster configuration.
-	if options.ConfigGetter != nil {
-		kubeconfig, err = options.ConfigGetter()
-	} else {
-		kubeconfig, err = rest.InClusterConfig()
-	}
-	if err == nil {
-		fmt.Print("kubeconfig from Cluster")
-		fmt.Print("kubeconfig: ", kubeconfig)
-		kubeconfig.CAData, err = os.ReadFile(kubeconfig.CAFile)
-		if err == nil {
-			return kubeconfig, nil
+	default:
+		// If no kubeconfigPath is set in the provider args or via the KUBECONFIG environment variable,
+		//  try to use in-cluster configuration.
+		restConfig, err := inClusterConfigFunc()
+		if err != nil {
+			return nil, fmt.Errorf("failed to load in-cluster configuration: %w", err)
 		}
+		restConfig.CAData, err = os.ReadFile(restConfig.CAFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read CA file %s: %w", restConfig.CAFile, err)
+		}
+		return restConfig, nil
 	}
-
-	return nil, err
 }
