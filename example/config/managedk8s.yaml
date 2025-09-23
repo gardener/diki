@@ -24,12 +24,14 @@ providers:                   # contains information about known providers
     #     - apiVersion: "v1"
     #       # if set to "*" match all kinds
     #       kind: "Pod"
-    #       matchLabels:
-    #         foo: bar
+    #       labelSelector:
+    #         matchLabels:
+    #           foo: bar
     #       # only pods in namespaces ["default", "kube-public", "kube-node-lease"] are meaningful to be selected with namespaceMatchLabels
     #       # since the rule does not perform checks on objects in namespaces different from the listed above
-    #       namespaceMatchLabels:
-    #         kubernetes.io/metadata.name: default
+    #       namespaceLabelSelector:
+    #         matchLabels:
+    #           kubernetes.io/metadata.name: default
     #       justification: "justification"
     #       # relates to the result status in the report
     #       # can be set to Passed or Accepted. Defaults to Accepted
@@ -79,32 +81,38 @@ providers:                   # contains information about known providers
     # - ruleID: "242414"
     #   args:
     #     acceptedPods:
-    #     - podMatchLabels:
-    #         label: foo
-    #       namespaceMatchLabels:
-    #         label: foo
+    #     - labelSelector:
+    #         matchLabels:
+    #           label: foo
+    #       namespaceLabelSelector:
+    #         matchLabels:
+    #           label: foo
     #       justification: "justification"
     #       ports:
     #       - 53
     # - ruleID: "242415"
     #   args:
     #     acceptedPods:
-    #     - podMatchLabels:
-    #         label: foo
-    #       namespaceMatchLabels:
-    #         label: foo
+    #     - labelSelector:
+    #         matchLabels:
+    #           label: foo
+    #       namespaceLabelSelector:
+    #         matchLabels:
+    #           label: foo
     #       justification: "justification"
     #       environmentVariables:
     #       - FOO_BAR
     # - ruleID: "242417"
     #   args:
     #     acceptedPods:
-    #     - podMatchLabels:
-    #         foo: bar
+    #     - labelSelector:
+    #         matchLabels:
+    #           foo: bar
     #       # only pods in namespaces ["kube-system", "kube-public", "kube-node-lease"] are meaningful to be selected with namespaceMatchLabels
     #       # since the rule does not perform checks on objects in namespaces different from the listed above
-    #       namespaceMatchLabels:
-    #         kubernetes.io/metadata.name: kube-system
+    #       namespaceLabelSelector:
+    #         matchLabels:
+    #           kubernetes.io/metadata.name: kube-system
     #       justification: "justification"
     #       # relates to the result status in the report
     #       # can be set to Passed or Accepted. Defaults to Accepted

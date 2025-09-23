@@ -34,27 +34,33 @@ providers:             # contains information about known providers
     - ruleID: "242414"
       args:
         acceptedPods:
-        - podMatchLabels:
-            k8s-app: node-local-dns
-          namespaceMatchLabels:
-            kubernetes.io/metadata.name: kube-system
+        - labelSelector:
+            matchLabels:
+              k8s-app: node-local-dns
+          namespaceLabelSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
           justification: "Node local dns requires port 53 in order to operate properly."
           ports:
           - 53
-        - podMatchLabels:
-            app: node-problem-detector
-          namespaceMatchLabels:
-            kubernetes.io/metadata.name: kube-system
+        - labelSelector:
+            matchLabels:
+              app: node-problem-detector
+          namespaceLabelSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
           ports:
           - 1011
           - 1012
     # - ruleID: "242415"
     #   args:
     #     acceptedPods:
-    #     - podMatchLabels:
-    #         label: foo
-    #       namespaceMatchLabels:
-    #         label: foo
+    #     - labelSelector:
+    #         matchLabels:
+    #           label: foo
+    #       namespaceLabelSelector:
+    #         matchLabels:
+    #           label: foo
     #       justification: "justification"
     #       environmentVariables:
     #       - FOO_BAR

@@ -10,6 +10,7 @@ import (
 
 	resourcesv1alpha1 "github.com/gardener/gardener/pkg/apis/resources/v1alpha1"
 	kubernetesgardener "github.com/gardener/gardener/pkg/client/kubernetes"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -396,16 +397,18 @@ func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsCon
 			Options: &sharedrules.Options242417{
 				AcceptedPods: []sharedrules.AcceptedPods242417{
 					{
-						PodSelector: disaoption.PodSelector{
-							PodMatchLabels: map[string]string{
-								resourcesv1alpha1.ManagedBy: "gardener",
+						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+							NamespacedObjectSelector: option.NamespacedObjectSelector{
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{resourcesv1alpha1.ManagedBy: "gardener"},
+								},
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"kubernetes.io/metadata.name": "kube-system"},
+								},
 							},
-							NamespaceMatchLabels: map[string]string{
-								"kubernetes.io/metadata.name": "kube-system",
-							},
+							Justification: "Gardener managed pods are not user pods",
 						},
-						Justification: "Gardener managed pods are not user pods",
-						Status:        "Passed",
+						Status: "Passed",
 					},
 				},
 			},

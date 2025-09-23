@@ -18,7 +18,7 @@ import (
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -48,15 +48,27 @@ var _ = Describe("#242417", func() {
 		options = &rules.Options242417{
 			AcceptedPods: []rules.AcceptedPods242417{
 				{
-					PodSelector: option.PodSelector{
-						PodMatchLabels:       map[string]string{},
-						NamespaceMatchLabels: map[string]string{"random1": "value1"},
+					AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+						NamespacedObjectSelector: option.NamespacedObjectSelector{
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{},
+							},
+							NamespaceLabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"random1": "value1"},
+							},
+						},
 					},
 				},
 				{
-					PodSelector: option.PodSelector{
-						PodMatchLabels:       map[string]string{},
-						NamespaceMatchLabels: map[string]string{"random2": "value2"},
+					AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+						NamespacedObjectSelector: option.NamespacedObjectSelector{
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{},
+							},
+							NamespaceLabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"random2": "value2"},
+							},
+						},
 					},
 				},
 			},
@@ -119,9 +131,9 @@ var _ = Describe("#242417", func() {
 		pod4.Labels["compliance.gardener.cloud/role"] = "diki-privileged-pod"
 		Expect(fakeClient.Create(ctx, pod4)).To(Succeed())
 
-		options.AcceptedPods[0].PodMatchLabels["label"] = "value"
+		options.AcceptedPods[0].LabelSelector.MatchLabels["label"] = "value"
 		options.AcceptedPods[0].Status = "Passed"
-		options.AcceptedPods[1].PodMatchLabels["label"] = "value"
+		options.AcceptedPods[1].LabelSelector.MatchLabels["label"] = "value"
 		options.AcceptedPods[1].Status = "Passed"
 
 		r := &rules.Rule242417{
@@ -222,9 +234,9 @@ var _ = Describe("#242417", func() {
 		pod4.Labels["compliance.gardener.cloud/role"] = "diki-privileged-pod"
 		Expect(fakeClient.Create(ctx, pod4)).To(Succeed())
 
-		options.AcceptedPods[0].PodMatchLabels["label"] = "value"
+		options.AcceptedPods[0].LabelSelector.MatchLabels["label"] = "value"
 		options.AcceptedPods[0].Status = "Passed"
-		options.AcceptedPods[1].PodMatchLabels["label"] = "value"
+		options.AcceptedPods[1].LabelSelector.MatchLabels["label"] = "value"
 		options.AcceptedPods[1].Status = "Passed"
 
 		r := &rules.Rule242417{
@@ -260,8 +272,9 @@ var _ = Describe("#242417", func() {
 		pod3.Labels["label"] = "gardener"
 		Expect(fakeClient.Create(ctx, pod3)).To(Succeed())
 
-		options.AcceptedPods[0].PodMatchLabels["label"] = "value"
+		options.AcceptedPods[0].LabelSelector.MatchLabels["label1"] = "value1"
 		options.AcceptedPods[0].Status = "Passed"
+		options.AcceptedPods[1].LabelSelector.MatchLabels["labe2"] = "value2"
 
 		r := &rules.Rule242417{Client: fakeClient,
 			Options: options}
@@ -304,22 +317,34 @@ var _ = Describe("#242417", func() {
 		pod4.Labels["compliance.gardener.cloud/role"] = "diki-privileged-pod"
 		Expect(fakeClient.Create(ctx, pod4)).To(Succeed())
 
-		options.AcceptedPods[0].PodMatchLabels["foo"] = "bar"
-		options.AcceptedPods[0].PodMatchLabels["bar"] = "foo"
+		options.AcceptedPods[0].LabelSelector.MatchLabels["foo"] = "bar"
+		options.AcceptedPods[0].LabelSelector.MatchLabels["bar"] = "foo"
 		options.AcceptedPods[0].Status = "Accepted"
 		options.AcceptedPods[0].Justification = "Accept pod."
 
 		options.AcceptedPods = append(options.AcceptedPods, rules.AcceptedPods242417{
-			PodSelector: option.PodSelector{
-				PodMatchLabels:       map[string]string{"foo": "bar"},
-				NamespaceMatchLabels: map[string]string{"functionality": "system"},
+			AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+				NamespacedObjectSelector: option.NamespacedObjectSelector{
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+					NamespaceLabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"functionality": "system"},
+					},
+				},
 			},
 		})
 
 		options.AcceptedPods = append(options.AcceptedPods, rules.AcceptedPods242417{
-			PodSelector: option.PodSelector{
-				PodMatchLabels:       map[string]string{"foo-bar": "bar"},
-				NamespaceMatchLabels: map[string]string{"functionality": "system"},
+			AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+				NamespacedObjectSelector: option.NamespacedObjectSelector{
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo-bar": "bar"},
+					},
+					NamespaceLabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"functionality": "system"},
+					},
+				},
 			},
 			Status: "fake",
 		})
@@ -346,30 +371,53 @@ var _ = Describe("#242417", func() {
 			options = &rules.Options242417{
 				AcceptedPods: []rules.AcceptedPods242417{
 					{
-						PodSelector: option.PodSelector{
-							PodMatchLabels:       map[string]string{"typeOfPod": "veryImportant"},
-							NamespaceMatchLabels: map[string]string{"namespaceType": "system"},
+						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+							NamespacedObjectSelector: option.NamespacedObjectSelector{
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"typeOfPod": "veryImportant"},
+								},
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"namespaceType": "system"},
+								},
+							},
 						},
-						Status: "Passed",
 					},
 					{
-						PodSelector: option.PodSelector{
-							PodMatchLabels:       map[string]string{"typeOfPod": "veryImportant"},
-							NamespaceMatchLabels: map[string]string{"namespaceType": "system"},
+						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+							NamespacedObjectSelector: option.NamespacedObjectSelector{
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"typeOfPod": "veryImportant"},
+								},
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"namespaceType": "system"},
+								},
+							},
 						},
 						Status: "Accepted",
 					},
 					{
-						PodSelector: option.PodSelector{
-							PodMatchLabels:       map[string]string{"typeOfPod": "veryImportant"},
-							NamespaceMatchLabels: map[string]string{"namespaceType": "system"},
+						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+							NamespacedObjectSelector: option.NamespacedObjectSelector{
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"typeOfPod": "veryImportant"},
+								},
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"namespaceType": "system"},
+								},
+							},
 						},
 						Status: "fake",
 					},
 					{
-						PodSelector: option.PodSelector{
-							PodMatchLabels:       map[string]string{"typeOfPod": "veryImportant"},
-							NamespaceMatchLabels: map[string]string{"namespaceType": "system"},
+						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+							NamespacedObjectSelector: option.NamespacedObjectSelector{
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"typeOfPod": "veryImportant"},
+								},
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"namespaceType": "system"},
+								},
+							},
 						},
 					},
 				},
