@@ -77,11 +77,11 @@ var _ = Describe("options", func() {
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
 					"Field":  Equal("foo.labelSelector"),
-					"Detail": Equal("must not be empty"),
+					"Detail": Equal("must not be empty. For more information, please refer to the migration guide: https://github.com/gardener/diki/tree/main/docs/usage/migrate-selector-rule-options.md"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
 					"Field":  Equal("foo.labelSelector"),
-					"Detail": Equal("must not be empty"),
+					"Detail": Equal("must not be empty. For more information, please refer to the migration guide: https://github.com/gardener/diki/tree/main/docs/usage/migrate-selector-rule-options.md"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("foo.labelSelector.matchLabels"),
@@ -93,7 +93,7 @@ var _ = Describe("options", func() {
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeForbidden),
 					"Field":  Equal("foo.matchLabels"),
-					"Detail": Equal("cannot be set when labelSelector is defined"),
+					"Detail": Equal("cannot be set when labelSelector is defined. For more information, please refer to the migration guide: https://github.com/gardener/diki/tree/main/docs/usage/migrate-selector-rule-options.md"),
 				}))))
 		})
 	})
@@ -256,31 +256,31 @@ var _ = Describe("options", func() {
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
 					"Field":  Equal("foo"),
-					"Detail": Equal("both matchLabels and namespaceMatchLabels must be set"),
+					"Detail": Equal("both matchLabels and namespaceMatchLabels must be set. For more information, please refer to the migration guide: https://github.com/gardener/diki/tree/main/docs/usage/migrate-selector-rule-options.md"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
 					"Field":  Equal("foo"),
-					"Detail": Equal("both matchLabels and namespaceMatchLabels must be set"),
+					"Detail": Equal("both matchLabels and namespaceMatchLabels must be set. For more information, please refer to the migration guide: https://github.com/gardener/diki/tree/main/docs/usage/migrate-selector-rule-options.md"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
 					"Field":  Equal("foo"),
-					"Detail": Equal("both matchLabels and namespaceMatchLabels must be set"),
+					"Detail": Equal("both matchLabels and namespaceMatchLabels must be set. For more information, please refer to the migration guide: https://github.com/gardener/diki/tree/main/docs/usage/migrate-selector-rule-options.md"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
 					"Field":  Equal("foo"),
-					"Detail": Equal("both matchLabels and namespaceMatchLabels must be set"),
+					"Detail": Equal("both matchLabels and namespaceMatchLabels must be set. For more information, please refer to the migration guide: https://github.com/gardener/diki/tree/main/docs/usage/migrate-selector-rule-options.md"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
 					"Field":  Equal("foo"),
-					"Detail": Equal("both labelSelector and namespaceLabelSelector must be set"),
+					"Detail": Equal("both labelSelector and namespaceLabelSelector must be set. For more information, please refer to the migration guide: https://github.com/gardener/diki/tree/main/docs/usage/migrate-selector-rule-options.md"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
 					"Field":  Equal("foo"),
-					"Detail": Equal("both labelSelector and namespaceLabelSelector must be set"),
+					"Detail": Equal("both labelSelector and namespaceLabelSelector must be set. For more information, please refer to the migration guide: https://github.com/gardener/diki/tree/main/docs/usage/migrate-selector-rule-options.md"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeRequired),
 					"Field":  Equal("foo"),
-					"Detail": Equal("both labelSelector and namespaceLabelSelector must be set"),
+					"Detail": Equal("both labelSelector and namespaceLabelSelector must be set. For more information, please refer to the migration guide: https://github.com/gardener/diki/tree/main/docs/usage/migrate-selector-rule-options.md"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("foo.labelSelector.matchExpressions[0].operator"),
@@ -292,11 +292,11 @@ var _ = Describe("options", func() {
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeForbidden),
 					"Field":  Equal("foo"),
-					"Detail": Equal("matchLabels cannot be set when labelSelectors are used"),
+					"Detail": Equal("matchLabels cannot be set when labelSelectors are used. For more information, please refer to the migration guide: https://github.com/gardener/diki/tree/main/docs/usage/migrate-selector-rule-options.md"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeForbidden),
 					"Field":  Equal("foo"),
-					"Detail": Equal("matchLabels cannot be set when labelSelectors are used"),
+					"Detail": Equal("matchLabels cannot be set when labelSelectors are used. For more information, please refer to the migration guide: https://github.com/gardener/diki/tree/main/docs/usage/migrate-selector-rule-options.md"),
 				}))))
 		})
 	})
