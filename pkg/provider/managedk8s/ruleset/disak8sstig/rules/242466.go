@@ -75,20 +75,19 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 		nodeLabels                 []string
 		pods                       []corev1.Pod
 		expectedFilePermissionsMax = "644"
+		kubeProxySelector          = option.ClusterObjectSelector{
+			LabelSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"role": "proxy"},
+			},
+		}
 	)
 
 	if r.Options != nil {
 		if r.Options.NodeGroupByLabels != nil {
 			nodeLabels = slices.Clone(r.Options.NodeGroupByLabels)
 		}
-	} else {
-		r.Options = &Options242466{}
-	}
-	if r.Options.KubeProxy.ClusterObjectSelector == nil {
-		r.Options.KubeProxy.ClusterObjectSelector = &option.ClusterObjectSelector{
-			LabelSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"role": "proxy"},
-			},
+		if r.Options.KubeProxy.ClusterObjectSelector != nil {
+			kubeProxySelector = *r.Options.KubeProxy.ClusterObjectSelector
 		}
 	}
 
@@ -128,13 +127,13 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	// kube-proxy check
-	if r.Options.KubeProxy.Disabled {
+	if r.Options != nil && r.Options.KubeProxy.Disabled {
 		checkResults = append(checkResults, rule.AcceptedCheckResult("kube-proxy check is skipped.", rule.NewTarget()))
 		return rule.Result(r, checkResults...), nil
 	}
 
 	for _, p := range allPods {
-		if matches, err := r.Options.KubeProxy.Matches(p.Labels); err != nil {
+		if matches, err := kubeProxySelector.Matches(p.Labels); err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget()))
 			return rule.Result(r, checkResults...), nil
 		} else if matches {

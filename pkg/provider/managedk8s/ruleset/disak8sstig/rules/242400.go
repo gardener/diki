@@ -72,18 +72,16 @@ func (r *Rule242400) Severity() rule.SeverityLevel {
 
 func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
-		checkResults []rule.CheckResult
-	)
-
-	if r.Options == nil {
-		r.Options = &Options242400{}
-	}
-	if r.Options.KubeProxy.ClusterObjectSelector == nil {
-		r.Options.KubeProxy.ClusterObjectSelector = &option.ClusterObjectSelector{
+		checkResults      []rule.CheckResult
+		kubeProxySelector = option.ClusterObjectSelector{
 			LabelSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"role": "proxy"},
 			},
 		}
+	)
+
+	if r.Options != nil && r.Options.KubeProxy.ClusterObjectSelector != nil {
+		kubeProxySelector = *r.Options.KubeProxy.ClusterObjectSelector
 	}
 
 	const option = "featureGates.AllAlpha"
@@ -124,7 +122,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	// kube-proxy check
-	if r.Options.KubeProxy.Disabled {
+	if r.Options != nil && r.Options.KubeProxy.Disabled {
 		checkResults = append(checkResults, rule.AcceptedCheckResult("kube-proxy check is skipped.", rule.NewTarget()))
 		return rule.Result(r, checkResults...), nil
 	}
@@ -136,7 +134,7 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 	var pods []corev1.Pod
 	for _, p := range allPods {
-		if matches, err := r.Options.KubeProxy.Matches(p.Labels); err != nil {
+		if matches, err := kubeProxySelector.Matches(p.Labels); err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget()))
 			return rule.Result(r, checkResults...), nil
 		} else if matches {

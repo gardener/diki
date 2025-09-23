@@ -79,20 +79,19 @@ func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
 		checkResults            []rule.CheckResult
 		options                 = disaoption.FileOwnerOptions{}
 		kubeProxyContainerNames = []string{"kube-proxy", "proxy"}
+		kubeProxySelector       = option.ClusterObjectSelector{
+			LabelSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"role": "proxy"},
+			},
+		}
 	)
 
 	if r.Options != nil {
 		if r.Options.FileOwnerOptions != nil {
 			options = *r.Options.FileOwnerOptions
 		}
-	} else {
-		r.Options = &Options242448{}
-	}
-	if r.Options.ClusterObjectSelector == nil {
-		r.Options.ClusterObjectSelector = &option.ClusterObjectSelector{
-			LabelSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"role": "proxy"},
-			},
+		if r.Options.ClusterObjectSelector != nil {
+			kubeProxySelector = *r.Options.ClusterObjectSelector
 		}
 	}
 	if len(options.ExpectedFileOwner.Users) == 0 {
@@ -110,7 +109,7 @@ func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	var pods []corev1.Pod
 	for _, p := range allPods {
-		if matches, err := r.Options.Matches(p.Labels); err != nil {
+		if matches, err := kubeProxySelector.Matches(p.Labels); err != nil {
 			return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 		} else if matches {
 			pods = append(pods, p)
