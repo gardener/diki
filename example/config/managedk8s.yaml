@@ -183,8 +183,9 @@ providers:                   # contains information about known providers
     #     justification: "the whole rule is accepted for ... reasons"
     #   args:
     #     acceptedNamespaces:
-    #     - matchLabels:
-    #         foo: bar
+    #     - labelSelector:
+    #         matchLabels:
+    #           foo: bar
     #       justification: "justification"
     #       acceptedTraffic:
     #         ingress: true
@@ -192,10 +193,12 @@ providers:                   # contains information about known providers
     # - ruleID: "2001"
     #   args:
     #     acceptedPods:
-    #     - matchLabels:
-    #         foo: bar
-    #       namespaceMatchLabels:
-    #         foo: bar
+    #     - labelSelector:
+    #         matchLabels:
+    #           foo: bar
+    #       namespaceLabelSelector:
+    #         matchLabels:
+    #           foo: bar
     #       justification: "justification"
     # - ruleID: "2002"
     #   args:
@@ -207,28 +210,34 @@ providers:                   # contains information about known providers
     # - ruleID: "2003"
     #   args:
     #     acceptedPods:
-    #     - matchLabels:
-    #         foo: bar
-    #       namespaceMatchLabels:
-    #         foo: bar
+    #     - labelSelector:
+    #         matchLabels:
+    #           foo: bar
+    #       namespaceLabelSelector:
+    #         matchLabels:
+    #           foo: bar
     #       justification: "justification"
     #       volumeNames:
     #       - "volume-a"
     #       - "volume-b"
-    #     - matchLabels:
-    #         foo: baz
-    #       namespaceMatchLabels:
-    #         foo: baz
+    #     - labelSelector:
+    #         matchLabels:
+    #           foo: baz
+    #       namespaceLabelSelector:
+    #         matchLabels:
+    #           foo: baz
     #       justification: "justification"
     #       volumeNames:
     #       - "*" # a wildcard can be used to match against all volumes in an accepted pod
     # - ruleID: "2004"
     #   args:
     #     acceptedServices:
-    #     - matchLabels:
-    #         foo: bar
-    #       namespaceMatchLabels:
-    #         foo: bar
+    #     - labelSelector:
+    #         matchLabels:
+    #           foo: bar
+    #       namespaceLabelSelector:
+    #         matchLabels:
+    #           foo: bar
     #       justification: "justification"
     # - ruleID: "2005"
     #   args:
@@ -237,42 +246,52 @@ providers:                   # contains information about known providers
     # - ruleID: "2006"
     #   args:
     #     acceptedRoles:
-    #     - matchLabels:
-    #         foo: bar
-    #       namespaceMatchLabels:
-    #         foo: bar
+    #     - labelSelector:
+    #         matchLabels:
+    #           foo: bar
+    #       namespaceLabelSelector:
+    #         matchLabels:
+    #           foo: bar
     #       justification: "justification"
     #     acceptedClusterRoles:
-    #     - matchLabels:
-    #         foo: bar
+    #     - labelSelector:
+    #         matchLabels:
+    #           foo: bar
     #       justification: "justification"
     # - ruleID: "2007"
     #   args:
     #     acceptedRoles:
-    #     - matchLabels:
-    #         foo: bar
-    #       namespaceMatchLabels:
-    #         foo: bar
+    #     - labelSelector:
+    #         matchLabels:
+    #           foo: bar
+    #       namespaceLabelSelector:
+    #         matchLabels:
+    #           foo: bar
     #       justification: "justification"
     #     acceptedClusterRoles:
-    #     - matchLabels:
-    #         foo: bar
+    #     - labelSelector:
+    #         matchLabels:
+    #           foo: bar
     #       justification: "justification"
     # - ruleID: "2008"
     #   args:
     #     acceptedPods:
-    #     - matchLabels:
-    #         foo: bar
-    #       namespaceMatchLabels:
-    #         foo: bar
+    #     - labelSelector:
+    #         matchLabels:
+    #           foo: bar
+    #       namespaceLabelSelector:
+    #         matchLabels:
+    #           foo: bar
     #       justification: "justification"
     #       volumeNames:
     #       - "volume-a"
     #       - "volume-b"
-    #     - matchLabels:
-    #         foo: baz
-    #       namespaceMatchLabels:
-    #         foo: baz
+    #     - labelSelector:
+    #         matchLabels:
+    #           foo: baz
+    #       namespaceLabelSelector:
+    #         matchLabels:
+    #           foo: baz
     #       justification: "justification"
     #       volumeNames:
     #       - "*" # a wildcard can be used to match against all volumes in an accepted pod

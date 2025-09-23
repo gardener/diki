@@ -8,13 +8,11 @@ import (
 	"context"
 	"slices"
 
-	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
@@ -127,7 +125,10 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 		if deniesAllIngress && !allowsAllIngress {
 			checkResults = append(checkResults, rule.PassedCheckResult("Ingress traffic is denied by default.", deniesAllIngressTarget))
 		} else {
-			accepted, justification := r.acceptedIngress(namespace)
+			accepted, justification, err := r.acceptedIngress(namespace.Labels)
+			if err != nil {
+				return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+			}
 
 			acceptedTarget := target
 			msg := "Namespace is accepted to allow Ingress traffic by default."
@@ -152,7 +153,10 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 		if deniesAllEgress && !allowsAllEgress {
 			checkResults = append(checkResults, rule.PassedCheckResult("Egress traffic is denied by default.", deniesAllEgressTarget))
 		} else {
-			accepted, justification := r.acceptedEgress(namespace)
+			accepted, justification, err := r.acceptedEgress(namespace.Labels)
+			if err != nil {
+				return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+			}
 
 			acceptedTarget := target
 			msg := "Namespace is accepted to allow Egress traffic by default."
@@ -178,33 +182,34 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 	return rule.Result(r, checkResults...), nil
 }
 
-func (r *Rule2000) acceptedIngress(namespace corev1.Namespace) (bool, string) {
+func (r *Rule2000) acceptedIngress(namespaceLabels map[string]string) (bool, string, error) {
 	if r.Options == nil {
-		return false, ""
+		return false, "", nil
 	}
 
 	for _, acceptedNamespace := range r.Options.AcceptedNamespaces {
-
-		if utils.MatchLabels(namespace.Labels, acceptedNamespace.MatchLabels) &&
-			acceptedNamespace.AcceptedTraffic.Ingress {
-			return true, acceptedNamespace.Justification
+		if matches, err := acceptedNamespace.Matches(namespaceLabels); err != nil {
+			return false, "", err
+		} else if matches && acceptedNamespace.AcceptedTraffic.Ingress {
+			return true, acceptedNamespace.Justification, nil
 		}
 	}
 
-	return false, ""
+	return false, "", nil
 }
 
-func (r *Rule2000) acceptedEgress(namespace corev1.Namespace) (bool, string) {
+func (r *Rule2000) acceptedEgress(namespaceLabels map[string]string) (bool, string, error) {
 	if r.Options == nil {
-		return false, ""
+		return false, "", nil
 	}
 
 	for _, acceptedNamespace := range r.Options.AcceptedNamespaces {
-		if utils.MatchLabels(namespace.Labels, acceptedNamespace.MatchLabels) &&
-			acceptedNamespace.AcceptedTraffic.Egress {
-			return true, acceptedNamespace.Justification
+		if matches, err := acceptedNamespace.Matches(namespaceLabels); err != nil {
+			return false, "", err
+		} else if matches && acceptedNamespace.AcceptedTraffic.Egress {
+			return true, acceptedNamespace.Justification, nil
 		}
 	}
 
-	return false, ""
+	return false, "", nil
 }
