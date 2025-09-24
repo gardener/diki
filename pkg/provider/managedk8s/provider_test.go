@@ -100,6 +100,9 @@ var _ = Describe("managedk8s", func() {
 			tmpKubeconfig = GinkgoT().TempDir() + "/kubeconfig"
 			_ = os.WriteFile(tmpKubeconfig, []byte(testKubeconfig), 0600)
 
+			defer func() {
+				managedk8s.SetInClusterConfigFunc(rest.InClusterConfig)
+			}()
 		})
 
 		AfterEach(func() {
@@ -181,10 +184,6 @@ var _ = Describe("managedk8s", func() {
 			tmpCertFile := GinkgoT().TempDir() + "/ca.crt"
 			_ = os.WriteFile(tmpCertFile, []byte(cert), 0600)
 
-			defer func() {
-				managedk8s.SetInClusterConfigFunc(rest.InClusterConfig)
-			}()
-
 			managedk8s.SetInClusterConfigFunc(func() (*rest.Config, error) {
 				return &rest.Config{
 					Host: "in-cluster",
@@ -215,10 +214,6 @@ var _ = Describe("managedk8s", func() {
 				ID:   "id",
 				Name: "name",
 			}
-
-			defer func() {
-				managedk8s.SetInClusterConfigFunc(rest.InClusterConfig)
-			}()
 
 			managedk8s.SetInClusterConfigFunc(func() (*rest.Config, error) {
 				return &rest.Config{
