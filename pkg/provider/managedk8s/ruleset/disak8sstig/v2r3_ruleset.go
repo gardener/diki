@@ -91,10 +91,7 @@ func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsCon
 	}
 
 	authorityCertPool := x509.NewCertPool()
-	ok := authorityCertPool.AppendCertsFromPEM(r.Config.CAData)
-	if !ok {
-		return fmt.Errorf("failed to parse kube-apiserver CA data from config")
-	}
+	authorityCertPool.AppendCertsFromPEM(r.Config.CAData)
 
 	opts242383, err := getV2R3OptionOrNil[sharedrules.Options242383](ruleOptions[sharedrules.ID242383].Args)
 	if err != nil {
