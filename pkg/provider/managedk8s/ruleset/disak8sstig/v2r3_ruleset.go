@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/kubernetes"
@@ -91,22 +92,21 @@ func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsCon
 		return err
 	}
 
-	var (
-		insecureSkipTLSVerify bool
-		authorityCertPool     = x509.NewCertPool()
-	)
+	var authorityCertPool = x509.NewCertPool()
 
 	switch {
 	case len(r.Config.CAData) > 0:
-		authorityCertPool.AppendCertsFromPEM(r.Config.CAData)
+		ok := authorityCertPool.AppendCertsFromPEM(r.Config.CAData)
+		if !ok {
+			return fmt.Errorf("failed to parse kube-apiserver CA data from config")
+		}
 	case len(r.Config.CAFile) > 0:
-		caFileData, err := os.ReadFile(r.Config.CAFile)
+		caFileData, err := os.ReadFile(filepath.Clean(r.Config.CAFile))
 		if err != nil {
 			return fmt.Errorf("failed to read CA file: %w", err)
 		}
 		authorityCertPool.AppendCertsFromPEM(caFileData)
 	default:
-		insecureSkipTLSVerify = true
 		authorityCertPool = nil
 	}
 
@@ -308,8 +308,7 @@ func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsCon
 				Transport: &http.Transport{
 					// the TLS MinVersion warnings are ignored in order to avoid version conflicts
 					TLSClientConfig: &tls.Config{ // #nosec: G402
-						RootCAs:            authorityCertPool,
-						InsecureSkipVerify: insecureSkipTLSVerify,
+						RootCAs: authorityCertPool,
 					},
 				},
 			},
