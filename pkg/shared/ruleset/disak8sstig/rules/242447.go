@@ -57,14 +57,15 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
 		checkResults            []rule.CheckResult
 		kubeProxyContainerNames = []string{"kube-proxy", "proxy"}
-	)
-
-	if r.Options == nil {
-		r.Options = &option.ClusterObjectSelector{
+		kubeProxySelector       = option.ClusterObjectSelector{
 			LabelSelector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"role": "proxy"},
 			},
 		}
+	)
+
+	if r.Options != nil {
+		kubeProxySelector = *r.Options
 	}
 
 	target := rule.NewTarget()
@@ -75,7 +76,7 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	var pods []corev1.Pod
 	for _, p := range allPods {
-		if matches, err := r.Options.Matches(p.Labels); err != nil {
+		if matches, err := kubeProxySelector.Matches(p.Labels); err != nil {
 			return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 		} else if matches {
 			pods = append(pods, p)
