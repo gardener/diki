@@ -4,8 +4,6 @@
 
 package managedk8s
 
-import "k8s.io/client-go/rest"
-
-func SetInClusterConfigFunc(f func() (*rest.Config, error)) {
+func SetInClusterConfigFunc(f inClusterConfigGetter) {
 	inClusterConfigFunc = f
 }

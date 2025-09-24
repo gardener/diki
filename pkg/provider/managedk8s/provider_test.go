@@ -100,9 +100,7 @@ var _ = Describe("managedk8s", func() {
 			tmpKubeconfig = GinkgoT().TempDir() + "/kubeconfig"
 			_ = os.WriteFile(tmpKubeconfig, []byte(testKubeconfig), 0600)
 
-			defer func() {
-				managedk8s.SetInClusterConfigFunc(rest.InClusterConfig)
-			}()
+			managedk8s.SetInClusterConfigFunc(rest.InClusterConfig)
 		})
 
 		AfterEach(func() {
