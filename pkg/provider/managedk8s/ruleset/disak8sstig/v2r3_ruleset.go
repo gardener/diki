@@ -8,8 +8,11 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/kubernetes"
@@ -91,9 +94,24 @@ func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsCon
 	}
 
 	authorityCertPool := x509.NewCertPool()
-	ok := authorityCertPool.AppendCertsFromPEM(r.Config.CAData)
-	if !ok {
-		return fmt.Errorf("failed to parse kube-apiserver CA data from config")
+
+	switch {
+	case len(r.Config.CAData) > 0:
+		ok := authorityCertPool.AppendCertsFromPEM(r.Config.CAData)
+		if !ok {
+			return errors.New("failed to parse kube-apiserver CA data from config")
+		}
+	case len(r.Config.CAFile) > 0:
+		caFileData, err := os.ReadFile(filepath.Clean(r.Config.CAFile))
+		if err != nil {
+			return fmt.Errorf("failed to read CA file: %w", err)
+		}
+		ok := authorityCertPool.AppendCertsFromPEM(caFileData)
+		if !ok {
+			return errors.New("failed to parse kube-apiserver CA data from config")
+		}
+	default:
+		authorityCertPool = nil
 	}
 
 	opts242383, err := getV2R3OptionOrNil[sharedrules.Options242383](ruleOptions[sharedrules.ID242383].Args)
@@ -294,7 +312,8 @@ func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsCon
 				Transport: &http.Transport{
 					// the TLS MinVersion warnings are ignored in order to avoid version conflicts
 					TLSClientConfig: &tls.Config{ // #nosec: G402
-						RootCAs: authorityCertPool,
+						RootCAs:            authorityCertPool,
+						InsecureSkipVerify: r.Config.Insecure, // #nosec: G402
 					},
 				},
 			},
