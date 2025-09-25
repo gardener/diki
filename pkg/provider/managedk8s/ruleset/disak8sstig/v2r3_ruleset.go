@@ -105,7 +105,10 @@ func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsCon
 		if err != nil {
 			return fmt.Errorf("failed to read CA file: %w", err)
 		}
-		authorityCertPool.AppendCertsFromPEM(caFileData)
+		ok := authorityCertPool.AppendCertsFromPEM(caFileData)
+		if !ok {
+			return fmt.Errorf("failed to parse kube-apiserver CA data from config")
+		}
 	default:
 		authorityCertPool = nil
 	}
