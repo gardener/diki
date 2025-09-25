@@ -6,13 +6,14 @@ providers:                   # contains information about known providers
   args:
     # additionalOpsPodLabels: # pod labels that will be added to diki ops pods
     #   foo: bar
-    kubeconfigPath: /tmp/kubeconfig.config  # path to cluster admin kubeconfig
+    # # if kubeconfigPath is not set, diki will use the KUBECONFIG env var or try to use in-cluster configuration
+    # kubeconfigPath: /tmp/kubeconfig.config  # path to cluster admin kubeconfig
   rulesets:
   - id: disa-kubernetes-stig
     name: DISA Kubernetes Security Technical Implementation Guide
     version: v2r3
     # args:
-    #   maxRetries: 1 # number of maximum rule run retries. Defaults to 1 
+    #   maxRetries: 1 # number of maximum rule run retries. Defaults to 1
     ruleOptions:
     # - ruleID: "242376"
     #   skip:
@@ -40,7 +41,7 @@ providers:                   # contains information about known providers
     #   args:
     #     # Diki will group nodes by the value of this label
     #     # and perform the rule checks on a single node from each group.
-    #     # Skip these labels if you want diki 
+    #     # Skip these labels if you want diki
     #     # to perform checks on all nodes in the cluster.
     #     # Mind that not providing a set of labels to group by
     #     # can slow down the execution of the ruleset and spawn

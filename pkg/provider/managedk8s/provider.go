@@ -10,8 +10,10 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
 
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/gardener/diki/pkg/config"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
@@ -43,6 +45,10 @@ type providerArgs struct {
 	AdditionalOpsPodLabels map[string]string `json:"additionalOpsPodLabels" yaml:"additionalOpsPodLabels"`
 	KubeconfigPath         string            `json:"kubeconfigPath" yaml:"kubeconfigPath"`
 }
+
+type inClusterConfigGetter func() (*rest.Config, error)
+
+var inClusterConfigFunc inClusterConfigGetter = rest.InClusterConfig
 
 var _ provider.Provider = &Provider{}
 
@@ -137,7 +143,7 @@ func FromGenericConfig(providerConf config.ProviderConfig) (*Provider, error) {
 		return nil, err
 	}
 
-	kubeconfig, err := kubeutils.RESTConfigFromFile(providerArgs.KubeconfigPath)
+	kubeconfig, err := loadConfig(providerArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -163,4 +169,27 @@ func (p *Provider) Logger() sharedprovider.Logger {
 		p.logger = slog.Default().With("provider", p.ID())
 	}
 	return p.logger
+}
+
+func loadConfig(providerArgs providerArgs) (config *rest.Config, err error) {
+	switch {
+	case len(providerArgs.KubeconfigPath) > 0:
+		restConfig, err := kubeutils.RESTConfigFromFile(providerArgs.KubeconfigPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load kubeconfig from path %s: %w", providerArgs.KubeconfigPath, err)
+		}
+		return restConfig, nil
+	case len(os.Getenv(clientcmd.RecommendedConfigPathEnvVar)) > 0:
+		restConfig, err := kubeutils.RESTConfigFromFile(os.Getenv(clientcmd.RecommendedConfigPathEnvVar))
+		if err != nil {
+			return nil, fmt.Errorf("failed to load kubeconfig from path %s: %w", os.Getenv(clientcmd.RecommendedConfigPathEnvVar), err)
+		}
+		return restConfig, nil
+	default:
+		restConfig, err := inClusterConfigFunc()
+		if err != nil {
+			return nil, fmt.Errorf("failed to load in-cluster configuration: %w", err)
+		}
+		return restConfig, nil
+	}
 }
