@@ -93,10 +93,7 @@ func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsCon
 		return err
 	}
 
-	var (
-		insecureSkipTLSVerify bool
-		authorityCertPool     = x509.NewCertPool()
-	)
+	authorityCertPool := x509.NewCertPool()
 
 	switch {
 	case len(r.Config.CAData) > 0:
@@ -113,9 +110,6 @@ func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsCon
 		if !ok {
 			return errors.New("failed to parse kube-apiserver CA data from config")
 		}
-	case r.Config.Insecure:
-		insecureSkipTLSVerify = true
-		authorityCertPool = nil
 	default:
 		authorityCertPool = nil
 	}
@@ -319,7 +313,7 @@ func (r *Ruleset) registerV2R3Rules(ruleOptions map[string]config.RuleOptionsCon
 					// the TLS MinVersion warnings are ignored in order to avoid version conflicts
 					TLSClientConfig: &tls.Config{ // #nosec: G402
 						RootCAs:            authorityCertPool,
-						InsecureSkipVerify: insecureSkipTLSVerify, // #nosec: G402
+						InsecureSkipVerify: r.Config.Insecure, // #nosec: G402
 					},
 				},
 			},
