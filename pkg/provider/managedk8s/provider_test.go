@@ -35,32 +35,6 @@ users:
     token: dummytoken
 `
 
-const cert = `
------BEGIN CERTIFICATE-----
-MIID5jCCAk6gAwIBAgIQC8l0jvV8MEIgws6kbTeDljANBgkqhkiG9w0BAQsFADAN
-MQswCQYDVQQDEwJjYTAeFw0yNTA4MTUxMTI1NTlaFw0zNTA4MTUxMTI2NTlaMA0x
-CzAJBgNVBAMTAmNhMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEArfPm
-yq9EgKpFWjHpGNQyWqX3yE/AA5lhcDuisB626jKecqC9T0jzdNY4CzUCcHI91Db8
-dhAn1JhJLZFZK4Bmfdc8T+80ppcBQEwNlWagAiiM1hLyO8RiIrf5H+5mPtZQAkHX
-XO1IQDPBgflq4xG35BKazJNGbV9tnw92b7PPf+xTIdrutNdH/iZ/mZ219f4rwiTm
-Vq/J9fU/eAKypF5xkUVMG2LIjt0YwZajWFb9ZAjxsHZLHGYSwPMwGBTG1j2DlEl2
-ETlNL+HgdcovKoT/Aq7JkewqVcFzfWr2SFQYGcWk0m8XyBDtCHyW1COiqpVytj7i
-jEPRP/kMZc54gZdfaN6sGRtqqSvss63zgrFfl0R+coy/9zDR8HGomB9Oxmx010Qn
-gy+cKzYQ+T9tvFFfJRhpB5t6oefxpw1Aitlt2HIY3V8969AXePFptJJ5hy4/mY56
-e9wzdy/aWV//uJiK7rRDX7uFzpMM/JMaRjtbANtuBBFjJ9hyluS1p201YRTTAgMB
-AAGjQjBAMA4GA1UdDwEB/wQEAwIBpjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQW
-BBThpDavXDiBnosV/XpLTD/BkHeGXDANBgkqhkiG9w0BAQsFAAOCAYEAogsGWHVX
-2lziUENFyVXMAryw0dIFmIoAGelr3gOTKnNUlsvQvLm3BmOaEnVEbD0Du2tinW++
-YviEP23GR5UOTcy7jsTdSug2o3WCnG8a9It5LpCCWocH4KwA2vMDb+0bXMEdNKV9
-AvTnQj1gNyUG+zmWzF7h3AIMi3vVgHwcZjIbENh565VVQ+PhI9IodlKOuaRUD/je
-7uXJUQf9PusJ1AVgjnENnFW68cLD+7rfCCqkuMLoKW8zVCv8xEFAiEXCBVYxVTPo
-kbLv/IM6BgvExBrqpycSncturauXavzB23jpKrVnD758esTna/FYlVgAiXR7nSxi
-hyiC4xNxo3cAeeoE4Cx8tpJgzaSGPyua2t8jrjF/0JzoJU3Gg7BmUKo+4WXtUysR
-oAAohsGDJiuRLls58aitRZWBfDNSUI0I06G5oiM4AU+6CUe3i68ckAaekAfzr3JH
-LrtUc5/X9UqSg9YPiQ2qj55Ge5TKMC3FPQnmQpxK6gCMezmBgagcf7tn
------END CERTIFICATE-----
-`
-
 var _ = Describe("managedk8s", func() {
 	var (
 		id, name   string
@@ -88,25 +62,14 @@ var _ = Describe("managedk8s", func() {
 	Describe("#FromGenericConfig", func() {
 		var (
 			tmpKubeconfig string
-			origEnv       string
-			restoreEnv    func()
 		)
 
 		BeforeEach(func() {
-			origEnv = os.Getenv("KUBECONFIG")
-			restoreEnv = func() {
-				_ = os.Setenv("KUBECONFIG", origEnv)
-			}
+			GinkgoT().Setenv("KUBECONFIG", "")
 			tmpKubeconfig = GinkgoT().TempDir() + "/kubeconfig"
 			_ = os.WriteFile(tmpKubeconfig, []byte(testKubeconfig), 0600)
 
 			managedk8s.SetInClusterConfigFunc(rest.InClusterConfig)
-		})
-
-		AfterEach(func() {
-			if restoreEnv != nil {
-				restoreEnv()
-			}
 		})
 
 		It("should create a Provider from valid ProviderConfig with kubeconfigPath", func() {
@@ -138,7 +101,7 @@ var _ = Describe("managedk8s", func() {
 					"foo": "bar",
 				},
 			}
-			_ = os.Setenv("KUBECONFIG", tmpKubeconfig)
+			GinkgoT().Setenv("KUBECONFIG", tmpKubeconfig)
 			provider, err := managedk8s.FromGenericConfig(providerConf)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(provider.ID()).To(Equal("id"))
@@ -180,7 +143,7 @@ var _ = Describe("managedk8s", func() {
 
 			// Create a temp cert file
 			tmpCertFile := GinkgoT().TempDir() + "/ca.crt"
-			_ = os.WriteFile(tmpCertFile, []byte(cert), 0600)
+			_ = os.WriteFile(tmpCertFile, []byte("foo"), 0600)
 
 			managedk8s.SetInClusterConfigFunc(func() (*rest.Config, error) {
 				return &rest.Config{
