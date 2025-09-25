@@ -276,7 +276,7 @@ var _ = Describe("#2008", func() {
 						},
 					},
 					Justification: "accepted wildcard",
-					VolumeNames:   []string{"*"},
+					VolumeNames:   []string{"volume-*"},
 				},
 			},
 		}
@@ -296,19 +296,25 @@ var _ = Describe("#2008", func() {
 		labeledNamespacePod.Namespace = labeledNamespace.Name
 		labeledNamespacePod.Spec.Volumes = []corev1.Volume{
 			{
-				Name: "volume1",
+				Name: "volume-1",
 				VolumeSource: corev1.VolumeSource{
 					HostPath: &corev1.HostPathVolumeSource{},
 				},
 			},
 			{
-				Name: "volume2",
+				Name: "volume-2",
 				VolumeSource: corev1.VolumeSource{
 					HostPath: &corev1.HostPathVolumeSource{},
 				},
 			},
 			{
-				Name: "volume3",
+				Name: "volume-3",
+				VolumeSource: corev1.VolumeSource{
+					HostPath: &corev1.HostPathVolumeSource{},
+				},
+			},
+			{
+				Name: "volume4",
 				VolumeSource: corev1.VolumeSource{
 					HostPath: &corev1.HostPathVolumeSource{},
 				},
@@ -326,9 +332,10 @@ var _ = Describe("#2008", func() {
 		Expect(err).To(BeNil())
 
 		Expect(result.CheckResults).To(Equal([]rule.CheckResult{
-			{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume1")},
-			{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume2")},
-			{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume3")},
+			{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume-1")},
+			{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume-2")},
+			{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume-3")},
+			{Status: rule.Failed, Message: "Pod must not use volumes of type hostPath.", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume4")},
 		}))
 	})
 
@@ -423,6 +430,17 @@ var _ = Describe("#2008", func() {
 						},
 						VolumeNames: []string{""},
 					},
+					{
+						NamespacedObjectSelector: option.NamespacedObjectSelector{
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"foo": "bar"},
+							},
+							NamespaceLabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"foo": "bar"},
+							},
+						},
+						VolumeNames: []string{"valid-volume-name", "invalid-volume-name?", "valid-wildcard*", "*invalid-wildcard-", "*", "valid*wildcard"},
+					},
 				},
 			}
 
@@ -439,6 +457,18 @@ var _ = Describe("#2008", func() {
 					"Field":    Equal("foo.acceptedPods[2].volumeNames[0]"),
 					"BadValue": Equal(""),
 					"Detail":   Equal("must not be empty"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("foo.acceptedPods[3].volumeNames[1]"),
+					"BadValue": Equal("invalid-volume-name?"),
+					"Detail":   Equal("must be a valid volume name"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("foo.acceptedPods[3].volumeNames[3]"),
+					"BadValue": Equal("*invalid-wildcard-"),
+					"Detail":   Equal("must be a valid volume name"),
 				})),
 			))
 		})
