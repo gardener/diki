@@ -14,7 +14,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/component-base/version"
@@ -45,14 +44,18 @@ type Rule242448 struct {
 }
 
 type Options242448 struct {
-	KubeProxyMatchLabels map[string]string `json:"kubeProxyMatchLabels" yaml:"kubeProxyMatchLabels"`
+	*option.ClusterObjectSelector
 	*disaoption.FileOwnerOptions
 }
 
 var _ option.Option = (*Options242448)(nil)
 
 func (o Options242448) Validate(fldPath *field.Path) field.ErrorList {
-	allErrs := validation.ValidateLabels(o.KubeProxyMatchLabels, fldPath.Child("kubeProxyMatchLabels"))
+	var allErrs field.ErrorList
+
+	if o.ClusterObjectSelector != nil {
+		allErrs = append(allErrs, o.ClusterObjectSelector.Validate(fldPath)...)
+	}
 	if o.FileOwnerOptions != nil {
 		return append(allErrs, o.FileOwnerOptions.Validate(fldPath)...)
 	}
@@ -75,16 +78,20 @@ func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
 	var (
 		checkResults            []rule.CheckResult
 		options                 = disaoption.FileOwnerOptions{}
-		kubeProxySelector       = labels.SelectorFromSet(labels.Set{"role": "proxy"})
 		kubeProxyContainerNames = []string{"kube-proxy", "proxy"}
+		kubeProxySelector       = option.ClusterObjectSelector{
+			LabelSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"role": "proxy"},
+			},
+		}
 	)
 
 	if r.Options != nil {
 		if r.Options.FileOwnerOptions != nil {
 			options = *r.Options.FileOwnerOptions
 		}
-		if len(r.Options.KubeProxyMatchLabels) > 0 {
-			kubeProxySelector = labels.SelectorFromSet(labels.Set(r.Options.KubeProxyMatchLabels))
+		if r.Options.ClusterObjectSelector != nil {
+			kubeProxySelector = *r.Options.ClusterObjectSelector
 		}
 	}
 	if len(options.ExpectedFileOwner.Users) == 0 {
@@ -102,13 +109,15 @@ func (r *Rule242448) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	var pods []corev1.Pod
 	for _, p := range allPods {
-		if kubeProxySelector.Matches(labels.Set(p.Labels)) {
+		if matches, err := kubeProxySelector.Matches(p.Labels); err != nil {
+			return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
+		} else if matches {
 			pods = append(pods, p)
 		}
 	}
 
 	if len(pods) == 0 {
-		return rule.Result(r, rule.ErroredCheckResult("kube-proxy pods not found", target.With("selector", kubeProxySelector.String()))), nil
+		return rule.Result(r, rule.ErroredCheckResult("kube-proxy pods not found", target)), nil
 	}
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)

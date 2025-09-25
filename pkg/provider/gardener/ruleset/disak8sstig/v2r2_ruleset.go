@@ -71,15 +71,15 @@ func (r *Ruleset) validateV2R2RuleOptions(ruleOptions map[string]internalconfig.
 	allErrs := field.ErrorList{}
 
 	allErrs = append(allErrs, validateV2R2Options[sharedrules.Options242390](ruleOptions[sharedrules.ID242390].Args, fldPath.Index(ruleOptions[sharedrules.ID242390].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV2R2Options[disaoption.KubeProxyOptions](ruleOptions[sharedrules.ID242400].Args, fldPath.Index(ruleOptions[sharedrules.ID242400].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R2Options[rules.Options242400](ruleOptions[sharedrules.ID242400].Args, fldPath.Index(ruleOptions[sharedrules.ID242400].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV2R2Options[disaoption.Options242414](ruleOptions[sharedrules.ID242414].Args, fldPath.Index(ruleOptions[sharedrules.ID242414].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV2R2Options[disaoption.Options242415](ruleOptions[sharedrules.ID242415].Args, fldPath.Index(ruleOptions[sharedrules.ID242415].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV2R2Options[disaoption.Options242442](ruleOptions[sharedrules.ID242442].Args, fldPath.Index(ruleOptions[sharedrules.ID242442].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV2R2Options[disaoption.FileOwnerOptions](ruleOptions[sharedrules.ID242445].Args, fldPath.Index(ruleOptions[sharedrules.ID242445].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV2R2Options[disaoption.FileOwnerOptions](ruleOptions[sharedrules.ID242446].Args, fldPath.Index(ruleOptions[sharedrules.ID242446].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV2R2Options[rules.Options242451](ruleOptions[sharedrules.ID242451].Args, fldPath.Index(ruleOptions[sharedrules.ID242451].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV2R2Options[disaoption.KubeProxyOptions](ruleOptions[sharedrules.ID242466].Args, fldPath.Index(ruleOptions[sharedrules.ID242466].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV2R2Options[disaoption.KubeProxyOptions](ruleOptions[sharedrules.ID242467].Args, fldPath.Index(ruleOptions[sharedrules.ID242467].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R2Options[rules.Options242466](ruleOptions[sharedrules.ID242466].Args, fldPath.Index(ruleOptions[sharedrules.ID242466].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R2Options[rules.Options242467](ruleOptions[sharedrules.ID242467].Args, fldPath.Index(ruleOptions[sharedrules.ID242467].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV2R2Options[sharedrules.Options245543](ruleOptions[sharedrules.ID245543].Args, fldPath.Index(ruleOptions[sharedrules.ID245543].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV2R2Options[sharedrules.Options254800](ruleOptions[sharedrules.ID254800].Args, fldPath.Index(ruleOptions[sharedrules.ID254800].Index).Child("args"))...)
 
@@ -116,7 +116,7 @@ func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsCon
 	if err != nil {
 		return fmt.Errorf("rule option 242390 error: %s", err.Error())
 	}
-	opts242400, err := getV2R2OptionOrNil[disaoption.KubeProxyOptions](ruleOptions[sharedrules.ID242400].Args)
+	opts242400, err := getV2R2OptionOrNil[rules.Options242400](ruleOptions[sharedrules.ID242400].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242400 error: %s", err.Error())
 	}
@@ -144,11 +144,11 @@ func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsCon
 	if err != nil {
 		return fmt.Errorf("rule option 242451 error: %s", err.Error())
 	}
-	opts242466, err := getV2R2OptionOrNil[disaoption.KubeProxyOptions](ruleOptions[sharedrules.ID242466].Args)
+	opts242466, err := getV2R2OptionOrNil[rules.Options242466](ruleOptions[sharedrules.ID242466].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242466 error: %s", err.Error())
 	}
-	opts242467, err := getV2R2OptionOrNil[disaoption.KubeProxyOptions](ruleOptions[sharedrules.ID242467].Args)
+	opts242467, err := getV2R2OptionOrNil[rules.Options242467](ruleOptions[sharedrules.ID242467].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242467 error: %s", err.Error())
 	}

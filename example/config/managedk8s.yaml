@@ -58,9 +58,11 @@ providers:                   # contains information about known providers
     #     - foo
     # - ruleID: "242400"
     #   args:
-    #     kubeProxyDisabled: true
-    #     kubeProxyMatchLabels:
-    #       foo: bar
+    #     kubeProxy:
+    #       disabled: true # skip kube-proxy check
+    #       labelSelector:
+    #         matchLabels:
+    #           foo: bar
     # - ruleID: "242404"
     #   args:
     #     nodeGroupByLabels:
@@ -120,19 +122,23 @@ providers:                   # contains information about known providers
     #       status: Passed
     # - ruleID: "242442"
     #   args:
-    #     kubeProxyMatchLabels:
-    #       foo: bar
+    #     kubeProxy:
+    #       labelSelector:
+    #         matchLabels:
+    #           foo: bar
     #     expectedVersionedImages:
     #     - name: "eu.gcr.io/foo"
     #     - name: "eu.gcr.io/bar"
     # - ruleID: "242447"
     #   args:
-    #     kubeProxyMatchLabels:
-    #       foo: bar
+    #     labelSelector:
+    #       matchLabels:
+    #         foo: bar
     # - ruleID: "242448"
     #   args:
-    #     kubeProxyMatchLabels:
-    #       foo: bar
+    #     labelSelector:
+    #       matchLabels:
+    #         foo: bar
     #     expectedFileOwner:
     #       users: ["0"]
     #       groups: ["0"]
@@ -149,9 +155,11 @@ providers:                   # contains information about known providers
     #       groups: ["0"]
     # - ruleID: "242451"
     #   args:
-    #     kubeProxyDisabled: true
-    #     kubeProxyMatchLabels:
-    #       foo: bar
+    #     kubeProxy:
+    #       disabled: true # skip kube-proxy check
+    #       labelSelector:
+    #         matchLabels:
+    #           foo: bar
     #     nodeGroupByLabels:
     #     - foo
     #     expectedFileOwner:
@@ -170,16 +178,20 @@ providers:                   # contains information about known providers
     #       groups: ["0"]
     # - ruleID: "242466"
     #   args:
-    #     kubeProxyDisabled: true # skip kube-proxy check
-    #     kubeProxyMatchLabels:
-    #       foo: bar
+    #     kubeProxy:
+    #       disabled: true # skip kube-proxy check
+    #       labelSelector:
+    #         matchLabels:
+    #           foo: bar
     #     nodeGroupByLabels:
     #     - foo
     # - ruleID: "242467"
     #   args:
-    #     kubeProxyDisabled: true # skip kube-proxy check
-    #     kubeProxyMatchLabels:
-    #       foo: bar
+    #     kubeProxy:
+    #       disabled: true # skip kube-proxy check
+    #       labelSelector:
+    #         matchLabels:
+    #           foo: bar
     #     nodeGroupByLabels:
     #     - foo
   - id: security-hardened-k8s

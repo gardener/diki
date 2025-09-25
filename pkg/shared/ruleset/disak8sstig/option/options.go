@@ -164,7 +164,30 @@ func ValidateLabelNames(labelNames []string, fldPath *field.Path) field.ErrorLis
 	return allErrs
 }
 
+// KubeProxyOptionsWithoutSelectors contains options for kube-proxy rules
+type KubeProxyOptionsWithoutSelectors struct {
+	Disabled bool `json:"disabled" yaml:"disabled"`
+}
+
+var _ option.Option = (*KubeProxyOptionsWithoutSelectors)(nil)
+
+// Validate validates that option configurations are correctly defined.
+func (o KubeProxyOptionsWithoutSelectors) Validate(_ *field.Path) field.ErrorList {
+	return nil
+}
+
 // KubeProxyOptions contains options for kube-proxy rules
 type KubeProxyOptions struct {
-	KubeProxyDisabled bool `json:"kubeProxyDisabled" yaml:"kubeProxyDisabled"`
+	*option.ClusterObjectSelector
+	Disabled bool `json:"disabled" yaml:"disabled"`
+}
+
+var _ option.Option = (*KubeProxyOptions)(nil)
+
+// Validate validates that option configurations are correctly defined.
+func (o KubeProxyOptions) Validate(fldPath *field.Path) field.ErrorList {
+	if o.ClusterObjectSelector != nil {
+		return o.ClusterObjectSelector.Validate(fldPath)
+	}
+	return nil
 }
