@@ -5,6 +5,8 @@
 package option
 
 import (
+	"fmt"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/labels"
@@ -44,6 +46,12 @@ func (s *ClusterObjectSelector) Validate(fldPath *field.Path) field.ErrorList {
 
 	allErrs = append(allErrs, metav1validation.ValidateLabels(s.MatchLabels, fldPath.Child("matchLabels"))...)
 	allErrs = append(allErrs, metav1validation.ValidateLabelSelector(s.LabelSelector, metav1validation.LabelSelectorValidationOptions{}, fldPath.Child("labelSelector"))...)
+
+	// Add link to documentation about migrating from matchLabels to labelSelector
+	// TODO: Remove this link in a future release
+	for _, err := range allErrs {
+		err.Detail = fmt.Sprintf("%s. For more information, please refer to the migration guide: https://github.com/gardener/diki/tree/main/docs/usage/migrate-selector-rule-options.md", err.Detail)
+	}
 
 	return allErrs
 }
@@ -100,6 +108,13 @@ func (s *NamespacedObjectSelector) Validate(fldPath *field.Path) field.ErrorList
 	allErrs = append(allErrs, metav1validation.ValidateLabels(s.MatchLabels, fldPath.Child("matchLabels"))...)
 	allErrs = append(allErrs, metav1validation.ValidateLabelSelector(s.LabelSelector, metav1validation.LabelSelectorValidationOptions{}, fldPath.Child("labelSelector"))...)
 	allErrs = append(allErrs, metav1validation.ValidateLabelSelector(s.NamespaceLabelSelector, metav1validation.LabelSelectorValidationOptions{}, fldPath.Child("namespaceLabelSelector"))...)
+
+	// Add link to documentation about migrating from matchLabels to labelSelector
+	// TODO: Remove this link in a future release
+	for _, err := range allErrs {
+		err.Detail = fmt.Sprintf("%s. For more information, please refer to the migration guide: https://github.com/gardener/diki/tree/main/docs/usage/migrate-selector-rule-options.md", err.Detail)
+	}
+
 	return allErrs
 }
 
