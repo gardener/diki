@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -92,13 +93,16 @@ func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsCon
 		return err
 	}
 
-	var authorityCertPool = x509.NewCertPool()
+	var (
+		insecureSkipTLSVerify bool
+		authorityCertPool     = x509.NewCertPool()
+	)
 
 	switch {
 	case len(r.Config.CAData) > 0:
 		ok := authorityCertPool.AppendCertsFromPEM(r.Config.CAData)
 		if !ok {
-			return fmt.Errorf("failed to parse kube-apiserver CA data from config")
+			return errors.New("failed to parse kube-apiserver CA data from config")
 		}
 	case len(r.Config.CAFile) > 0:
 		caFileData, err := os.ReadFile(filepath.Clean(r.Config.CAFile))
@@ -107,8 +111,11 @@ func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsCon
 		}
 		ok := authorityCertPool.AppendCertsFromPEM(caFileData)
 		if !ok {
-			return fmt.Errorf("failed to parse kube-apiserver CA data from config")
+			return errors.New("failed to parse kube-apiserver CA data from config")
 		}
+	case r.Config.Insecure:
+		insecureSkipTLSVerify = true
+		authorityCertPool = nil
 	default:
 		authorityCertPool = nil
 	}
@@ -311,7 +318,8 @@ func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsCon
 				Transport: &http.Transport{
 					// the TLS MinVersion warnings are ignored in order to avoid version conflicts
 					TLSClientConfig: &tls.Config{ // #nosec: G402
-						RootCAs: authorityCertPool,
+						RootCAs:            authorityCertPool,
+						InsecureSkipVerify: insecureSkipTLSVerify, // #nosec: G402
 					},
 				},
 			},
