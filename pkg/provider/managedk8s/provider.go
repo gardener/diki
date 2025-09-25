@@ -172,35 +172,23 @@ func (p *Provider) Logger() sharedprovider.Logger {
 }
 
 func loadConfig(providerArgs providerArgs) (config *rest.Config, err error) {
-
 	switch {
-	// Check if a kubeconfig path is provided via the provider args in the configuration file.
 	case len(providerArgs.KubeconfigPath) > 0:
 		restConfig, err := kubeutils.RESTConfigFromFile(providerArgs.KubeconfigPath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load kubeconfig from path %s: %w", providerArgs.KubeconfigPath, err)
 		}
 		return restConfig, nil
-
-	// If no kubeconfigPath is set in the provider args,
-	// check if a kubeconfig path is provided via the KUBECONFIG environment variable.
 	case len(os.Getenv(clientcmd.RecommendedConfigPathEnvVar)) > 0:
 		restConfig, err := kubeutils.RESTConfigFromFile(os.Getenv(clientcmd.RecommendedConfigPathEnvVar))
 		if err != nil {
 			return nil, fmt.Errorf("failed to load kubeconfig from path %s: %w", os.Getenv(clientcmd.RecommendedConfigPathEnvVar), err)
 		}
 		return restConfig, nil
-
 	default:
-		// If no kubeconfigPath is set in the provider args or via the KUBECONFIG environment variable,
-		//  try to use in-cluster configuration.
 		restConfig, err := inClusterConfigFunc()
 		if err != nil {
 			return nil, fmt.Errorf("failed to load in-cluster configuration: %w", err)
-		}
-		restConfig.CAData, err = os.ReadFile(restConfig.CAFile)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read CA file %s: %w", restConfig.CAFile, err)
 		}
 		return restConfig, nil
 	}

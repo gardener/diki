@@ -141,15 +141,11 @@ var _ = Describe("managedk8s", func() {
 				Name: "name",
 			}
 
-			// Create a temp cert file
-			tmpCertFile := GinkgoT().TempDir() + "/ca.crt"
-			_ = os.WriteFile(tmpCertFile, []byte("foo"), 0600)
-
 			managedk8s.SetInClusterConfigFunc(func() (*rest.Config, error) {
 				return &rest.Config{
 					Host: "in-cluster",
 					TLSClientConfig: rest.TLSClientConfig{
-						CAFile: tmpCertFile,
+						CAData: []byte("foo"),
 					},
 				}, nil
 			})
@@ -158,8 +154,8 @@ var _ = Describe("managedk8s", func() {
 			Expect(provider.ID()).To(Equal("id"))
 			Expect(provider.Name()).To(Equal("name"))
 			Expect(provider.Config).NotTo(BeNil())
-
 		})
+
 		It("should return error if in-cluster config cannot be loaded", func() {
 			providerConf := config.ProviderConfig{
 				ID:   "id",
@@ -168,25 +164,6 @@ var _ = Describe("managedk8s", func() {
 			provider, err := managedk8s.FromGenericConfig(providerConf)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(ContainSubstring("failed to load in-cluster configuration")))
-			Expect(provider).To(BeNil())
-		})
-		It("should return error if in-cluster config has invalid CA file", func() {
-			providerConf := config.ProviderConfig{
-				ID:   "id",
-				Name: "name",
-			}
-
-			managedk8s.SetInClusterConfigFunc(func() (*rest.Config, error) {
-				return &rest.Config{
-					Host: "in-cluster",
-					TLSClientConfig: rest.TLSClientConfig{
-						CAFile: "/does/not/exist",
-					},
-				}, nil
-			})
-			provider, err := managedk8s.FromGenericConfig(providerConf)
-			Expect(err).To(HaveOccurred())
-			Expect(err).To(MatchError(ContainSubstring("failed to read CA file")))
 			Expect(provider).To(BeNil())
 		})
 	})
