@@ -6,9 +6,9 @@ package rules
 
 import (
 	"context"
-	"slices"
+	"path/filepath"
+	"regexp"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -40,6 +40,9 @@ func (o Options2003) Validate(fldPath *field.Path) field.ErrorList {
 	var (
 		allErrs          field.ErrorList
 		acceptedPodsPath = fldPath.Child("acceptedPods")
+		// In Kubernetes, volume names are validated and are expected to comply with the RFC 1123 naming standard. ref: https://github.com/kubernetes/kubernetes/blob/69aca29e6def5873779cbd392bd9a1bad124c586/pkg/apis/core/validation/validation.go#L434
+		// This regex is slightly adjusted to accept this name format with additional wildcard symbols.
+		validVolumeNameRegex = regexp.MustCompile("^[a-z0-9*]([-a-z0-9*]*[a-z0-9*])?$")
 	)
 	for pIdx, p := range o.AcceptedPods {
 		allErrs = append(allErrs, p.Validate(acceptedPodsPath.Index(pIdx))...)
@@ -49,6 +52,10 @@ func (o Options2003) Validate(fldPath *field.Path) field.ErrorList {
 		for vIdx, volumeName := range p.VolumeNames {
 			if len(volumeName) == 0 {
 				allErrs = append(allErrs, field.Invalid(acceptedPodsPath.Index(pIdx).Child("volumeNames").Index(vIdx), volumeName, "must not be empty"))
+			} else {
+				if !validVolumeNameRegex.Match([]byte(volumeName)) {
+					allErrs = append(allErrs, field.Invalid(acceptedPodsPath.Index(pIdx).Child("volumeNames").Index(vIdx), volumeName, "must be a valid volume name"))
+				}
 			}
 		}
 	}
@@ -121,7 +128,7 @@ func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 				volume.Projected == nil &&
 				volume.Secret == nil {
 				uses = true
-				if accepted, justification, err := r.accepted(pod.Labels, allNamespaces[pod.Namespace].Labels, volume); err != nil {
+				if accepted, justification, err := r.accepted(pod.Labels, allNamespaces[pod.Namespace].Labels, volume.Name); err != nil {
 					return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 				} else if accepted {
 					checkResults = append(checkResults, rule.AcceptedCheckResult(justification, volumeTarget))
@@ -138,7 +145,7 @@ func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 	return rule.Result(r, checkResults...), nil
 }
 
-func (r *Rule2003) accepted(podLabels, namespaceLabels map[string]string, volume corev1.Volume) (bool, string, error) {
+func (r *Rule2003) accepted(podLabels, namespaceLabels map[string]string, volumeName string) (bool, string, error) {
 	if r.Options == nil {
 		return false, "", nil
 	}
@@ -146,8 +153,15 @@ func (r *Rule2003) accepted(podLabels, namespaceLabels map[string]string, volume
 	for _, acceptedPod := range r.Options.AcceptedPods {
 		if matches, err := acceptedPod.Matches(podLabels, namespaceLabels); err != nil {
 			return false, "", err
-		} else if matches && (slices.Contains(acceptedPod.VolumeNames, "*") || slices.Contains(acceptedPod.VolumeNames, volume.Name)) {
-			return true, acceptedPod.Justification, nil
+		} else if matches {
+			for _, acceptedVolumeName := range acceptedPod.VolumeNames {
+				if match, err := filepath.Match(acceptedVolumeName, volumeName); err != nil {
+					return false, "", err
+				} else if match {
+					return true, acceptedPod.Justification, nil
+				}
+			}
+			return false, "", nil
 		}
 	}
 
