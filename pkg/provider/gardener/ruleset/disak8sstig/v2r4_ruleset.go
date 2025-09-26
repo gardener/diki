@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
+// SPDX-FileCopyrightText: 2025 SAP SE or an SAP affiliate company and Gardener contributors
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -27,8 +27,8 @@ import (
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
-func validateV2R2Options[O rules.RuleOption](options any, fldPath *field.Path) field.ErrorList {
-	parsedOptions, err := getV2R2OptionOrNil[O](options)
+func validateV2R4Options[O rules.RuleOption](options any, fldPath *field.Path) field.ErrorList {
+	parsedOptions, err := getV2R4OptionOrNil[O](options)
 	if err != nil {
 		return field.ErrorList{
 			field.InternalError(fldPath, err),
@@ -46,7 +46,7 @@ func validateV2R2Options[O rules.RuleOption](options any, fldPath *field.Path) f
 	return nil
 }
 
-func parseV2R2Options[O rules.RuleOption](options any) (*O, error) {
+func parseV2R4Options[O rules.RuleOption](options any) (*O, error) {
 	optionsByte, err := json.Marshal(options)
 	if err != nil {
 		return nil, err
@@ -60,33 +60,33 @@ func parseV2R2Options[O rules.RuleOption](options any) (*O, error) {
 	return &parsedOptions, nil
 }
 
-func getV2R2OptionOrNil[O rules.RuleOption](options any) (*O, error) {
+func getV2R4OptionOrNil[O rules.RuleOption](options any) (*O, error) {
 	if options == nil {
 		return nil, nil
 	}
-	return parseV2R2Options[O](options)
+	return parseV2R4Options[O](options)
 }
 
-func (r *Ruleset) validateV2R2RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath *field.Path) error {
+func (r *Ruleset) validateV2R4RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath *field.Path) error {
 	allErrs := field.ErrorList{}
 
-	allErrs = append(allErrs, validateV2R2Options[sharedrules.Options242390](ruleOptions[sharedrules.ID242390].Args, fldPath.Index(ruleOptions[sharedrules.ID242390].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV2R2Options[rules.Options242400](ruleOptions[sharedrules.ID242400].Args, fldPath.Index(ruleOptions[sharedrules.ID242400].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV2R2Options[disaoption.Options242414](ruleOptions[sharedrules.ID242414].Args, fldPath.Index(ruleOptions[sharedrules.ID242414].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV2R2Options[disaoption.Options242415](ruleOptions[sharedrules.ID242415].Args, fldPath.Index(ruleOptions[sharedrules.ID242415].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV2R2Options[disaoption.Options242442](ruleOptions[sharedrules.ID242442].Args, fldPath.Index(ruleOptions[sharedrules.ID242442].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV2R2Options[disaoption.FileOwnerOptions](ruleOptions[sharedrules.ID242445].Args, fldPath.Index(ruleOptions[sharedrules.ID242445].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV2R2Options[disaoption.FileOwnerOptions](ruleOptions[sharedrules.ID242446].Args, fldPath.Index(ruleOptions[sharedrules.ID242446].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV2R2Options[rules.Options242451](ruleOptions[sharedrules.ID242451].Args, fldPath.Index(ruleOptions[sharedrules.ID242451].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV2R2Options[rules.Options242466](ruleOptions[sharedrules.ID242466].Args, fldPath.Index(ruleOptions[sharedrules.ID242466].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV2R2Options[rules.Options242467](ruleOptions[sharedrules.ID242467].Args, fldPath.Index(ruleOptions[sharedrules.ID242467].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV2R2Options[sharedrules.Options245543](ruleOptions[sharedrules.ID245543].Args, fldPath.Index(ruleOptions[sharedrules.ID245543].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV2R2Options[sharedrules.Options254800](ruleOptions[sharedrules.ID254800].Args, fldPath.Index(ruleOptions[sharedrules.ID254800].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R4Options[sharedrules.Options242390](ruleOptions[sharedrules.ID242390].Args, fldPath.Index(ruleOptions[sharedrules.ID242390].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R4Options[rules.Options242400](ruleOptions[sharedrules.ID242400].Args, fldPath.Index(ruleOptions[sharedrules.ID242400].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R4Options[disaoption.Options242414](ruleOptions[sharedrules.ID242414].Args, fldPath.Index(ruleOptions[sharedrules.ID242414].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R4Options[disaoption.Options242415](ruleOptions[sharedrules.ID242415].Args, fldPath.Index(ruleOptions[sharedrules.ID242415].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R4Options[disaoption.Options242442](ruleOptions[sharedrules.ID242442].Args, fldPath.Index(ruleOptions[sharedrules.ID242442].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R4Options[disaoption.FileOwnerOptions](ruleOptions[sharedrules.ID242445].Args, fldPath.Index(ruleOptions[sharedrules.ID242445].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R4Options[disaoption.FileOwnerOptions](ruleOptions[sharedrules.ID242446].Args, fldPath.Index(ruleOptions[sharedrules.ID242446].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R4Options[rules.Options242451](ruleOptions[sharedrules.ID242451].Args, fldPath.Index(ruleOptions[sharedrules.ID242451].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R4Options[rules.Options242466](ruleOptions[sharedrules.ID242466].Args, fldPath.Index(ruleOptions[sharedrules.ID242466].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R4Options[rules.Options242467](ruleOptions[sharedrules.ID242467].Args, fldPath.Index(ruleOptions[sharedrules.ID242467].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R4Options[sharedrules.Options245543](ruleOptions[sharedrules.ID245543].Args, fldPath.Index(ruleOptions[sharedrules.ID245543].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R4Options[sharedrules.Options254800](ruleOptions[sharedrules.ID254800].Args, fldPath.Index(ruleOptions[sharedrules.ID254800].Index).Child("args"))...)
 
 	return allErrs.ToAggregate()
 }
 
-func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
+func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
 	shootClient, err := client.New(r.ShootConfig, client.Options{Scheme: kubernetesgardener.ShootScheme})
 	if err != nil {
 		return err
@@ -112,51 +112,51 @@ func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsCon
 		return err
 	}
 
-	opts242390, err := getV2R2OptionOrNil[sharedrules.Options242390](ruleOptions[sharedrules.ID242390].Args)
+	opts242390, err := getV2R4OptionOrNil[sharedrules.Options242390](ruleOptions[sharedrules.ID242390].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242390 error: %s", err.Error())
 	}
-	opts242400, err := getV2R2OptionOrNil[rules.Options242400](ruleOptions[sharedrules.ID242400].Args)
+	opts242400, err := getV2R4OptionOrNil[rules.Options242400](ruleOptions[sharedrules.ID242400].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242400 error: %s", err.Error())
 	}
-	opts242414, err := getV2R2OptionOrNil[disaoption.Options242414](ruleOptions[sharedrules.ID242414].Args)
+	opts242414, err := getV2R4OptionOrNil[disaoption.Options242414](ruleOptions[sharedrules.ID242414].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242414 error: %s", err.Error())
 	}
-	opts242415, err := getV2R2OptionOrNil[disaoption.Options242415](ruleOptions[sharedrules.ID242415].Args)
+	opts242415, err := getV2R4OptionOrNil[disaoption.Options242415](ruleOptions[sharedrules.ID242415].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242415 error: %s", err.Error())
 	}
-	opts242442, err := getV2R2OptionOrNil[disaoption.Options242442](ruleOptions[sharedrules.ID242442].Args)
+	opts242442, err := getV2R4OptionOrNil[disaoption.Options242442](ruleOptions[sharedrules.ID242442].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242442 error: %s", err.Error())
 	}
-	opts242445, err := getV2R2OptionOrNil[disaoption.FileOwnerOptions](ruleOptions[sharedrules.ID242445].Args)
+	opts242445, err := getV2R4OptionOrNil[disaoption.FileOwnerOptions](ruleOptions[sharedrules.ID242445].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242445 error: %s", err.Error())
 	}
-	opts242446, err := getV2R2OptionOrNil[disaoption.FileOwnerOptions](ruleOptions[sharedrules.ID242446].Args)
+	opts242446, err := getV2R4OptionOrNil[disaoption.FileOwnerOptions](ruleOptions[sharedrules.ID242446].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242446 error: %s", err.Error())
 	}
-	opts242451, err := getV2R2OptionOrNil[rules.Options242451](ruleOptions[sharedrules.ID242451].Args)
+	opts242451, err := getV2R4OptionOrNil[rules.Options242451](ruleOptions[sharedrules.ID242451].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242451 error: %s", err.Error())
 	}
-	opts242466, err := getV2R2OptionOrNil[rules.Options242466](ruleOptions[sharedrules.ID242466].Args)
+	opts242466, err := getV2R4OptionOrNil[rules.Options242466](ruleOptions[sharedrules.ID242466].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242466 error: %s", err.Error())
 	}
-	opts242467, err := getV2R2OptionOrNil[rules.Options242467](ruleOptions[sharedrules.ID242467].Args)
+	opts242467, err := getV2R4OptionOrNil[rules.Options242467](ruleOptions[sharedrules.ID242467].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242467 error: %s", err.Error())
 	}
-	opts245543, err := getV2R2OptionOrNil[sharedrules.Options245543](ruleOptions[sharedrules.ID245543].Args)
+	opts245543, err := getV2R4OptionOrNil[sharedrules.Options245543](ruleOptions[sharedrules.ID245543].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 245543 error: %s", err.Error())
 	}
-	opts254800, err := getV2R2OptionOrNil[sharedrules.Options254800](ruleOptions[sharedrules.ID254800].Args)
+	opts254800, err := getV2R4OptionOrNil[sharedrules.Options254800](ruleOptions[sharedrules.ID254800].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 254800 error: %s", err.Error())
 	}
@@ -699,6 +699,27 @@ func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsCon
 			rule.Skipped,
 			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
+		rule.NewSkipRule(
+			sharedrules.ID274882,
+			"Kubernetes Secrets must be encrypted at rest.",
+			"Rule is not implemented.",
+			rule.NotImplemented,
+			rule.SkipRuleWithSeverity(rule.SeverityHigh),
+		),
+		rule.NewSkipRule(
+			sharedrules.ID274883,
+			"Sensitive information must be stored using Kubernetes Secrets or an external Secret store provider.",
+			"Rule is not implemented.",
+			rule.NotImplemented,
+			rule.SkipRuleWithSeverity(rule.SeverityHigh),
+		),
+		rule.NewSkipRule(
+			sharedrules.ID274884,
+			"Kubernetes must limit Secret access on a need-to-know basis.",
+			"Rule is not implemented.",
+			rule.NotImplemented,
+			rule.SkipRuleWithSeverity(rule.SeverityMedium),
+		),
 	}
 
 	for i, r := range rules {
@@ -717,8 +738,8 @@ func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsCon
 
 	// check that the registered rules equal
 	// the number of rules in that ruleset version
-	if len(rules) != 91 {
-		return fmt.Errorf("revision expects 91 registered rules, but got: %d", len(rules))
+	if len(rules) != 94 {
+		return fmt.Errorf("revision expects 94 registered rules, but got: %d", len(rules))
 	}
 
 	return r.AddRules(rules...)
