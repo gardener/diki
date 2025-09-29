@@ -39,8 +39,8 @@ import (
 )
 
 var (
+	// VolumeNameValueFmt is a string representing a regex that is slightly adjusted to accept a specific name format with additional wildcard symbols.
 	// In Kubernetes, volume names are validated and are expected to comply with the RFC 1123 naming standard. ref: https://github.com/kubernetes/kubernetes/blob/69aca29e6def5873779cbd392bd9a1bad124c586/pkg/apis/core/validation/validation.go#L434
-	// VolumeNameValueFmt is a string representing a regex that is slightly adjusted to accept this name format with additional wildcard symbols.
 	VolumeNameValueFmt = "^[a-z0-9*]([-a-z0-9*]*[a-z0-9*])?$"
 	// ValidVolumeNameRegexp is a regex intended to match volume names with their wildcard symbols.
 	ValidVolumeNameRegexp = regexp.MustCompile(VolumeNameValueFmt)
