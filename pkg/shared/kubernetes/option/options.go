@@ -132,6 +132,7 @@ type AcceptedPodVolumes struct {
 	VolumeNames []string `json:"volumeNames" yaml:"volumeNames"`
 }
 
+// Validate validates that option configurations are correctly defined. It accepts a [field.Path] parameter with the fldPath.
 func (a *AcceptedPodVolumes) Validate(fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
 
