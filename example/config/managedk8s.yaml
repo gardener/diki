@@ -229,6 +229,7 @@ providers:                   # contains information about known providers
     #       volumeNames:
     #       - "volume-a"
     #       - "volume-b"
+    #       - "vol-*"
     #     - labelSelector:
     #         matchLabels:
     #           foo: baz
@@ -295,6 +296,7 @@ providers:                   # contains information about known providers
     #       volumeNames:
     #       - "volume-a"
     #       - "volume-b"
+    #       - "vol-*"
     #     - labelSelector:
     #         matchLabels:
     #           foo: baz

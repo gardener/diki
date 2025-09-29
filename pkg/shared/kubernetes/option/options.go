@@ -135,7 +135,6 @@ type AcceptedPodVolumes struct {
 
 // Validate validates that option configurations are correctly defined. It accepts a [field.Path] parameter with the fldPath.
 func (a *AcceptedPodVolumes) Validate(fldPath *field.Path) field.ErrorList {
-
 	var (
 		// In Kubernetes, volume names are validated and are expected to comply with the RFC 1123 naming standard. ref: https://github.com/kubernetes/kubernetes/blob/69aca29e6def5873779cbd392bd9a1bad124c586/pkg/apis/core/validation/validation.go#L434
 		// This regex is slightly adjusted from Kubernetes with additional wildcard symbols.

@@ -125,7 +125,7 @@ func (r *Rule2008) accepted(podLabels, namespaceLabels map[string]string, volume
 
 	for _, acceptedPod := range r.Options.AcceptedPods {
 		if matches, err := acceptedPod.Matches(podLabels, namespaceLabels, volumeName); err != nil {
-			return false, "", nil
+			return false, "", err
 		} else if matches {
 			return true, acceptedPod.Justification, nil
 		}
