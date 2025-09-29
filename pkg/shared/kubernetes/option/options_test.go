@@ -354,4 +354,109 @@ var _ = Describe("options", func() {
 			map[string]string{"foo": "bar"}, map[string]string{"baz": "foo"}, false,
 		),
 	)
+
+	Describe("#ValidateAcceptedPodVolumes", func() {
+		It("should correctly validate an empty list of volume names", func() {
+			option := option.AcceptedPodVolumes{
+				AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+					NamespacedObjectSelector: option.NamespacedObjectSelector{
+						LabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{"foo": "bar"},
+						},
+						NamespaceLabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{"foo": "bar"},
+						},
+					},
+				},
+			}
+
+			results := option.Validate(field.NewPath("foo"))
+
+			Expect(results).To(ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("foo.volumeNames"),
+					"Detail": Equal("must not be empty"),
+				})),
+			))
+		})
+
+		It("should error when a volume name is empty", func() {
+			option := option.AcceptedPodVolumes{
+				AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+					NamespacedObjectSelector: option.NamespacedObjectSelector{
+						MatchLabels: map[string]string{
+							"foo": "bar",
+						},
+						NamespaceMatchLabels: map[string]string{
+							"foo": "bar",
+						},
+					},
+				},
+				VolumeNames: []string{"valid-volume-name-1", "valid-volume-name-2", ""},
+			}
+			results := option.Validate(field.NewPath("foo"))
+
+			Expect(results).To(ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("foo.volumeNames[2]"),
+					"BadValue": Equal(""),
+					"Detail":   Equal("must not be empty"),
+				})),
+			))
+		})
+
+		It("should correctly validate volume names", func() {
+			option := option.AcceptedPodVolumes{
+				AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+					NamespacedObjectSelector: option.NamespacedObjectSelector{
+						MatchLabels: map[string]string{
+							"foo": "bar",
+						},
+						NamespaceMatchLabels: map[string]string{
+							"foo": "bar",
+						},
+					},
+				},
+				VolumeNames: []string{"valid-volume-name", "invalid-volume-name?", "valid-wildcard*", "*invalid-wildcard-", "*", "valid*wildcard"},
+			}
+
+			results := option.Validate(field.NewPath("foo"))
+
+			Expect(results).To(ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("foo.volumeNames[1]"),
+					"BadValue": Equal("invalid-volume-name?"),
+					"Detail":   Equal("volume name must match regex: ^[a-z0-9*]([-a-z0-9*]*[a-z0-9*])?$"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("foo.volumeNames[3]"),
+					"BadValue": Equal("*invalid-wildcard-"),
+					"Detail":   Equal("volume name must match regex: ^[a-z0-9*]([-a-z0-9*]*[a-z0-9*])?$"),
+				})),
+			))
+		})
+
+		It("should not error when the volume names are correct", func() {
+			option := option.AcceptedPodVolumes{
+				AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+					NamespacedObjectSelector: option.NamespacedObjectSelector{
+						MatchLabels: map[string]string{
+							"foo": "bar",
+						},
+						NamespaceMatchLabels: map[string]string{
+							"foo": "bar",
+						},
+					},
+				},
+				VolumeNames: []string{"valid-volume-name", "volume", "abcde-eeee", "wildcard-volume*"},
+			}
+
+			results := option.Validate(field.NewPath("foo"))
+			Expect(results).To(BeNil())
+		})
+	})
 })

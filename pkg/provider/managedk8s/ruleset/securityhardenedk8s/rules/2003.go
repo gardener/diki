@@ -7,7 +7,6 @@ package rules
 import (
 	"context"
 	"path/filepath"
-	"regexp"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -27,12 +26,7 @@ var (
 )
 
 type Options2003 struct {
-	AcceptedPods []AcceptedPods2003 `json:"acceptedPods" yaml:"acceptedPods"`
-}
-
-type AcceptedPods2003 struct {
-	option.AcceptedNamespacedObject
-	VolumeNames []string `json:"volumeNames" yaml:"volumeNames"`
+	AcceptedPods []option.AcceptedPodVolumes `json:"acceptedPods" yaml:"acceptedPods"`
 }
 
 // Validate validates that option configurations are correctly defined.
@@ -40,22 +34,9 @@ func (o Options2003) Validate(fldPath *field.Path) field.ErrorList {
 	var (
 		allErrs          field.ErrorList
 		acceptedPodsPath = fldPath.Child("acceptedPods")
-		// In Kubernetes, volume names are validated and are expected to comply with the RFC 1123 naming standard. ref: https://github.com/kubernetes/kubernetes/blob/69aca29e6def5873779cbd392bd9a1bad124c586/pkg/apis/core/validation/validation.go#L434
-		// This regex is slightly adjusted to accept this name format with additional wildcard symbols.
-		validVolumeNameRegex = regexp.MustCompile("^[a-z0-9*]([-a-z0-9*]*[a-z0-9*])?$")
 	)
 	for pIdx, p := range o.AcceptedPods {
 		allErrs = append(allErrs, p.Validate(acceptedPodsPath.Index(pIdx))...)
-		if len(p.VolumeNames) == 0 {
-			allErrs = append(allErrs, field.Required(acceptedPodsPath.Index(pIdx).Child("volumeNames"), "must not be empty"))
-		}
-		for vIdx, volumeName := range p.VolumeNames {
-			if len(volumeName) == 0 {
-				allErrs = append(allErrs, field.Invalid(acceptedPodsPath.Index(pIdx).Child("volumeNames").Index(vIdx), volumeName, "must not be empty"))
-			} else if !validVolumeNameRegex.Match([]byte(volumeName)) {
-				allErrs = append(allErrs, field.Invalid(acceptedPodsPath.Index(pIdx).Child("volumeNames").Index(vIdx), volumeName, "must be a valid volume name"))
-			}
-		}
 	}
 	return allErrs
 }
@@ -159,7 +140,6 @@ func (r *Rule2003) accepted(podLabels, namespaceLabels map[string]string, volume
 					return true, acceptedPod.Justification, nil
 				}
 			}
-			return false, "", nil
 		}
 	}
 

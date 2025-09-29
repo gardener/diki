@@ -5,12 +5,15 @@
 package option
 
 import (
+	"fmt"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"github.com/gardener/diki/pkg/internal/utils"
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 )
 
 // Option that can be validated in order to ensure
@@ -119,6 +122,30 @@ func (s *NamespacedObjectSelector) Matches(objectLabels map[string]string, names
 	}
 
 	return utils.MatchLabels(objectLabels, s.MatchLabels) && utils.MatchLabels(namespaceLabels, s.NamespaceMatchLabels), nil
+}
+
+var _ Option = (*AcceptedPodVolumes)(nil)
+
+// AcceptedPodVolumes contains properties for accepting a list of volumes in (a) specific pod(s).
+type AcceptedPodVolumes struct {
+	AcceptedNamespacedObject
+	VolumeNames []string `json:"volumeNames" yaml:"volumeNames"`
+}
+
+func (a *AcceptedPodVolumes) Validate(fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+
+	if len(a.VolumeNames) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("volumeNames"), "must not be empty"))
+	}
+	for vIdx, volumeName := range a.VolumeNames {
+		if len(volumeName) == 0 {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("volumeNames").Index(vIdx), volumeName, "must not be empty"))
+		} else if !kubeutils.ValidVolumeNameRegexp.Match([]byte(volumeName)) {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("volumeNames").Index(vIdx), volumeName, fmt.Sprintf("volume name must match regex: %s", kubeutils.VolumeNameValueFmt)))
+		}
+	}
+	return allErrs
 }
 
 // AcceptedClusterObject contains generalized properties for accepting object.
