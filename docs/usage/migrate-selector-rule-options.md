@@ -9,17 +9,15 @@ The new selectors support both `matchExpressions` and `matchLabels`:
 ``` yaml
 labelSelector:
   matchExpressions:
-    - key: foo
-      operator: In
-      values:
-      - bar
-      - baz
-      - qux
+  - key: foo
+    operator: In
+    values:
+    - bar
+    - baz
+    - qux
   matchLabels:
     foo: bar
 ```
-
-There are also breaking changes where the options structure is being unified between selector rule options.
 
 This guide will show you how to migrate to the new `labelSelector`s for rule options.
 For specific rule options please check the [example config files](../../example/config)
@@ -128,9 +126,9 @@ New rule option:
 
 For rules `242447` & `242448` the `kube-proxy` options are directly composed
 ``` yaml
-    - ruleID: "242447"
-      args:
-        labelSelector:
-          matchLabels:
-            foo: bar
+- ruleID: "242447"
+  args:
+    labelSelector:
+      matchLabels:
+        foo: bar
 ```
