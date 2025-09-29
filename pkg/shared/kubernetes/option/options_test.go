@@ -459,4 +459,132 @@ var _ = Describe("options", func() {
 			Expect(results).To(BeNil())
 		})
 	})
+
+	Describe("MatchesAcceptedPodVolumes", func() {
+		It("should correctly match the pod with non-matching pod and namespace labels", func() {
+			option := option.AcceptedPodVolumes{
+				AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+					NamespacedObjectSelector: option.NamespacedObjectSelector{
+						LabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
+						},
+						NamespaceLabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "baz",
+							},
+						},
+					},
+					Justification: "accepted pod",
+				},
+				VolumeNames: []string{"volume-1"},
+			}
+
+			matches, err := option.Matches(map[string]string{"foo": "bar"}, map[string]string{"foo": "bar"}, "volume-1")
+			Expect(err).To(BeNil())
+			Expect(matches).To(BeFalse())
+		})
+
+		It("should correctly match the volume names of a pod", func() {
+			option := option.AcceptedPodVolumes{
+				AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+					NamespacedObjectSelector: option.NamespacedObjectSelector{
+						LabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
+						},
+						NamespaceLabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
+						},
+					},
+					Justification: "accepted pod",
+				},
+				VolumeNames: []string{"volume-1"},
+			}
+
+			matches, err := option.Matches(map[string]string{"foo": "bar"}, map[string]string{"foo": "bar"}, "volume-1")
+			Expect(err).To(BeNil())
+			Expect(matches).To(BeTrue())
+		})
+
+		It("should correctly match the volume names of a pod with a wildcard", func() {
+			option := option.AcceptedPodVolumes{
+				AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+					NamespacedObjectSelector: option.NamespacedObjectSelector{
+						LabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
+						},
+						NamespaceLabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
+						},
+					},
+					Justification: "accepted pod",
+				},
+				VolumeNames: []string{"*"},
+			}
+
+			matches, err := option.Matches(map[string]string{"foo": "bar"}, map[string]string{"foo": "bar"}, "volume-1")
+			Expect(err).To(BeNil())
+			Expect(matches).To(BeTrue())
+		})
+
+		It("should correctly match the volume names of a pod with a matching partial wildcard", func() {
+			option := option.AcceptedPodVolumes{
+				AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+					NamespacedObjectSelector: option.NamespacedObjectSelector{
+						LabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
+						},
+						NamespaceLabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
+						},
+					},
+					Justification: "accepted pod",
+				},
+				VolumeNames: []string{"volume-*"},
+			}
+
+			matches, err := option.Matches(map[string]string{"foo": "bar"}, map[string]string{"foo": "bar"}, "volume-1")
+			Expect(err).To(BeNil())
+			Expect(matches).To(BeTrue())
+		})
+
+		It("should correctly match the volume names of a pod with a non-matching partial wildcard", func() {
+			option := option.AcceptedPodVolumes{
+				AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+					NamespacedObjectSelector: option.NamespacedObjectSelector{
+						LabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
+						},
+						NamespaceLabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
+						},
+					},
+					Justification: "accepted pod",
+				},
+				VolumeNames: []string{"*-volume"},
+			}
+
+			matches, err := option.Matches(map[string]string{"foo": "bar"}, map[string]string{"foo": "bar"}, "volume1")
+			Expect(err).To(BeNil())
+			Expect(matches).To(BeFalse())
+		})
+
+	})
 })

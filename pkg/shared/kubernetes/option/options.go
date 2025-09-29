@@ -6,6 +6,8 @@ package option
 
 import (
 	"fmt"
+	"path/filepath"
+	"regexp"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
@@ -13,7 +15,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"github.com/gardener/diki/pkg/internal/utils"
-	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 )
 
 // Option that can be validated in order to ensure
@@ -134,7 +135,14 @@ type AcceptedPodVolumes struct {
 
 // Validate validates that option configurations are correctly defined. It accepts a [field.Path] parameter with the fldPath.
 func (a *AcceptedPodVolumes) Validate(fldPath *field.Path) field.ErrorList {
-	var allErrs field.ErrorList
+
+	var (
+		// In Kubernetes, volume names are validated and are expected to comply with the RFC 1123 naming standard. ref: https://github.com/kubernetes/kubernetes/blob/69aca29e6def5873779cbd392bd9a1bad124c586/pkg/apis/core/validation/validation.go#L434
+		// This regex is slightly adjusted from Kubernetes with additional wildcard symbols.
+		volumeNameValueFmt    = "^[a-z0-9*]([-a-z0-9*]*[a-z0-9*])?$"
+		validVolumeNameRegexp = regexp.MustCompile(volumeNameValueFmt)
+		allErrs               field.ErrorList
+	)
 
 	if len(a.VolumeNames) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("volumeNames"), "must not be empty"))
@@ -142,11 +150,28 @@ func (a *AcceptedPodVolumes) Validate(fldPath *field.Path) field.ErrorList {
 	for vIdx, volumeName := range a.VolumeNames {
 		if len(volumeName) == 0 {
 			allErrs = append(allErrs, field.Invalid(fldPath.Child("volumeNames").Index(vIdx), volumeName, "must not be empty"))
-		} else if !kubeutils.ValidVolumeNameRegexp.Match([]byte(volumeName)) {
-			allErrs = append(allErrs, field.Invalid(fldPath.Child("volumeNames").Index(vIdx), volumeName, fmt.Sprintf("volume name must match regex: %s", kubeutils.VolumeNameValueFmt)))
+		} else if !validVolumeNameRegexp.Match([]byte(volumeName)) {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("volumeNames").Index(vIdx), volumeName, fmt.Sprintf("volume name must match regex: %s", volumeNameValueFmt)))
 		}
 	}
+
 	return allErrs
+}
+
+// Matches returns true if this selector matches the given set of labels and volume name.
+func (a *AcceptedPodVolumes) Matches(podLabels, namespaceLabels map[string]string, volumeName string) (bool, error) {
+	if matches, err := a.AcceptedNamespacedObject.Matches(podLabels, namespaceLabels); err != nil {
+		return false, err
+	} else if matches {
+		for _, acceptedVolumeName := range a.VolumeNames {
+			if match, err := filepath.Match(acceptedVolumeName, volumeName); err != nil {
+				return false, err
+			} else if match {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
 }
 
 // AcceptedClusterObject contains generalized properties for accepting object.

@@ -7,7 +7,6 @@ package rules
 import (
 	"cmp"
 	"context"
-	"path/filepath"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -125,16 +124,10 @@ func (r *Rule2008) accepted(podLabels, namespaceLabels map[string]string, volume
 	}
 
 	for _, acceptedPod := range r.Options.AcceptedPods {
-		if matches, err := acceptedPod.Matches(podLabels, namespaceLabels); err != nil {
-			return false, "", err
+		if matches, err := acceptedPod.Matches(podLabels, namespaceLabels, volumeName); err != nil {
+			return false, "", nil
 		} else if matches {
-			for _, acceptedVolumeName := range acceptedPod.VolumeNames {
-				if match, err := filepath.Match(acceptedVolumeName, volumeName); err != nil {
-					return false, "", err
-				} else if match {
-					return true, acceptedPod.Justification, nil
-				}
-			}
+			return true, acceptedPod.Justification, nil
 		}
 	}
 
