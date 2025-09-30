@@ -225,7 +225,7 @@ var _ = Describe("options", func() {
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":   Equal(field.ErrorTypeForbidden),
 					"Field":  Equal("foo.matchLabels"),
-					"Detail": Equal("cannot be set when labelSelector is defined"),
+					"Detail": Equal("cannot be set when labelSelector is defined. For more information, please refer to the migration guide: https://github.com/gardener/diki/tree/main/docs/usage/migrate-selector-rule-options.md"),
 				})),
 			))
 		})
