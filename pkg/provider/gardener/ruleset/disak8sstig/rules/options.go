@@ -11,12 +11,14 @@ import (
 
 type RuleOption interface {
 	sharedrules.Options242390 |
+		Options242400 |
 		option.Options242414 |
 		option.Options242415 |
 		option.Options242442 |
 		Options242451 |
+		Options242466 |
+		Options242467 |
 		sharedrules.Options245543 |
 		sharedrules.Options254800 |
-		option.FileOwnerOptions |
-		option.KubeProxyOptions
+		option.FileOwnerOptions
 }

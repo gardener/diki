@@ -14,7 +14,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -23,7 +22,8 @@ import (
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
-	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -172,7 +172,6 @@ tlsCertFile: /var/lib/certs/tls.crt`
 	})
 
 	It("should fail when kube-proxy pods cannot be found", func() {
-		kubeProxySelector := labels.SelectorFromSet(labels.Set{"role": "proxy"})
 		fakePodContext = fakepod.NewFakeSimplePodContext([][]string{}, [][]error{})
 		r := &rules.Rule242466{
 			Logger:     testLogger,
@@ -183,9 +182,9 @@ tlsCertFile: /var/lib/certs/tls.crt`
 
 		ruleResult, err := r.Run(ctx)
 		Expect(err).To(BeNil())
-		Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
+		Expect(ruleResult.CheckResults).To(ConsistOf([]rule.CheckResult{
+			rule.ErroredCheckResult("kube-proxy pods not found", rule.NewTarget()),
 			rule.ErroredCheckResult("no allocatable nodes could be selected", rule.NewTarget()),
-			rule.ErroredCheckResult("pods not found", rule.NewTarget("selector", kubeProxySelector.String())),
 		}))
 	})
 
@@ -238,8 +237,14 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			}),
 		Entry("should check only pod with matched labels",
 			rules.Options242466{
-				KubeProxyMatchLabels: map[string]string{
-					"component": "kube-proxy",
+				KubeProxy: disaoption.KubeProxyOptions{
+					ClusterObjectSelector: &option.ClusterObjectSelector{
+						LabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"component": "kube-proxy",
+							},
+						},
+					},
 				},
 			},
 			[][]string{{kubeletPID, kubeletCommand, tlsKubeletConfig, compliantCertStats}, {mounts, compliantStats}},
@@ -263,8 +268,8 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			}),
 		Entry("should return accepted check result when kubeProxyDisabled option is set to true",
 			rules.Options242466{
-				KubeProxyOptions: option.KubeProxyOptions{
-					KubeProxyDisabled: true,
+				KubeProxy: disaoption.KubeProxyOptions{
+					Disabled: true,
 				},
 			},
 			[][]string{{kubeletPID, kubeletCommand, tlsKubeletConfig, compliantCertStats}},

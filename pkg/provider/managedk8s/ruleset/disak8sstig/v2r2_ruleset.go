@@ -64,7 +64,7 @@ func (r *Ruleset) validateV2R2RuleOptions(ruleOptions map[string]internalconfig.
 	allErrs = append(allErrs, validateV2R2Options[disaoption.Options242415](ruleOptions[sharedrules.ID242415].Args, fldPath.Index(ruleOptions[sharedrules.ID242415].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV2R2Options[sharedrules.Options242417](ruleOptions[sharedrules.ID242417].Args, fldPath.Index(ruleOptions[sharedrules.ID242417].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV2R2Options[rules.Options242442](ruleOptions[sharedrules.ID242442].Args, fldPath.Index(ruleOptions[sharedrules.ID242442].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV2R2Options[sharedrules.Options242447](ruleOptions[sharedrules.ID242447].Args, fldPath.Index(ruleOptions[sharedrules.ID242447].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV2R2Options[option.ClusterObjectSelector](ruleOptions[sharedrules.ID242447].Args, fldPath.Index(ruleOptions[sharedrules.ID242447].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV2R2Options[sharedrules.Options242448](ruleOptions[sharedrules.ID242448].Args, fldPath.Index(ruleOptions[sharedrules.ID242448].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV2R2Options[sharedrules.Options242449](ruleOptions[sharedrules.ID242449].Args, fldPath.Index(ruleOptions[sharedrules.ID242449].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV2R2Options[sharedrules.Options242450](ruleOptions[sharedrules.ID242450].Args, fldPath.Index(ruleOptions[sharedrules.ID242450].Index).Child("args"))...)
@@ -162,7 +162,7 @@ func (r *Ruleset) registerV2R2Rules(ruleOptions map[string]config.RuleOptionsCon
 	if err != nil {
 		return fmt.Errorf("rule option 242442 error: %s", err.Error())
 	}
-	opts242447, err := getV2R2OptionOrNil[sharedrules.Options242447](ruleOptions[sharedrules.ID242447].Args)
+	opts242447, err := getV2R2OptionOrNil[option.ClusterObjectSelector](ruleOptions[sharedrules.ID242447].Args)
 	if err != nil {
 		return fmt.Errorf("rule option 242447 error: %s", err.Error())
 	}

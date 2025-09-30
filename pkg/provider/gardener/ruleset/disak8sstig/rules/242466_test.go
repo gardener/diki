@@ -387,7 +387,7 @@ tlsCertFile: /var/lib/certs/tls.crt`
 	})
 
 	DescribeTable("Run cases",
-		func(seedExecuteReturnString, shootExecuteReturnString [][]string, seedExecuteReturnError, shootExecuteReturnError [][]error, option *option.KubeProxyOptions, expectedCheckResults []rule.CheckResult) {
+		func(seedExecuteReturnString, shootExecuteReturnString [][]string, seedExecuteReturnError, shootExecuteReturnError [][]error, option *rules.Options242466, expectedCheckResults []rule.CheckResult) {
 			Expect(fakeControlPlaneClient.Create(ctx, etcdMainPod)).To(Succeed())
 			Expect(fakeControlPlaneClient.Create(ctx, etcdEventsPod)).To(Succeed())
 			Expect(fakeControlPlaneClient.Create(ctx, kubeAPIServerPod)).To(Succeed())
@@ -456,8 +456,10 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			[][]string{{kubeletPID, kubeletCommand, "", nonCompliantStats}},
 			[][]error{{nil, nil, nil, nil, nil, nil}},
 			[][]error{{nil, nil, nil, nil}},
-			&option.KubeProxyOptions{
-				KubeProxyDisabled: true,
+			&rules.Options242466{
+				KubeProxy: option.KubeProxyOptionsWithoutSelectors{
+					Disabled: true,
+				},
 			},
 			[]rule.CheckResult{
 				rule.FailedCheckResult("File has too wide permissions", rule.NewTarget("cluster", "seed", "name", "etcd", "namespace", "foo", "containerName", "test", "kind", "DaemonSet", "details", "fileName: /destination/file1.crt, permissions: 664, expectedPermissionsMax: 644")),
