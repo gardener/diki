@@ -6,9 +6,7 @@ package rules
 
 import (
 	"context"
-	"slices"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -27,12 +25,7 @@ var (
 )
 
 type Options2003 struct {
-	AcceptedPods []AcceptedPods2003 `json:"acceptedPods" yaml:"acceptedPods"`
-}
-
-type AcceptedPods2003 struct {
-	option.AcceptedNamespacedObject
-	VolumeNames []string `json:"volumeNames" yaml:"volumeNames"`
+	AcceptedPods []option.AcceptedPodVolumes `json:"acceptedPods" yaml:"acceptedPods"`
 }
 
 // Validate validates that option configurations are correctly defined.
@@ -43,14 +36,6 @@ func (o Options2003) Validate(fldPath *field.Path) field.ErrorList {
 	)
 	for pIdx, p := range o.AcceptedPods {
 		allErrs = append(allErrs, p.Validate(acceptedPodsPath.Index(pIdx))...)
-		if len(p.VolumeNames) == 0 {
-			allErrs = append(allErrs, field.Required(acceptedPodsPath.Index(pIdx).Child("volumeNames"), "must not be empty"))
-		}
-		for vIdx, volumeName := range p.VolumeNames {
-			if len(volumeName) == 0 {
-				allErrs = append(allErrs, field.Invalid(acceptedPodsPath.Index(pIdx).Child("volumeNames").Index(vIdx), volumeName, "must not be empty"))
-			}
-		}
 	}
 	return allErrs
 }
@@ -121,7 +106,7 @@ func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 				volume.Projected == nil &&
 				volume.Secret == nil {
 				uses = true
-				if accepted, justification, err := r.accepted(pod.Labels, allNamespaces[pod.Namespace].Labels, volume); err != nil {
+				if accepted, justification, err := r.accepted(pod.Labels, allNamespaces[pod.Namespace].Labels, volume.Name); err != nil {
 					return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 				} else if accepted {
 					checkResults = append(checkResults, rule.AcceptedCheckResult(justification, volumeTarget))
@@ -138,15 +123,15 @@ func (r *Rule2003) Run(ctx context.Context) (rule.RuleResult, error) {
 	return rule.Result(r, checkResults...), nil
 }
 
-func (r *Rule2003) accepted(podLabels, namespaceLabels map[string]string, volume corev1.Volume) (bool, string, error) {
+func (r *Rule2003) accepted(podLabels, namespaceLabels map[string]string, volumeName string) (bool, string, error) {
 	if r.Options == nil {
 		return false, "", nil
 	}
 
 	for _, acceptedPod := range r.Options.AcceptedPods {
-		if matches, err := acceptedPod.Matches(podLabels, namespaceLabels); err != nil {
+		if matches, err := acceptedPod.Matches(podLabels, namespaceLabels, volumeName); err != nil {
 			return false, "", err
-		} else if matches && (slices.Contains(acceptedPod.VolumeNames, "*") || slices.Contains(acceptedPod.VolumeNames, volume.Name)) {
+		} else if matches {
 			return true, acceptedPod.Justification, nil
 		}
 	}

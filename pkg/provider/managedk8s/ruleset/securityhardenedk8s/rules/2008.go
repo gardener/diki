@@ -7,7 +7,6 @@ package rules
 import (
 	"cmp"
 	"context"
-	"slices"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -32,13 +31,7 @@ type Rule2008 struct {
 }
 
 type Options2008 struct {
-	AcceptedPods []AcceptedPods2008 `json:"acceptedPods" yaml:"acceptedPods"`
-}
-
-type AcceptedPods2008 struct {
-	option.NamespacedObjectSelector
-	VolumeNames   []string `json:"volumeNames" yaml:"volumeNames"`
-	Justification string   `json:"justification" yaml:"justification"`
+	AcceptedPods []option.AcceptedPodVolumes `json:"acceptedPods" yaml:"acceptedPods"`
 }
 
 // Validate validates that option configurations are correctly defined.
@@ -49,14 +42,6 @@ func (o Options2008) Validate(fldPath *field.Path) field.ErrorList {
 	)
 	for pIdx, p := range o.AcceptedPods {
 		allErrs = append(allErrs, p.Validate(acceptedPodsPath.Index(pIdx))...)
-		if len(p.VolumeNames) == 0 {
-			allErrs = append(allErrs, field.Required(acceptedPodsPath.Index(pIdx).Child("volumeNames"), "must not be empty"))
-		}
-		for vIdx, volumeName := range p.VolumeNames {
-			if len(volumeName) == 0 {
-				allErrs = append(allErrs, field.Invalid(acceptedPodsPath.Index(pIdx).Child("volumeNames").Index(vIdx), volumeName, "must not be empty"))
-			}
-		}
 	}
 	return allErrs
 }
@@ -139,9 +124,9 @@ func (r *Rule2008) accepted(podLabels, namespaceLabels map[string]string, volume
 	}
 
 	for _, acceptedPod := range r.Options.AcceptedPods {
-		if matches, err := acceptedPod.Matches(podLabels, namespaceLabels); err != nil {
+		if matches, err := acceptedPod.Matches(podLabels, namespaceLabels, volumeName); err != nil {
 			return false, "", err
-		} else if matches && (slices.Contains(acceptedPod.VolumeNames, "*") || slices.Contains(acceptedPod.VolumeNames, volumeName)) {
+		} else if matches {
 			return true, acceptedPod.Justification, nil
 		}
 	}

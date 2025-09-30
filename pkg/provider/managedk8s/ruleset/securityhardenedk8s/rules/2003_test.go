@@ -9,11 +9,9 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gstruct"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -181,7 +179,7 @@ var _ = Describe("#2003", func() {
 				Expect(fakeClient.Create(ctx, acceptedPod)).To(Succeed())
 			},
 			&rules.Options2003{
-				AcceptedPods: []rules.AcceptedPods2003{
+				AcceptedPods: []option.AcceptedPodVolumes{
 					{
 						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
 							NamespacedObjectSelector: option.NamespacedObjectSelector{
@@ -273,7 +271,7 @@ var _ = Describe("#2003", func() {
 				Expect(fakeClient.Create(ctx, regularPod)).To(Succeed())
 			},
 			&rules.Options2003{
-				AcceptedPods: []rules.AcceptedPods2003{
+				AcceptedPods: []option.AcceptedPodVolumes{
 					{
 						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
 							NamespacedObjectSelector: option.NamespacedObjectSelector{
@@ -344,7 +342,7 @@ var _ = Describe("#2003", func() {
 				Expect(fakeClient.Create(ctx, plainNamespacePod)).To(Succeed())
 			},
 			&rules.Options2003{
-				AcceptedPods: []rules.AcceptedPods2003{
+				AcceptedPods: []option.AcceptedPodVolumes{
 					{
 						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
 							NamespacedObjectSelector: option.NamespacedObjectSelector{
@@ -388,19 +386,25 @@ var _ = Describe("#2003", func() {
 			labeledNamespacePod.Namespace = labeledNamespace.Name
 			labeledNamespacePod.Spec.Volumes = []corev1.Volume{
 				{
-					Name: "volume1",
+					Name: "volume-1",
 					VolumeSource: corev1.VolumeSource{
 						Cinder: &corev1.CinderVolumeSource{},
 					},
 				},
 				{
-					Name: "volume2",
+					Name: "volume-2",
 					VolumeSource: corev1.VolumeSource{
 						StorageOS: &corev1.StorageOSVolumeSource{},
 					},
 				},
 				{
-					Name: "volume3",
+					Name: "volume-3",
+					VolumeSource: corev1.VolumeSource{
+						AWSElasticBlockStore: &corev1.AWSElasticBlockStoreVolumeSource{},
+					},
+				},
+				{
+					Name: "volume4",
 					VolumeSource: corev1.VolumeSource{
 						AWSElasticBlockStore: &corev1.AWSElasticBlockStoreVolumeSource{},
 					},
@@ -415,7 +419,7 @@ var _ = Describe("#2003", func() {
 			Expect(fakeClient.Create(ctx, labeledNamespacePod)).To(Succeed())
 		},
 			&rules.Options2003{
-				AcceptedPods: []rules.AcceptedPods2003{
+				AcceptedPods: []option.AcceptedPodVolumes{
 					{
 						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
 							NamespacedObjectSelector: option.NamespacedObjectSelector{
@@ -432,14 +436,158 @@ var _ = Describe("#2003", func() {
 							},
 							Justification: "accepted wildcard",
 						},
+						VolumeNames: []string{"volume-*"},
+					},
+				},
+			},
+			[]rule.CheckResult{
+				{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume-1")},
+				{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume-2")},
+				{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume-3")},
+				{Status: rule.Failed, Message: "Pod uses not allowed volume type.", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume4")},
+			},
+		),
+		Entry("should accept all volumes when a full wildcard is used for a volume name", func() {
+			labeledNamespace := &corev1.Namespace{}
+			labeledNamespace.Name = "labeledNamespace"
+			labeledNamespace.Labels = map[string]string{
+				"namespace": "foo",
+			}
+			Expect(fakeClient.Create(ctx, labeledNamespace)).To(Succeed())
+
+			labeledNamespacePod := plainPod.DeepCopy()
+			labeledNamespacePod.Name = "labeledNamespacePod"
+			labeledNamespacePod.Labels = map[string]string{"pod": "bar"}
+			labeledNamespacePod.Namespace = labeledNamespace.Name
+			labeledNamespacePod.Spec.Volumes = []corev1.Volume{
+				{
+					Name: "volume-1",
+					VolumeSource: corev1.VolumeSource{
+						Cinder: &corev1.CinderVolumeSource{},
+					},
+				},
+				{
+					Name: "2volume",
+					VolumeSource: corev1.VolumeSource{
+						StorageOS: &corev1.StorageOSVolumeSource{},
+					},
+				},
+				{
+					Name: "foo-bar",
+					VolumeSource: corev1.VolumeSource{
+						AWSElasticBlockStore: &corev1.AWSElasticBlockStoreVolumeSource{},
+					},
+				},
+				{
+					Name: "baz",
+					VolumeSource: corev1.VolumeSource{
+						AWSElasticBlockStore: &corev1.AWSElasticBlockStoreVolumeSource{},
+					},
+				},
+			}
+			Expect(fakeClient.Create(ctx, labeledNamespacePod)).To(Succeed())
+		},
+			&rules.Options2003{
+				AcceptedPods: []option.AcceptedPodVolumes{
+					{
+						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+							NamespacedObjectSelector: option.NamespacedObjectSelector{
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"pod": "bar",
+									},
+								},
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"namespace": "foo",
+									},
+								},
+							},
+							Justification: "accepted full wildcard",
+						},
 						VolumeNames: []string{"*"},
 					},
 				},
 			},
 			[]rule.CheckResult{
-				{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume1")},
-				{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume2")},
-				{Status: rule.Accepted, Message: "accepted wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume3")},
+				{Status: rule.Accepted, Message: "accepted full wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume-1")},
+				{Status: rule.Accepted, Message: "accepted full wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "2volume")},
+				{Status: rule.Accepted, Message: "accepted full wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "foo-bar")},
+				{Status: rule.Accepted, Message: "accepted full wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "baz")},
+			},
+		),
+
+		Entry("should accept a volume if there are more than one options that target it's pod", func() {
+			labeledNamespace := &corev1.Namespace{}
+			labeledNamespace.Name = "labeledNamespace"
+			labeledNamespace.Labels = map[string]string{
+				"namespace": "foo",
+			}
+			Expect(fakeClient.Create(ctx, labeledNamespace)).To(Succeed())
+
+			labeledNamespacePod := plainPod.DeepCopy()
+			labeledNamespacePod.Name = "labeledNamespacePod"
+			labeledNamespacePod.Labels = map[string]string{"pod": "bar"}
+			labeledNamespacePod.Namespace = labeledNamespace.Name
+			labeledNamespacePod.Spec.Volumes = []corev1.Volume{
+				{
+					Name: "volume-suffix",
+					VolumeSource: corev1.VolumeSource{
+						Cinder: &corev1.CinderVolumeSource{},
+					},
+				},
+				{
+					Name: "prefix-volume",
+					VolumeSource: corev1.VolumeSource{
+						Cinder: &corev1.CinderVolumeSource{},
+					},
+				},
+			}
+			Expect(fakeClient.Create(ctx, labeledNamespacePod)).To(Succeed())
+		},
+			&rules.Options2003{
+				AcceptedPods: []option.AcceptedPodVolumes{
+					{
+						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+							NamespacedObjectSelector: option.NamespacedObjectSelector{
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"pod": "bar",
+									},
+								},
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"namespace": "foo",
+									},
+								},
+							},
+							Justification: "accepted prefix wildcard",
+						},
+						VolumeNames: []string{"*-volume"},
+					},
+					{
+						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+							NamespacedObjectSelector: option.NamespacedObjectSelector{
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"pod": "bar",
+									},
+								},
+								NamespaceLabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"namespace": "foo",
+									},
+								},
+							},
+							Justification: "accepted suffix wildcard",
+						},
+						VolumeNames: []string{"volume-*"},
+					},
+				},
+			},
+			[]rule.CheckResult{
+				{Status: rule.Accepted, Message: "accepted suffix wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "volume-suffix")},
+				{Status: rule.Accepted, Message: "accepted prefix wildcard", Target: rule.NewTarget("kind", "Pod", "name", "labeledNamespacePod", "namespace", "labeledNamespace", "volume", "prefix-volume")},
 			},
 		),
 	)
@@ -497,73 +645,6 @@ var _ = Describe("#2003", func() {
 				{Status: rule.Passed, Message: "Pod uses only allowed volume types.", Target: rule.NewTarget("kind", "DaemonSet", "name", "bar", "namespace", "foo")},
 			},
 		))
-	})
-
-	Describe("#ValidateOptions2003", func() {
-		It("should correctly validate options", func() {
-			options := rules.Options2003{
-				AcceptedPods: []rules.AcceptedPods2003{
-					{
-						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
-							NamespacedObjectSelector: option.NamespacedObjectSelector{
-								LabelSelector: &metav1.LabelSelector{
-									MatchLabels: map[string]string{
-										"foo": "bar",
-									},
-								},
-								NamespaceLabelSelector: &metav1.LabelSelector{
-									MatchLabels: map[string]string{
-										"foo": "bar",
-									},
-								},
-							},
-						},
-					},
-					{
-						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
-							NamespacedObjectSelector: option.NamespacedObjectSelector{
-								MatchLabels: map[string]string{
-									"foo": "bar",
-								},
-								NamespaceMatchLabels: map[string]string{
-									"foo": "bar",
-								},
-							},
-						},
-						VolumeNames: []string{"foo"},
-					},
-					{
-						AcceptedNamespacedObject: option.AcceptedNamespacedObject{
-							NamespacedObjectSelector: option.NamespacedObjectSelector{
-								MatchLabels: map[string]string{
-									"foo": "bar",
-								},
-								NamespaceMatchLabels: map[string]string{
-									"foo": "bar",
-								},
-							},
-						},
-						VolumeNames: []string{""},
-					},
-				},
-			}
-
-			result := options.Validate(field.NewPath("foo"))
-
-			Expect(result).To(ConsistOf(
-				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":   Equal(field.ErrorTypeRequired),
-					"Field":  Equal("foo.acceptedPods[0].volumeNames"),
-					"Detail": Equal("must not be empty"),
-				})),
-				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("foo.acceptedPods[2].volumeNames[0]"),
-					"BadValue": Equal(""),
-					"Detail":   Equal("must not be empty"),
-				})),
-			))
-		})
 	})
 
 })
