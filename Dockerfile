@@ -22,7 +22,7 @@ FROM alpine:3.22.1 AS diki-ops-builder
 ARG TARGETARCH
 
 RUN apk --no-cache add curl &&\
-    curl -sLf https://github.com/containerd/nerdctl/releases/download/v2.1.5/nerdctl-2.1.5-linux-${TARGETARCH}.tar.gz -o /nerdctl.tar.gz &&\
+    curl -sLf https://github.com/containerd/nerdctl/releases/download/v2.1.6/nerdctl-2.1.6-linux-${TARGETARCH}.tar.gz -o /nerdctl.tar.gz &&\
     tar -C /usr/local/bin -xzvf nerdctl.tar.gz
 
 WORKDIR /volume
