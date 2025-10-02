@@ -33,7 +33,7 @@ var (
 	_ ruleset.Ruleset = &Ruleset{}
 	// SupportedVersions is a list of available versions for the DISA Kubernetes STIG Ruleset.
 	// Versions are sorted from newest to oldest.
-	SupportedVersions = []string{"v2r3", "v2r2"}
+	SupportedVersions = []string{"v2r4", "v2r3"}
 )
 
 // Ruleset implements DISA Kubernetes STIG.
@@ -123,18 +123,18 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabel
 	}
 
 	switch rulesetConfig.Version {
-	case "v2r2":
-		if err := ruleset.validateV2R2RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
-			return nil, err
-		}
-		if err := ruleset.registerV2R2Rules(ruleOptions); err != nil {
-			return nil, err
-		}
 	case "v2r3":
 		if err := ruleset.validateV2R3RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
 			return nil, err
 		}
 		if err := ruleset.registerV2R3Rules(ruleOptions); err != nil {
+			return nil, err
+		}
+	case "v2r4":
+		if err := ruleset.validateV2R4RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
+			return nil, err
+		}
+		if err := ruleset.registerV2R4Rules(ruleOptions); err != nil {
 			return nil, err
 		}
 	default:
