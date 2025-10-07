@@ -699,13 +699,10 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 			rule.Skipped,
 			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
-		rule.NewSkipRule(
-			sharedrules.ID274882,
-			"Kubernetes Secrets must be encrypted at rest.",
-			"Rule is not implemented.",
-			rule.NotImplemented,
-			rule.SkipRuleWithSeverity(rule.SeverityHigh),
-		),
+		&sharedrules.Rule274882{
+			Client:    seedClient,
+			Namespace: r.shootNamespace,
+		},
 		rule.NewSkipRule(
 			sharedrules.ID274883,
 			"Sensitive information must be stored using Kubernetes Secrets or an external Secret store provider.",
