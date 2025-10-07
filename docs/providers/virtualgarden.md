@@ -8,9 +8,8 @@ The `Virtual Garden` provider is capable of accessing a `runtime/virtual garden`
 
 The `Gardener` provider implements the following `rulesets`:
 - [DISA Kubernetes Security Technical Implementation Guide](../rulesets/disa-k8s-stig/ruleset.md)
-    - v2r3
-    - v2r2
-    
+  - v2r4
+  - v2r3
 
 ### Configuration
 
