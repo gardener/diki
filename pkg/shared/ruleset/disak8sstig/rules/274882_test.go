@@ -143,13 +143,13 @@ var _ = Describe("#274882", func() {
 		},
 		Entry("should error when the encryption config is not valid yaml",
 			"foo",
-			rule.CheckResult{Status: "Errored", Message: "[1:1] string was used where mapping is expected\n>  1 | foo\n       ^\n", Target: target},
+			rule.CheckResult{Status: rule.Errored, Message: "[1:1] string was used where mapping is expected\n>  1 | foo\n       ^\n", Target: target},
 		),
 		Entry("should fail when the encryption config has no resources configured",
 			`
 apiVersion: apiserver.config.k8s.io/v1
 kind: EncryptionConfiguration`,
-			rule.CheckResult{Status: "Failed", Message: "Secrets are not explicitly encrypted at REST.", Target: target},
+			rule.CheckResult{Status: rule.Failed, Message: "Secrets are not explicitly encrypted at REST.", Target: target},
 		),
 		Entry("should fail when the encryption config does not include secrets as a resource for encryption",
 			`
@@ -163,7 +163,7 @@ resources:
     keys:
     - name: key1
       secret: c2VjcmV0IGlzIHNlY3VyZQ==`,
-			rule.CheckResult{Status: "Failed", Message: "Secrets are not explicitly encrypted at REST.", Target: target},
+			rule.CheckResult{Status: rule.Failed, Message: "Secrets are not explicitly encrypted at REST.", Target: target},
 		),
 		Entry("should fail when the encryption config includes secrets as a resource but encrypts then with identity",
 			`
@@ -174,7 +174,7 @@ resources:
   - secrets
   providers:
   - identity: {}`,
-			rule.CheckResult{Status: "Failed", Message: "Secrets are explicitly stored as plain text.", Target: target},
+			rule.CheckResult{Status: rule.Failed, Message: "Secrets are explicitly stored as plain text.", Target: target},
 		),
 		Entry("should fail when encryption config includes secrets as a resource and contains multiple providers but identity is the primary one",
 			`
@@ -189,7 +189,7 @@ resources:
     keys:
     - name: key1
       secret: c2VjcmV0IGlzIHNlY3VyZQ==`,
-			rule.CheckResult{Status: "Failed", Message: "Secrets are explicitly stored as plain text.", Target: target},
+			rule.CheckResult{Status: rule.Failed, Message: "Secrets are explicitly stored as plain text.", Target: target},
 		),
 		Entry("should pass when encryption config includes secrets as a resource and contains multiple providers and a valid one is the primary one",
 			`
@@ -204,7 +204,7 @@ resources:
     - name: key1
       secret: c2VjcmV0IGlzIHNlY3VyZQ==
   - identity: {}`,
-			rule.CheckResult{Status: "Passed", Message: "Secrets are encrypted at REST.", Target: target}),
+			rule.CheckResult{Status: rule.Passed, Message: "Secrets are encrypted at REST.", Target: target}),
 		Entry("should fail when encryption config includes a wildcard resource for secrets but identity is the primary provider",
 			`
 apiVersion: apiserver.config.k8s.io/v1
@@ -218,7 +218,7 @@ resources:
     keys:
     - name: key1
       secret: c2VjcmV0IGlzIHNlY3VyZQ==`,
-			rule.CheckResult{Status: "Failed", Message: "Secrets are explicitly stored as plain text.", Target: target}),
+			rule.CheckResult{Status: rule.Failed, Message: "Secrets are explicitly stored as plain text.", Target: target}),
 		Entry("should pass when encryption configuration includes a wildcard resource for secrets and a valid primary provider",
 			`
 apiVersion: apiserver.config.k8s.io/v1
@@ -232,7 +232,7 @@ resources:
     - name: key1
       secret: c2VjcmV0IGlzIHNlY3VyZQ==
   - identity: {}`,
-			rule.CheckResult{Status: "Passed", Message: "Secrets are encrypted at REST.", Target: target},
+			rule.CheckResult{Status: rule.Passed, Message: "Secrets are encrypted at REST.", Target: target},
 		),
 		Entry("should pass when there are multiple resource entries and secrets are properly encrypted in one of them",
 			`
@@ -251,7 +251,7 @@ resources:
   - "*"
   providers:
   - identity: {}`,
-			rule.CheckResult{Status: "Passed", Message: "Secrets are encrypted at REST.", Target: target},
+			rule.CheckResult{Status: rule.Passed, Message: "Secrets are encrypted at REST.", Target: target},
 		),
 		Entry("should fail when there are multiple resource entries and the order of precedence overwrites the secret encryption",
 			`
@@ -269,7 +269,7 @@ resources:
     keys:
     - name: key1
       secret: c2VjcmV0IGlzIHNlY3VyZQ==
-  - identity: {}`, rule.CheckResult{Status: "Failed", Message: "Secrets are explicitly stored as plain text.", Target: target},
+  - identity: {}`, rule.CheckResult{Status: rule.Failed, Message: "Secrets are explicitly stored as plain text.", Target: target},
 		),
 	)
 })
