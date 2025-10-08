@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/goccy/go-yaml"
+	"gopkg.in/yaml.v3"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apiserverv1 "k8s.io/apiserver/pkg/apis/apiserver"
