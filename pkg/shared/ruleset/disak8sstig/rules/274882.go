@@ -118,7 +118,7 @@ func (r *Rule274882) Run(ctx context.Context) (rule.RuleResult, error) {
 				return rule.Result(r, rule.FailedCheckResult("No provider has been set for secrets encryption at REST.", target)), nil
 			case 1:
 				if resourceConfig.Providers[0].Identity != nil {
-					return rule.Result(r, rule.FailedCheckResult("No provider has been set for secrets encryption at REST.", target)), nil
+					return rule.Result(r, rule.FailedCheckResult("Secrets are explicitly stored as plain text.", target)), nil
 				}
 				return rule.Result(r, rule.PassedCheckResult("Secrets are encrypted at REST.", target)), nil
 			default:

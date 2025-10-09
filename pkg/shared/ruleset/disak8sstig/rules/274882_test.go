@@ -174,7 +174,7 @@ resources:
   - secrets
   providers:
   - identity: {}`,
-			rule.CheckResult{Status: rule.Failed, Message: "No provider has been set for secrets encryption at REST.", Target: target},
+			rule.CheckResult{Status: rule.Failed, Message: "Secrets are explicitly stored as plain text.", Target: target},
 		),
 		Entry("should fail when encryption config includes secrets as a resource and contains multiple providers but identity is the primary one",
 			`
@@ -189,7 +189,7 @@ resources:
       keys:
       - name: key1
         secret: c2VjcmV0IGlzIHNlY3VyZQ==`,
-			rule.CheckResult{Status: rule.Failed, Message: "No provider has been set for secrets encryption at REST.", Target: target},
+			rule.CheckResult{Status: rule.Failed, Message: "Secrets are explicitly stored as plain text.", Target: target},
 		),
 		Entry("should pass when encryption config includes secrets as a resource and contains multiple providers and a valid one is the primary one",
 			`
@@ -218,7 +218,7 @@ resources:
       keys:
       - name: key1
         secret: c2VjcmV0IGlzIHNlY3VyZQ==`,
-			rule.CheckResult{Status: rule.Failed, Message: "No provider has been set for secrets encryption at REST.", Target: target}),
+			rule.CheckResult{Status: rule.Failed, Message: "Secrets are explicitly stored as plain text.", Target: target}),
 		Entry("should pass when encryption configuration includes a wildcard resource for secrets and a valid primary provider",
 			`
 apiVersion: apiserver.config.k8s.io/v1
@@ -269,7 +269,7 @@ resources:
       keys:
       - name: key1
         secret: c2VjcmV0IGlzIHNlY3VyZQ==
-  - identity: {}`, rule.CheckResult{Status: rule.Failed, Message: "No provider has been set for secrets encryption at REST.", Target: target},
+  - identity: {}`, rule.CheckResult{Status: rule.Failed, Message: "Secrets are explicitly stored as plain text.", Target: target},
 		),
 		Entry("should warn if an encryption resource has more than one providers set simultaneously",
 			`
@@ -292,6 +292,24 @@ resources:
       - name: key1
         secret: c2VjcmV0IGlzIHNlY3VyZQ==
   - identity: {}`, rule.CheckResult{Status: rule.Warning, Message: "Multiple encryption providers are set for secrets encryption at REST.", Target: target},
+		),
+		Entry("should fail if an encryption resource has no providers set",
+			`
+apiVersion: apiserver.config.k8s.io/v1
+kind: EncryptionConfiguration
+resources:
+- resources:
+  - "*."
+  providers:
+  - {}
+- resources:
+  - secrets
+  providers:
+  - aesgcm:
+      keys:
+      - name: key1
+        secret: c2VjcmV0IGlzIHNlY3VyZQ==
+  - identity: {}`, rule.CheckResult{Status: rule.Failed, Message: "No provider has been set for secrets encryption at REST.", Target: target},
 		),
 	)
 })
