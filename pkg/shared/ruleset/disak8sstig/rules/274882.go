@@ -36,7 +36,7 @@ func (r *Rule274882) ID() string {
 }
 
 func (r *Rule274882) Name() string {
-	return "The Kubernetes API server must have anonymous authentication disabled."
+	return "Kubernetes Secrets must be encrypted at rest."
 }
 
 func (r *Rule274882) Severity() rule.SeverityLevel {
@@ -44,8 +44,7 @@ func (r *Rule274882) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule274882) Run(ctx context.Context) (rule.RuleResult, error) {
-
-	const encryptionProviderConfigOption = "encryption-provider-config"
+	const encryptionConfigOption = "encryption-provider-config"
 
 	deploymentName := "kube-apiserver"
 	containerName := "kube-apiserver"
@@ -60,15 +59,15 @@ func (r *Rule274882) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	target := rule.NewTarget("name", deploymentName, "namespace", r.Namespace, "kind", "Deployment")
 
-	optSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, encryptionProviderConfigOption)
+	optSlice, err := kubeutils.GetCommandOptionFromDeployment(ctx, r.Client, deploymentName, containerName, r.Namespace, encryptionConfigOption)
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
 	if len(optSlice) > 1 {
-		return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in the container command.", encryptionProviderConfigOption), target)), nil
+		return rule.Result(r, rule.WarningCheckResult(fmt.Sprintf("Option %s has been set more than once in the container command.", encryptionConfigOption), target)), nil
 	} else if len(optSlice) == 0 {
-		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Option %s has not been set in the container command.", encryptionProviderConfigOption), target)), nil
+		return rule.Result(r, rule.FailedCheckResult(fmt.Sprintf("Option %s has not been set in the container command.", encryptionConfigOption), target)), nil
 	}
 
 	kubeAPIServerDeployment := &appsv1.Deployment{
@@ -87,28 +86,44 @@ func (r *Rule274882) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
-	encryptionProviderConfig := &apiserverv1.EncryptionConfiguration{}
-	if err := yaml.Unmarshal(bytes, encryptionProviderConfig); err != nil {
+	encryptionConfig := &apiserverv1.EncryptionConfiguration{}
+	if err := yaml.Unmarshal(bytes, encryptionConfig); err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 	}
 
-	if len(encryptionProviderConfig.Resources) == 0 {
-		return rule.Result(r, rule.FailedCheckResult("Secrets are not explicitly encrypted at REST.", target)), nil
-	}
+	for _, resourceConfig := range encryptionConfig.Resources {
 
-	for _, resourceConfig := range encryptionProviderConfig.Resources {
 		if slices.ContainsFunc(resourceConfig.Resources, func(resourceName string) bool {
-			return resourceName == "*." || resourceName == "*.*" || resourceName == "secrets"
+			return resourceName == "*." || resourceName == "*.*" || resourceName == "secrets" || resourceName == "secrets."
 		}) {
-			if len(resourceConfig.Providers) == 0 {
-				return rule.Result(r, rule.FailedCheckResult("Secrets are not explicitly encrypted at REST.", target)), nil
+			setProviders := 0
+			if resourceConfig.Providers[0].AESGCM != nil {
+				setProviders++
 			}
-
+			if resourceConfig.Providers[0].AESCBC != nil {
+				setProviders++
+			}
+			if resourceConfig.Providers[0].Secretbox != nil {
+				setProviders++
+			}
+			if resourceConfig.Providers[0].KMS != nil {
+				setProviders++
+			}
 			if resourceConfig.Providers[0].Identity != nil {
-				return rule.Result(r, rule.FailedCheckResult("Secrets are explicitly stored as plain text.", target)), nil
+				setProviders++
 			}
 
-			return rule.Result(r, rule.PassedCheckResult("Secrets are encrypted at REST.", target)), nil
+			switch setProviders {
+			case 0:
+				return rule.Result(r, rule.FailedCheckResult("No provider has been set for secrets encryption at REST.", target)), nil
+			case 1:
+				if resourceConfig.Providers[0].Identity != nil {
+					return rule.Result(r, rule.FailedCheckResult("No provider has been set for secrets encryption at REST.", target)), nil
+				}
+				return rule.Result(r, rule.PassedCheckResult("Secrets are encrypted at REST.", target)), nil
+			default:
+				return rule.Result(r, rule.WarningCheckResult("Multiple encryption providers are set for secrets encryption at REST.", target)), nil
+			}
 		}
 	}
 
