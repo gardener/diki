@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-FROM golang:1.25.1 AS go-builder
+FROM golang:1.25.2 AS go-builder
 
 ARG TARGETARCH
 WORKDIR /workspace
