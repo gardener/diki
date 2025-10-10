@@ -92,7 +92,6 @@ func (r *Rule274882) Run(ctx context.Context) (rule.RuleResult, error) {
 	}
 
 	for _, resourceConfig := range encryptionConfig.Resources {
-
 		if slices.ContainsFunc(resourceConfig.Resources, func(resourceName string) bool {
 			return resourceName == "*." || resourceName == "*.*" || resourceName == "secrets" || resourceName == "secrets."
 		}) {
