@@ -706,15 +706,15 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 		rule.NewSkipRule(
 			sharedrules.ID274883,
 			"Sensitive information must be stored using Kubernetes Secrets or an external Secret store provider.",
-			"Rule is not implemented.",
-			rule.NotImplemented,
+			"Cannot be tested with confidence and should be enforced organizationally.",
+			rule.Skipped,
 			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 		rule.NewSkipRule(
 			sharedrules.ID274884,
 			"Kubernetes must limit Secret access on a need-to-know basis.",
-			"Rule is not implemented.",
-			rule.NotImplemented,
+			"Cannot be tested with confidence and should be enforced organizationally.",
+			rule.Skipped,
 			rule.SkipRuleWithSeverity(rule.SeverityMedium),
 		),
 	}
