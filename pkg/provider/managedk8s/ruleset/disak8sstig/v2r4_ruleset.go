@@ -897,8 +897,8 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 		rule.NewSkipRule(
 			sharedrules.ID274882,
 			"Kubernetes Secrets must be encrypted at rest.",
-			"Rule is not implemented.",
-			rule.NotImplemented,
+			noControlPlaneMsg,
+			rule.Skipped,
 			rule.SkipRuleWithSeverity(rule.SeverityHigh),
 		),
 		rule.NewSkipRule(
