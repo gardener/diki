@@ -89,7 +89,7 @@ diki run \
     --config=config.yaml \
     --provider=gardener \
     --ruleset-id=disa-kubernetes-stig \
-    --ruleset-version=v2r3
+    --ruleset-version=v2r4
 ```
 
 - Run a specific rule defined in a ruleset for a known provider
@@ -98,7 +98,7 @@ diki run \
     --config=config.yaml \
     --provider=gardener \
     --ruleset-id=disa-kubernetes-stig \
-    --ruleset-version=v2r3 \
+    --ruleset-version=v2r4 \
     --rule-id=242414
 ```
 
