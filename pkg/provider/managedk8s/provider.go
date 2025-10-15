@@ -18,6 +18,8 @@ import (
 	"github.com/gardener/diki/pkg/config"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider"
+	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig"
+	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/securityhardenedk8s"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
 	sharedprovider "github.com/gardener/diki/pkg/shared/provider"
@@ -191,5 +193,29 @@ func loadConfig(providerArgs providerArgs) (config *rest.Config, err error) {
 			return nil, fmt.Errorf("failed to load in-cluster configuration: %w", err)
 		}
 		return restConfig, nil
+	}
+}
+
+// ManagedK8sDefaultDikiConfigFunc returns a default Diki config for the Managed Kubernetes Provider and it's supported rulesets.
+func ManagedK8sDefaultDikiConfigFunc() *config.DikiConfig {
+	return &config.DikiConfig{
+		Providers: []config.ProviderConfig{
+			{
+				ID:   ProviderID,
+				Name: ProviderName,
+				Rulesets: []config.RulesetConfig{
+					{
+						ID:      disak8sstig.RulesetID,
+						Name:    disak8sstig.RulesetName,
+						Version: disak8sstig.SupportedVersions[0],
+					},
+					{
+						ID:      securityhardenedk8s.RulesetID,
+						Name:    securityhardenedk8s.RulesetName,
+						Version: securityhardenedk8s.SupportedVersions[0],
+					},
+				},
+			},
+		},
 	}
 }

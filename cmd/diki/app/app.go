@@ -50,6 +50,11 @@ func NewDikiCommand(providerOptions map[string]provider.ProviderOption) *cobra.C
 		metadataFuncs[providerID] = providerOption.MetadataFunc
 	}
 
+	defaultConfigFuncs := map[string]provider.DefaultDikiConfigFunc{}
+	for providerID, providerOption := range providerOptions {
+		defaultConfigFuncs[providerID] = providerOption.DefaultDikiConfigFunc
+	}
+
 	rootCmd := &cobra.Command{
 		Use:   "diki",
 		Short: "Diki a \"compliance checker\" of sorts, a detective control framework.",
@@ -84,7 +89,7 @@ e.g. to check compliance of your hyperscaler accounts.`,
 		Short: "Run some rulesets and rules.",
 		Long:  "Run allows running rulesets and rules for the given provider(s).",
 		RunE: func(c *cobra.Command, _ []string) error {
-			return runCmd(c.Context(), providerCreateFuncs, opts)
+			return runCmd(c.Context(), providerCreateFuncs, defaultConfigFuncs, opts)
 		},
 	}
 
@@ -410,8 +415,8 @@ func generateCmd(args []string, rootOpts reportOptions, opts generateOptions, lo
 	}
 }
 
-func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.ProviderFromConfigFunc, opts runOptions) error {
-	dikiConfig, err := readConfig(opts.configFile)
+func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.ProviderFromConfigFunc, defaultConfigFuncs map[string]provider.DefaultDikiConfigFunc, opts runOptions) error {
+	dikiConfig, err := getDikiConfig(opts, defaultConfigFuncs)
 	if err != nil {
 		return err
 	}
@@ -588,4 +593,23 @@ func getProvidersFromConfig(c *config.DikiConfig, providerCreateFuncs map[string
 	}
 
 	return providers, nil
+}
+
+func getDikiConfig(opts runOptions, defaultConfigFuncs map[string]provider.DefaultDikiConfigFunc) (*config.DikiConfig, error) {
+	if len(opts.configFile) != 0 {
+		return readConfig(opts.configFile)
+	} else {
+		if len(opts.provider) == 0 {
+			return nil, fmt.Errorf("--provider should be set when --config is omitted")
+		}
+
+		if defaultFunc, ok := defaultConfigFuncs[opts.provider]; !ok {
+			return nil, fmt.Errorf("unknown provider: %s", opts.provider)
+		} else {
+			if defaultFunc == nil {
+				return nil, fmt.Errorf("provider %s cannot resolve a default Diki configuration - it should be specified with the --config flag", opts.provider)
+			}
+			return defaultFunc(), nil
+		}
+	}
 }
