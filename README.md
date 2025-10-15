@@ -102,6 +102,14 @@ diki run \
     --rule-id=242414
 ```
 
+Additionally, if `diki run` is ran with the provider `managedk8s`, the run configuration file is not necessary. Diki will use a default configuration for the `managedk8s` provider.
+```bash
+diki run \
+    --provider=managedk8s
+    --ruleset-id=security-hardened-k8s
+    --ruleset-version=v0.1.0
+```
+
 ### Report
 
 Diki can generate a human readable report from the output files of a `diki run` execution.
