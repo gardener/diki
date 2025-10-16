@@ -102,7 +102,7 @@ diki run \
     --rule-id=242414
 ```
 
-Additionally, if `diki run` is ran with the provider `managedk8s`, the run configuration file is not necessary. Diki will use a default configuration for the `managedk8s` provider.
+- Run a scan with a predefined configuration (only available for the `managedk8s` provider)
 ```bash
 diki run \
     --provider=managedk8s

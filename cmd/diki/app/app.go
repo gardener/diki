@@ -598,18 +598,20 @@ func getProvidersFromConfig(c *config.DikiConfig, providerCreateFuncs map[string
 func getDikiConfig(opts runOptions, defaultConfigFuncs map[string]provider.DefaultDikiConfigFunc) (*config.DikiConfig, error) {
 	if len(opts.configFile) != 0 {
 		return readConfig(opts.configFile)
+	}
+
+	if len(opts.provider) == 0 {
+		return nil, fmt.Errorf("--provider must be set when --config is omitted")
+	}
+
+	if defaultFunc, ok := defaultConfigFuncs[opts.provider]; !ok {
+		return nil, fmt.Errorf("unknown provider: %s", opts.provider)
 	} else {
-		if len(opts.provider) == 0 {
-			return nil, fmt.Errorf("--provider should be set when --config is omitted")
+		if defaultFunc == nil {
+			return nil, fmt.Errorf("provider %s cannot resolve to a default configuration. Configuration must be specified with the --config flag", opts.provider)
 		}
 
-		if defaultFunc, ok := defaultConfigFuncs[opts.provider]; !ok {
-			return nil, fmt.Errorf("unknown provider: %s", opts.provider)
-		} else {
-			if defaultFunc == nil {
-				return nil, fmt.Errorf("provider %s cannot resolve a default Diki configuration - it should be specified with the --config flag", opts.provider)
-			}
-			return defaultFunc(), nil
-		}
+		dikiConfig := defaultFunc()
+		return &dikiConfig, nil
 	}
 }

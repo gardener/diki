@@ -39,8 +39,8 @@ type ProviderFromConfigFunc func(conf config.ProviderConfig, fldPath *field.Path
 // MetadataFunc constructs a detailed Provider metadata object.
 type MetadataFunc func() metadata.ProviderDetailed
 
-// DefaultDikiConfigFunc defines a default DikiConfig, based on a provider.
-type DefaultDikiConfigFunc func() *config.DikiConfig
+// DefaultDikiConfigFunc constructs a default [config.DikiConfig] for a specific provider.
+type DefaultDikiConfigFunc func() config.DikiConfig
 
 // ProviderOption constructs a pair of a configuration and metadata function for a specific provider.
 type ProviderOption struct {

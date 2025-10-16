@@ -196,9 +196,9 @@ func loadConfig(providerArgs providerArgs) (config *rest.Config, err error) {
 	}
 }
 
-// ManagedK8sDefaultDikiConfigFunc returns a default Diki config for the Managed Kubernetes Provider and it's supported rulesets.
-func ManagedK8sDefaultDikiConfigFunc() *config.DikiConfig {
-	return &config.DikiConfig{
+// ManagedK8sDefaultDikiConfigFunc constructs a default [config.DikiConfig] for the Managed Kubernetes Provider and it's supported rulesets.
+func ManagedK8sDefaultDikiConfigFunc() config.DikiConfig {
+	return config.DikiConfig{
 		Providers: []config.ProviderConfig{
 			{
 				ID:   ProviderID,
