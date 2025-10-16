@@ -426,7 +426,7 @@ func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.Provide
 		outputPath = dikiConfig.Output.Path
 	}
 
-	providers, err := getProvidersFromConfig(dikiConfig, providerCreateFuncs)
+	providers, err := getProvidersFromConfig(&dikiConfig, providerCreateFuncs)
 	if err != nil {
 		return err
 	}
@@ -557,20 +557,20 @@ type diffOptions struct {
 	title     string
 }
 
-func readConfig(filePath string) (*config.DikiConfig, error) {
+func readConfig(filePath string) (config.DikiConfig, error) {
 	data, err := os.ReadFile(filepath.Clean(filePath))
 	if err != nil {
-		return nil, err
+		return config.DikiConfig{}, err
 	}
 
 	c := &config.DikiConfig{}
 	err = yaml.Unmarshal(data, c)
 
 	if err != nil {
-		return nil, err
+		return config.DikiConfig{}, err
 	}
 
-	return c, nil
+	return *c, nil
 }
 
 func getProvidersFromConfig(c *config.DikiConfig, providerCreateFuncs map[string]provider.ProviderFromConfigFunc) (map[string]provider.Provider, error) {
@@ -595,23 +595,23 @@ func getProvidersFromConfig(c *config.DikiConfig, providerCreateFuncs map[string
 	return providers, nil
 }
 
-func getDikiConfig(opts runOptions, defaultConfigFuncs map[string]provider.DefaultDikiConfigFunc) (*config.DikiConfig, error) {
+func getDikiConfig(opts runOptions, defaultConfigFuncs map[string]provider.DefaultDikiConfigFunc) (config.DikiConfig, error) {
 	if len(opts.configFile) != 0 {
 		return readConfig(opts.configFile)
 	}
 
 	if len(opts.provider) == 0 {
-		return nil, fmt.Errorf("--provider must be set when --config is omitted")
+		return config.DikiConfig{}, fmt.Errorf("--provider must be set when --config is omitted")
 	}
 
 	if defaultFunc, ok := defaultConfigFuncs[opts.provider]; !ok {
-		return nil, fmt.Errorf("unknown provider: %s", opts.provider)
+		return config.DikiConfig{}, fmt.Errorf("unknown provider: %s", opts.provider)
 	} else {
 		if defaultFunc == nil {
-			return nil, fmt.Errorf("provider %s cannot resolve to a default configuration. Configuration must be specified with the --config flag", opts.provider)
+			return config.DikiConfig{}, fmt.Errorf("provider %s cannot resolve to a default configuration. Configuration must be specified with the --config flag", opts.provider)
 		}
 
 		dikiConfig := defaultFunc()
-		return &dikiConfig, nil
+		return dikiConfig, nil
 	}
 }
