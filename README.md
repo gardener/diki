@@ -83,6 +83,14 @@ diki run \
     --output=./report.json
 ```
 
+- Run a scan with a predefined configuration (only available for the `managedk8s` provider)
+```bash
+diki run \
+    --provider=managedk8s \
+    --all \
+    --output=./report.json
+```
+
 - Run a specific ruleset for a known provider
 ```bash
 diki run \
@@ -100,14 +108,6 @@ diki run \
     --ruleset-id=disa-kubernetes-stig \
     --ruleset-version=v2r4 \
     --rule-id=242414
-```
-
-- Run a scan with a predefined configuration (only available for the `managedk8s` provider)
-```bash
-diki run \
-    --provider=managedk8s \
-    --all \
-    --output=./report.json
 ```
 
 ### Report
