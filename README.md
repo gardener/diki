@@ -105,9 +105,9 @@ diki run \
 - Run a scan with a predefined configuration (only available for the `managedk8s` provider)
 ```bash
 diki run \
-    --provider=managedk8s
-    --ruleset-id=security-hardened-k8s
-    --ruleset-version=v0.1.0
+    --provider=managedk8s \
+    --all \
+    --output=./report.json
 ```
 
 ### Report

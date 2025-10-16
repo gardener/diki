@@ -426,7 +426,7 @@ func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.Provide
 		outputPath = dikiConfig.Output.Path
 	}
 
-	providers, err := getProvidersFromConfig(&dikiConfig, providerCreateFuncs)
+	providers, err := getProvidersFromConfig(dikiConfig, providerCreateFuncs)
 	if err != nil {
 		return err
 	}
@@ -563,17 +563,17 @@ func readConfig(filePath string) (config.DikiConfig, error) {
 		return config.DikiConfig{}, err
 	}
 
-	c := &config.DikiConfig{}
+	c := config.DikiConfig{}
 	err = yaml.Unmarshal(data, c)
 
 	if err != nil {
 		return config.DikiConfig{}, err
 	}
 
-	return *c, nil
+	return c, nil
 }
 
-func getProvidersFromConfig(c *config.DikiConfig, providerCreateFuncs map[string]provider.ProviderFromConfigFunc) (map[string]provider.Provider, error) {
+func getProvidersFromConfig(c config.DikiConfig, providerCreateFuncs map[string]provider.ProviderFromConfigFunc) (map[string]provider.Provider, error) {
 	providers := map[string]provider.Provider{}
 	rootPath := field.NewPath("providers")
 
