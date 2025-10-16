@@ -217,5 +217,9 @@ func ManagedK8sDefaultDikiConfigFunc() config.DikiConfig {
 				},
 			},
 		},
+		Output: &config.OutputConfig{
+			Path:      "/tmp/test-output.json",
+			MinStatus: "Passed",
+		},
 	}
 }
