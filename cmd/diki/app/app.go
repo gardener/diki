@@ -608,7 +608,7 @@ func getDikiConfig(opts runOptions, defaultConfigFuncs map[string]provider.Defau
 		return config.DikiConfig{}, fmt.Errorf("unknown provider: %s", opts.provider)
 	} else {
 		if defaultFunc == nil {
-			return config.DikiConfig{}, fmt.Errorf("provider %s cannot resolve to a default configuration. Configuration must be specified with the --config flag", opts.provider)
+			return config.DikiConfig{}, fmt.Errorf("provider %s cannot resolve to a default configuration, it must be specified with the --config flag", opts.provider)
 		}
 
 		dikiConfig := defaultFunc()
