@@ -23,7 +23,7 @@ func main() {
 		map[string]provider.ProviderOption{
 			garden.ProviderID:        {ProviderFromConfigFunc: builder.GardenProviderFromConfig, MetadataFunc: builder.GardenProviderMetadata},
 			gardener.ProviderID:      {ProviderFromConfigFunc: builder.GardenerProviderFromConfig, MetadataFunc: builder.GardenerProviderMetadata},
-			managedk8s.ProviderID:    {ProviderFromConfigFunc: builder.ManagedK8SProviderFromConfig, MetadataFunc: builder.ManagedK8SProviderMetadata},
+			managedk8s.ProviderID:    {ProviderFromConfigFunc: builder.ManagedK8SProviderFromConfig, MetadataFunc: builder.ManagedK8SProviderMetadata, DefaultDikiConfigFunc: managedk8s.ManagedK8sDefaultDikiConfigFunc},
 			virtualgarden.ProviderID: {ProviderFromConfigFunc: builder.VirtualGardenProviderFromConfig, MetadataFunc: builder.VirtualGardenProviderMetadata},
 		},
 	)

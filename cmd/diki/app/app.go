@@ -50,6 +50,11 @@ func NewDikiCommand(providerOptions map[string]provider.ProviderOption) *cobra.C
 		metadataFuncs[providerID] = providerOption.MetadataFunc
 	}
 
+	defaultConfigFuncs := map[string]provider.DefaultDikiConfigFunc{}
+	for providerID, providerOption := range providerOptions {
+		defaultConfigFuncs[providerID] = providerOption.DefaultDikiConfigFunc
+	}
+
 	rootCmd := &cobra.Command{
 		Use:   "diki",
 		Short: "Diki a \"compliance checker\" of sorts, a detective control framework.",
@@ -84,7 +89,7 @@ e.g. to check compliance of your hyperscaler accounts.`,
 		Short: "Run some rulesets and rules.",
 		Long:  "Run allows running rulesets and rules for the given provider(s).",
 		RunE: func(c *cobra.Command, _ []string) error {
-			return runCmd(c.Context(), providerCreateFuncs, opts)
+			return runCmd(c.Context(), providerCreateFuncs, defaultConfigFuncs, opts)
 		},
 	}
 
@@ -410,8 +415,8 @@ func generateCmd(args []string, rootOpts reportOptions, opts generateOptions, lo
 	}
 }
 
-func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.ProviderFromConfigFunc, opts runOptions) error {
-	dikiConfig, err := readConfig(opts.configFile)
+func runCmd(ctx context.Context, providerCreateFuncs map[string]provider.ProviderFromConfigFunc, defaultConfigFuncs map[string]provider.DefaultDikiConfigFunc, opts runOptions) error {
+	dikiConfig, err := getDikiConfig(opts, defaultConfigFuncs)
 	if err != nil {
 		return err
 	}
@@ -552,23 +557,23 @@ type diffOptions struct {
 	title     string
 }
 
-func readConfig(filePath string) (*config.DikiConfig, error) {
+func readConfig(filePath string) (config.DikiConfig, error) {
 	data, err := os.ReadFile(filepath.Clean(filePath))
 	if err != nil {
-		return nil, err
+		return config.DikiConfig{}, err
 	}
 
-	c := &config.DikiConfig{}
+	c := config.DikiConfig{}
 	err = yaml.Unmarshal(data, c)
 
 	if err != nil {
-		return nil, err
+		return config.DikiConfig{}, err
 	}
 
 	return c, nil
 }
 
-func getProvidersFromConfig(c *config.DikiConfig, providerCreateFuncs map[string]provider.ProviderFromConfigFunc) (map[string]provider.Provider, error) {
+func getProvidersFromConfig(c config.DikiConfig, providerCreateFuncs map[string]provider.ProviderFromConfigFunc) (map[string]provider.Provider, error) {
 	providers := map[string]provider.Provider{}
 	rootPath := field.NewPath("providers")
 
@@ -588,4 +593,25 @@ func getProvidersFromConfig(c *config.DikiConfig, providerCreateFuncs map[string
 	}
 
 	return providers, nil
+}
+
+func getDikiConfig(opts runOptions, defaultConfigFuncs map[string]provider.DefaultDikiConfigFunc) (config.DikiConfig, error) {
+	if len(opts.configFile) != 0 {
+		return readConfig(opts.configFile)
+	}
+
+	if len(opts.provider) == 0 {
+		return config.DikiConfig{}, fmt.Errorf("--provider must be set when --config is omitted")
+	}
+
+	if defaultFunc, ok := defaultConfigFuncs[opts.provider]; !ok {
+		return config.DikiConfig{}, fmt.Errorf("unknown provider: %s", opts.provider)
+	} else {
+		if defaultFunc == nil {
+			return config.DikiConfig{}, fmt.Errorf("provider %s cannot resolve to a default configuration, it must be specified with the --config flag", opts.provider)
+		}
+
+		dikiConfig := defaultFunc()
+		return dikiConfig, nil
+	}
 }
