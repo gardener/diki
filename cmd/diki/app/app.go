@@ -564,7 +564,7 @@ func readConfig(filePath string) (config.DikiConfig, error) {
 	}
 
 	c := config.DikiConfig{}
-	err = yaml.Unmarshal(data, c)
+	err = yaml.Unmarshal(data, &c)
 
 	if err != nil {
 		return config.DikiConfig{}, err
