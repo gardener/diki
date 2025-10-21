@@ -557,23 +557,23 @@ type diffOptions struct {
 	title     string
 }
 
-func readConfig(filePath string) (config.DikiConfig, error) {
+func readConfig(filePath string) (*config.DikiConfig, error) {
 	data, err := os.ReadFile(filepath.Clean(filePath))
 	if err != nil {
-		return config.DikiConfig{}, err
+		return nil, err
 	}
 
-	c := config.DikiConfig{}
+	c := &config.DikiConfig{}
 	err = yaml.Unmarshal(data, c)
 
 	if err != nil {
-		return config.DikiConfig{}, err
+		return nil, err
 	}
 
 	return c, nil
 }
 
-func getProvidersFromConfig(c config.DikiConfig, providerCreateFuncs map[string]provider.ProviderFromConfigFunc) (map[string]provider.Provider, error) {
+func getProvidersFromConfig(c *config.DikiConfig, providerCreateFuncs map[string]provider.ProviderFromConfigFunc) (map[string]provider.Provider, error) {
 	providers := map[string]provider.Provider{}
 	rootPath := field.NewPath("providers")
 
@@ -595,23 +595,23 @@ func getProvidersFromConfig(c config.DikiConfig, providerCreateFuncs map[string]
 	return providers, nil
 }
 
-func getDikiConfig(opts runOptions, defaultConfigFuncs map[string]provider.DefaultDikiConfigFunc) (config.DikiConfig, error) {
+func getDikiConfig(opts runOptions, defaultConfigFuncs map[string]provider.DefaultDikiConfigFunc) (*config.DikiConfig, error) {
 	if len(opts.configFile) != 0 {
 		return readConfig(opts.configFile)
 	}
 
 	if len(opts.provider) == 0 {
-		return config.DikiConfig{}, fmt.Errorf("--provider must be set when --config is omitted")
+		return nil, fmt.Errorf("--provider must be set when --config is omitted")
 	}
 
 	if defaultFunc, ok := defaultConfigFuncs[opts.provider]; !ok {
-		return config.DikiConfig{}, fmt.Errorf("unknown provider: %s", opts.provider)
+		return nil, fmt.Errorf("unknown provider: %s", opts.provider)
 	} else {
 		if defaultFunc == nil {
-			return config.DikiConfig{}, fmt.Errorf("provider %s cannot resolve to a default configuration, it must be specified with the --config flag", opts.provider)
+			return nil, fmt.Errorf("provider %s cannot resolve to a default configuration, it must be specified with the --config flag", opts.provider)
 		}
 
 		dikiConfig := defaultFunc()
-		return dikiConfig, nil
+		return &dikiConfig, nil
 	}
 }
