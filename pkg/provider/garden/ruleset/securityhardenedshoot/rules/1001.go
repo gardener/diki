@@ -113,8 +113,10 @@ func (r *Rule1001) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult("kubernetes version not found in cloudProfile", target)), nil
 	}
 
-	if checkResult, found := r.checkShootVersion(shoot.Spec.Kubernetes.Version, namespacedCloudProfile.Spec.Kubernetes.Versions, target); found {
-		return rule.Result(r, checkResult), nil
+	if namespacedCloudProfile.Spec.Kubernetes != nil {
+		if checkResult, found := r.checkShootVersion(shoot.Spec.Kubernetes.Version, namespacedCloudProfile.Spec.Kubernetes.Versions, target); found {
+			return rule.Result(r, checkResult), nil
+		}
 	}
 	if checkResult, found := r.checkShootVersion(shoot.Spec.Kubernetes.Version, namespacedCloudProfile.Status.CloudProfileSpec.Kubernetes.Versions, target); found {
 		return rule.Result(r, checkResult), nil
