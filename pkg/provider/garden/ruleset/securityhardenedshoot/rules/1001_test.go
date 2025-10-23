@@ -282,6 +282,30 @@ var _ = Describe("#1001", func() {
 		),
 	)
 
+	It("should correctly use NamespacedCloudProfile status when Spec.Kubernetes is nil", func() {
+		nsCloudProfile.Spec.Kubernetes = nil
+		Expect(fakeClient.Update(ctx, nsCloudProfile)).To(Succeed())
+
+		shoot.Spec.CloudProfile = &gardencorev1beta1.CloudProfileReference{
+			Name: "foo",
+			Kind: "NamespacedCloudProfile",
+		}
+		shoot.Spec.Kubernetes.Version = "2"
+		Expect(fakeClient.Create(ctx, shoot)).To(Succeed())
+
+		r = &rules.Rule1001{
+			Client:         fakeClient,
+			ShootName:      shootName,
+			ShootNamespace: shootNamespace,
+		}
+
+		res, err := r.Run(ctx)
+		Expect(err).To(BeNil())
+		Expect(res).To(Equal(rule.RuleResult{RuleID: ruleID, RuleName: ruleName, Severity: severity, CheckResults: []rule.CheckResult{
+			{Status: rule.Passed, Message: "Shoot uses a Kubernetes version with an allowed classification.", Target: rule.NewTarget("version", "2", "classification", "supported")},
+		}}))
+	})
+
 	Describe("#ValidateOptions", func() {
 		It("should not error when options are correct", func() {
 			options := rules.Options1001{
