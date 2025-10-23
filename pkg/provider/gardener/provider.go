@@ -74,7 +74,7 @@ func New(options ...CreateOption) (*Provider, error) {
 		err = errors.Join(err, errors.New("seed config is nil"))
 	}
 
-	if err2 := validateAgrs(p.Args); err != nil {
+	if err2 := validateArgs(p.Args); err != nil {
 		err = errors.Join(err, err2)
 	}
 
@@ -85,7 +85,7 @@ func New(options ...CreateOption) (*Provider, error) {
 	return p, nil
 }
 
-func validateAgrs(args Args) error {
+func validateArgs(args Args) error {
 	var err error
 	// TODO: improve errors
 	if len(args.ShootName) == 0 {

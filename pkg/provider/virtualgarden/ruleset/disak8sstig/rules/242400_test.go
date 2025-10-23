@@ -125,7 +125,7 @@ var _ = Describe("#242400", func() {
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
 	})
 
-	It("should return correc checkResults only for selected deployments", func() {
+	It("should return correct checkResults only for selected deployments", func() {
 		kapiDeployment = plainDeployment.DeepCopy()
 		kapiDeployment.Name = "virtual-garden-kube-apiserver"
 		kapiDeployment.Spec.Template.Spec.Containers[0].Name = "kube-apiserver"
