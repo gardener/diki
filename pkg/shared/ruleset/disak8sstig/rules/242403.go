@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	auditv1 "k8s.io/apiserver/pkg/apis/audit/v1"
