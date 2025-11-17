@@ -284,9 +284,9 @@ var _ = Describe("#242383", func() {
 		Expect(err).To(BeNil())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Found user resource in system namespaces.", rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", pod.Kind)),
-			rule.FailedCheckResult("Found user resource in system namespaces.", rule.NewTarget("name", deployment.Name, "namespace", deployment.Namespace, "kind", deployment.Kind)),
-			rule.FailedCheckResult("Found user resource in system namespaces.", rule.NewTarget("name", daemonSet.Name, "namespace", daemonSet.Namespace, "kind", daemonSet.Kind)),
+			rule.FailedCheckResult("Found user resource in system namespaces.", rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "Pod")),
+			rule.FailedCheckResult("Found user resource in system namespaces.", rule.NewTarget("name", deployment.Name, "namespace", deployment.Namespace, "kind", "Deployment")),
+			rule.FailedCheckResult("Found user resource in system namespaces.", rule.NewTarget("name", daemonSet.Name, "namespace", daemonSet.Namespace, "kind", "DaemonSet")),
 			rule.FailedCheckResult("Found user resource in system namespaces.", rule.NewTarget("name", "fake", "namespace", pod2.Namespace, "kind", "fake")),
 		}
 
@@ -338,10 +338,10 @@ var _ = Describe("#242383", func() {
 		Expect(err).To(BeNil())
 
 		expectedCheckResults := []rule.CheckResult{
-			rule.FailedCheckResult("Found user resource in system namespaces.", rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", pod.Kind)),
-			rule.FailedCheckResult("Found user resource in system namespaces.", rule.NewTarget("name", deployment.Name, "namespace", deployment.Namespace, "kind", deployment.Kind)),
-			rule.FailedCheckResult("Found user resource in system namespaces.", rule.NewTarget("name", daemonSet.Name, "namespace", daemonSet.Namespace, "kind", daemonSet.Kind)),
-			rule.FailedCheckResult("Found user resource in system namespaces.", rule.NewTarget("name", job.Name, "namespace", job.Namespace, "kind", job.Kind)),
+			rule.FailedCheckResult("Found user resource in system namespaces.", rule.NewTarget("name", pod.Name, "namespace", pod.Namespace, "kind", "Pod")),
+			rule.FailedCheckResult("Found user resource in system namespaces.", rule.NewTarget("name", deployment.Name, "namespace", deployment.Namespace, "kind", "Deployment")),
+			rule.FailedCheckResult("Found user resource in system namespaces.", rule.NewTarget("name", daemonSet.Name, "namespace", daemonSet.Namespace, "kind", "DaemonSet")),
+			rule.FailedCheckResult("Found user resource in system namespaces.", rule.NewTarget("name", job.Name, "namespace", job.Namespace, "kind", "Job")),
 		}
 
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
