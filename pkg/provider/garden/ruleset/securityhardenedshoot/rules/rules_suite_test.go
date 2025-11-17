@@ -13,5 +13,5 @@ import (
 
 func TestRules(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Secutiry Hardener Shoot Cluster Test Suite")
+	RunSpecs(t, "Security Hardener Shoot Cluster Test Suite")
 }
