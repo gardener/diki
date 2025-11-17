@@ -63,6 +63,7 @@ type RuleOptionSkipConfig struct {
 // OutputConfig represents output configurations.
 type OutputConfig struct {
 	// Path is the location which will be used to write a diki report.
+	//
 	// Deprecated: This field is deprecated and will be removed in a future release.
 	Path string `yaml:"path"`
 	// MinStatus is the minimal status that diki will report.
