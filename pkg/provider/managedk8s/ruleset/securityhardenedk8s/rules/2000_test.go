@@ -41,8 +41,16 @@ var _ = Describe("#2000", func() {
 		})
 
 		DescribeTable("test namespaces without a deletion timestamp",
-			func(configuredNetworkPolicy *networkingv1.NetworkPolicy, checkResults []rule.CheckResult) {
+			func(configuredNetworkPolicyName string, configuredNetworkPolicySpec *networkingv1.NetworkPolicySpec, checkResults []rule.CheckResult) {
 				Expect(client.Create(ctx, plainNamespace)).To(Succeed())
+
+				configuredNetworkPolicy := &networkingv1.NetworkPolicy{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      configuredNetworkPolicyName,
+						Namespace: plainNamespace.Name,
+					},
+					Spec: *configuredNetworkPolicySpec,
+				}
 				Expect(client.Create(ctx, configuredNetworkPolicy)).To(Succeed())
 
 				r := rules.Rule2000{Client: client}
@@ -52,19 +60,14 @@ var _ = Describe("#2000", func() {
 				Expect(ruleResult.CheckResults).To(Equal(checkResults))
 			},
 			Entry("should pass when a deny-all network policy is configured",
-				&networkingv1.NetworkPolicy{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "deny-all",
-						Namespace: "plain-namespace",
+				"deny-all",
+				&networkingv1.NetworkPolicySpec{
+					PolicyTypes: []networkingv1.PolicyType{
+						networkingv1.PolicyTypeIngress,
+						networkingv1.PolicyTypeEgress,
 					},
-					Spec: networkingv1.NetworkPolicySpec{
-						PolicyTypes: []networkingv1.PolicyType{
-							networkingv1.PolicyTypeIngress,
-							networkingv1.PolicyTypeEgress,
-						},
-						Ingress: []networkingv1.NetworkPolicyIngressRule{},
-						Egress:  []networkingv1.NetworkPolicyEgressRule{},
-					},
+					Ingress: []networkingv1.NetworkPolicyIngressRule{},
+					Egress:  []networkingv1.NetworkPolicyEgressRule{},
 				},
 				[]rule.CheckResult{
 					{
@@ -80,19 +83,14 @@ var _ = Describe("#2000", func() {
 				},
 			),
 			Entry("should fail if an allow-all network policy is configured for ingress explicitly",
-				&networkingv1.NetworkPolicy{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "deny-all",
-						Namespace: "plain-namespace",
+				"deny-all",
+				&networkingv1.NetworkPolicySpec{
+					PolicyTypes: []networkingv1.PolicyType{
+						networkingv1.PolicyTypeIngress,
+						networkingv1.PolicyTypeEgress,
 					},
-					Spec: networkingv1.NetworkPolicySpec{
-						PolicyTypes: []networkingv1.PolicyType{
-							networkingv1.PolicyTypeIngress,
-							networkingv1.PolicyTypeEgress,
-						},
-						Ingress: []networkingv1.NetworkPolicyIngressRule{{}},
-						Egress:  []networkingv1.NetworkPolicyEgressRule{},
-					},
+					Ingress: []networkingv1.NetworkPolicyIngressRule{{}},
+					Egress:  []networkingv1.NetworkPolicyEgressRule{},
 				},
 				[]rule.CheckResult{
 					{
@@ -108,19 +106,14 @@ var _ = Describe("#2000", func() {
 				},
 			),
 			Entry("should fail if an allow-all network policy is configured for egress explicitly",
-				&networkingv1.NetworkPolicy{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "deny-all",
-						Namespace: "plain-namespace",
+				"deny-all",
+				&networkingv1.NetworkPolicySpec{
+					PolicyTypes: []networkingv1.PolicyType{
+						networkingv1.PolicyTypeIngress,
+						networkingv1.PolicyTypeEgress,
 					},
-					Spec: networkingv1.NetworkPolicySpec{
-						PolicyTypes: []networkingv1.PolicyType{
-							networkingv1.PolicyTypeIngress,
-							networkingv1.PolicyTypeEgress,
-						},
-						Ingress: []networkingv1.NetworkPolicyIngressRule{},
-						Egress:  []networkingv1.NetworkPolicyEgressRule{{}},
-					},
+					Ingress: []networkingv1.NetworkPolicyIngressRule{},
+					Egress:  []networkingv1.NetworkPolicyEgressRule{{}},
 				},
 				[]rule.CheckResult{
 					{
@@ -136,17 +129,12 @@ var _ = Describe("#2000", func() {
 				},
 			),
 			Entry("should fail if no denying network policy is configured for ingress",
-				&networkingv1.NetworkPolicy{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "deny-all",
-						Namespace: "plain-namespace",
+				"deny-all",
+				&networkingv1.NetworkPolicySpec{
+					PolicyTypes: []networkingv1.PolicyType{
+						networkingv1.PolicyTypeEgress,
 					},
-					Spec: networkingv1.NetworkPolicySpec{
-						PolicyTypes: []networkingv1.PolicyType{
-							networkingv1.PolicyTypeEgress,
-						},
-						Egress: []networkingv1.NetworkPolicyEgressRule{},
-					},
+					Egress: []networkingv1.NetworkPolicyEgressRule{},
 				},
 				[]rule.CheckResult{
 					{
@@ -161,17 +149,12 @@ var _ = Describe("#2000", func() {
 					},
 				}),
 			Entry("should fail if no denying network policy is configured for egress",
-				&networkingv1.NetworkPolicy{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "deny-all",
-						Namespace: "plain-namespace",
+				"deny-all",
+				&networkingv1.NetworkPolicySpec{
+					PolicyTypes: []networkingv1.PolicyType{
+						networkingv1.PolicyTypeIngress,
 					},
-					Spec: networkingv1.NetworkPolicySpec{
-						PolicyTypes: []networkingv1.PolicyType{
-							networkingv1.PolicyTypeIngress,
-						},
-						Ingress: []networkingv1.NetworkPolicyIngressRule{},
-					},
+					Ingress: []networkingv1.NetworkPolicyIngressRule{},
 				},
 				[]rule.CheckResult{
 					{
@@ -186,20 +169,15 @@ var _ = Describe("#2000", func() {
 					},
 				}),
 			Entry("should handle namespace with pod-specific network policy",
-				&networkingv1.NetworkPolicy{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "pod-specific-policy",
-						Namespace: "plain-namespace",
+				"pod-specific-policy",
+				&networkingv1.NetworkPolicySpec{
+					PodSelector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app": "specific",
+						},
 					},
-					Spec: networkingv1.NetworkPolicySpec{
-						PodSelector: metav1.LabelSelector{
-							MatchLabels: map[string]string{
-								"app": "specific",
-							},
-						},
-						PolicyTypes: []networkingv1.PolicyType{
-							networkingv1.PolicyTypeIngress,
-						},
+					PolicyTypes: []networkingv1.PolicyType{
+						networkingv1.PolicyTypeIngress,
 					},
 				},
 				[]rule.CheckResult{
@@ -216,25 +194,20 @@ var _ = Describe("#2000", func() {
 				},
 			),
 			Entry("should handle namespace with targeted egress rules",
-				&networkingv1.NetworkPolicy{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "targeted-egress",
-						Namespace: "plain-namespace",
+				"targeted-egress",
+				&networkingv1.NetworkPolicySpec{
+					PolicyTypes: []networkingv1.PolicyType{
+						networkingv1.PolicyTypeIngress,
+						networkingv1.PolicyTypeEgress,
 					},
-					Spec: networkingv1.NetworkPolicySpec{
-						PolicyTypes: []networkingv1.PolicyType{
-							networkingv1.PolicyTypeIngress,
-							networkingv1.PolicyTypeEgress,
-						},
-						Ingress: []networkingv1.NetworkPolicyIngressRule{},
-						Egress: []networkingv1.NetworkPolicyEgressRule{
-							{
-								To: []networkingv1.NetworkPolicyPeer{
-									{
-										NamespaceSelector: &metav1.LabelSelector{
-											MatchLabels: map[string]string{
-												"allowed": "true",
-											},
+					Ingress: []networkingv1.NetworkPolicyIngressRule{},
+					Egress: []networkingv1.NetworkPolicyEgressRule{
+						{
+							To: []networkingv1.NetworkPolicyPeer{
+								{
+									NamespaceSelector: &metav1.LabelSelector{
+										MatchLabels: map[string]string{
+											"allowed": "true",
 										},
 									},
 								},
@@ -517,8 +490,16 @@ var _ = Describe("#2000", func() {
 		})
 
 		DescribeTable("Run test cases for namespaces with deletion timestamp",
-			func(configuredNetworkPolicy *networkingv1.NetworkPolicy, deployPod bool, checkResults []rule.CheckResult) {
+			func(configuredNetworkPolicyName string, configuredNetworkPolicySpec *networkingv1.NetworkPolicySpec, deployPod bool, checkResults []rule.CheckResult) {
 				client = fakeclient.NewClientBuilder().WithObjects(namespaceWithDeletionTimestamp).Build()
+
+				configuredNetworkPolicy := &networkingv1.NetworkPolicy{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      configuredNetworkPolicyName,
+						Namespace: namespaceWithDeletionTimestamp.Name,
+					},
+					Spec: *configuredNetworkPolicySpec,
+				}
 				Expect(client.Create(ctx, configuredNetworkPolicy)).To(Succeed())
 
 				if deployPod {
@@ -532,16 +513,11 @@ var _ = Describe("#2000", func() {
 				Expect(ruleResult.CheckResults).To(Equal(checkResults))
 			},
 			Entry("should pass when the namespace has a deny-all network policy configured",
-				&networkingv1.NetworkPolicy{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "deny-all",
-						Namespace: "plain-namespace",
-					},
-					Spec: networkingv1.NetworkPolicySpec{
-						PolicyTypes: []networkingv1.PolicyType{
-							"Ingress",
-							"Egress",
-						},
+				"deny-all",
+				&networkingv1.NetworkPolicySpec{
+					PolicyTypes: []networkingv1.PolicyType{
+						"Ingress",
+						"Egress",
 					},
 				},
 				true,
@@ -559,18 +535,13 @@ var _ = Describe("#2000", func() {
 				},
 			),
 			Entry("should fail when an allow-all network policy is configured for ingress and pods are still present",
-				&networkingv1.NetworkPolicy{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "allow-ingress",
-						Namespace: "plain-namespace",
+				"allow-ingress",
+				&networkingv1.NetworkPolicySpec{
+					PolicyTypes: []networkingv1.PolicyType{
+						"Ingress",
+						"Egress",
 					},
-					Spec: networkingv1.NetworkPolicySpec{
-						PolicyTypes: []networkingv1.PolicyType{
-							"Ingress",
-							"Egress",
-						},
-						Ingress: []networkingv1.NetworkPolicyIngressRule{{}},
-					},
+					Ingress: []networkingv1.NetworkPolicyIngressRule{{}},
 				},
 				true,
 				[]rule.CheckResult{
@@ -587,18 +558,13 @@ var _ = Describe("#2000", func() {
 				},
 			),
 			Entry("should fail when an allow-all network policy is configured for egress and pods are still present",
-				&networkingv1.NetworkPolicy{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "allow-egress",
-						Namespace: "plain-namespace",
+				"allow-egress",
+				&networkingv1.NetworkPolicySpec{
+					PolicyTypes: []networkingv1.PolicyType{
+						"Ingress",
+						"Egress",
 					},
-					Spec: networkingv1.NetworkPolicySpec{
-						PolicyTypes: []networkingv1.PolicyType{
-							"Ingress",
-							"Egress",
-						},
-						Egress: []networkingv1.NetworkPolicyEgressRule{{}},
-					},
+					Egress: []networkingv1.NetworkPolicyEgressRule{{}},
 				},
 				true,
 				[]rule.CheckResult{
@@ -615,17 +581,12 @@ var _ = Describe("#2000", func() {
 				},
 			),
 			Entry("should fail when no denying network policy is explicitly set for ingress and pods are present on the namespace",
-				&networkingv1.NetworkPolicy{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "not-deny-ingress",
-						Namespace: "plain-namespace",
+				"not-deny-ingress",
+				&networkingv1.NetworkPolicySpec{
+					PolicyTypes: []networkingv1.PolicyType{
+						"Egress",
 					},
-					Spec: networkingv1.NetworkPolicySpec{
-						PolicyTypes: []networkingv1.PolicyType{
-							"Egress",
-						},
-						Egress: []networkingv1.NetworkPolicyEgressRule{},
-					},
+					Egress: []networkingv1.NetworkPolicyEgressRule{},
 				},
 				true,
 				[]rule.CheckResult{
@@ -642,17 +603,12 @@ var _ = Describe("#2000", func() {
 				},
 			),
 			Entry("should fail when no denying network policy is explicitly set for egress and pods are present on the namespace",
-				&networkingv1.NetworkPolicy{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "not-deny-egress",
-						Namespace: "plain-namespace",
+				"not-deny-egress",
+				&networkingv1.NetworkPolicySpec{
+					PolicyTypes: []networkingv1.PolicyType{
+						"Ingress",
 					},
-					Spec: networkingv1.NetworkPolicySpec{
-						PolicyTypes: []networkingv1.PolicyType{
-							"Ingress",
-						},
-						Ingress: []networkingv1.NetworkPolicyIngressRule{},
-					},
+					Ingress: []networkingv1.NetworkPolicyIngressRule{},
 				},
 				true,
 				[]rule.CheckResult{
@@ -669,18 +625,13 @@ var _ = Describe("#2000", func() {
 				},
 			),
 			Entry("should fail when an allow-all network policy is configured for the ingress traffic and there are no pods present",
-				&networkingv1.NetworkPolicy{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "allow-ingress",
-						Namespace: "plain-namespace",
+				"allow-ingress",
+				&networkingv1.NetworkPolicySpec{
+					PolicyTypes: []networkingv1.PolicyType{
+						"Ingress",
+						"Egress",
 					},
-					Spec: networkingv1.NetworkPolicySpec{
-						PolicyTypes: []networkingv1.PolicyType{
-							"Ingress",
-							"Egress",
-						},
-						Ingress: []networkingv1.NetworkPolicyIngressRule{{}},
-					},
+					Ingress: []networkingv1.NetworkPolicyIngressRule{{}},
 				},
 				false,
 				[]rule.CheckResult{
@@ -697,18 +648,13 @@ var _ = Describe("#2000", func() {
 				},
 			),
 			Entry("should fail when an allow-all network policy is configured for the egress traffic and there are no pods present",
-				&networkingv1.NetworkPolicy{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "allow-egress",
-						Namespace: "plain-namespace",
+				"allow-egress",
+				&networkingv1.NetworkPolicySpec{
+					PolicyTypes: []networkingv1.PolicyType{
+						"Ingress",
+						"Egress",
 					},
-					Spec: networkingv1.NetworkPolicySpec{
-						PolicyTypes: []networkingv1.PolicyType{
-							"Ingress",
-							"Egress",
-						},
-						Egress: []networkingv1.NetworkPolicyEgressRule{{}},
-					},
+					Egress: []networkingv1.NetworkPolicyEgressRule{{}},
 				},
 				false,
 				[]rule.CheckResult{
@@ -725,17 +671,12 @@ var _ = Describe("#2000", func() {
 				},
 			),
 			Entry("should warn when no denying network policy is configured for ingress and there are no pods present",
-				&networkingv1.NetworkPolicy{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "no-deny-ingress",
-						Namespace: "plain-namespace",
+				"no-deny-ingress",
+				&networkingv1.NetworkPolicySpec{
+					PolicyTypes: []networkingv1.PolicyType{
+						"Egress",
 					},
-					Spec: networkingv1.NetworkPolicySpec{
-						PolicyTypes: []networkingv1.PolicyType{
-							"Egress",
-						},
-						Egress: []networkingv1.NetworkPolicyEgressRule{},
-					},
+					Egress: []networkingv1.NetworkPolicyEgressRule{},
 				},
 				false,
 				[]rule.CheckResult{
@@ -752,17 +693,12 @@ var _ = Describe("#2000", func() {
 				},
 			),
 			Entry("should warn when no denying network policy is configured for egress and there are no pods present",
-				&networkingv1.NetworkPolicy{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "no-deny-egress",
-						Namespace: "plain-namespace",
+				"no-deny-egress",
+				&networkingv1.NetworkPolicySpec{
+					PolicyTypes: []networkingv1.PolicyType{
+						"Ingress",
 					},
-					Spec: networkingv1.NetworkPolicySpec{
-						PolicyTypes: []networkingv1.PolicyType{
-							"Ingress",
-						},
-						Ingress: []networkingv1.NetworkPolicyIngressRule{},
-					},
+					Ingress: []networkingv1.NetworkPolicyIngressRule{},
 				},
 				false,
 				[]rule.CheckResult{
