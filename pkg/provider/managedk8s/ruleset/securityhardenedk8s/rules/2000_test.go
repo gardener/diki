@@ -668,7 +668,7 @@ var _ = Describe("#2000", func() {
 					},
 				},
 			),
-			Entry("should warn fail an allow-all network policy is configured for the ingress traffic and there are no pods present",
+			Entry("should fail when an allow-all network policy is configured for the ingress traffic and there are no pods present",
 				&networkingv1.NetworkPolicy{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "allow-ingress",
@@ -696,7 +696,7 @@ var _ = Describe("#2000", func() {
 					},
 				},
 			),
-			Entry("should warn fail an allow-all network policy is configured for the egress traffic and there are no pods present",
+			Entry("should fail when an allow-all network policy is configured for the egress traffic and there are no pods present",
 				&networkingv1.NetworkPolicy{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "allow-egress",

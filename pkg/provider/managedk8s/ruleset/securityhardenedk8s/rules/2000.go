@@ -160,6 +160,7 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 					checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget()))
 					break
 				}
+
 				if len(pods) > 0 {
 					checkResults = append(checkResults, rule.FailedCheckResult(ingressTrafficNotDeniedMessage, target.With("details", namespaceDeletionWithPodsDetails)))
 				} else {
