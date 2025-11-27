@@ -632,7 +632,7 @@ var _ = Describe("#2000", func() {
 					{
 						Status:  rule.Failed,
 						Message: "Ingress traffic is not denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "details", "namespace is marked for deletion - there are still pods deployed on it"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "details", "namespace is marked for deletion with present pods"),
 					},
 					{
 						Status:  rule.Passed,
@@ -664,7 +664,7 @@ var _ = Describe("#2000", func() {
 					{
 						Status:  rule.Failed,
 						Message: "Egress traffic is not denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "details", "namespace is marked for deletion - there are still pods deployed on it"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "details", "namespace is marked for deletion with present pods"),
 					},
 				},
 			),
@@ -742,7 +742,7 @@ var _ = Describe("#2000", func() {
 					{
 						Status:  rule.Warning,
 						Message: "Ingress traffic is not denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "details", "namespace is marked for deletion - no pods are deployed on it"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "details", "namespace is marked for deletion without any present pods"),
 					},
 					{
 						Status:  rule.Passed,
@@ -774,7 +774,7 @@ var _ = Describe("#2000", func() {
 					{
 						Status:  rule.Warning,
 						Message: "Egress traffic is not denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "details", "namespace is marked for deletion - no pods are deployed on it"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "details", "namespace is marked for deletion without any present pods"),
 					},
 				},
 			),
@@ -798,12 +798,12 @@ var _ = Describe("#2000", func() {
 				{
 					Status:  "Failed",
 					Message: "Ingress traffic is not denied by default.",
-					Target:  rule.NewTarget("namespace", "test", "details", "namespace is marked for deletion - there are still pods deployed on it"),
+					Target:  rule.NewTarget("namespace", "test", "details", "namespace is marked for deletion with present pods"),
 				},
 				{
 					Status:  "Failed",
 					Message: "Egress traffic is not denied by default.",
-					Target:  rule.NewTarget("namespace", "test", "details", "namespace is marked for deletion - there are still pods deployed on it"),
+					Target:  rule.NewTarget("namespace", "test", "details", "namespace is marked for deletion with present pods"),
 				},
 			}))
 		})
@@ -821,12 +821,12 @@ var _ = Describe("#2000", func() {
 				{
 					Status:  "Warning",
 					Message: "Ingress traffic is not denied by default.",
-					Target:  rule.NewTarget("namespace", "test", "details", "namespace is marked for deletion - no pods are deployed on it"),
+					Target:  rule.NewTarget("namespace", "test", "details", "namespace is marked for deletion without any present pods"),
 				},
 				{
 					Status:  "Warning",
 					Message: "Egress traffic is not denied by default.",
-					Target:  rule.NewTarget("namespace", "test", "details", "namespace is marked for deletion - no pods are deployed on it"),
+					Target:  rule.NewTarget("namespace", "test", "details", "namespace is marked for deletion without any present pods"),
 				},
 			}))
 		})
@@ -940,7 +940,7 @@ var _ = Describe("#2000", func() {
 				{
 					Status:  rule.Failed,
 					Message: "Ingress traffic is not denied by default.",
-					Target:  rule.NewTarget("namespace", "partially-accepted-with-pod", "details", "namespace is marked for deletion - there are still pods deployed on it"),
+					Target:  rule.NewTarget("namespace", "partially-accepted-with-pod", "details", "namespace is marked for deletion with present pods"),
 				},
 				{
 					Status:  rule.Accepted,
@@ -950,7 +950,7 @@ var _ = Describe("#2000", func() {
 				{
 					Status:  rule.Warning,
 					Message: "Ingress traffic is not denied by default.",
-					Target:  rule.NewTarget("namespace", "partially-accepted", "details", "namespace is marked for deletion - no pods are deployed on it"),
+					Target:  rule.NewTarget("namespace", "partially-accepted", "details", "namespace is marked for deletion without any present pods"),
 				},
 				{
 					Status:  rule.Accepted,
