@@ -157,8 +157,7 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 			default:
 				pods, err := kubeutils.GetPods(ctx, r.Client, namespace.Name, labels.NewSelector(), 300)
 				if err != nil {
-					checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget()))
-					break
+					return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 				}
 
 				if len(pods) > 0 {
@@ -197,8 +196,7 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 			default:
 				pods, err := kubeutils.GetPods(ctx, r.Client, namespace.Name, labels.NewSelector(), 300)
 				if err != nil {
-					checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), rule.NewTarget()))
-					break
+					return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
 				}
 
 				if len(pods) > 0 {
