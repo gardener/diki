@@ -30,6 +30,7 @@ var _ = Describe("#2000", func() {
 	Context("test namespaces without a deletion timestamp", func() {
 
 		var plainNamespace *corev1.Namespace
+		const testNetworkPolicyName = "test-network-policy"
 
 		BeforeEach(func() {
 			plainNamespace = &corev1.Namespace{
@@ -41,12 +42,12 @@ var _ = Describe("#2000", func() {
 		})
 
 		DescribeTable("test namespaces without a deletion timestamp",
-			func(configuredNetworkPolicyName string, configuredNetworkPolicySpec *networkingv1.NetworkPolicySpec, checkResults []rule.CheckResult) {
+			func(configuredNetworkPolicySpec *networkingv1.NetworkPolicySpec, checkResults []rule.CheckResult) {
 				Expect(client.Create(ctx, plainNamespace)).To(Succeed())
 
 				configuredNetworkPolicy := &networkingv1.NetworkPolicy{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      configuredNetworkPolicyName,
+						Name:      testNetworkPolicyName,
 						Namespace: plainNamespace.Name,
 					},
 					Spec: *configuredNetworkPolicySpec,
@@ -60,7 +61,6 @@ var _ = Describe("#2000", func() {
 				Expect(ruleResult.CheckResults).To(Equal(checkResults))
 			},
 			Entry("should pass when a deny-all network policy is configured",
-				"deny-all",
 				&networkingv1.NetworkPolicySpec{
 					PolicyTypes: []networkingv1.PolicyType{
 						networkingv1.PolicyTypeIngress,
@@ -73,17 +73,16 @@ var _ = Describe("#2000", func() {
 					{
 						Status:  rule.Passed,
 						Message: "Ingress traffic is denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "deny-all"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 					{
 						Status:  rule.Passed,
 						Message: "Egress traffic is denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "deny-all"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 				},
 			),
 			Entry("should fail if an allow-all network policy is configured for ingress explicitly",
-				"deny-all",
 				&networkingv1.NetworkPolicySpec{
 					PolicyTypes: []networkingv1.PolicyType{
 						networkingv1.PolicyTypeIngress,
@@ -96,17 +95,16 @@ var _ = Describe("#2000", func() {
 					{
 						Status:  rule.Failed,
 						Message: "All Ingress traffic is allowed by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "deny-all"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 					{
 						Status:  rule.Passed,
 						Message: "Egress traffic is denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "deny-all"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 				},
 			),
 			Entry("should fail if an allow-all network policy is configured for egress explicitly",
-				"deny-all",
 				&networkingv1.NetworkPolicySpec{
 					PolicyTypes: []networkingv1.PolicyType{
 						networkingv1.PolicyTypeIngress,
@@ -119,17 +117,16 @@ var _ = Describe("#2000", func() {
 					{
 						Status:  rule.Passed,
 						Message: "Ingress traffic is denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "deny-all"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 					{
 						Status:  rule.Failed,
 						Message: "All Egress traffic is allowed by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "deny-all"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 				},
 			),
 			Entry("should fail if no denying network policy is configured for ingress",
-				"deny-all",
 				&networkingv1.NetworkPolicySpec{
 					PolicyTypes: []networkingv1.PolicyType{
 						networkingv1.PolicyTypeEgress,
@@ -145,11 +142,10 @@ var _ = Describe("#2000", func() {
 					{
 						Status:  rule.Passed,
 						Message: "Egress traffic is denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "deny-all"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 				}),
 			Entry("should fail if no denying network policy is configured for egress",
-				"deny-all",
 				&networkingv1.NetworkPolicySpec{
 					PolicyTypes: []networkingv1.PolicyType{
 						networkingv1.PolicyTypeIngress,
@@ -160,7 +156,7 @@ var _ = Describe("#2000", func() {
 					{
 						Status:  rule.Passed,
 						Message: "Ingress traffic is denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "deny-all"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 					{
 						Status:  rule.Failed,
@@ -169,7 +165,6 @@ var _ = Describe("#2000", func() {
 					},
 				}),
 			Entry("should handle namespace with pod-specific network policy",
-				"pod-specific-policy",
 				&networkingv1.NetworkPolicySpec{
 					PodSelector: metav1.LabelSelector{
 						MatchLabels: map[string]string{
@@ -194,7 +189,6 @@ var _ = Describe("#2000", func() {
 				},
 			),
 			Entry("should handle namespace with targeted egress rules",
-				"targeted-egress",
 				&networkingv1.NetworkPolicySpec{
 					PolicyTypes: []networkingv1.PolicyType{
 						networkingv1.PolicyTypeIngress,
@@ -219,7 +213,7 @@ var _ = Describe("#2000", func() {
 					{
 						Status:  rule.Passed,
 						Message: "Ingress traffic is denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "targeted-egress"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 					{
 						Status:  rule.Failed,
@@ -470,6 +464,8 @@ var _ = Describe("#2000", func() {
 			plainPod                       *corev1.Pod
 		)
 
+		const testNetworkPolicyName = "test-network-policy"
+
 		BeforeEach(func() {
 			namespaceWithDeletionTimestamp = &corev1.Namespace{
 				ObjectMeta: metav1.ObjectMeta{
@@ -490,12 +486,12 @@ var _ = Describe("#2000", func() {
 		})
 
 		DescribeTable("Run test cases for namespaces with deletion timestamp",
-			func(configuredNetworkPolicyName string, configuredNetworkPolicySpec *networkingv1.NetworkPolicySpec, deployPod bool, checkResults []rule.CheckResult) {
+			func(configuredNetworkPolicySpec *networkingv1.NetworkPolicySpec, deployPod bool, checkResults []rule.CheckResult) {
 				client = fakeclient.NewClientBuilder().WithObjects(namespaceWithDeletionTimestamp).Build()
 
 				configuredNetworkPolicy := &networkingv1.NetworkPolicy{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      configuredNetworkPolicyName,
+						Name:      testNetworkPolicyName,
 						Namespace: namespaceWithDeletionTimestamp.Name,
 					},
 					Spec: *configuredNetworkPolicySpec,
@@ -513,7 +509,6 @@ var _ = Describe("#2000", func() {
 				Expect(ruleResult.CheckResults).To(Equal(checkResults))
 			},
 			Entry("should pass when the namespace has a deny-all network policy configured",
-				"deny-all",
 				&networkingv1.NetworkPolicySpec{
 					PolicyTypes: []networkingv1.PolicyType{
 						"Ingress",
@@ -525,17 +520,16 @@ var _ = Describe("#2000", func() {
 					{
 						Status:  rule.Passed,
 						Message: "Ingress traffic is denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "deny-all"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 					{
 						Status:  rule.Passed,
 						Message: "Egress traffic is denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "deny-all"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 				},
 			),
 			Entry("should fail when an allow-all network policy is configured for ingress and pods are still present",
-				"allow-ingress",
 				&networkingv1.NetworkPolicySpec{
 					PolicyTypes: []networkingv1.PolicyType{
 						"Ingress",
@@ -548,17 +542,16 @@ var _ = Describe("#2000", func() {
 					{
 						Status:  rule.Failed,
 						Message: "All Ingress traffic is allowed by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "allow-ingress"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 					{
 						Status:  rule.Passed,
 						Message: "Egress traffic is denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "allow-ingress"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 				},
 			),
 			Entry("should fail when an allow-all network policy is configured for egress and pods are still present",
-				"allow-egress",
 				&networkingv1.NetworkPolicySpec{
 					PolicyTypes: []networkingv1.PolicyType{
 						"Ingress",
@@ -571,17 +564,16 @@ var _ = Describe("#2000", func() {
 					{
 						Status:  rule.Passed,
 						Message: "Ingress traffic is denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "allow-egress"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 					{
 						Status:  rule.Failed,
 						Message: "All Egress traffic is allowed by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "allow-egress"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 				},
 			),
 			Entry("should fail when no denying network policy is explicitly set for ingress and pods are present on the namespace",
-				"not-deny-ingress",
 				&networkingv1.NetworkPolicySpec{
 					PolicyTypes: []networkingv1.PolicyType{
 						"Egress",
@@ -598,12 +590,11 @@ var _ = Describe("#2000", func() {
 					{
 						Status:  rule.Passed,
 						Message: "Egress traffic is denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "not-deny-ingress"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 				},
 			),
 			Entry("should fail when no denying network policy is explicitly set for egress and pods are present on the namespace",
-				"not-deny-egress",
 				&networkingv1.NetworkPolicySpec{
 					PolicyTypes: []networkingv1.PolicyType{
 						"Ingress",
@@ -615,7 +606,7 @@ var _ = Describe("#2000", func() {
 					{
 						Status:  rule.Passed,
 						Message: "Ingress traffic is denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "not-deny-egress"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 					{
 						Status:  rule.Failed,
@@ -625,7 +616,6 @@ var _ = Describe("#2000", func() {
 				},
 			),
 			Entry("should fail when an allow-all network policy is configured for the ingress traffic and there are no pods present",
-				"allow-ingress",
 				&networkingv1.NetworkPolicySpec{
 					PolicyTypes: []networkingv1.PolicyType{
 						"Ingress",
@@ -638,17 +628,16 @@ var _ = Describe("#2000", func() {
 					{
 						Status:  rule.Failed,
 						Message: "All Ingress traffic is allowed by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "allow-ingress"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 					{
 						Status:  rule.Passed,
 						Message: "Egress traffic is denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "allow-ingress"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 				},
 			),
 			Entry("should fail when an allow-all network policy is configured for the egress traffic and there are no pods present",
-				"allow-egress",
 				&networkingv1.NetworkPolicySpec{
 					PolicyTypes: []networkingv1.PolicyType{
 						"Ingress",
@@ -661,17 +650,16 @@ var _ = Describe("#2000", func() {
 					{
 						Status:  rule.Passed,
 						Message: "Ingress traffic is denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "allow-egress"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 					{
 						Status:  rule.Failed,
 						Message: "All Egress traffic is allowed by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "allow-egress"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 				},
 			),
 			Entry("should warn when no denying network policy is configured for ingress and there are no pods present",
-				"no-deny-ingress",
 				&networkingv1.NetworkPolicySpec{
 					PolicyTypes: []networkingv1.PolicyType{
 						"Egress",
@@ -688,12 +676,11 @@ var _ = Describe("#2000", func() {
 					{
 						Status:  rule.Passed,
 						Message: "Egress traffic is denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "no-deny-ingress"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 				},
 			),
 			Entry("should warn when no denying network policy is configured for egress and there are no pods present",
-				"no-deny-egress",
 				&networkingv1.NetworkPolicySpec{
 					PolicyTypes: []networkingv1.PolicyType{
 						"Ingress",
@@ -705,7 +692,7 @@ var _ = Describe("#2000", func() {
 					{
 						Status:  rule.Passed,
 						Message: "Ingress traffic is denied by default.",
-						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "no-deny-egress"),
+						Target:  rule.NewTarget("namespace", "plain-namespace", "kind", "NetworkPolicy", "name", "test-network-policy"),
 					},
 					{
 						Status:  rule.Warning,
