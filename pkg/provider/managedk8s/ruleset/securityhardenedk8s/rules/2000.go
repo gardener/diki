@@ -55,6 +55,13 @@ func (r *Rule2000) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
+	const (
+		namespaceDeletionWithoutPodsDetails = "namespace is marked for deletion without any present pods"
+		namespaceDeletionWithPodsDetails    = "namespace is marked for deletion with present pods"
+		ingressTrafficNotDeniedMessage      = "Ingress traffic is not denied by default."
+		egressTrafficNotDeniedMessage       = "Egress traffic is not denied by default."
+	)
+
 	networkPolicies, err := kubeutils.GetNetworkPolicies(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ServiceList"))), nil
@@ -145,8 +152,19 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, acceptedTarget))
 			case allowsAllIngress:
 				checkResults = append(checkResults, rule.FailedCheckResult("All Ingress traffic is allowed by default.", allowsAllIngressTarget))
+			case namespace.DeletionTimestamp == nil:
+				checkResults = append(checkResults, rule.FailedCheckResult(ingressTrafficNotDeniedMessage, target))
 			default:
-				checkResults = append(checkResults, rule.FailedCheckResult("Ingress traffic is not denied by default.", target))
+				pods, err := kubeutils.GetPods(ctx, r.Client, namespace.Name, labels.NewSelector(), 300)
+				if err != nil {
+					return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
+				}
+
+				if len(pods) > 0 {
+					checkResults = append(checkResults, rule.FailedCheckResult(ingressTrafficNotDeniedMessage, target.With("details", namespaceDeletionWithPodsDetails)))
+				} else {
+					checkResults = append(checkResults, rule.WarningCheckResult(ingressTrafficNotDeniedMessage, target.With("details", namespaceDeletionWithoutPodsDetails)))
+				}
 			}
 		}
 
@@ -173,8 +191,19 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, acceptedTarget))
 			case allowsAllEgress:
 				checkResults = append(checkResults, rule.FailedCheckResult("All Egress traffic is allowed by default.", allowsAllEgressTarget))
+			case namespace.DeletionTimestamp == nil:
+				checkResults = append(checkResults, rule.FailedCheckResult(egressTrafficNotDeniedMessage, target))
 			default:
-				checkResults = append(checkResults, rule.FailedCheckResult("Egress traffic is not denied by default.", target))
+				pods, err := kubeutils.GetPods(ctx, r.Client, namespace.Name, labels.NewSelector(), 300)
+				if err != nil {
+					return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
+				}
+
+				if len(pods) > 0 {
+					checkResults = append(checkResults, rule.FailedCheckResult(egressTrafficNotDeniedMessage, target.With("details", namespaceDeletionWithPodsDetails)))
+				} else {
+					checkResults = append(checkResults, rule.WarningCheckResult(egressTrafficNotDeniedMessage, target.With("details", namespaceDeletionWithoutPodsDetails)))
+				}
 			}
 		}
 	}
