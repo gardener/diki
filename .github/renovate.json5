@@ -11,17 +11,14 @@
   "automergeStrategy": "squash",
   "customManagers": [
     {
-      // Generic detection for pod-like image specifications.
-      "customType": "regex",
-      "fileMatch": ["^\.ci\/pipeline_definitions$"],
-      "matchStrings": ["image: ['\"]?(?<depName>.*?):(?<currentValue>.*?)['\"]?\\s"],
-      "datasourceTemplate": "docker"
-    },
-    {
       // Generic detection for go version in github-actions.
       "customType": "regex",
-      "fileMatch": ["^\.github\/workflows\/upload-diki-binaries.yaml$"],
-      "matchStrings": ["go-version: '(?<currentValue>.*?)'\\s"],
+      "fileMatch": [
+        "^\.github\/workflows\/build\.yaml$",
+        "^\.github\/actions\/prepare-release\/action\.yaml$",
+      ],
+      "matchStrings": [
+        "go-version: '(?<currentValue>.*?)'\\s",],
       "depNameTemplate": "golang",
       "datasourceTemplate": "docker"
     },
