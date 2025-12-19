@@ -18,7 +18,8 @@
         "^\.github\/actions\/prepare-release\/action\.yaml$",
       ],
       "matchStrings": [
-        "go-version: '(?<currentValue>.*?)'\\s",],
+        "go-version: '(?<currentValue>.*?)'\\s",
+      ],
       "depNameTemplate": "golang",
       "datasourceTemplate": "docker"
     },
