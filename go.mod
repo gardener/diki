@@ -7,7 +7,7 @@ tool github.com/gardener/gardener/hack
 require (
 	github.com/Masterminds/semver/v3 v3.4.0
 	github.com/distribution/reference v0.6.0
-	github.com/gardener/gardener v1.134.0
+	github.com/gardener/gardener v1.134.1
 	github.com/gardener/gardener-extension-shoot-lakom-service v0.23.0
 	github.com/go-logr/logr v1.4.3
 	github.com/google/uuid v1.6.0
