@@ -132,7 +132,6 @@ jobs:
       oci-repository: ${{ matrix.args.oci-repository }}
       oci-platforms: linux/amd64,linux/arm64
       ocm-labels: ${{ toJSON(matrix.args.ocm-labels) }}
-      extra-tags: latest
 
   verify:
     runs-on: ubuntu-latest
