@@ -110,6 +110,10 @@ diki run \
     --rule-id=242414
 ```
 
+#### Minimal Required Permissions
+
+Diki has certain access requirements that can be checked out [here](./docs/usage/minimal-required-permissions.md).
+
 ### Report
 
 Diki can generate a human readable report from the output files of a `diki run` execution.
