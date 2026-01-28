@@ -9,11 +9,11 @@
 [![license apache 2.0](https://badgen.net/badge/license/apache-2.0/8ab803)](https://opensource.org/licenses/Apache-2.0)
 
 
-Diki a "compliance checker" of sorts, a detective control framework with pluggable rule sets.
+Diki is a "compliance checker" of sorts, or a detective control framework with pluggable rule sets.
 It's part of the [Gardener](https://github.com/gardener) family, but can be used also on other Kubernetes distros or even on non-Kubernetes environments, e.g. to check compliance of your hyperscaler accounts.
 
 Diki is the Greek word for "trial".
-You can also memorise it as "Detective Investigation of Key Imperatives" or as GNU-style recursive acronym "Diki Investigates Key Imperatives".
+You can also memorise it as "Detective Investigation of Key Imperatives" or with the GNU-style recursive acronym "Diki Investigates Key Imperatives".
 It's colloquially known as "Don't I Know It", which is a nice fit as well for what it does.
 
 > [!IMPORTANT]
