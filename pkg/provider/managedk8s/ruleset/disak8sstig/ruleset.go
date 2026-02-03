@@ -123,13 +123,6 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabel
 	}
 
 	switch rulesetConfig.Version {
-	case "v2r3":
-		if err := ruleset.validateV2R3RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
-			return nil, err
-		}
-		if err := ruleset.registerV2R3Rules(ruleOptions); err != nil {
-			return nil, err
-		}
 	case "v2r4":
 		if err := ruleset.validateV2R4RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
 			return nil, err
