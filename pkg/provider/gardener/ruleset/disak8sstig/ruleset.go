@@ -135,6 +135,13 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabel
 		if err := ruleset.registerV2R4Rules(ruleOptions); err != nil {
 			return nil, err
 		}
+	case "v2r5":
+		if err := ruleset.validateV2R5RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
+			return nil, err
+		}
+		if err := ruleset.registerV2R5Rules(ruleOptions); err != nil {
+			return nil, err
+		}
 	default:
 		return nil, fmt.Errorf("unknown ruleset %s version: %s - use 'diki show provider gardener' to see the provider's supported rulesets", rulesetConfig.ID, rulesetConfig.Version)
 	}
