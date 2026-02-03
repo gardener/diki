@@ -33,7 +33,7 @@ var (
 	_ ruleset.Ruleset = &Ruleset{}
 	// SupportedVersions is a list of available versions for the DISA Kubernetes STIG Ruleset.
 	// Versions are sorted from newest to oldest.
-	SupportedVersions = []string{"v2r4", "v2r3"}
+	SupportedVersions = []string{"v2r5", "v2r4"}
 )
 
 // Ruleset implements DISA Kubernetes STIG.
