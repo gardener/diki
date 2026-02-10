@@ -197,7 +197,7 @@ kind: AuthenticationConfiguration
 				}
 			},
 			nil,
-			[]rule.CheckResult{{Status: rule.Errored, Message: "yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `foo` into v1beta1.AuthenticationConfiguration", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")}},
+			[]rule.CheckResult{{Status: rule.Errored, Message: "yaml: construct errors:\n  line 1: cannot construct !!str `foo` into v1beta1.AuthenticationConfiguration", Target: rule.NewTarget("name", "authentication-config", "namespace", "bar", "kind", "ConfigMap")}},
 		),
 		Entry("should pass if the structuredAuthentication configuration does not have anonymous authentication config set",
 			func() {

@@ -200,7 +200,7 @@ anonymous:
 				Expect(fakeClient.Create(ctx, configMap)).To(Succeed())
 			},
 			nil,
-			[]rule.CheckResult{{Status: rule.Errored, Message: "yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `foo` into v1beta1.AuthenticationConfiguration", Target: target}},
+			[]rule.CheckResult{{Status: rule.Errored, Message: "yaml: construct errors:\n  line 1: cannot construct !!str `foo` into v1beta1.AuthenticationConfiguration", Target: target}},
 			BeNil()),
 		Entry("should fail if the authentication configuration has anonymous authentication enabled unconditionally.",
 			corev1.Container{

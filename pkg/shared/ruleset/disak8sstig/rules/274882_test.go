@@ -143,7 +143,7 @@ var _ = Describe("#274882", func() {
 		},
 		Entry("should error when the encryption config is not valid yaml",
 			"foo",
-			rule.CheckResult{Status: rule.Errored, Message: "yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `foo` into apiserver.EncryptionConfiguration", Target: target},
+			rule.CheckResult{Status: rule.Errored, Message: "yaml: construct errors:\n  line 1: cannot construct !!str `foo` into apiserver.EncryptionConfiguration", Target: target},
 		),
 		Entry("should fail when the encryption config has no resources configured",
 			`
