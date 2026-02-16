@@ -1,0 +1,9 @@
+rules:
+- apiGroups:
+  - core.gardener.cloud
+  resources:
+  - cloudprofiles
+  - namespacedcloudprofiles
+  - shoots
+  verbs:
+  - get

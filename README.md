@@ -9,7 +9,7 @@
 [![license apache 2.0](https://badgen.net/badge/license/apache-2.0/8ab803)](https://opensource.org/licenses/Apache-2.0)
 
 
-Diki a "compliance checker" of sorts, a detective control framework with pluggable rule sets.
+Diki is a "compliance checker" of sorts, a detective control framework with pluggable rule sets.
 It's part of the [Gardener](https://github.com/gardener) family, but can be used also on other Kubernetes distros or even on non-Kubernetes environments, e.g. to check compliance of your hyperscaler accounts.
 
 Diki is the Greek word for "trial".
@@ -109,6 +109,10 @@ diki run \
     --ruleset-version=v2r4 \
     --rule-id=242414
 ```
+
+#### Minimal Required Permissions
+
+Diki has certain access requirements that can be checked out [here](./docs/usage/minimal-required-permissions.md).
 
 ### Report
 
