@@ -14,6 +14,7 @@ import (
 	"github.com/gardener/diki/pkg/rule"
 )
 
+// TODO (georgibaltiev): Remove the implementation of this rule once support for DISA STIG version v2r4 has been dropped.
 var (
 	_ rule.Rule     = &Rule242388{}
 	_ rule.Severity = &Rule242388{}
