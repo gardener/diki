@@ -24,7 +24,7 @@ Make sure you have [diki installed](../../README.md#Installation) and have a run
 We will be using the sample [DISA K8s STIG for Shoots configuration file](../../example/guides/disa-k8s-stig-shoot.yaml) for this run.
 
 > [!TIP]
-> In order to complete its compliance checking, Diki will require permissions to access certain Gardener and Kubernetes resources.
+> In order to complete its compliance checks, Diki requires permissions for certain Kubernetes resources.
 > [A compiled list of RBAC-style rules is provided](../../example/rbac/managedk8s.yaml), which represents all required permissions for the ruleset run. You may use this list to create your own RBAC resources.
 
 ### Configuration
