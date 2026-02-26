@@ -14,8 +14,9 @@ jobs:
     uses: ./.github/workflows/build.yaml
     with:
       mode: release
+    secrets: inherit
     permissions:
-      contents: write
+      contents: read
       packages: write
       id-token: write
 
@@ -31,7 +32,6 @@ jobs:
     with:
       release-commit-target: branch
       next-version: ${{ inputs.next-version }}
-      next-version-callback-action-path:
       slack-channel-id: C9CEBQPGE # #sap-tech-gardener
       assets: |
         - name: diki-darwin-amd64
