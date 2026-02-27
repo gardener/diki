@@ -41,7 +41,7 @@ func (r *Rule242390) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(fmt.Sprintf("could not create request: %s", err.Error()), rule.NewTarget())), nil
 	}
 
-	response, err := r.Client.Do(request)
+	response, err := r.Client.Do(request) // #nosec G704 -- KAPIExternalURL is set from trusted configuration
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(fmt.Sprintf("could not access kube-apiserver: %s", err.Error()), rule.NewTarget())), nil
 	}

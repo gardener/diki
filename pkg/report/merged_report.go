@@ -288,7 +288,7 @@ func metadataTextForMergedProvider(mp MergedProvider) map[string]string {
 				sb.WriteString("(")
 				empty = false
 			}
-			sb.WriteString(fmt.Sprintf("%s: %s, ", key, metadata[key]))
+			fmt.Fprintf(&sb, "%s: %s, ", key, metadata[key])
 		}
 
 		metadataText := sb.String()
