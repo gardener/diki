@@ -9,7 +9,7 @@ set -e
 rule_id=""
 provider="gardener"
 ruleset_id="disa-kubernetes-stig"
-ruleset_version="v2r4"
+ruleset_version="v2r5"
 run_all="false"
 
 
@@ -29,7 +29,7 @@ This command runs diki with a specified config file.
                       specified ruleset are executed.
     --provider        Ruleset provider. Defaults to "gardener".
     --ruleset-id      ID of ruleset that will be ran. Defaults to "disa-kubernetes-stig".
-    --ruleset-version Version of ruleset that will be ran. Defaults to "v2r4".
+    --ruleset-version Version of ruleset that will be ran. Defaults to "v2r5".
     
   environment variables:
     IMAGEVECTOR_OVERWRITE Overwrites diki/imagesvector/images.yaml file with specified file path.
