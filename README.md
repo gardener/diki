@@ -165,3 +165,5 @@ Contributions are very welcome. To learn more, see the [contributor guide](https
 ## Credits
 
 A special thank you to @vlerenc, @AleksandarSavchev and @dimityrmirchev who made significant contributions to the project before it was made available to the public.
+
+<p align="center"><img alt="Bundesministerium für Wirtschaft und Energie (BMWE)-EU funding logo" src="https://apeirora.eu/assets/img/BMWK-EU.png" width="400"/></p>
