@@ -24,7 +24,7 @@ format: $(GOIMPORTS) $(GOIMPORTSREVISER)
 
 .PHONY: test
 test:
-	go test -cover ./...
+	CGO_ENABLED=0 go test -cover ./...
 
 .PHONY: clean
 clean:
@@ -65,7 +65,7 @@ sast-report: $(GOSEC)
 
 .PHONY: test-cov
 test-cov:
-	@bash $(GARDENER_HACK_DIR)/test-cover.sh ./cmd/... ./pkg/...
+	@CGO_ENABLED=0 bash $(GARDENER_HACK_DIR)/test-cover.sh ./cmd/... ./pkg/...
 
 .PHONY: test-clean
 test-clean:
