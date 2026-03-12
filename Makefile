@@ -65,7 +65,7 @@ sast-report: $(GOSEC)
 
 .PHONY: test-cov
 test-cov:
-	@CGO_ENABLED=0 bash $(GARDENER_HACK_DIR)/test-cover.sh ./cmd/... ./pkg/...
+	@bash $(GARDENER_HACK_DIR)/test-cover.sh ./cmd/... ./pkg/...
 
 .PHONY: test-clean
 test-clean:
