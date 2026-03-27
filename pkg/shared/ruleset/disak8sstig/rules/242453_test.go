@@ -19,6 +19,7 @@ import (
 	fakestrgen "github.com/gardener/diki/pkg/internal/stringgen/fake"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
@@ -162,4 +163,47 @@ var _ = Describe("#242453", func() {
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "Node", "name", "node4", "details", "fileName: /var/lib/kubelet/config/kubelet, ownerUser: 0, ownerGroup: 0")),
 			}),
 	)
+
+	It("should use PodWorkerPool and reuse pooled pods", func() {
+		// When using a PodWorkerPool, AdjustedAllocatablePods boosts nodes that already
+		// have a pool executor. This test verifies the rule works correctly with a pool.
+		// node1 and node2 both have foo=foo; SelectNodes picks node1 (first allocatable).
+		// node3 has foo=bar. node4 has no "foo" label → warning.
+		fakeCtx := fakepod.NewFakeSimplePodContext(
+			[][]string{
+				{kubeletPID, rawKubeletCommand, compliantKubeconfigStats, compliantConfigStats}, // node1
+				{kubeletPID, rawKubeletCommand, compliantKubeconfigStats, compliantConfigStats}, // node3
+			},
+			[][]error{
+				{nil, nil, nil, nil},
+				{nil, nil, nil, nil},
+			},
+		)
+		workerPool := pod.NewPodWorkerPool(fakeCtx, kubeutils.SelectNodes, kubeutils.SelectPodOfReferenceGroup, func(nodeName string) func() *corev1.Pod {
+			return pod.NewPrivilegedPod("", "kube-system", "img", nodeName, nil)
+		})
+
+		r := &rules.Rule242453{
+			Logger:     testLogger,
+			InstanceID: instanceID,
+			Client:     fakeClient,
+			PodContext: workerPool,
+			Options: &rules.Options242453{
+				NodeGroupByLabels: []string{"foo"},
+			},
+		}
+
+		ruleResult, err := r.Run(ctx)
+		Expect(err).To(BeNil())
+
+		// node1 is selected for foo=foo, node3 for foo=bar.
+		// node4 missing the label triggers a warning. No check for node2.
+		Expect(ruleResult.CheckResults).To(ConsistOf(
+			rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "Node", "name", "node1", "details", "fileName: /var/lib/kubelet/kubeconfig, ownerUser: 0, ownerGroup: 0")),
+			rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "Node", "name", "node1", "details", "fileName: /var/lib/kubelet/config/kubelet, ownerUser: 0, ownerGroup: 0")),
+			rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "Node", "name", "node3", "details", "fileName: /var/lib/kubelet/kubeconfig, ownerUser: 0, ownerGroup: 0")),
+			rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "Node", "name", "node3", "details", "fileName: /var/lib/kubelet/config/kubelet, ownerUser: 0, ownerGroup: 0")),
+			rule.WarningCheckResult("Node is missing a label", rule.NewTarget("kind", "Node", "name", "node4", "label", "foo")),
+		))
+	})
 })
