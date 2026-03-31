@@ -24,6 +24,9 @@ format: $(GOIMPORTS) $(GOIMPORTSREVISER)
 
 .PHONY: test
 test:
+	# CGO is disabled because a transitive dependency (github.com/valyala/gozstd) ships a pre-compiled
+	# libzstd_linux_amd64.a that is not built with -fPIE, causing linker failures on amd64.
+	# See: https://github.com/valyala/gozstd/issues/65
 	CGO_ENABLED=0 go test -cover ./...
 
 .PHONY: clean

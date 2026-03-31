@@ -17,7 +17,10 @@ COVERPROFILE_HTML="$REPO_ROOT/test.coverage.html"
 
 trap "rm -rf \"$COVERPROFILE_TMP\"" EXIT ERR INT TERM
 
-CGO_ENABLED=0 GO111MODULE=on go test -cover -coverprofile "$COVERPROFILE_TMP" -timeout=2m $@ | grep -v 'no test files'
+# CGO is disabled because a transitive dependency (github.com/valyala/gozstd) ships a pre-compiled
+# libzstd_linux_amd64.a that is not built with -fPIE, causing linker failures on amd64.
+# See: https://github.com/valyala/gozstd/issues/65
+CGO_ENABLED=0 GO111MODULE=on go test -cover -coverprofile "$COVERPROFILE_TMP" -timeout=2m "$@" | grep -v 'no test files'
 
 cat "$COVERPROFILE_TMP" | grep -vE "\.pb\.go|zz_generated" > "$COVERPROFILE"
 go tool cover -html="$COVERPROFILE" -o="$COVERPROFILE_HTML"
