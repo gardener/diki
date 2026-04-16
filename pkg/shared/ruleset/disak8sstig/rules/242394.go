@@ -70,7 +70,7 @@ func (r *Rule242394) Run(ctx context.Context) (rule.RuleResult, error) {
 		nodeLabels   []string
 	)
 
-	if r.Options != nil && r.Options.NodeGroupByLabels != nil {
+	if r.Options != nil && len(r.Options.NodeGroupByLabels) > 0 {
 		nodeLabels = slices.Clone(r.Options.NodeGroupByLabels)
 	}
 
@@ -83,19 +83,27 @@ func (r *Rule242394) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NodeList"))), nil
 	}
 
-	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(pods, nodes)
-	selectedNodes, checks := kubeutils.SelectNodes(nodes, nodesAllocatablePods, nodeLabels)
-	checkResults = append(checkResults, checks...)
-
-	if len(selectedNodes) == 0 {
-		return rule.Result(r, rule.ErroredCheckResult("no allocatable nodes could be selected", rule.NewTarget())), nil
-	}
-
 	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
 	if err != nil {
 		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
 	}
 	image.WithOptionalTag(version.Get().GitVersion)
+
+	var (
+		nodesAllocatablePods = kubeutils.GetNodesAllocatablePodsNum(pods, nodes)
+		selectedNodes        []corev1.Node
+		checks               []rule.CheckResult
+	)
+	if workerPool, ok := r.PodContext.(*pod.PodWorkerPool); ok {
+		selectedNodes, checks = workerPool.SelectNodes(ctx, nodes, nodesAllocatablePods, nodeLabels)
+	} else {
+		selectedNodes, checks = kubeutils.SelectNodes(nodes, nodesAllocatablePods, nodeLabels)
+	}
+	checkResults = append(checkResults, checks...)
+
+	if len(selectedNodes) == 0 {
+		return rule.Result(r, rule.ErroredCheckResult("no allocatable nodes could be selected", rule.NewTarget())), nil
+	}
 
 	slices.SortFunc(selectedNodes, func(n1, n2 corev1.Node) int {
 		return cmp.Compare(n1.Name, n2.Name)
@@ -104,7 +112,6 @@ func (r *Rule242394) Run(ctx context.Context) (rule.RuleResult, error) {
 	for _, node := range selectedNodes {
 		podName := fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
 		nodeTarget := kubeutils.TargetWithK8sObject(rule.NewTarget(), metav1.TypeMeta{Kind: "Node"}, node.ObjectMeta)
-		execPodTarget := rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "Pod")
 		defer func() {
 			timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 			defer cancel()
@@ -118,9 +125,16 @@ func (r *Rule242394) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 		podExecutor, err := r.PodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", image.String(), node.Name, additionalLabels))
 		if err != nil {
+			execPodTarget := rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "Pod")
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 			continue
 		}
+
+		actualPodName := podName
+		if named, ok := podExecutor.(*pod.NamedPodExecutor); ok {
+			actualPodName = named.PodName
+		}
+		execPodTarget := rule.NewTarget("name", actualPodName, "namespace", "kube-system", "kind", "Pod")
 
 		commandResult, err := podExecutor.Execute(ctx, "/bin/sh", `ss -tulpn | grep "LISTEN" | grep -E ":22(\s|$)" || true`)
 		if err != nil {

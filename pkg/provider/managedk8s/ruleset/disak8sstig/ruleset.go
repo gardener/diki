@@ -17,6 +17,7 @@ import (
 
 	"github.com/gardener/diki/pkg/config"
 	internalconfig "github.com/gardener/diki/pkg/internal/config"
+	"github.com/gardener/diki/pkg/kubernetes/pod"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
 	sharedruleset "github.com/gardener/diki/pkg/shared/ruleset"
@@ -46,6 +47,7 @@ type Ruleset struct {
 	args                   Args
 	instanceID             string
 	logger                 *slog.Logger
+	podWorkerPool          *pod.PodWorkerPool
 }
 
 // Args are Ruleset specific arguments.
@@ -156,7 +158,15 @@ func (r *Ruleset) RunRule(ctx context.Context, id string) (rule.RuleResult, erro
 
 // Run executes all known Rules of the Ruleset.
 func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
-	return sharedruleset.Run(ctx, r, r.rules, r.numWorkers, r.Logger())
+	if r.podWorkerPool != nil {
+		defer func() {
+			if cleanupErr := r.podWorkerPool.CleanupAll(ctx); cleanupErr != nil {
+				r.Logger().Error("pod worker pool cleanup failed", "error", cleanupErr)
+			}
+		}()
+	}
+	result, err := sharedruleset.Run(ctx, r, r.rules, r.numWorkers, r.Logger())
+	return result, err
 }
 
 // AddRules adds Rules to the Ruleset.
