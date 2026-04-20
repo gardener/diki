@@ -883,4 +883,190 @@ var _ = Describe("#2000", func() {
 			}))
 		})
 	})
+
+	Context("test backoff retry for recently created namespaces", func() {
+		var (
+			originalTimeSleep func(time.Duration)
+			originalTimeNow   func() time.Time
+			fakeNow           time.Time
+		)
+
+		BeforeEach(func() {
+			originalTimeSleep = rules.TimeSleep
+			originalTimeNow = rules.TimeNow
+			fakeNow = time.Now()
+			rules.TimeNow = func() time.Time { return fakeNow }
+			rules.TimeSleep = func(_ time.Duration) {}
+			client = fakeclient.NewClientBuilder().Build()
+		})
+
+		AfterEach(func() {
+			rules.TimeSleep = originalTimeSleep
+			rules.TimeNow = originalTimeNow
+		})
+
+		It("should retry and pass when network policy is added before retry", func() {
+			namespace := &corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:              "young-ns",
+					CreationTimestamp: metav1.Time{Time: fakeNow.Add(-time.Minute)},
+				},
+			}
+			Expect(client.Create(ctx, namespace)).To(Succeed())
+
+			// Override TimeSleep to create the policy during the backoff.
+			rules.TimeSleep = func(_ time.Duration) {
+				denyAll := &networkingv1.NetworkPolicy{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "deny-all",
+						Namespace: "young-ns",
+					},
+					Spec: networkingv1.NetworkPolicySpec{
+						PolicyTypes: []networkingv1.PolicyType{
+							networkingv1.PolicyTypeIngress,
+							networkingv1.PolicyTypeEgress,
+						},
+					},
+				}
+				Expect(client.Create(ctx, denyAll)).To(Succeed())
+			}
+
+			r := &rules.Rule2000{Client: client}
+			ruleResult, err := r.Run(ctx)
+			Expect(err).To(BeNil())
+
+			Expect(ruleResult.CheckResults).To(ConsistOf(
+				rule.CheckResult{
+					Status:  rule.Passed,
+					Message: "Ingress traffic is denied by default.",
+					Target:  rule.NewTarget("namespace", "young-ns", "kind", "NetworkPolicy", "name", "deny-all"),
+				},
+				rule.CheckResult{
+					Status:  rule.Passed,
+					Message: "Egress traffic is denied by default.",
+					Target:  rule.NewTarget("namespace", "young-ns", "kind", "NetworkPolicy", "name", "deny-all"),
+				},
+			))
+		})
+
+		It("should retry and still fail when no network policy is added", func() {
+			namespace := &corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:              "young-ns",
+					CreationTimestamp: metav1.Time{Time: fakeNow.Add(-time.Minute)},
+				},
+			}
+			Expect(client.Create(ctx, namespace)).To(Succeed())
+
+			r := &rules.Rule2000{Client: client}
+			ruleResult, err := r.Run(ctx)
+			Expect(err).To(BeNil())
+
+			Expect(ruleResult.CheckResults).To(ConsistOf(
+				rule.CheckResult{
+					Status:  rule.Failed,
+					Message: "Ingress traffic is not denied by default.",
+					Target:  rule.NewTarget("namespace", "young-ns"),
+				},
+				rule.CheckResult{
+					Status:  rule.Failed,
+					Message: "Egress traffic is not denied by default.",
+					Target:  rule.NewTarget("namespace", "young-ns"),
+				},
+			))
+		})
+
+		It("should not retry old namespaces", func() {
+			namespace := &corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:              "old-ns",
+					CreationTimestamp: metav1.Time{Time: fakeNow.Add(-time.Hour)},
+				},
+			}
+			Expect(client.Create(ctx, namespace)).To(Succeed())
+
+			sleepCalled := false
+			rules.TimeSleep = func(_ time.Duration) {
+				sleepCalled = true
+			}
+
+			r := &rules.Rule2000{Client: client}
+			ruleResult, err := r.Run(ctx)
+			Expect(err).To(BeNil())
+			Expect(sleepCalled).To(BeFalse())
+
+			Expect(ruleResult.CheckResults).To(Equal([]rule.CheckResult{
+				{
+					Status:  rule.Failed,
+					Message: "Ingress traffic is not denied by default.",
+					Target:  rule.NewTarget("namespace", "old-ns"),
+				},
+				{
+					Status:  rule.Failed,
+					Message: "Egress traffic is not denied by default.",
+					Target:  rule.NewTarget("namespace", "old-ns"),
+				},
+			}))
+		})
+
+		It("should only retry young namespaces and keep results for old namespaces", func() {
+			oldNs := &corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:              "old-ns",
+					CreationTimestamp: metav1.Time{Time: fakeNow.Add(-time.Hour)},
+				},
+			}
+			youngNs := &corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:              "young-ns",
+					CreationTimestamp: metav1.Time{Time: fakeNow.Add(-time.Minute)},
+				},
+			}
+			Expect(client.Create(ctx, oldNs)).To(Succeed())
+			Expect(client.Create(ctx, youngNs)).To(Succeed())
+
+			rules.TimeSleep = func(_ time.Duration) {
+				denyAll := &networkingv1.NetworkPolicy{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "deny-all",
+						Namespace: "young-ns",
+					},
+					Spec: networkingv1.NetworkPolicySpec{
+						PolicyTypes: []networkingv1.PolicyType{
+							networkingv1.PolicyTypeIngress,
+							networkingv1.PolicyTypeEgress,
+						},
+					},
+				}
+				Expect(client.Create(ctx, denyAll)).To(Succeed())
+			}
+
+			r := &rules.Rule2000{Client: client}
+			ruleResult, err := r.Run(ctx)
+			Expect(err).To(BeNil())
+
+			Expect(ruleResult.CheckResults).To(ConsistOf(
+				rule.CheckResult{
+					Status:  rule.Failed,
+					Message: "Ingress traffic is not denied by default.",
+					Target:  rule.NewTarget("namespace", "old-ns"),
+				},
+				rule.CheckResult{
+					Status:  rule.Failed,
+					Message: "Egress traffic is not denied by default.",
+					Target:  rule.NewTarget("namespace", "old-ns"),
+				},
+				rule.CheckResult{
+					Status:  rule.Passed,
+					Message: "Ingress traffic is denied by default.",
+					Target:  rule.NewTarget("namespace", "young-ns", "kind", "NetworkPolicy", "name", "deny-all"),
+				},
+				rule.CheckResult{
+					Status:  rule.Passed,
+					Message: "Egress traffic is denied by default.",
+					Target:  rule.NewTarget("namespace", "young-ns", "kind", "NetworkPolicy", "name", "deny-all"),
+				},
+			))
+		})
+	})
 })
