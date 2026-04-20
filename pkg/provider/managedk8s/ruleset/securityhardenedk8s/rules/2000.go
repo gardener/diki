@@ -7,10 +7,13 @@ package rules
 import (
 	"context"
 	"slices"
+	"time"
 
+	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
@@ -21,6 +24,18 @@ import (
 var (
 	_ rule.Rule     = &Rule2000{}
 	_ rule.Severity = &Rule2000{}
+	_ option.Option = &Options2000{}
+)
+
+// TimeNow and TimeSleep are package-level variables to allow overriding in tests.
+var (
+	TimeNow   = time.Now
+	TimeSleep = time.Sleep
+)
+
+const (
+	youngNamespaceThreshold = 5 * time.Minute
+	retryBackoff            = 1 * time.Minute
 )
 
 type Rule2000 struct {
@@ -35,6 +50,18 @@ type Options2000 struct {
 type AcceptedNamespaces2000 struct {
 	option.AcceptedClusterObject
 	AcceptedTraffic AcceptedTraffic `json:"acceptedTraffic" yaml:"acceptedTraffic"`
+}
+
+// Validate validates that option configurations are correctly defined.
+func (o Options2000) Validate(fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+
+	acceptedNamespacesPath := fldPath.Child("acceptedNamespaces")
+	for nIdx, n := range o.AcceptedNamespaces {
+		allErrs = append(allErrs, n.Validate(acceptedNamespacesPath.Index(nIdx))...)
+	}
+
+	return allErrs
 }
 
 type AcceptedTraffic struct {
@@ -55,6 +82,43 @@ func (r *Rule2000) Severity() rule.SeverityLevel {
 }
 
 func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
+	namespacesMap, err := kubeutils.GetNamespaces(ctx, r.Client)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NamespaceList"))), nil
+	}
+	namespaces := make([]corev1.Namespace, 0, len(namespacesMap))
+	for _, ns := range namespacesMap {
+		namespaces = append(namespaces, ns)
+	}
+
+	groupedNetworkPolicies, err := r.getGroupedNetworkPolicies(ctx)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NetworkPolicyList"))), nil
+	}
+
+	checkResults, youngFailedNamespaces := r.checkNamespaces(ctx, namespaces, groupedNetworkPolicies, true)
+	if len(youngFailedNamespaces) == 0 {
+		return rule.Result(r, checkResults...), nil
+	}
+
+	// Backoff and retry for recently created namespaces that failed.
+	TimeSleep(retryBackoff)
+
+	groupedNetworkPolicies, err = r.getGroupedNetworkPolicies(ctx)
+	if err != nil {
+		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NetworkPolicyList"))), nil
+	}
+
+	retryResults, _ := r.checkNamespaces(ctx, youngFailedNamespaces, groupedNetworkPolicies, false)
+	checkResults = append(checkResults, retryResults...)
+
+	return rule.Result(r, checkResults...), nil
+}
+
+// checkNamespaces evaluates network policies for the given namespaces. When retryYoung is true,
+// namespaces created within the last 5 minutes that fail checks are excluded from checkResults
+// and returned separately for a retry. When retryYoung is false, all results are included.
+func (r *Rule2000) checkNamespaces(ctx context.Context, namespaces []corev1.Namespace, groupedNetworkPolicies map[string][]networkingv1.NetworkPolicy, retryYoung bool) ([]rule.CheckResult, []corev1.Namespace) {
 	const (
 		namespaceDeletionWithoutPodsDetails = "namespace is marked for deletion without any present pods"
 		namespaceDeletionWithPodsDetails    = "namespace is marked for deletion with present pods"
@@ -62,26 +126,13 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 		egressTrafficNotDeniedMessage       = "Egress traffic is not denied by default."
 	)
 
-	networkPolicies, err := kubeutils.GetNetworkPolicies(ctx, r.Client, "", labels.NewSelector(), 300)
-	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ServiceList"))), nil
-	}
-
-	namespaces, err := kubeutils.GetNamespaces(ctx, r.Client)
-	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NamespaceList"))), nil
-	}
-
-	groupedNetworkPolicies := map[string][]networkingv1.NetworkPolicy{}
-
-	for _, np := range networkPolicies {
-		groupedNetworkPolicies[np.Namespace] = append(groupedNetworkPolicies[np.Namespace], np)
-	}
-
-	var checkResults []rule.CheckResult
+	var (
+		checkResults          []rule.CheckResult
+		youngFailedNamespaces []corev1.Namespace
+		now                   = TimeNow()
+	)
 
 	for _, namespace := range namespaces {
-
 		var (
 			deniesAllIngress, deniesAllEgress bool
 			allowsAllIngress, allowsAllEgress bool
@@ -90,6 +141,8 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 			deniesAllEgressTarget             = target
 			allowsAllIngressTarget            = target
 			allowsAllEgressTarget             = target
+			nsCheckResults                    []rule.CheckResult
+			nsFailed                          bool
 		)
 
 		for _, networkPolicy := range groupedNetworkPolicies[namespace.Name] {
@@ -130,11 +183,11 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 		}
 
 		if deniesAllIngress && !allowsAllIngress {
-			checkResults = append(checkResults, rule.PassedCheckResult("Ingress traffic is denied by default.", deniesAllIngressTarget))
+			nsCheckResults = append(nsCheckResults, rule.PassedCheckResult("Ingress traffic is denied by default.", deniesAllIngressTarget))
 		} else {
 			accepted, justification, err := r.acceptedIngress(namespace.Labels)
 			if err != nil {
-				return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+				return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), rule.NewTarget())}, nil
 			}
 
 			acceptedTarget := target
@@ -149,31 +202,32 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 
 			switch {
 			case accepted:
-				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, acceptedTarget))
+				nsCheckResults = append(nsCheckResults, rule.AcceptedCheckResult(msg, acceptedTarget))
 			case allowsAllIngress:
-				checkResults = append(checkResults, rule.FailedCheckResult("All Ingress traffic is allowed by default.", allowsAllIngressTarget))
+				nsCheckResults = append(nsCheckResults, rule.FailedCheckResult("All Ingress traffic is allowed by default.", allowsAllIngressTarget))
 			case namespace.DeletionTimestamp == nil:
-				checkResults = append(checkResults, rule.FailedCheckResult(ingressTrafficNotDeniedMessage, target))
+				nsCheckResults = append(nsCheckResults, rule.FailedCheckResult(ingressTrafficNotDeniedMessage, target))
+				nsFailed = true
 			default:
 				pods, err := kubeutils.GetPods(ctx, r.Client, namespace.Name, labels.NewSelector(), 300)
 				if err != nil {
-					return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
+					return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), target)}, nil
 				}
 
 				if len(pods) > 0 {
-					checkResults = append(checkResults, rule.FailedCheckResult(ingressTrafficNotDeniedMessage, target.With("details", namespaceDeletionWithPodsDetails)))
+					nsCheckResults = append(nsCheckResults, rule.FailedCheckResult(ingressTrafficNotDeniedMessage, target.With("details", namespaceDeletionWithPodsDetails)))
 				} else {
-					checkResults = append(checkResults, rule.WarningCheckResult(ingressTrafficNotDeniedMessage, target.With("details", namespaceDeletionWithoutPodsDetails)))
+					nsCheckResults = append(nsCheckResults, rule.WarningCheckResult(ingressTrafficNotDeniedMessage, target.With("details", namespaceDeletionWithoutPodsDetails)))
 				}
 			}
 		}
 
 		if deniesAllEgress && !allowsAllEgress {
-			checkResults = append(checkResults, rule.PassedCheckResult("Egress traffic is denied by default.", deniesAllEgressTarget))
+			nsCheckResults = append(nsCheckResults, rule.PassedCheckResult("Egress traffic is denied by default.", deniesAllEgressTarget))
 		} else {
 			accepted, justification, err := r.acceptedEgress(namespace.Labels)
 			if err != nil {
-				return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+				return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), rule.NewTarget())}, nil
 			}
 
 			acceptedTarget := target
@@ -188,27 +242,34 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 
 			switch {
 			case accepted:
-				checkResults = append(checkResults, rule.AcceptedCheckResult(msg, acceptedTarget))
+				nsCheckResults = append(nsCheckResults, rule.AcceptedCheckResult(msg, acceptedTarget))
 			case allowsAllEgress:
-				checkResults = append(checkResults, rule.FailedCheckResult("All Egress traffic is allowed by default.", allowsAllEgressTarget))
+				nsCheckResults = append(nsCheckResults, rule.FailedCheckResult("All Egress traffic is allowed by default.", allowsAllEgressTarget))
 			case namespace.DeletionTimestamp == nil:
-				checkResults = append(checkResults, rule.FailedCheckResult(egressTrafficNotDeniedMessage, target))
+				nsCheckResults = append(nsCheckResults, rule.FailedCheckResult(egressTrafficNotDeniedMessage, target))
+				nsFailed = true
 			default:
 				pods, err := kubeutils.GetPods(ctx, r.Client, namespace.Name, labels.NewSelector(), 300)
 				if err != nil {
-					return rule.Result(r, rule.ErroredCheckResult(err.Error(), target)), nil
+					return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), target)}, nil
 				}
 
 				if len(pods) > 0 {
-					checkResults = append(checkResults, rule.FailedCheckResult(egressTrafficNotDeniedMessage, target.With("details", namespaceDeletionWithPodsDetails)))
+					nsCheckResults = append(nsCheckResults, rule.FailedCheckResult(egressTrafficNotDeniedMessage, target.With("details", namespaceDeletionWithPodsDetails)))
 				} else {
-					checkResults = append(checkResults, rule.WarningCheckResult(egressTrafficNotDeniedMessage, target.With("details", namespaceDeletionWithoutPodsDetails)))
+					nsCheckResults = append(nsCheckResults, rule.WarningCheckResult(egressTrafficNotDeniedMessage, target.With("details", namespaceDeletionWithoutPodsDetails)))
 				}
 			}
 		}
+
+		if retryYoung && nsFailed && now.Sub(namespace.CreationTimestamp.Time) < youngNamespaceThreshold {
+			youngFailedNamespaces = append(youngFailedNamespaces, namespace)
+		} else {
+			checkResults = append(checkResults, nsCheckResults...)
+		}
 	}
 
-	return rule.Result(r, checkResults...), nil
+	return checkResults, youngFailedNamespaces
 }
 
 func (r *Rule2000) acceptedIngress(namespaceLabels map[string]string) (bool, string, error) {
@@ -241,4 +302,18 @@ func (r *Rule2000) acceptedEgress(namespaceLabels map[string]string) (bool, stri
 	}
 
 	return false, "", nil
+}
+
+func (r *Rule2000) getGroupedNetworkPolicies(ctx context.Context) (map[string][]networkingv1.NetworkPolicy, error) {
+	networkPolicies, err := kubeutils.GetNetworkPolicies(ctx, r.Client, "", labels.NewSelector(), 300)
+	if err != nil {
+		return nil, err
+	}
+
+	groupedNetworkPolicies := map[string][]networkingv1.NetworkPolicy{}
+	for _, np := range networkPolicies {
+		groupedNetworkPolicies[np.Namespace] = append(groupedNetworkPolicies[np.Namespace], np)
+	}
+
+	return groupedNetworkPolicies, nil
 }
