@@ -883,4 +883,77 @@ var _ = Describe("#2000", func() {
 			}))
 		})
 	})
+
+	Describe("#Merge Options2000", func() {
+		It("should merge two Options2000 by appending AcceptedNamespaces", func() {
+			base := &rules.Options2000{
+				AcceptedNamespaces: []rules.AcceptedNamespaces2000{
+					{
+						AcceptedClusterObject: option.AcceptedClusterObject{
+							ClusterObjectSelector: option.ClusterObjectSelector{
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"env": "prod"},
+								},
+							},
+							Justification: "base justification",
+						},
+						AcceptedTraffic: rules.AcceptedTraffic{Ingress: true, Egress: true},
+					},
+				},
+			}
+
+			override := &rules.Options2000{
+				AcceptedNamespaces: []rules.AcceptedNamespaces2000{
+					{
+						AcceptedClusterObject: option.AcceptedClusterObject{
+							ClusterObjectSelector: option.ClusterObjectSelector{
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{"team": "security"},
+								},
+							},
+							Justification: "override justification",
+						},
+						AcceptedTraffic: rules.AcceptedTraffic{Ingress: false, Egress: true},
+					},
+				},
+			}
+
+			merged, err := base.Merge(override)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options2000)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AcceptedNamespaces).To(HaveLen(2))
+			Expect(mergedOpts.AcceptedNamespaces[0].Justification).To(Equal("base justification"))
+			Expect(mergedOpts.AcceptedNamespaces[1].Justification).To(Equal("override justification"))
+		})
+
+		It("should return the receiver when merging with nil", func() {
+			base := &rules.Options2000{
+				AcceptedNamespaces: []rules.AcceptedNamespaces2000{
+					{
+						AcceptedClusterObject: option.AcceptedClusterObject{
+							Justification: "base",
+						},
+					},
+				},
+			}
+
+			merged, err := base.Merge(nil)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(merged).To(Equal(base))
+		})
+
+		It("should handle merging two empty Options2000", func() {
+			base := &rules.Options2000{}
+			other := &rules.Options2000{}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options2000)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AcceptedNamespaces).To(BeEmpty())
+		})
+	})
 })
