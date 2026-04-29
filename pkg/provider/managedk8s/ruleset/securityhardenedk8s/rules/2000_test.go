@@ -909,7 +909,7 @@ var _ = Describe("#2000", func() {
 			namespace := &corev1.Namespace{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:              "young-ns",
-					CreationTimestamp: metav1.Time{Time: fakeNow.Add(-time.Minute)},
+					CreationTimestamp: metav1.Time{Time: fakeNow.Add(-30 * time.Second)},
 				},
 			}
 			Expect(client.Create(ctx, namespace)).To(Succeed())
@@ -954,7 +954,7 @@ var _ = Describe("#2000", func() {
 			namespace := &corev1.Namespace{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:              "young-ns",
-					CreationTimestamp: metav1.Time{Time: fakeNow.Add(-time.Minute)},
+					CreationTimestamp: metav1.Time{Time: fakeNow.Add(-30 * time.Second)},
 				},
 			}
 			Expect(client.Create(ctx, namespace)).To(Succeed())
@@ -1021,7 +1021,7 @@ var _ = Describe("#2000", func() {
 			youngNs := &corev1.Namespace{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:              "young-ns",
-					CreationTimestamp: metav1.Time{Time: fakeNow.Add(-time.Minute)},
+					CreationTimestamp: metav1.Time{Time: fakeNow.Add(-30 * time.Second)},
 				},
 			}
 			Expect(client.Create(ctx, oldNs)).To(Succeed())
