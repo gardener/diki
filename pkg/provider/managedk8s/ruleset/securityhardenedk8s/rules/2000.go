@@ -35,7 +35,8 @@ var (
 
 const (
 	youngNamespaceThreshold = 5 * time.Minute
-	retryBackoff            = 1 * time.Minute
+	maxRetries              = 3
+	retryBaseInterval       = 10 * time.Second
 )
 
 type Rule2000 struct {
@@ -101,16 +102,27 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, checkResults...), nil
 	}
 
-	// Backoff and retry for recently created namespaces that failed.
-	TimeSleep(retryBackoff)
+	for retry := range maxRetries {
+		// Sleep for an incremented interval
+		TimeSleep(retryBaseInterval * time.Duration(retry+1))
 
-	groupedNetworkPolicies, err = r.getGroupedNetworkPolicies(ctx)
-	if err != nil {
-		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NetworkPolicyList"))), nil
+		groupedNetworkPolicies, err = r.getGroupedNetworkPolicies(ctx)
+		if err != nil {
+			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NetworkPolicyList"))), nil
+		}
+
+		if retry < maxRetries-1 {
+			var retryResults []rule.CheckResult
+			retryResults, youngFailedNamespaces = r.checkNamespaces(ctx, youngFailedNamespaces, groupedNetworkPolicies, true)
+			checkResults = append(checkResults, retryResults...)
+			if len(youngFailedNamespaces) == 0 {
+				break
+			}
+		} else {
+			retryResults, _ := r.checkNamespaces(ctx, youngFailedNamespaces, groupedNetworkPolicies, false)
+			checkResults = append(checkResults, retryResults...)
+		}
 	}
-
-	retryResults, _ := r.checkNamespaces(ctx, youngFailedNamespaces, groupedNetworkPolicies, false)
-	checkResults = append(checkResults, retryResults...)
 
 	return rule.Result(r, checkResults...), nil
 }
