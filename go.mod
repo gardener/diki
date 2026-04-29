@@ -13,7 +13,7 @@ require (
 	github.com/go-logr/logr v1.4.3
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo/v2 v2.28.1
-	github.com/onsi/gomega v1.39.1
+	github.com/onsi/gomega v1.40.0
 	github.com/spf13/cobra v1.10.2
 	go.yaml.in/yaml/v4 v4.0.0-rc.4
 	k8s.io/api v0.35.2
