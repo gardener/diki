@@ -27,14 +27,20 @@ var (
 	_ option.Option = &Options2000{}
 )
 
-// TimeNow and TimeSleep are package-level variables to allow overriding in tests.
 var (
-	TimeNow   = time.Now
-	TimeSleep = time.Sleep
+	timeNow   = time.Now
+	timeSleep = func(ctx context.Context, d time.Duration) error {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(d):
+			return nil
+		}
+	}
 )
 
 const (
-	youngNamespaceThreshold = 5 * time.Minute
+	youngNamespaceThreshold = 1 * time.Minute
 	maxRetries              = 3
 	retryBaseInterval       = 10 * time.Second
 )
@@ -104,7 +110,9 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	for retry := range maxRetries {
 		// Sleep for an incremented interval
-		TimeSleep(retryBaseInterval * time.Duration(retry+1))
+		if err := timeSleep(ctx, retryBaseInterval*time.Duration(retry+1)); err != nil {
+			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+		}
 
 		groupedNetworkPolicies, err = r.getGroupedNetworkPolicies(ctx)
 		if err != nil {
@@ -128,7 +136,7 @@ func (r *Rule2000) Run(ctx context.Context) (rule.RuleResult, error) {
 }
 
 // checkNamespaces evaluates network policies for the given namespaces. When retryYoung is true,
-// namespaces created within the last 5 minutes that fail checks are excluded from checkResults
+// namespaces created within the last 1 minute that fail checks are excluded from checkResults
 // and returned separately for a retry. When retryYoung is false, all results are included.
 func (r *Rule2000) checkNamespaces(ctx context.Context, namespaces []corev1.Namespace, groupedNetworkPolicies map[string][]networkingv1.NetworkPolicy, retryYoung bool) ([]rule.CheckResult, []corev1.Namespace) {
 	const (
@@ -141,7 +149,7 @@ func (r *Rule2000) checkNamespaces(ctx context.Context, namespaces []corev1.Name
 	var (
 		checkResults          []rule.CheckResult
 		youngFailedNamespaces []corev1.Namespace
-		now                   = TimeNow()
+		now                   = timeNow()
 	)
 
 	for _, namespace := range namespaces {

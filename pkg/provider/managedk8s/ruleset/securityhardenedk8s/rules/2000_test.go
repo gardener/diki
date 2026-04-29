@@ -886,23 +886,23 @@ var _ = Describe("#2000", func() {
 
 	Context("test backoff retry for recently created namespaces", func() {
 		var (
-			originalTimeSleep func(time.Duration)
+			originalTimeSleep func(context.Context, time.Duration) error
 			originalTimeNow   func() time.Time
 			fakeNow           time.Time
 		)
 
 		BeforeEach(func() {
-			originalTimeSleep = rules.TimeSleep
-			originalTimeNow = rules.TimeNow
+			originalTimeSleep = rules.GetTimeSleep()
+			originalTimeNow = rules.GetTimeNow()
 			fakeNow = time.Now()
-			rules.TimeNow = func() time.Time { return fakeNow }
-			rules.TimeSleep = func(_ time.Duration) {}
+			rules.SetTimeNow(func() time.Time { return fakeNow })
+			rules.SetTimeSleep(func(_ context.Context, _ time.Duration) error { return nil })
 			client = fakeclient.NewClientBuilder().Build()
 		})
 
 		AfterEach(func() {
-			rules.TimeSleep = originalTimeSleep
-			rules.TimeNow = originalTimeNow
+			rules.SetTimeSleep(originalTimeSleep)
+			rules.SetTimeNow(originalTimeNow)
 		})
 
 		It("should retry and pass when network policy is added before retry", func() {
@@ -915,7 +915,7 @@ var _ = Describe("#2000", func() {
 			Expect(client.Create(ctx, namespace)).To(Succeed())
 
 			// Override TimeSleep to create the policy during the backoff.
-			rules.TimeSleep = func(_ time.Duration) {
+			rules.SetTimeSleep(func(_ context.Context, _ time.Duration) error {
 				denyAll := &networkingv1.NetworkPolicy{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "deny-all",
@@ -929,7 +929,8 @@ var _ = Describe("#2000", func() {
 					},
 				}
 				Expect(client.Create(ctx, denyAll)).To(Succeed())
-			}
+				return nil
+			})
 
 			r := &rules.Rule2000{Client: client}
 			ruleResult, err := r.Run(ctx)
@@ -986,9 +987,10 @@ var _ = Describe("#2000", func() {
 			Expect(client.Create(ctx, namespace)).To(Succeed())
 
 			sleepCalled := false
-			rules.TimeSleep = func(_ time.Duration) {
+			rules.SetTimeSleep(func(_ context.Context, _ time.Duration) error {
 				sleepCalled = true
-			}
+				return nil
+			})
 
 			r := &rules.Rule2000{Client: client}
 			ruleResult, err := r.Run(ctx)
@@ -1025,7 +1027,7 @@ var _ = Describe("#2000", func() {
 			Expect(client.Create(ctx, oldNs)).To(Succeed())
 			Expect(client.Create(ctx, youngNs)).To(Succeed())
 
-			rules.TimeSleep = func(_ time.Duration) {
+			rules.SetTimeSleep(func(_ context.Context, _ time.Duration) error {
 				denyAll := &networkingv1.NetworkPolicy{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "deny-all",
@@ -1039,7 +1041,8 @@ var _ = Describe("#2000", func() {
 					},
 				}
 				Expect(client.Create(ctx, denyAll)).To(Succeed())
-			}
+				return nil
+			})
 
 			r := &rules.Rule2000{Client: client}
 			ruleResult, err := r.Run(ctx)
