@@ -5,7 +5,7 @@ go 1.25.7
 tool github.com/gardener/gardener/hack
 
 require (
-	github.com/Masterminds/semver/v3 v3.4.0
+	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/distribution/reference v0.6.0
 	github.com/gardener/gardener v1.141.1
 	github.com/gardener/gardener-extension-shoot-lakom-service v0.24.0
