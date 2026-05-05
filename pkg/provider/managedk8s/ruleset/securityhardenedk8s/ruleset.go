@@ -82,16 +82,12 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.C
 	}
 
 	var (
-		indexedRuleOptions = make(map[string]internalconfig.IndexedRuleOptionsConfig)
-		ruleOptions        = make(map[string]config.RuleOptionsConfig)
+		indexedRuleOptions = make(map[string][]internalconfig.IndexedRuleOptionsConfig)
+		ruleOptions        = make(map[string][]config.RuleOptionsConfig)
 	)
 	for index, opt := range rulesetConfig.RuleOptions {
-		if _, ok := indexedRuleOptions[opt.RuleID]; ok {
-			return nil, fmt.Errorf("rule option for rule id: %s is already registered", opt.RuleID)
-		}
-
-		ruleOptions[opt.RuleID] = opt
-		indexedRuleOptions[opt.RuleID] = internalconfig.IndexedRuleOptionsConfig{Index: index, RuleOptionsConfig: opt}
+		ruleOptions[opt.RuleID] = append(ruleOptions[opt.RuleID], opt)
+		indexedRuleOptions[opt.RuleID] = append(indexedRuleOptions[opt.RuleID], internalconfig.IndexedRuleOptionsConfig{Index: index, RuleOptionsConfig: opt})
 	}
 
 	switch rulesetConfig.Version {
