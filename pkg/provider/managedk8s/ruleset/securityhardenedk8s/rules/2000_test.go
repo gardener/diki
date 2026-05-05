@@ -1041,6 +1041,19 @@ var _ = Describe("#2000", func() {
 					},
 				}
 				Expect(client.Create(ctx, denyAll)).To(Succeed())
+				oldDenyAll := &networkingv1.NetworkPolicy{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "deny-all",
+						Namespace: "old-ns",
+					},
+					Spec: networkingv1.NetworkPolicySpec{
+						PolicyTypes: []networkingv1.PolicyType{
+							networkingv1.PolicyTypeIngress,
+							networkingv1.PolicyTypeEgress,
+						},
+					},
+				}
+				Expect(client.Create(ctx, oldDenyAll)).To(Succeed())
 				return nil
 			})
 
@@ -1070,6 +1083,105 @@ var _ = Describe("#2000", func() {
 					Target:  rule.NewTarget("namespace", "young-ns", "kind", "NetworkPolicy", "name", "deny-all"),
 				},
 			))
+		})
+
+		It("should retry only until all namespaces pass", func() {
+			oldNs := &corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:              "old-ns",
+					CreationTimestamp: metav1.Time{Time: fakeNow.Add(-time.Hour)},
+				},
+			}
+			youngNs1 := &corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:              "young-ns-1",
+					CreationTimestamp: metav1.Time{Time: fakeNow.Add(-30 * time.Second)},
+				},
+			}
+			youngNs2 := &corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:              "young-ns-2",
+					CreationTimestamp: metav1.Time{Time: fakeNow.Add(-15 * time.Second)},
+				},
+			}
+			Expect(client.Create(ctx, oldNs)).To(Succeed())
+			Expect(client.Create(ctx, youngNs1)).To(Succeed())
+			Expect(client.Create(ctx, youngNs2)).To(Succeed())
+
+			retryCounter := 0
+
+			rules.SetTimeSleep(func(_ context.Context, _ time.Duration) error {
+				retryCounter++
+				switch retryCounter {
+				case 1:
+					denyAll := &networkingv1.NetworkPolicy{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "deny-all-1",
+							Namespace: "young-ns-1",
+						},
+						Spec: networkingv1.NetworkPolicySpec{
+							PolicyTypes: []networkingv1.PolicyType{
+								networkingv1.PolicyTypeIngress,
+								networkingv1.PolicyTypeEgress,
+							},
+						},
+					}
+					Expect(client.Create(ctx, denyAll)).To(Succeed())
+				case 2:
+					denyAll := &networkingv1.NetworkPolicy{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "deny-all-2",
+							Namespace: "young-ns-2",
+						},
+						Spec: networkingv1.NetworkPolicySpec{
+							PolicyTypes: []networkingv1.PolicyType{
+								networkingv1.PolicyTypeIngress,
+								networkingv1.PolicyTypeEgress,
+							},
+						},
+					}
+					Expect(client.Create(ctx, denyAll)).To(Succeed())
+				}
+				return nil
+			})
+
+			r := &rules.Rule2000{Client: client}
+			ruleResult, err := r.Run(ctx)
+
+			Expect(err).To(BeNil())
+			Expect(ruleResult.CheckResults).To(ConsistOf(
+				rule.CheckResult{
+					Status:  rule.Failed,
+					Message: "Ingress traffic is not denied by default.",
+					Target:  rule.NewTarget("namespace", "old-ns"),
+				},
+				rule.CheckResult{
+					Status:  rule.Failed,
+					Message: "Egress traffic is not denied by default.",
+					Target:  rule.NewTarget("namespace", "old-ns"),
+				},
+				rule.CheckResult{
+					Status:  rule.Passed,
+					Message: "Ingress traffic is denied by default.",
+					Target:  rule.NewTarget("namespace", "young-ns-1", "kind", "NetworkPolicy", "name", "deny-all-1"),
+				},
+				rule.CheckResult{
+					Status:  rule.Passed,
+					Message: "Egress traffic is denied by default.",
+					Target:  rule.NewTarget("namespace", "young-ns-1", "kind", "NetworkPolicy", "name", "deny-all-1"),
+				},
+				rule.CheckResult{
+					Status:  rule.Passed,
+					Message: "Ingress traffic is denied by default.",
+					Target:  rule.NewTarget("namespace", "young-ns-2", "kind", "NetworkPolicy", "name", "deny-all-2"),
+				},
+				rule.CheckResult{
+					Status:  rule.Passed,
+					Message: "Egress traffic is denied by default.",
+					Target:  rule.NewTarget("namespace", "young-ns-2", "kind", "NetworkPolicy", "name", "deny-all-2"),
+				},
+			))
+			Expect(retryCounter).To(Equal(2))
 		})
 	})
 })
