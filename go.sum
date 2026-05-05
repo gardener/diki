@@ -170,8 +170,8 @@ github.com/gardener/cert-management v0.22.0 h1:82uZiLzYs+W/Qp/z1XnUSN+nmNDCMFUcd
 github.com/gardener/cert-management v0.22.0/go.mod h1:hJvxHEKHwdSywZUxDqO7vUZN4D7udfhgtpdfDOoaKNs=
 github.com/gardener/etcd-druid/api v0.36.3 h1:mBhDE/TJmcn2BY8Fscd5SfBSeWvtK4ZBPEW+v6XsQIQ=
 github.com/gardener/etcd-druid/api v0.36.3/go.mod h1:RwZzKp8K415AS0zg8VoODjBxYepCAUYyLgXnZc1bmbo=
-github.com/gardener/gardener v1.141.0 h1:B5gkB/pr2GteIljUMzGbzlwwGptitfSq2EocVTiF6VE=
-github.com/gardener/gardener v1.141.0/go.mod h1:n+mRxlSNEosLbMShvbQ0J9DWT73VQRFOyFGM6PNYnEY=
+github.com/gardener/gardener v1.141.1 h1:9jlI9WKx66GFOpG6vhnA4SrwAs2VpiCVcFownQVkv10=
+github.com/gardener/gardener v1.141.1/go.mod h1:n+mRxlSNEosLbMShvbQ0J9DWT73VQRFOyFGM6PNYnEY=
 github.com/gardener/gardener-extension-shoot-lakom-service v0.24.0 h1:8sUJ1XLNgh2/STsHJeTnG0Ou/RWAmquXT4avw+wrf90=
 github.com/gardener/gardener-extension-shoot-lakom-service v0.24.0/go.mod h1:6WGRsq463IzX9DylgAQsc86jKsHDmr6iAd8vG/C6vH0=
 github.com/gardener/gardener/pkg/apis v1.141.0 h1:X4jK8umXN6x75ebFvNG0yhcD7rAH9O0+fLWKU2VMzdY=
