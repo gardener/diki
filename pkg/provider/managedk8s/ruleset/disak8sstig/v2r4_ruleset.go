@@ -14,16 +14,21 @@ import (
 	"os"
 	"path/filepath"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/component-base/version"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/gardener/diki/imagevector"
 	"github.com/gardener/diki/pkg/config"
 	internalconfig "github.com/gardener/diki/pkg/internal/config"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/rule/retry"
+	"github.com/gardener/diki/pkg/shared/images"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/retryerrors"
@@ -87,6 +92,20 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 	if err != nil {
 		return err
 	}
+
+	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
+	if err != nil {
+		return fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
+	}
+	image.WithOptionalTag(version.Get().GitVersion)
+
+	nodeConstructorFn := func(nodeName string) func() *corev1.Pod {
+		additionalLabels := map[string]string{pod.LabelInstanceID: r.instanceID}
+		return pod.NewPrivilegedPod("", "kube-system", image.String(), nodeName, additionalLabels)
+	}
+
+	pool := pod.NewPodWorkerPool(podContext, kubeutils.SelectNodes, kubeutils.SelectPodOfReferenceGroup, nodeConstructorFn)
+	r.podWorkerPool = pool
 
 	clientSet, err := kubernetes.NewForConfig(r.Config)
 	if err != nil {
@@ -332,7 +351,7 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 				Logger:     r.Logger().With("rule_id", sharedrules.ID242393),
 				InstanceID: r.instanceID,
 				Client:     client,
-				PodContext: podContext,
+				PodContext: pool,
 				Options:    opts242393,
 			}),
 			retry.WithRetryCondition(rcOpsPod),
@@ -344,7 +363,7 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 				Logger:     r.Logger().With("rule_id", sharedrules.ID242394),
 				InstanceID: r.instanceID,
 				Client:     client,
-				PodContext: podContext,
+				PodContext: pool,
 				Options:    opts242394,
 			}),
 			retry.WithRetryCondition(rcOpsPod),
@@ -357,7 +376,7 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 				Logger:     r.Logger().With("rule_id", sharedrules.ID242396),
 				InstanceID: r.instanceID,
 				Client:     client,
-				PodContext: podContext,
+				PodContext: pool,
 				Options:    opts242396,
 			}),
 			retry.WithRetryCondition(rcOpsPod),
@@ -389,7 +408,7 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 				Logger:       r.Logger().With("rule_id", sharedrules.ID242400),
 				InstanceID:   r.instanceID,
 				Client:       client,
-				PodContext:   podContext,
+				PodContext:   pool,
 				V1RESTClient: clientSet.CoreV1().RESTClient(),
 				Options:      opts242400,
 			}),
@@ -417,7 +436,7 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 				Logger:     r.Logger().With("rule_id", sharedrules.ID242404),
 				InstanceID: r.instanceID,
 				Client:     client,
-				PodContext: podContext,
+				PodContext: pool,
 				Options:    opts242404,
 			}),
 			retry.WithRetryCondition(rcOpsPod),
@@ -436,7 +455,7 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 				Logger:     r.Logger().With("rule_id", sharedrules.ID242406),
 				InstanceID: r.instanceID,
 				Client:     client,
-				PodContext: podContext,
+				PodContext: pool,
 				Options:    opts242406,
 			}),
 			retry.WithRetryCondition(rcFileChecks),
@@ -448,7 +467,7 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 				Logger:     r.Logger().With("rule_id", sharedrules.ID242407),
 				InstanceID: r.instanceID,
 				Client:     client,
-				PodContext: podContext,
+				PodContext: pool,
 				Options:    opts242407,
 			}),
 			retry.WithRetryCondition(rcFileChecks),
@@ -675,7 +694,7 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 				Logger:     r.Logger().With("rule_id", sharedrules.ID242447),
 				InstanceID: r.instanceID,
 				Client:     client,
-				PodContext: podContext,
+				PodContext: pool,
 				Options:    opts242447,
 			}),
 			retry.WithRetryCondition(rcFileChecks),
@@ -687,7 +706,7 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 				Logger:     r.Logger().With("rule_id", sharedrules.ID242448),
 				InstanceID: r.instanceID,
 				Client:     client,
-				PodContext: podContext,
+				PodContext: pool,
 				Options:    opts242448,
 			}),
 			retry.WithRetryCondition(rcFileChecks),
@@ -699,7 +718,7 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 				Logger:     r.Logger().With("rule_id", sharedrules.ID242449),
 				InstanceID: r.instanceID,
 				Client:     client,
-				PodContext: podContext,
+				PodContext: pool,
 				Options:    opts242449,
 			}),
 			retry.WithRetryCondition(rcFileChecks),
@@ -711,7 +730,7 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 				Logger:     r.Logger().With("rule_id", sharedrules.ID242450),
 				InstanceID: r.instanceID,
 				Client:     client,
-				PodContext: podContext,
+				PodContext: pool,
 				Options:    opts242450,
 			}),
 			retry.WithRetryCondition(rcFileChecks),
@@ -723,7 +742,7 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 				Logger:     r.Logger().With("rule_id", sharedrules.ID242451),
 				InstanceID: r.instanceID,
 				Client:     client,
-				PodContext: podContext,
+				PodContext: pool,
 				Options:    opts242451,
 			}),
 			retry.WithRetryCondition(rcFileChecks),
@@ -735,7 +754,7 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 				Logger:     r.Logger().With("rule_id", sharedrules.ID242452),
 				InstanceID: r.instanceID,
 				Client:     client,
-				PodContext: podContext,
+				PodContext: pool,
 				Options:    opts242452,
 			}),
 			retry.WithRetryCondition(rcFileChecks),
@@ -747,7 +766,7 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 				Logger:     r.Logger().With("rule_id", sharedrules.ID242453),
 				InstanceID: r.instanceID,
 				Client:     client,
-				PodContext: podContext,
+				PodContext: pool,
 				Options:    opts242453,
 			}),
 			retry.WithRetryCondition(rcFileChecks),
@@ -836,7 +855,7 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 				Logger:     r.Logger().With("rule_id", sharedrules.ID242466),
 				InstanceID: r.instanceID,
 				Client:     client,
-				PodContext: podContext,
+				PodContext: pool,
 				Options:    opts242466,
 			}),
 			retry.WithRetryCondition(rcFileChecks),
@@ -848,7 +867,7 @@ func (r *Ruleset) registerV2R4Rules(ruleOptions map[string]config.RuleOptionsCon
 				Logger:     r.Logger().With("rule_id", sharedrules.ID242467),
 				InstanceID: r.instanceID,
 				Client:     client,
-				PodContext: podContext,
+				PodContext: pool,
 				Options:    opts242467,
 			}),
 			retry.WithRetryCondition(rcFileChecks),

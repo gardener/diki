@@ -157,8 +157,16 @@ func (r *Rule242400) Run(ctx context.Context) (rule.RuleResult, error) {
 			return rule.Result(r, checkResults...), nil
 		}
 
-		nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
-		groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, replicaSets, nodesAllocatablePods, rule.NewTarget())
+		var (
+			nodesAllocatablePods = kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
+			groupedPods          map[string][]corev1.Pod
+			checks               []rule.CheckResult
+		)
+		if workerPool, ok := r.PodContext.(*pod.PodWorkerPool); ok {
+			groupedPods, checks = workerPool.SelectPodOfReferenceGroup(ctx, pods, replicaSets, nodesAllocatablePods, rule.NewTarget())
+		} else {
+			groupedPods, checks = kubeutils.SelectPodOfReferenceGroup(pods, replicaSets, nodesAllocatablePods, rule.NewTarget())
+		}
 		checkResults = append(checkResults, checks...)
 		for nodeName, pods := range groupedPods {
 			checkResults = append(checkResults, r.checkKubeProxy(ctx, pods, replicaSets, nodeName, image.String())...)
@@ -179,7 +187,6 @@ func (r *Rule242400) checkKubeProxy(
 		checkResults            []rule.CheckResult
 		additionalLabels        = map[string]string{pod.LabelInstanceID: r.InstanceID}
 		podName                 = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
-		execPodTarget           = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "Pod")
 		kubeProxyContainerNames = []string{"kube-proxy", "proxy"}
 	)
 
@@ -194,12 +201,19 @@ func (r *Rule242400) checkKubeProxy(
 
 	podExecutor, err := r.PodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", imageName, nodeName, additionalLabels))
 	if err != nil {
+		execPodTarget := rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "Pod")
 		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
 	}
 
+	actualPodName := podName
+	if named, ok := podExecutor.(*pod.NamedPodExecutor); ok {
+		actualPodName = named.PodName
+	}
+	execPodTarget := rule.NewTarget("name", actualPodName, "namespace", "kube-system", "kind", "Pod")
+
 	execPod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      podName,
+			Name:      actualPodName,
 			Namespace: "kube-system",
 		},
 	}

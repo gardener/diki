@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -70,7 +71,7 @@ func (r *Rule242449) Run(ctx context.Context) (rule.RuleResult, error) {
 		expectedFilePermissionsMax = "644"
 	)
 
-	if r.Options != nil && r.Options.NodeGroupByLabels != nil {
+	if r.Options != nil && len(r.Options.NodeGroupByLabels) > 0 {
 		nodeLabels = slices.Clone(r.Options.NodeGroupByLabels)
 	}
 
@@ -83,19 +84,28 @@ func (r *Rule242449) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NodeList"))), nil
 	}
 
-	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(pods, nodes)
-	selectedNodes, checks := kubeutils.SelectNodes(nodes, nodesAllocatablePods, nodeLabels)
-	checkResults = append(checkResults, checks...)
-
-	if len(selectedNodes) == 0 {
-		return rule.Result(r, rule.ErroredCheckResult("no allocatable nodes could be selected", rule.NewTarget())), nil
-	}
-
 	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
 	if err != nil {
 		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
 	}
 	image.WithOptionalTag(version.Get().GitVersion)
+
+	var (
+		additionalLabels     = map[string]string{pod.LabelInstanceID: r.InstanceID}
+		nodesAllocatablePods = kubeutils.GetNodesAllocatablePodsNum(pods, nodes)
+		selectedNodes        []corev1.Node
+		checks               []rule.CheckResult
+	)
+	if workerPool, ok := r.PodContext.(*pod.PodWorkerPool); ok {
+		selectedNodes, checks = workerPool.SelectNodes(ctx, nodes, nodesAllocatablePods, nodeLabels)
+	} else {
+		selectedNodes, checks = kubeutils.SelectNodes(nodes, nodesAllocatablePods, nodeLabels)
+	}
+	checkResults = append(checkResults, checks...)
+
+	if len(selectedNodes) == 0 {
+		return rule.Result(r, rule.ErroredCheckResult("no allocatable nodes could be selected", rule.NewTarget())), nil
+	}
 
 	for _, node := range selectedNodes {
 		podName := fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
@@ -108,13 +118,14 @@ func (r *Rule242449) Run(ctx context.Context) (rule.RuleResult, error) {
 				r.Logger.Error(err.Error())
 			}
 		}()
-		additionalLabels := map[string]string{
-			pod.LabelInstanceID: r.InstanceID,
-		}
 		podExecutor, err := r.PodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", image.String(), node.Name, additionalLabels))
 		if err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 			continue
+		}
+
+		if named, ok := podExecutor.(*pod.NamedPodExecutor); ok {
+			execPodTarget = rule.NewTarget("name", named.PodName, "namespace", "kube-system", "kind", "Pod")
 		}
 
 		rawKubeletCommand, err := kubeutils.GetKubeletCommand(ctx, podExecutor)

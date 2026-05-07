@@ -83,7 +83,7 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	)
 
 	if r.Options != nil {
-		if r.Options.NodeGroupByLabels != nil {
+		if len(r.Options.NodeGroupByLabels) > 0 {
 			nodeLabels = slices.Clone(r.Options.NodeGroupByLabels)
 		}
 		if r.Options.KubeProxy.ClusterObjectSelector != nil {
@@ -105,8 +105,6 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	if err != nil {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "NodeList"))), nil
 	}
-	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
-
 	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
 	if err != nil {
 		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
@@ -114,7 +112,16 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 	image.WithOptionalTag(version.Get().GitVersion)
 
 	// kubelet check
-	selectedShootNodes, checks := kubeutils.SelectNodes(nodes, nodesAllocatablePods, nodeLabels)
+	var (
+		nodesAllocatablePods = kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
+		selectedShootNodes   []corev1.Node
+		checks               []rule.CheckResult
+	)
+	if workerPool, ok := r.PodContext.(*pod.PodWorkerPool); ok {
+		selectedShootNodes, checks = workerPool.SelectNodes(ctx, nodes, nodesAllocatablePods, nodeLabels)
+	} else {
+		selectedShootNodes, checks = kubeutils.SelectNodes(nodes, nodesAllocatablePods, nodeLabels)
+	}
 	checkResults = append(checkResults, checks...)
 
 	if len(selectedShootNodes) == 0 {
@@ -146,7 +153,12 @@ func (r *Rule242466) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, checkResults...), nil
 	}
 
-	groupedShootPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, replicaSets, nodesAllocatablePods, rule.NewTarget())
+	var groupedShootPods map[string][]corev1.Pod
+	if workerPool, ok := r.PodContext.(*pod.PodWorkerPool); ok {
+		groupedShootPods, checks = workerPool.SelectPodOfReferenceGroup(ctx, pods, replicaSets, nodesAllocatablePods, rule.NewTarget())
+	} else {
+		groupedShootPods, checks = kubeutils.SelectPodOfReferenceGroup(pods, replicaSets, nodesAllocatablePods, rule.NewTarget())
+	}
 	checkResults = append(checkResults, checks...)
 
 	for nodeName, pods := range groupedShootPods {
@@ -167,7 +179,6 @@ func (r *Rule242466) checkPods(
 	var (
 		checkResults     []rule.CheckResult
 		podName          = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
-		execPodTarget    = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "Pod")
 		additionalLabels = map[string]string{pod.LabelInstanceID: r.InstanceID}
 	)
 
@@ -182,12 +193,19 @@ func (r *Rule242466) checkPods(
 
 	podExecutor, err := r.PodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", imageName, nodeName, additionalLabels))
 	if err != nil {
+		execPodTarget := rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "Pod")
 		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
 	}
 
+	actualPodName := podName
+	if named, ok := podExecutor.(*pod.NamedPodExecutor); ok {
+		actualPodName = named.PodName
+	}
+	execPodTarget := rule.NewTarget("name", actualPodName, "namespace", "kube-system", "kind", "Pod")
+
 	execPod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      podName,
+			Name:      actualPodName,
 			Namespace: "kube-system",
 		},
 	}
@@ -249,7 +267,6 @@ func (r *Rule242466) checkKubelet(
 		selectedFileStats []intutils.FileStats
 		podName           = fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
 		nodeTarget        = rule.NewTarget("name", nodeName, "kind", "Node")
-		execPodTarget     = rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "Pod")
 		additionalLabels  = map[string]string{pod.LabelInstanceID: r.InstanceID}
 	)
 
@@ -263,8 +280,15 @@ func (r *Rule242466) checkKubelet(
 	}()
 	podExecutor, err := r.PodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", imageName, nodeName, additionalLabels))
 	if err != nil {
+		execPodTarget := rule.NewTarget("name", podName, "namespace", "kube-system", "kind", "Pod")
 		return []rule.CheckResult{rule.ErroredCheckResult(err.Error(), execPodTarget)}
 	}
+
+	actualPodName := podName
+	if named, ok := podExecutor.(*pod.NamedPodExecutor); ok {
+		actualPodName = named.PodName
+	}
+	execPodTarget := rule.NewTarget("name", actualPodName, "namespace", "kube-system", "kind", "Pod")
 
 	rawKubeletCommand, err := kubeutils.GetKubeletCommand(ctx, podExecutor)
 	if err != nil {
