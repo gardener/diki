@@ -6,6 +6,7 @@ package rules
 
 import (
 	"context"
+	"fmt"
 	"slices"
 
 	networkingv1 "k8s.io/api/networking/v1"
@@ -19,8 +20,9 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule2000{}
-	_ rule.Severity = &Rule2000{}
+	_ rule.Rule              = &Rule2000{}
+	_ rule.Severity          = &Rule2000{}
+	_ option.MergeableOption = &Options2000{}
 )
 
 type Rule2000 struct {
@@ -40,6 +42,27 @@ type AcceptedNamespaces2000 struct {
 type AcceptedTraffic struct {
 	Egress  bool `json:"egress" yaml:"egress"`
 	Ingress bool `json:"ingress" yaml:"ingress"`
+}
+
+// Merge returns a new Options2000 that is the result of merging other into the receiver.
+// AcceptedNamespaces slices are concatenated. If other is not *Options2000, an error is returned.
+func (o *Options2000) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, ok := other.(*Options2000)
+	if !ok {
+		return nil, fmt.Errorf("cannot merge options of type %T into *Options2000", other)
+	}
+
+	merged := &Options2000{
+		AcceptedNamespaces: make([]AcceptedNamespaces2000, 0, len(o.AcceptedNamespaces)+len(otherOpts.AcceptedNamespaces)),
+	}
+	merged.AcceptedNamespaces = append(merged.AcceptedNamespaces, o.AcceptedNamespaces...)
+	merged.AcceptedNamespaces = append(merged.AcceptedNamespaces, otherOpts.AcceptedNamespaces...)
+
+	return merged, nil
 }
 
 func (r *Rule2000) ID() string {

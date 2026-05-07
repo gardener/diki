@@ -23,6 +23,11 @@ type Option interface {
 	Validate(fldPath *field.Path) field.ErrorList
 }
 
+// MergeableOption is an Option that can be merged with another option of the same type.
+type MergeableOption interface {
+	Merge(other MergeableOption) (MergeableOption, error)
+}
+
 // ClusterObjectSelector contains generalized options for matching entities by their attribute labels.
 type ClusterObjectSelector struct {
 	// Deprecated: This field is deprecated and will be forbidden in a future release.

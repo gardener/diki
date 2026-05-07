@@ -18,61 +18,61 @@ import (
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 )
 
-func (r *Ruleset) validateV01RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath *field.Path) error {
+func (r *Ruleset) validateV01RuleOptions(ruleOptions map[string][]internalconfig.IndexedRuleOptionsConfig, fldPath *field.Path) error {
 	allErrs := field.ErrorList{}
 
-	allErrs = append(allErrs, validateV01Options[rules.Options2000](ruleOptions["2000"].Args, fldPath.Index(ruleOptions["2000"].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV01Options[rules.Options2001](ruleOptions["2001"].Args, fldPath.Index(ruleOptions["2001"].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV01Options[rules.Options2002](ruleOptions["2002"].Args, fldPath.Index(ruleOptions["2002"].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV01Options[rules.Options2003](ruleOptions["2003"].Args, fldPath.Index(ruleOptions["2003"].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV01Options[rules.Options2004](ruleOptions["2004"].Args, fldPath.Index(ruleOptions["2004"].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV01Options[rules.Options2005](ruleOptions["2005"].Args, fldPath.Index(ruleOptions["2005"].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV01Options[rules.Options2006](ruleOptions["2006"].Args, fldPath.Index(ruleOptions["2006"].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV01Options[rules.Options2007](ruleOptions["2007"].Args, fldPath.Index(ruleOptions["2007"].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV01Options[rules.Options2008](ruleOptions["2008"].Args, fldPath.Index(ruleOptions["2008"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateAllV01Options[rules.Options2000](ruleOptions["2000"], fldPath)...)
+	allErrs = append(allErrs, validateAllV01Options[rules.Options2001](ruleOptions["2001"], fldPath)...)
+	allErrs = append(allErrs, validateAllV01Options[rules.Options2002](ruleOptions["2002"], fldPath)...)
+	allErrs = append(allErrs, validateAllV01Options[rules.Options2003](ruleOptions["2003"], fldPath)...)
+	allErrs = append(allErrs, validateAllV01Options[rules.Options2004](ruleOptions["2004"], fldPath)...)
+	allErrs = append(allErrs, validateAllV01Options[rules.Options2005](ruleOptions["2005"], fldPath)...)
+	allErrs = append(allErrs, validateAllV01Options[rules.Options2006](ruleOptions["2006"], fldPath)...)
+	allErrs = append(allErrs, validateAllV01Options[rules.Options2007](ruleOptions["2007"], fldPath)...)
+	allErrs = append(allErrs, validateAllV01Options[rules.Options2008](ruleOptions["2008"], fldPath)...)
 
 	return allErrs.ToAggregate()
 }
 
-func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
+func (r *Ruleset) registerV01Rules(ruleOptions map[string][]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
 	c, err := client.New(r.Config, client.Options{})
 	if err != nil {
 		return err
 	}
 
-	opts2000, err := getV01OptionOrNil[rules.Options2000](ruleOptions["2000"].Args)
+	opts2000, err := getV01MergedOptionOrNil[rules.Options2000](ruleOptions["2000"])
 	if err != nil {
 		return fmt.Errorf("rule option 2000 error: %s", err.Error())
 	}
-	opts2001, err := getV01OptionOrNil[rules.Options2001](ruleOptions["2001"].Args)
+	opts2001, err := getV01MergedOptionOrNil[rules.Options2001](ruleOptions["2001"])
 	if err != nil {
 		return fmt.Errorf("rule option 2001 error: %s", err.Error())
 	}
-	opts2002, err := getV01OptionOrNil[rules.Options2002](ruleOptions["2002"].Args)
+	opts2002, err := getV01MergedOptionOrNil[rules.Options2002](ruleOptions["2002"])
 	if err != nil {
 		return fmt.Errorf("rule option 2002 error: %s", err.Error())
 	}
-	opts2003, err := getV01OptionOrNil[rules.Options2003](ruleOptions["2003"].Args)
+	opts2003, err := getV01MergedOptionOrNil[rules.Options2003](ruleOptions["2003"])
 	if err != nil {
 		return fmt.Errorf("rule option 2003 error: %s", err.Error())
 	}
-	opts2004, err := getV01OptionOrNil[rules.Options2004](ruleOptions["2004"].Args)
+	opts2004, err := getV01MergedOptionOrNil[rules.Options2004](ruleOptions["2004"])
 	if err != nil {
 		return fmt.Errorf("rule option 2004 error: %s", err.Error())
 	}
-	opts2005, err := getV01OptionOrNil[rules.Options2005](ruleOptions["2005"].Args)
+	opts2005, err := getV01MergedOptionOrNil[rules.Options2005](ruleOptions["2005"])
 	if err != nil {
 		return fmt.Errorf("rule option 2005 error: %s", err.Error())
 	}
-	opts2006, err := getV01OptionOrNil[rules.Options2006](ruleOptions["2006"].Args)
+	opts2006, err := getV01MergedOptionOrNil[rules.Options2006](ruleOptions["2006"])
 	if err != nil {
 		return fmt.Errorf("rule option 2006 error: %s", err.Error())
 	}
-	opts2007, err := getV01OptionOrNil[rules.Options2007](ruleOptions["2007"].Args)
+	opts2007, err := getV01MergedOptionOrNil[rules.Options2007](ruleOptions["2007"])
 	if err != nil {
 		return fmt.Errorf("rule option 2007 error: %s", err.Error())
 	}
-	opts2008, err := getV01OptionOrNil[rules.Options2008](ruleOptions["2008"].Args)
+	opts2008, err := getV01MergedOptionOrNil[rules.Options2008](ruleOptions["2008"])
 	if err != nil {
 		return fmt.Errorf("rule option 2008 error: %s", err.Error())
 	}
@@ -124,9 +124,8 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			severityLevel = severity.Severity()
 		}
 
-		opt, found := ruleOptions[r.ID()]
-		if found && opt.Skip != nil && opt.Skip.Enabled {
-			rules[i] = rule.NewSkipRule(r.ID(), r.Name(), opt.Skip.Justification, rule.Accepted, rule.SkipRuleWithSeverity(severityLevel))
+		if skip := getSkipConfig(ruleOptions[r.ID()]); skip != nil && skip.Enabled {
+			rules[i] = rule.NewSkipRule(r.ID(), r.Name(), skip.Justification, rule.Accepted, rule.SkipRuleWithSeverity(severityLevel))
 		}
 	}
 
@@ -137,6 +136,14 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 	}
 
 	return r.AddRules(rules...)
+}
+
+func validateAllV01Options[O rules.RuleOption](indexedOpts []internalconfig.IndexedRuleOptionsConfig, fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+	for _, indexed := range indexedOpts {
+		allErrs = append(allErrs, validateV01Options[O](indexed.Args, fldPath.Index(indexed.Index).Child("args"))...)
+	}
+	return allErrs
 }
 
 func validateV01Options[O rules.RuleOption](options any, fldPath *field.Path) field.ErrorList {
@@ -155,6 +162,58 @@ func validateV01Options[O rules.RuleOption](options any, fldPath *field.Path) fi
 		return val.Validate(fldPath)
 	}
 
+	return nil
+}
+
+func getV01MergedOptionOrNil[O rules.RuleOption](opts []config.RuleOptionsConfig) (*O, error) {
+	if len(opts) == 0 {
+		return nil, nil
+	}
+
+	first, err := getV01OptionOrNil[O](opts[0].Args)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(opts) == 1 {
+		return first, nil
+	}
+
+	// Multiple entries — check if the type supports merging.
+	mergeable, isMergeable := any(first).(option.MergeableOption)
+	if !isMergeable {
+		return nil, fmt.Errorf("multiple rule option entries provided but options type %T does not implement MergeableOption", first)
+	}
+
+	for _, opt := range opts[1:] {
+		parsed, err := getV01OptionOrNil[O](opt.Args)
+		if err != nil {
+			return nil, err
+		}
+		if parsed == nil {
+			continue
+		}
+
+		merged, err := mergeable.Merge(any(parsed).(option.MergeableOption))
+		if err != nil {
+			return nil, err
+		}
+		mergeable = merged
+	}
+
+	result, ok := any(mergeable).(*O)
+	if !ok {
+		return nil, fmt.Errorf("merged options type %T is not *%T", mergeable, *new(O))
+	}
+	return result, nil
+}
+
+func getSkipConfig(opts []config.RuleOptionsConfig) *config.RuleOptionSkipConfig {
+	for _, opt := range opts {
+		if opt.Skip != nil && opt.Skip.Enabled {
+			return opt.Skip
+		}
+	}
 	return nil
 }
 
