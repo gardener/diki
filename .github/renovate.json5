@@ -59,6 +59,15 @@
       "enabled": false
     },
     {
+      // Group gardener/gardener and gardener/gardener/pkg/apis since they come from the same repo.
+      "groupName": "github.com/gardener/gardener",
+      "matchDatasources": ["go"],
+      "matchPackageNames": [
+        "github.com/gardener/gardener",
+        "github.com/gardener/gardener/pkg/apis",
+      ],
+    },
+    {
       // Group github-actions minor updates in one PR
       "matchManagers": ["github-actions"],
       "groupName": "github-actions"
