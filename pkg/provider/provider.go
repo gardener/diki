@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"github.com/gardener/diki/pkg/config"
+	"github.com/gardener/diki/pkg/config/merge"
 	"github.com/gardener/diki/pkg/metadata"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
@@ -45,10 +46,14 @@ type DefaultDikiConfigFunc func() config.DikiConfig
 // ValidateConfigFunc validates a [config.ProviderConfig]. It returns a list of validation errors.
 type ValidateConfigFunc func(conf config.ProviderConfig, fldPath *field.Path) field.ErrorList
 
+// MergeRegistryFunc registers merge functions for a provider's rulesets into a [merge.Registry].
+type MergeRegistryFunc func(r *merge.Registry)
+
 // ProviderOption constructs a pair of a configuration and metadata function for a specific provider.
 type ProviderOption struct {
 	ProviderFromConfigFunc
 	ValidateConfigFunc
 	MetadataFunc
 	DefaultDikiConfigFunc
+	MergeRegistryFunc
 }
