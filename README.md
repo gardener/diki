@@ -154,6 +154,21 @@ diki report generate diff \
     difference1.json difference2.json
 ```
 
+### Config Merge
+
+Diki can merge two configuration files, a base (default) config and a custom config, into a single config.
+This is helpful when you want to reuse the same rule options across different diki runs.
+Only `ruleOptions` are merged, everything else (provider args, metadata, output) comes from the custom config.
+
+If either config skips a rule, the merged result will always skip it.
+
+```bash
+diki config merge \
+    --base=base.yaml \
+    --custom=custom.yaml \
+    --output=merged.yaml
+```
+
 ### Unit Tests
 
 You can manually run the tests via `make test`.
