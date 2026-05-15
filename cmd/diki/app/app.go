@@ -24,6 +24,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/gardener/diki/pkg/config"
+	"github.com/gardener/diki/pkg/config/merge"
 	"github.com/gardener/diki/pkg/metadata"
 	"github.com/gardener/diki/pkg/provider"
 	"github.com/gardener/diki/pkg/report"
@@ -169,6 +170,37 @@ e.g. to check compliance of your hyperscaler accounts.`,
 	}
 
 	showCmd.AddCommand(showProviderCmd)
+
+	mergeRegistryFuncs := []provider.MergeRegistryFunc{}
+	for _, providerOption := range providerOptions {
+		if providerOption.MergeRegistryFunc != nil {
+			mergeRegistryFuncs = append(mergeRegistryFuncs, providerOption.MergeRegistryFunc)
+		}
+	}
+
+	configCmd := &cobra.Command{
+		Use:   "config",
+		Short: "Config is the root command for configuration operations.",
+		Long:  "Config is the root command for configuration operations.",
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return errors.New("config subcommand not selected")
+		},
+	}
+
+	rootCmd.AddCommand(configCmd)
+
+	var configMergeOpts configMergeOptions
+	configMergeCmd := &cobra.Command{
+		Use:   "merge",
+		Short: "Merge a base config with a custom config.",
+		Long:  "Merge combines rule options from a base (default) config with a custom config. The custom config is primary; only ruleOptions are merged.",
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return configMergeCmd(configMergeOpts, mergeRegistryFuncs, logger)
+		},
+	}
+
+	addConfigMergeFlags(configMergeCmd, &configMergeOpts)
+	configCmd.AddCommand(configMergeCmd)
 
 	return rootCmd
 }
@@ -555,6 +587,65 @@ type diffOptions struct {
 	oldReport string
 	newReport string
 	title     string
+}
+
+type configMergeOptions struct {
+	basePath   string
+	customPath string
+	outputPath string
+}
+
+func addConfigMergeFlags(cmd *cobra.Command, opts *configMergeOptions) {
+	cmd.PersistentFlags().StringVar(&opts.basePath, "base", "", "Path to the base (default) configuration file.")
+	cmd.PersistentFlags().StringVar(&opts.customPath, "custom", "", "Path to the custom configuration file.")
+	cmd.PersistentFlags().StringVar(&opts.outputPath, "output", "", "Output path for the merged configuration. If not set, output is written to stdout.")
+	_ = cmd.MarkPersistentFlagRequired("base")
+	_ = cmd.MarkPersistentFlagRequired("custom")
+}
+
+func configMergeCmd(opts configMergeOptions, registryFuncs []provider.MergeRegistryFunc, logger *slog.Logger) error {
+
+	baseConfig, err := readConfig(opts.basePath)
+	if err != nil {
+		return fmt.Errorf("failed to read base config: %w", err)
+	}
+
+	customConfig, err := readConfig(opts.customPath)
+	if err != nil {
+		return fmt.Errorf("failed to read custom config: %w", err)
+	}
+
+	registry := merge.NewRegistry()
+	for _, fn := range registryFuncs {
+		fn(registry)
+	}
+
+	merged, err := merge.MergeConfigs(baseConfig, customConfig, registry)
+	if err != nil {
+		return fmt.Errorf("failed to merge configs: %w", err)
+	}
+
+	data, err := yaml.Marshal(merged)
+	if err != nil {
+		return fmt.Errorf("failed to marshal merged config: %w", err)
+	}
+
+	var writer io.Writer = os.Stdout
+	if len(opts.outputPath) > 0 {
+		file, err := os.OpenFile(opts.outputPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			if err := file.Close(); err != nil {
+				logger.Error(err.Error())
+			}
+		}()
+		writer = file
+	}
+
+	_, err = writer.Write(data)
+	return err
 }
 
 func readConfig(filePath string) (*config.DikiConfig, error) {
