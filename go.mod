@@ -12,7 +12,7 @@ require (
 	github.com/gardener/gardener/pkg/apis v1.141.1
 	github.com/go-logr/logr v1.4.3
 	github.com/google/uuid v1.6.0
-	github.com/onsi/ginkgo/v2 v2.28.3
+	github.com/onsi/ginkgo/v2 v2.29.0
 	github.com/onsi/gomega v1.40.0
 	github.com/spf13/cobra v1.10.2
 	go.yaml.in/yaml/v4 v4.0.0-rc.4
