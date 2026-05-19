@@ -13,7 +13,6 @@ import (
 	"k8s.io/client-go/rest"
 
 	"github.com/gardener/diki/pkg/config"
-	internalconfig "github.com/gardener/diki/pkg/internal/config"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
 	sharedruleset "github.com/gardener/diki/pkg/shared/ruleset"
@@ -73,6 +72,10 @@ func (r *Ruleset) Version() string {
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
 func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.Config, fldPath *field.Path) (*Ruleset, error) {
+	if err := ValidateRulesetConfig(rulesetConfig, fldPath); err != nil {
+		return nil, err
+	}
+
 	ruleset, err := New(
 		WithVersion(rulesetConfig.Version),
 		WithConfig(managedConfig),
@@ -81,32 +84,41 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.C
 		return nil, err
 	}
 
-	var (
-		indexedRuleOptions = make(map[string]internalconfig.IndexedRuleOptionsConfig)
-		ruleOptions        = make(map[string]config.RuleOptionsConfig)
-	)
-	for index, opt := range rulesetConfig.RuleOptions {
-		if _, ok := indexedRuleOptions[opt.RuleID]; ok {
-			return nil, fmt.Errorf("rule option for rule id: %s is already registered", opt.RuleID)
-		}
-
+	ruleOptions := make(map[string]config.RuleOptionsConfig)
+	for _, opt := range rulesetConfig.RuleOptions {
 		ruleOptions[opt.RuleID] = opt
-		indexedRuleOptions[opt.RuleID] = internalconfig.IndexedRuleOptionsConfig{Index: index, RuleOptionsConfig: opt}
 	}
 
-	switch rulesetConfig.Version {
-	case "v0.1.0":
-		if err := ruleset.validateV01RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
-			return nil, err
-		}
-		if err := ruleset.registerV01Rules(ruleOptions); err != nil {
-			return nil, err
-		}
-	default:
-		return nil, fmt.Errorf("unknown ruleset %s version: %s - use 'diki show provider managedk8s' to see the provider's supported rulesets", rulesetConfig.ID, rulesetConfig.Version)
+	if err := ruleset.registerRules(ruleOptions); err != nil {
+		return nil, err
 	}
 
 	return ruleset, nil
+}
+
+// ValidateRulesetConfig validates a [config.RulesetConfig].
+func ValidateRulesetConfig(rulesetConfig config.RulesetConfig, fldPath *field.Path) error {
+	indexedRuleOptions, err := sharedruleset.IndexRuleOptions(rulesetConfig.RuleOptions)
+	if err != nil {
+		return err
+	}
+
+	r := &Ruleset{}
+	switch rulesetConfig.Version {
+	case "v0.1.0":
+		return r.validateV01RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions"))
+	default:
+		return sharedruleset.UnknownVersionError(rulesetConfig.ID, rulesetConfig.Version, "managedk8s")
+	}
+}
+
+func (r *Ruleset) registerRules(ruleOptions map[string]config.RuleOptionsConfig) error {
+	switch r.version {
+	case "v0.1.0":
+		return r.registerV01Rules(ruleOptions)
+	default:
+		return sharedruleset.UnknownVersionError(r.ID(), r.Version(), "managedk8s")
+	}
 }
 
 // RunRule executes specific known Rule of the Ruleset.

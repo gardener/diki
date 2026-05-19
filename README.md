@@ -154,6 +154,14 @@ diki report generate diff \
     difference1.json difference2.json
 ```
 
+### Config Validate
+
+Diki can validate the structure and content of a configuration file.
+
+```bash
+diki config validate config.yaml
+```
+
 ### Unit Tests
 
 You can manually run the tests via `make test`.

@@ -14,7 +14,6 @@ import (
 	"k8s.io/client-go/rest"
 
 	"github.com/gardener/diki/pkg/config"
-	internalconfig "github.com/gardener/diki/pkg/internal/config"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
 	"github.com/gardener/diki/pkg/shared/provider"
@@ -82,6 +81,10 @@ func (r *Ruleset) Version() string {
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
 func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.Config, logger provider.Logger, fldPath *field.Path) (*Ruleset, error) {
+	if err := ValidateRulesetConfig(rulesetConfig, fldPath); err != nil {
+		return nil, err
+	}
+
 	rulesetArgsByte, err := json.Marshal(rulesetConfig.Args)
 	if err != nil {
 		return nil, err
@@ -101,52 +104,77 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.C
 		return nil, err
 	}
 
-	var (
-		indexedRuleOptions = make(map[string]internalconfig.IndexedRuleOptionsConfig)
-		ruleOptions        = make(map[string]config.RuleOptionsConfig)
-	)
-
-	for index, opt := range rulesetConfig.RuleOptions {
-		if _, ok := ruleOptions[opt.RuleID]; ok {
-			return nil, fmt.Errorf("rule option for rule id: %s is already registered", opt.RuleID)
-		}
-
+	ruleOptions := make(map[string]config.RuleOptionsConfig)
+	for _, opt := range rulesetConfig.RuleOptions {
 		ruleOptions[opt.RuleID] = opt
-		indexedRuleOptions[opt.RuleID] = internalconfig.IndexedRuleOptionsConfig{Index: index, RuleOptionsConfig: opt}
 	}
 
-	switch rulesetConfig.Version {
-	case "v0.1.0":
-		if err := ruleset.validateV01RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
-			return nil, err
-		}
-		if err := ruleset.registerV01Rules(ruleOptions); err != nil {
-			return nil, err
-		}
-	case "v0.2.0":
+	if rulesetConfig.Version == "v0.2.0" {
 		logger.Info("Using version v0.2.1 as latest patch version of security-hardened-shoot-cluster v0.2.x ruleset")
 
 		setLatestPatchVersion := WithVersion("v0.2.1")
 		setLatestPatchVersion(ruleset)
+	}
 
-		if err := ruleset.validateV02RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
-			return nil, err
-		}
-		if err := ruleset.registerV02Rules(ruleOptions); err != nil {
-			return nil, err
-		}
-	case "v0.2.1":
-		if err := ruleset.validateV02RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
-			return nil, err
-		}
-		if err := ruleset.registerV02Rules(ruleOptions); err != nil {
-			return nil, err
-		}
-	default:
-		return nil, fmt.Errorf("unknown ruleset %s version: %s - use 'diki show provider garden' to see the provider's supported rulesets", rulesetConfig.ID, rulesetConfig.Version)
+	if err := ruleset.registerRules(ruleOptions); err != nil {
+		return nil, err
 	}
 
 	return ruleset, nil
+}
+
+// ValidateRulesetConfig validates a [config.RulesetConfig].
+func ValidateRulesetConfig(rulesetConfig config.RulesetConfig, fldPath *field.Path) error {
+	rulesetArgsByte, err := json.Marshal(rulesetConfig.Args)
+	if err != nil {
+		return err
+	}
+
+	var rulesetArgs Args
+	if err := json.Unmarshal(rulesetArgsByte, &rulesetArgs); err != nil {
+		return err
+	}
+
+	allErrs := field.ErrorList{}
+	if len(rulesetArgs.ShootName) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("args", "shootName"), ""))
+	}
+	if len(rulesetArgs.ProjectNamespace) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("args", "projectNamespace"), ""))
+	}
+
+	indexedRuleOptions, err := sharedruleset.IndexRuleOptions(rulesetConfig.RuleOptions)
+	if err != nil {
+		allErrs = append(allErrs, field.InternalError(fldPath.Child("ruleOptions"), err))
+		return allErrs.ToAggregate()
+	}
+
+	r := &Ruleset{}
+	switch rulesetConfig.Version {
+	case "v0.1.0":
+		if err := r.validateV01RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
+			allErrs = append(allErrs, field.InternalError(fldPath.Child("ruleOptions"), err))
+		}
+	case "v0.2.0", "v0.2.1":
+		if err := r.validateV02RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
+			allErrs = append(allErrs, field.InternalError(fldPath.Child("ruleOptions"), err))
+		}
+	default:
+		allErrs = append(allErrs, field.NotSupported(fldPath.Child("version"), rulesetConfig.Version, []string{"v0.1.0", "v0.2.0", "v0.2.1"}))
+	}
+
+	return allErrs.ToAggregate()
+}
+
+func (r *Ruleset) registerRules(ruleOptions map[string]config.RuleOptionsConfig) error {
+	switch r.version {
+	case "v0.1.0":
+		return r.registerV01Rules(ruleOptions)
+	case "v0.2.0", "v0.2.1":
+		return r.registerV02Rules(ruleOptions)
+	default:
+		return sharedruleset.UnknownVersionError(r.ID(), r.Version(), "garden")
+	}
 }
 
 // RunRule executes specific known Rule of the Ruleset.
