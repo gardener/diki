@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/gardener/diki/pkg/config"
+	internalconfig "github.com/gardener/diki/pkg/internal/config"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
 	"github.com/gardener/diki/pkg/shared/provider"
@@ -109,4 +111,21 @@ func Run(
 		return ruleset.RulesetResult{}, err
 	}
 	return result, nil
+}
+
+// UnknownVersionError returns a standardized error for unsupported ruleset versions.
+func UnknownVersionError(rulesetID, version, providerID string) error {
+	return fmt.Errorf("unknown ruleset %s version: %s - use 'diki show provider %s' to see the provider's supported rulesets", rulesetID, version, providerID)
+}
+
+// IndexRuleOptions builds an indexed map of rule options, returning an error if duplicate rule IDs are found.
+func IndexRuleOptions(ruleOptions []config.RuleOptionsConfig) (map[string]internalconfig.IndexedRuleOptionsConfig, error) {
+	indexed := make(map[string]internalconfig.IndexedRuleOptionsConfig, len(ruleOptions))
+	for index, opt := range ruleOptions {
+		if _, ok := indexed[opt.RuleID]; ok {
+			return nil, fmt.Errorf("rule option for rule id: %s is already registered", opt.RuleID)
+		}
+		indexed[opt.RuleID] = internalconfig.IndexedRuleOptionsConfig{Index: index, RuleOptionsConfig: opt}
+	}
+	return indexed, nil
 }
