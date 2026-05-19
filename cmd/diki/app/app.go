@@ -24,6 +24,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/gardener/diki/pkg/config"
+	"github.com/gardener/diki/pkg/config/validate"
 	"github.com/gardener/diki/pkg/metadata"
 	"github.com/gardener/diki/pkg/provider"
 	"github.com/gardener/diki/pkg/report"
@@ -169,6 +170,38 @@ e.g. to check compliance of your hyperscaler accounts.`,
 	}
 
 	showCmd.AddCommand(showProviderCmd)
+
+	validateConfigFuncs := map[string]provider.ValidateConfigFunc{}
+	for providerID, providerOption := range providerOptions {
+		if providerOption.ValidateConfigFunc != nil {
+			validateConfigFuncs[providerID] = providerOption.ValidateConfigFunc
+		}
+	}
+
+	configCmd := &cobra.Command{
+		Use:   "config",
+		Short: "Config is the root command for configuration operations.",
+		Long:  "Config is the root command for configuration operations.",
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return errors.New("config subcommand not selected")
+		},
+	}
+
+	rootCmd.AddCommand(configCmd)
+
+	configValidateCmd := &cobra.Command{
+		Use:           "validate",
+		Short:         "Validate checks the structure and content of a diki configuration.",
+		Long:          "Validate checks the structure and content of a diki configuration.",
+		Args:          cobra.ExactArgs(1),
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		RunE: func(_ *cobra.Command, args []string) error {
+			return configValidateCmd(args[0], validateConfigFuncs, logger)
+		},
+	}
+
+	configCmd.AddCommand(configValidateCmd)
 
 	return rootCmd
 }
@@ -614,4 +647,21 @@ func getDikiConfig(opts runOptions, defaultConfigFuncs map[string]provider.Defau
 		dikiConfig := defaultFunc()
 		return &dikiConfig, nil
 	}
+}
+
+func configValidateCmd(configPath string, validateFuncs map[string]provider.ValidateConfigFunc, logger *slog.Logger) error {
+	cfg, err := readConfig(configPath)
+	if err != nil {
+		return fmt.Errorf("failed to read config: %w", err)
+	}
+
+	if errs := validate.ValidateConfig(cfg, validateFuncs); len(errs) > 0 {
+		for _, e := range errs {
+			logger.Error(e.Error())
+		}
+		return errors.New("configuration is not valid")
+	}
+
+	logger.Info("configuration is valid")
+	return nil
 }
