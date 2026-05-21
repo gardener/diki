@@ -46,17 +46,35 @@
       // Minor and major upgrades most likely require manual adaptations of the code.
       "matchDatasources": ["go"],
       "matchUpdateTypes": ["major", "minor"],
-      "matchPackagePatterns": [
-        "k8s\\.io\/.+",
-        "sigs\\.k8s\\.io\/controller-runtime",
+      "matchPackageNames": [
+        "/k8s\\.io\/.+/",
+        "/sigs\\.k8s\\.io\/controller-runtime/",
       ],
       "enabled": false
     },
     {
       // Ignore dependency updates from k8s.io/kube-openapi because it depends on k8s.io/apiserver.
       "matchDatasources": ["go"],
-      "matchPackagePatterns": ["k8s\\.io\/kube-openapi"],
+      "matchPackageNames": ["/k8s\\.io\/kube-openapi/"],
       "enabled": false
+    },
+    {
+      // Group gardener/gardener and gardener/gardener/pkg/apis since they come from the same repo.
+      "groupName": "github.com/gardener/gardener",
+      "matchDatasources": ["go"],
+      "matchPackageNames": [
+        "github.com/gardener/gardener",
+        "github.com/gardener/gardener/pkg/apis",
+      ],
+    },
+    {
+      // Group ginkgo and gomega.
+      "groupName": "github.com/onsi (ginkgo + gomega)",
+      "matchDatasources": ["go"],
+      "matchPackageNames": [
+        "github.com/onsi/ginkgo/v2",
+        "github.com/onsi/gomega",
+      ],
     },
     {
       // Group github-actions minor updates in one PR
