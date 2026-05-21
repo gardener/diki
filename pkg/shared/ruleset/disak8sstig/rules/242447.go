@@ -97,14 +97,24 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 		return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget("kind", "ReplicaSetList"))), nil
 	}
 
-	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
-	groupedPods, checks := kubeutils.SelectPodOfReferenceGroup(pods, replicaSets, nodesAllocatablePods, target)
-	checkResults = append(checkResults, checks...)
 	image, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
 	if err != nil {
 		return rule.RuleResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
 	}
 	image.WithOptionalTag(version.Get().GitVersion)
+
+	var (
+		additionalLabels     = map[string]string{pod.LabelInstanceID: r.InstanceID}
+		nodesAllocatablePods = kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
+		groupedPods          map[string][]corev1.Pod
+		checks               []rule.CheckResult
+	)
+	if workerPool, ok := r.PodContext.(*pod.PodWorkerPool); ok {
+		groupedPods, checks = workerPool.SelectPodOfReferenceGroup(ctx, pods, replicaSets, nodesAllocatablePods, target)
+	} else {
+		groupedPods, checks = kubeutils.SelectPodOfReferenceGroup(pods, replicaSets, nodesAllocatablePods, target)
+	}
+	checkResults = append(checkResults, checks...)
 
 	for nodeName, pods := range groupedPods {
 		podName := fmt.Sprintf("diki-%s-%s", r.ID(), Generator.Generate(10))
@@ -119,16 +129,21 @@ func (r *Rule242447) Run(ctx context.Context) (rule.RuleResult, error) {
 			}
 		}()
 
-		additionalLabels := map[string]string{pod.LabelInstanceID: r.InstanceID}
 		podExecutor, err := r.PodContext.Create(ctx, pod.NewPrivilegedPod(podName, "kube-system", image.String(), nodeName, additionalLabels))
 		if err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 			continue
 		}
 
+		actualPodName := podName
+		if named, ok := podExecutor.(*pod.NamedPodExecutor); ok {
+			actualPodName = named.PodName
+		}
+		execPodTarget = target.With("name", actualPodName, "namespace", "kube-system", "kind", "Pod")
+
 		execPod := &corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      podName,
+				Name:      actualPodName,
 				Namespace: "kube-system",
 			},
 		}
