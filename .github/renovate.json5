@@ -68,6 +68,15 @@
       ],
     },
     {
+      // Group ginkgo and gomega.
+      "groupName": "github.com/onsi (ginkgo + gomega)",
+      "matchDatasources": ["go"],
+      "matchPackageNames": [
+        "github.com/onsi/ginkgo/v2",
+        "github.com/onsi/gomega",
+      ],
+    },
+    {
       // Group github-actions minor updates in one PR
       "matchManagers": ["github-actions"],
       "groupName": "github-actions"
