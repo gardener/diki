@@ -27,11 +27,11 @@ func ValidateProviderConfig(conf config.ProviderConfig, fldPath *field.Path) fie
 		return append(allErrs, field.Invalid(fldPath.Child("args"), conf.Args, err.Error()))
 	}
 
-	seenRulesets := make(map[string]struct{})
+	seenRulesets := make(map[struct{ ID, Version string }]struct{})
 	for rulesetIdx, rulesetConfig := range conf.Rulesets {
 		var (
 			rulesetPath = fldPath.Child("rulesets").Index(rulesetIdx)
-			rulesetKey  = rulesetConfig.ID + "/" + rulesetConfig.Version
+			rulesetKey  = struct{ ID, Version string }{rulesetConfig.ID, rulesetConfig.Version}
 		)
 		if _, seen := seenRulesets[rulesetKey]; seen {
 			allErrs = append(allErrs, field.Duplicate(rulesetPath, rulesetKey))
