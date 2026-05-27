@@ -72,8 +72,8 @@ func (r *Ruleset) Version() string {
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
 func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.Config, fldPath *field.Path) (*Ruleset, error) {
-	if err := ValidateRulesetConfig(rulesetConfig, fldPath); err != nil {
-		return nil, err
+	if errs := ValidateRulesetConfig(rulesetConfig, fldPath); len(errs) > 0 {
+		return nil, errs.ToAggregate()
 	}
 
 	ruleset, err := New(
@@ -97,19 +97,23 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.C
 }
 
 // ValidateRulesetConfig validates a [config.RulesetConfig].
-func ValidateRulesetConfig(rulesetConfig config.RulesetConfig, fldPath *field.Path) error {
+func ValidateRulesetConfig(rulesetConfig config.RulesetConfig, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
 	indexedRuleOptions, err := sharedruleset.IndexRuleOptions(rulesetConfig.RuleOptions)
 	if err != nil {
-		return err
+		return append(allErrs, field.Invalid(fldPath.Child("ruleOptions"), rulesetConfig.RuleOptions, err.Error()))
 	}
 
 	r := &Ruleset{}
 	switch rulesetConfig.Version {
 	case "v0.1.0":
-		return r.validateV01RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions"))
+		allErrs = append(allErrs, r.validateV01RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions"))...)
 	default:
-		return sharedruleset.UnknownVersionError(rulesetConfig.ID, rulesetConfig.Version, "managedk8s")
+		allErrs = append(allErrs, field.NotSupported(fldPath.Child("version"), rulesetConfig.Version, SupportedVersions))
 	}
+
+	return allErrs
 }
 
 func (r *Ruleset) registerRules(ruleOptions map[string]config.RuleOptionsConfig) error {

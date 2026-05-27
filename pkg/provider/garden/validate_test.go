@@ -83,10 +83,11 @@ var _ = Describe("ValidateProviderConfig", func() {
 		}
 
 		errs := garden.ValidateProviderConfig(conf, fldPath)
-		Expect(errs).To(HaveLen(1))
-		Expect(errs[0].Type).To(Equal(field.ErrorTypeInternal))
-		Expect(errs[0].Error()).To(ContainSubstring("shootName"))
-		Expect(errs[0].Error()).To(ContainSubstring("projectNamespace"))
+		Expect(errs).To(HaveLen(2))
+		Expect(errs[0].Type).To(Equal(field.ErrorTypeRequired))
+		Expect(errs[0].Field).To(Equal("providers[0].rulesets[0].args.shootName"))
+		Expect(errs[1].Type).To(Equal(field.ErrorTypeRequired))
+		Expect(errs[1].Field).To(Equal("providers[0].rulesets[0].args.projectNamespace"))
 	})
 
 	It("should return error for invalid args", func() {

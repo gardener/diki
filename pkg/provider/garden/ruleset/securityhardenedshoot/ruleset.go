@@ -81,8 +81,8 @@ func (r *Ruleset) Version() string {
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
 func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.Config, logger provider.Logger, fldPath *field.Path) (*Ruleset, error) {
-	if err := ValidateRulesetConfig(rulesetConfig, fldPath); err != nil {
-		return nil, err
+	if errs := ValidateRulesetConfig(rulesetConfig, fldPath); len(errs) > 0 {
+		return nil, errs.ToAggregate()
 	}
 
 	rulesetArgsByte, err := json.Marshal(rulesetConfig.Args)
@@ -124,18 +124,19 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.C
 }
 
 // ValidateRulesetConfig validates a [config.RulesetConfig].
-func ValidateRulesetConfig(rulesetConfig config.RulesetConfig, fldPath *field.Path) error {
+func ValidateRulesetConfig(rulesetConfig config.RulesetConfig, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
 	rulesetArgsByte, err := json.Marshal(rulesetConfig.Args)
 	if err != nil {
-		return err
+		return append(allErrs, field.Invalid(fldPath.Child("args"), rulesetConfig.Args, err.Error()))
 	}
 
 	var rulesetArgs Args
 	if err := json.Unmarshal(rulesetArgsByte, &rulesetArgs); err != nil {
-		return err
+		return append(allErrs, field.Invalid(fldPath.Child("args"), rulesetConfig.Args, err.Error()))
 	}
 
-	allErrs := field.ErrorList{}
 	if len(rulesetArgs.ShootName) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("args", "shootName"), ""))
 	}
@@ -145,25 +146,20 @@ func ValidateRulesetConfig(rulesetConfig config.RulesetConfig, fldPath *field.Pa
 
 	indexedRuleOptions, err := sharedruleset.IndexRuleOptions(rulesetConfig.RuleOptions)
 	if err != nil {
-		allErrs = append(allErrs, field.InternalError(fldPath.Child("ruleOptions"), err))
-		return allErrs.ToAggregate()
+		return append(allErrs, field.Invalid(fldPath.Child("ruleOptions"), rulesetConfig.RuleOptions, err.Error()))
 	}
 
 	r := &Ruleset{}
 	switch rulesetConfig.Version {
 	case "v0.1.0":
-		if err := r.validateV01RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
-			allErrs = append(allErrs, field.InternalError(fldPath.Child("ruleOptions"), err))
-		}
+		allErrs = append(allErrs, r.validateV01RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions"))...)
 	case "v0.2.0", "v0.2.1":
-		if err := r.validateV02RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
-			allErrs = append(allErrs, field.InternalError(fldPath.Child("ruleOptions"), err))
-		}
+		allErrs = append(allErrs, r.validateV02RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions"))...)
 	default:
-		allErrs = append(allErrs, field.NotSupported(fldPath.Child("version"), rulesetConfig.Version, []string{"v0.1.0", "v0.2.0", "v0.2.1"}))
+		allErrs = append(allErrs, field.NotSupported(fldPath.Child("version"), rulesetConfig.Version, SupportedVersions))
 	}
 
-	return allErrs.ToAggregate()
+	return allErrs
 }
 
 func (r *Ruleset) registerRules(ruleOptions map[string]config.RuleOptionsConfig) error {

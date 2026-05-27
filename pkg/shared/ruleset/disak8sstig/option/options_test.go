@@ -31,15 +31,16 @@ var _ = Describe("options", func() {
 				"BadValue": Equal("-1"),
 			})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":     Equal(field.ErrorTypeInternal),
+					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("foo.expectedFileOwner.groups[0]"),
-					"BadValue": BeNil(),
+					"BadValue": Equal(""),
 					"Detail":   Equal("strconv.ParseInt: parsing \"\": invalid syntax"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":   Equal(field.ErrorTypeInternal),
-					"Field":  Equal("foo.expectedFileOwner.groups[1]"),
-					"Detail": Equal("strconv.ParseInt: parsing \"asd\": invalid syntax"),
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("foo.expectedFileOwner.groups[1]"),
+					"BadValue": Equal("asd"),
+					"Detail":   Equal("strconv.ParseInt: parsing \"asd\": invalid syntax"),
 				})),
 			))
 		})

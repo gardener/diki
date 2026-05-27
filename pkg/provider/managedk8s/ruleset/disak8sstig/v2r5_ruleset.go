@@ -34,7 +34,7 @@ func validateV2R5Options[O rules.RuleOption](options any, fldPath *field.Path) f
 	parsedOptions, err := getV2R5OptionOrNil[O](options)
 	if err != nil {
 		return field.ErrorList{
-			field.InternalError(fldPath, err),
+			field.Invalid(fldPath, options, err.Error()),
 		}
 	}
 
@@ -49,7 +49,7 @@ func validateV2R5Options[O rules.RuleOption](options any, fldPath *field.Path) f
 	return nil
 }
 
-func (r *Ruleset) validateV2R5RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath *field.Path) error {
+func (r *Ruleset) validateV2R5RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	allErrs = append(allErrs, validateV2R5Options[sharedrules.Options242383](ruleOptions[sharedrules.ID242383].Args, fldPath.Index(ruleOptions[sharedrules.ID242383].Index).Child("args"))...)
@@ -74,7 +74,7 @@ func (r *Ruleset) validateV2R5RuleOptions(ruleOptions map[string]internalconfig.
 	allErrs = append(allErrs, validateV2R5Options[rules.Options242466](ruleOptions[sharedrules.ID242466].Args, fldPath.Index(ruleOptions[sharedrules.ID242466].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV2R5Options[rules.Options242467](ruleOptions[sharedrules.ID242467].Args, fldPath.Index(ruleOptions[sharedrules.ID242467].Index).Child("args"))...)
 
-	return allErrs.ToAggregate()
+	return allErrs
 }
 
 func (r *Ruleset) registerV2R5Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig

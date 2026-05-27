@@ -41,9 +41,7 @@ func ValidateProviderConfig(conf config.ProviderConfig, fldPath *field.Path) fie
 
 		switch rulesetConfig.ID {
 		case disak8sstig.RulesetID:
-			if err := disak8sstig.ValidateRulesetConfig(rulesetConfig, rulesetPath); err != nil {
-				allErrs = append(allErrs, field.InternalError(rulesetPath, err))
-			}
+			allErrs = append(allErrs, disak8sstig.ValidateRulesetConfig(rulesetConfig, rulesetPath)...)
 		default:
 			allErrs = append(allErrs, field.NotSupported(rulesetPath.Child("id"), rulesetConfig.ID, []string{disak8sstig.RulesetID}))
 		}

@@ -19,7 +19,7 @@ import (
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 )
 
-func (r *Ruleset) validateV02RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath *field.Path) error {
+func (r *Ruleset) validateV02RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	allErrs = append(allErrs, validateV02Options[rules.Options1000](ruleOptions["1000"].Args, fldPath.Index(ruleOptions["1000"].Index).Child("args"))...)
@@ -29,7 +29,7 @@ func (r *Ruleset) validateV02RuleOptions(ruleOptions map[string]internalconfig.I
 	allErrs = append(allErrs, validateV02Options[rules.Options2000](ruleOptions["2000"].Args, fldPath.Index(ruleOptions["2000"].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV02Options[rules.Options2007](ruleOptions["2007"].Args, fldPath.Index(ruleOptions["2007"].Index).Child("args"))...)
 
-	return allErrs.ToAggregate()
+	return allErrs
 }
 
 func (r *Ruleset) registerV02Rules(ruleOptions map[string]config.RuleOptionsConfig) error { // TODO: add to FromGenericConfig
@@ -156,7 +156,7 @@ func validateV02Options[O rules.RuleOption](options any, fldPath *field.Path) fi
 	parsedOptions, err := getV02OptionOrNil[O](options)
 	if err != nil {
 		return field.ErrorList{
-			field.InternalError(fldPath, err),
+			field.Invalid(fldPath, options, err.Error()),
 		}
 	}
 

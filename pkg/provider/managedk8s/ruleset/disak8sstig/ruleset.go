@@ -87,8 +87,8 @@ func (r *Ruleset) Version() string {
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
 func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabels map[string]string, managedConfig *rest.Config, fldPath *field.Path) (*Ruleset, error) {
-	if err := ValidateRulesetConfig(rulesetConfig, fldPath); err != nil {
-		return nil, err
+	if errs := ValidateRulesetConfig(rulesetConfig, fldPath); len(errs) > 0 {
+		return nil, errs.ToAggregate()
 	}
 
 	rulesetArgsByte, err := json.Marshal(rulesetConfig.Args)
@@ -124,31 +124,35 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabel
 }
 
 // ValidateRulesetConfig validates a [config.RulesetConfig].
-func ValidateRulesetConfig(rulesetConfig config.RulesetConfig, fldPath *field.Path) error {
+func ValidateRulesetConfig(rulesetConfig config.RulesetConfig, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
 	rulesetArgsByte, err := json.Marshal(rulesetConfig.Args)
 	if err != nil {
-		return err
+		return append(allErrs, field.Invalid(fldPath.Child("args"), rulesetConfig.Args, err.Error()))
 	}
 
 	var rulesetArgs Args
 	if err := json.Unmarshal(rulesetArgsByte, &rulesetArgs); err != nil {
-		return err
+		return append(allErrs, field.Invalid(fldPath.Child("args"), rulesetConfig.Args, err.Error()))
 	}
 
 	indexedRuleOptions, err := sharedruleset.IndexRuleOptions(rulesetConfig.RuleOptions)
 	if err != nil {
-		return err
+		return append(allErrs, field.Invalid(fldPath.Child("ruleOptions"), rulesetConfig.RuleOptions, err.Error()))
 	}
 
 	r := &Ruleset{}
 	switch rulesetConfig.Version {
 	case "v2r4":
-		return r.validateV2R4RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions"))
+		allErrs = append(allErrs, r.validateV2R4RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions"))...)
 	case "v2r5":
-		return r.validateV2R5RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions"))
+		allErrs = append(allErrs, r.validateV2R5RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions"))...)
 	default:
-		return sharedruleset.UnknownVersionError(rulesetConfig.ID, rulesetConfig.Version, "managedk8s")
+		allErrs = append(allErrs, field.NotSupported(fldPath.Child("version"), rulesetConfig.Version, SupportedVersions))
 	}
+
+	return allErrs
 }
 
 func (r *Ruleset) registerRules(ruleOptions map[string]config.RuleOptionsConfig) error {
