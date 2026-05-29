@@ -16,7 +16,6 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/gardener/diki/pkg/config"
-	internalconfig "github.com/gardener/diki/pkg/internal/config"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
 	sharedruleset "github.com/gardener/diki/pkg/shared/ruleset"
@@ -90,6 +89,10 @@ func (r *Ruleset) Version() string {
 
 // FromGenericConfig creates a Ruleset from a RulesetConfig
 func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabels map[string]string, shootConfig, seedConfig *rest.Config, shootNamespace string, fldPath *field.Path) (*Ruleset, error) {
+	if errs := ValidateRulesetConfig(rulesetConfig, fldPath); len(errs) > 0 {
+		return nil, errs.ToAggregate()
+	}
+
 	rulesetArgsByte, err := json.Marshal(rulesetConfig.Args)
 	if err != nil {
 		return nil, err
@@ -100,7 +103,6 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabel
 		return nil, err
 	}
 
-	// TODO: add all known rules and validate
 	ruleset, err := New(
 		WithVersion(rulesetConfig.Version),
 		WithAdditionalOpsPodLabels(additionalOpsPodLabels),
@@ -113,40 +115,59 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, additionalOpsPodLabel
 		return nil, err
 	}
 
-	var (
-		indexedRuleOptions = make(map[string]internalconfig.IndexedRuleOptionsConfig)
-		ruleOptions        = make(map[string]config.RuleOptionsConfig)
-	)
-
-	for index, opt := range rulesetConfig.RuleOptions {
-		if _, ok := ruleOptions[opt.RuleID]; ok {
-			return nil, fmt.Errorf("rule option for rule id: %s is already registered", opt.RuleID)
-		}
-
+	ruleOptions := make(map[string]config.RuleOptionsConfig)
+	for _, opt := range rulesetConfig.RuleOptions {
 		ruleOptions[opt.RuleID] = opt
-		indexedRuleOptions[opt.RuleID] = internalconfig.IndexedRuleOptionsConfig{Index: index, RuleOptionsConfig: opt}
 	}
 
-	switch rulesetConfig.Version {
-	case "v2r4":
-		if err := ruleset.validateV2R4RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
-			return nil, err
-		}
-		if err := ruleset.registerV2R4Rules(ruleOptions); err != nil {
-			return nil, err
-		}
-	case "v2r5":
-		if err := ruleset.validateV2R5RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions")); err != nil {
-			return nil, err
-		}
-		if err := ruleset.registerV2R5Rules(ruleOptions); err != nil {
-			return nil, err
-		}
-	default:
-		return nil, fmt.Errorf("unknown ruleset %s version: %s - use 'diki show provider gardener' to see the provider's supported rulesets", rulesetConfig.ID, rulesetConfig.Version)
+	if err := ruleset.registerRules(ruleOptions); err != nil {
+		return nil, err
 	}
 
 	return ruleset, nil
+}
+
+// ValidateRulesetConfig validates a [config.RulesetConfig].
+func ValidateRulesetConfig(rulesetConfig config.RulesetConfig, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	rulesetArgsByte, err := json.Marshal(rulesetConfig.Args)
+	if err != nil {
+		return append(allErrs, field.Invalid(fldPath.Child("args"), rulesetConfig.Args, err.Error()))
+	}
+
+	var rulesetArgs Args
+	if err := json.Unmarshal(rulesetArgsByte, &rulesetArgs); err != nil {
+		return append(allErrs, field.Invalid(fldPath.Child("args"), rulesetConfig.Args, err.Error()))
+	}
+
+	indexedRuleOptions, err := sharedruleset.IndexRuleOptions(rulesetConfig.RuleOptions)
+	if err != nil {
+		return append(allErrs, field.Invalid(fldPath.Child("ruleOptions"), rulesetConfig.RuleOptions, err.Error()))
+	}
+
+	r := &Ruleset{}
+	switch rulesetConfig.Version {
+	case "v2r4":
+		allErrs = append(allErrs, r.validateV2R4RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions"))...)
+	case "v2r5":
+		allErrs = append(allErrs, r.validateV2R5RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions"))...)
+	default:
+		allErrs = append(allErrs, field.NotSupported(fldPath.Child("version"), rulesetConfig.Version, SupportedVersions))
+	}
+
+	return allErrs
+}
+
+func (r *Ruleset) registerRules(ruleOptions map[string]config.RuleOptionsConfig) error {
+	switch r.version {
+	case "v2r4":
+		return r.registerV2R4Rules(ruleOptions)
+	case "v2r5":
+		return r.registerV2R5Rules(ruleOptions)
+	default:
+		return sharedruleset.UnknownVersionError(r.ID(), r.Version(), "gardener")
+	}
 }
 
 // RunRule executes specific known Rule of the Ruleset.

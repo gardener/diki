@@ -36,7 +36,7 @@ func (o FileOwnerOptions) Validate(fldPath *field.Path) field.ErrorList {
 	for uIdx, user := range o.ExpectedFileOwner.Users {
 		userID, err := strconv.ParseInt(user, 10, 64)
 		if err != nil {
-			allErrs = append(allErrs, field.InternalError(expectedFileOwnerPath.Child("users").Index(uIdx), err))
+			allErrs = append(allErrs, field.Invalid(expectedFileOwnerPath.Child("users").Index(uIdx), user, err.Error()))
 			continue
 		}
 		for _, msg := range validation.IsValidUserID(userID) {
@@ -47,7 +47,7 @@ func (o FileOwnerOptions) Validate(fldPath *field.Path) field.ErrorList {
 	for gIdx, group := range o.ExpectedFileOwner.Groups {
 		groupID, err := strconv.ParseInt(group, 10, 64)
 		if err != nil {
-			allErrs = append(allErrs, field.InternalError(expectedFileOwnerPath.Child("groups").Index(gIdx), err))
+			allErrs = append(allErrs, field.Invalid(expectedFileOwnerPath.Child("groups").Index(gIdx), group, err.Error()))
 			continue
 		}
 		for _, msg := range validation.IsValidGroupID(groupID) {

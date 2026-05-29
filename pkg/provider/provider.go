@@ -42,9 +42,13 @@ type MetadataFunc func() metadata.ProviderDetailed
 // DefaultDikiConfigFunc constructs a default [config.DikiConfig] for a specific provider.
 type DefaultDikiConfigFunc func() config.DikiConfig
 
+// ValidateConfigFunc validates a [config.ProviderConfig]. It returns a list of validation errors.
+type ValidateConfigFunc func(conf config.ProviderConfig, fldPath *field.Path) field.ErrorList
+
 // ProviderOption constructs a pair of a configuration and metadata function for a specific provider.
 type ProviderOption struct {
 	ProviderFromConfigFunc
+	ValidateConfigFunc
 	MetadataFunc
 	DefaultDikiConfigFunc
 }
