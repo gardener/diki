@@ -217,7 +217,7 @@ e.g. to check compliance of your hyperscaler accounts.`,
 		Short: "Merge a base config with a custom config.",
 		Long:  "Merge combines rule options from a base (default) config with a custom config. The custom config is primary; only ruleOptions are merged.",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			return configMergeCmd(configMergeOpts, mergeRegistryFuncs, logger)
+			return configMergeCmd(configMergeOpts, mergeRegistryFuncs, validateConfigFuncs, logger)
 		},
 	}
 
@@ -625,7 +625,7 @@ func addConfigMergeFlags(cmd *cobra.Command, opts *configMergeOptions) {
 	_ = cmd.MarkPersistentFlagRequired("custom")
 }
 
-func configMergeCmd(opts configMergeOptions, registryFuncs []provider.MergeRegistryFunc, logger *slog.Logger) error {
+func configMergeCmd(opts configMergeOptions, registryFuncs []provider.MergeRegistryFunc, validateFuncs map[string]provider.ValidateConfigFunc, logger *slog.Logger) error {
 
 	baseConfig, err := readConfig(opts.basePath)
 	if err != nil {
@@ -637,6 +637,13 @@ func configMergeCmd(opts configMergeOptions, registryFuncs []provider.MergeRegis
 		return fmt.Errorf("failed to read custom config: %w", err)
 	}
 
+	if errs := validate.ValidateConfig(customConfig, validateFuncs); len(errs) > 0 {
+		for _, e := range errs {
+			logger.Error(e.Error())
+		}
+		return errors.New("custom configuration is not valid")
+	}
+
 	registry := merge.NewRegistry()
 	for _, fn := range registryFuncs {
 		fn(registry)
@@ -645,6 +652,13 @@ func configMergeCmd(opts configMergeOptions, registryFuncs []provider.MergeRegis
 	merged, err := merge.MergeConfigs(baseConfig, customConfig, registry)
 	if err != nil {
 		return fmt.Errorf("failed to merge configs: %w", err)
+	}
+
+	if errs := validate.ValidateConfig(merged, validateFuncs); len(errs) > 0 {
+		for _, e := range errs {
+			logger.Error(e.Error())
+		}
+		return errors.New("merged configuration is not valid, please check the base configuration")
 	}
 
 	data, err := yaml.Marshal(merged)
