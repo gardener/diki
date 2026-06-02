@@ -156,6 +156,8 @@ func (a *AcceptedPodVolumes) Validate(fldPath *field.Path) field.ErrorList {
 		allErrs               field.ErrorList
 	)
 
+	allErrs = append(allErrs, a.NamespacedObjectSelector.Validate(fldPath)...)
+
 	if len(a.VolumeNames) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("volumeNames"), "must not be empty"))
 	}
