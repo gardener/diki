@@ -96,6 +96,19 @@ var _ = Describe("ValidateProviderConfig", func() {
 		Expect(errs[1].Field).To(Equal("providers[0].rulesets[0].args.projectNamespace"))
 	})
 
+	It("should return error for missing required provider args", func() {
+		conf := config.ProviderConfig{
+			ID:   "garden",
+			Name: "Garden",
+			Args: map[string]any{},
+		}
+
+		errs := garden.ValidateProviderConfig(conf, fldPath)
+		Expect(errs).To(HaveLen(1))
+		Expect(errs[0].Type).To(Equal(field.ErrorTypeRequired))
+		Expect(errs[0].Field).To(Equal("providers[0].args.kubeconfigPath"))
+	})
+
 	It("should return error for invalid args", func() {
 		conf := config.ProviderConfig{
 			ID:   "garden",
