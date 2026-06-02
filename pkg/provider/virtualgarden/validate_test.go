@@ -40,7 +40,9 @@ var _ = Describe("ValidateProviderConfig", func() {
 		conf := config.ProviderConfig{
 			ID:   "virtualgarden",
 			Name: "Virtual Garden",
-			Args: map[string]any{},
+			Args: map[string]string{
+				"runtimeKubeconfigPath": "/path/to/kubeconfig",
+			},
 			Rulesets: []config.RulesetConfig{
 				{ID: "unknown-ruleset", Version: "v1"},
 			},
@@ -55,7 +57,9 @@ var _ = Describe("ValidateProviderConfig", func() {
 		conf := config.ProviderConfig{
 			ID:   "virtualgarden",
 			Name: "Virtual Garden",
-			Args: map[string]any{},
+			Args: map[string]string{
+				"runtimeKubeconfigPath": "/path/to/kubeconfig",
+			},
 			Rulesets: []config.RulesetConfig{
 				{ID: "disa-kubernetes-stig", Version: "v2r5"},
 				{ID: "disa-kubernetes-stig", Version: "v2r5"},

@@ -27,6 +27,10 @@ func ValidateProviderConfig(conf config.ProviderConfig, fldPath *field.Path) fie
 		return append(allErrs, field.Invalid(fldPath.Child("args"), conf.Args, err.Error()))
 	}
 
+	if len(args.KubeconfigPath) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("args", "kubeconfigPath"), ""))
+	}
+
 	seenRulesets := make(map[struct{ ID, Version string }]struct{})
 	for rulesetIdx, rulesetConfig := range conf.Rulesets {
 		var (
