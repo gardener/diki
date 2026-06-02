@@ -6,7 +6,6 @@ package securityhardenedshoot
 
 import (
 	"github.com/gardener/diki/pkg/config/merge"
-	"github.com/gardener/diki/pkg/provider/garden"
 	"github.com/gardener/diki/pkg/provider/garden/ruleset/securityhardenedshoot/rules"
 )
 
@@ -26,7 +25,7 @@ func RegisterMergeFuncs(r *merge.Registry) {
 func registerV02MergeFuncs(r *merge.Registry, version string) {
 	key := func(ruleID string) merge.RegistryKey {
 		return merge.RegistryKey{
-			ProviderID: garden.ProviderID,
+			ProviderID: "garden",
 			RulesetID:  RulesetID,
 			Version:    version,
 			RuleID:     ruleID,
@@ -44,7 +43,7 @@ func registerV02MergeFuncs(r *merge.Registry, version string) {
 func registerV01MergeFuncs(r *merge.Registry, version string) {
 	key := func(ruleID string) merge.RegistryKey {
 		return merge.RegistryKey{
-			ProviderID: garden.ProviderID,
+			ProviderID: "garden",
 			RulesetID:  RulesetID,
 			Version:    version,
 			RuleID:     ruleID,

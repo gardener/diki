@@ -6,7 +6,6 @@ package disak8sstig
 
 import (
 	"github.com/gardener/diki/pkg/config/merge"
-	"github.com/gardener/diki/pkg/provider/virtualgarden"
 	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
@@ -22,7 +21,7 @@ func RegisterMergeFuncs(r *merge.Registry) {
 func registerMergeFuncs(r *merge.Registry, version string) {
 	key := func(ruleID string) merge.RegistryKey {
 		return merge.RegistryKey{
-			ProviderID: virtualgarden.ProviderID,
+			ProviderID: "virtualgarden",
 			RulesetID:  RulesetID,
 			Version:    version,
 			RuleID:     ruleID,
