@@ -179,11 +179,9 @@ e.g. to check compliance of your hyperscaler accounts.`,
 		}
 	}
 
-	mergeRegistryFuncs := []provider.MergeRegistryFunc{}
+	var mergeRegistryFuncs []provider.MergeRegistryFunc
 	for _, providerOption := range providerOptions {
-		if providerOption.MergeRegistryFunc != nil {
-			mergeRegistryFuncs = append(mergeRegistryFuncs, providerOption.MergeRegistryFunc)
-		}
+		mergeRegistryFuncs = append(mergeRegistryFuncs, providerOption.MergeRegistryFuncs...)
 	}
 
 	configCmd := &cobra.Command{
@@ -214,8 +212,8 @@ e.g. to check compliance of your hyperscaler accounts.`,
 	var configMergeOpts configMergeOptions
 	configMergeCmd := &cobra.Command{
 		Use:   "merge",
-		Short: "Merge a base config with a custom config.",
-		Long:  "Merge combines rule options from a base (default) config with a custom config. The custom config is primary; only ruleOptions are merged.",
+		Short: "Merge a base config with a current config.",
+		Long:  "Merge combines rule options from a base (default) config with a current config. The current config is primary; only ruleOptions are merged.",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return configMergeCmd(configMergeOpts, mergeRegistryFuncs, validateConfigFuncs, logger)
 		},
@@ -612,17 +610,17 @@ type diffOptions struct {
 }
 
 type configMergeOptions struct {
-	basePath   string
-	customPath string
-	outputPath string
+	basePath    string
+	currentPath string
+	outputPath  string
 }
 
 func addConfigMergeFlags(cmd *cobra.Command, opts *configMergeOptions) {
 	cmd.PersistentFlags().StringVar(&opts.basePath, "base", "", "Path to the base (default) configuration file.")
-	cmd.PersistentFlags().StringVar(&opts.customPath, "custom", "", "Path to the custom configuration file.")
+	cmd.PersistentFlags().StringVar(&opts.currentPath, "current", "", "Path to the current configuration file.")
 	cmd.PersistentFlags().StringVar(&opts.outputPath, "output", "", "Output path for the merged configuration. If not set, output is written to stdout.")
 	_ = cmd.MarkPersistentFlagRequired("base")
-	_ = cmd.MarkPersistentFlagRequired("custom")
+	_ = cmd.MarkPersistentFlagRequired("current")
 }
 
 func configMergeCmd(opts configMergeOptions, registryFuncs []provider.MergeRegistryFunc, validateFuncs map[string]provider.ValidateConfigFunc, logger *slog.Logger) error {
@@ -632,16 +630,16 @@ func configMergeCmd(opts configMergeOptions, registryFuncs []provider.MergeRegis
 		return fmt.Errorf("failed to read base config: %w", err)
 	}
 
-	customConfig, err := readConfig(opts.customPath)
+	currentConfig, err := readConfig(opts.currentPath)
 	if err != nil {
-		return fmt.Errorf("failed to read custom config: %w", err)
+		return fmt.Errorf("failed to read current config: %w", err)
 	}
 
-	if errs := validate.ValidateConfig(customConfig, validateFuncs); len(errs) > 0 {
+	if errs := validate.ValidateConfig(currentConfig, validateFuncs); len(errs) > 0 {
 		for _, e := range errs {
 			logger.Error(e.Error())
 		}
-		return errors.New("custom configuration is not valid")
+		return errors.New("current configuration is not valid")
 	}
 
 	registry := merge.NewRegistry()
@@ -649,7 +647,7 @@ func configMergeCmd(opts configMergeOptions, registryFuncs []provider.MergeRegis
 		fn(registry)
 	}
 
-	merged, err := merge.MergeConfigs(baseConfig, customConfig, registry)
+	merged, err := merge.MergeConfigs(baseConfig, currentConfig, registry)
 	if err != nil {
 		return fmt.Errorf("failed to merge configs: %w", err)
 	}

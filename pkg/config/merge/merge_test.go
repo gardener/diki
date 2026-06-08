@@ -57,19 +57,19 @@ var _ = Describe("MergeConfigs", func() {
 		})
 	})
 
-	It("should return custom config when base is nil", func() {
-		custom := &config.DikiConfig{
+	It("should return current config when base is nil", func() {
+		current := &config.DikiConfig{
 			Providers: []config.ProviderConfig{
 				{ID: "test-provider"},
 			},
 		}
 
-		result, err := merge.MergeConfigs(nil, custom, registry)
+		result, err := merge.MergeConfigs(nil, current, registry)
 		Expect(err).ToNot(HaveOccurred())
-		Expect(result).To(Equal(custom))
+		Expect(result).To(Equal(current))
 	})
 
-	It("should return nil when custom is nil", func() {
+	It("should return nil when current is nil", func() {
 		base := &config.DikiConfig{
 			Providers: []config.ProviderConfig{
 				{ID: "test-provider"},
@@ -81,13 +81,13 @@ var _ = Describe("MergeConfigs", func() {
 		Expect(result).To(BeNil())
 	})
 
-	It("should pass through custom provider unchanged when base has no matching provider", func() {
+	It("should pass through current provider unchanged when base has no matching provider", func() {
 		base := &config.DikiConfig{
 			Providers: []config.ProviderConfig{
 				{ID: "other-provider"},
 			},
 		}
-		custom := &config.DikiConfig{
+		current := &config.DikiConfig{
 			Providers: []config.ProviderConfig{
 				{
 					ID: "test-provider",
@@ -96,7 +96,7 @@ var _ = Describe("MergeConfigs", func() {
 							ID:      "test-ruleset",
 							Version: "v1.0",
 							RuleOptions: []config.RuleOptionsConfig{
-								{RuleID: "rule-1", Args: map[string]any{"value": "custom"}},
+								{RuleID: "rule-1", Args: map[string]any{"value": "current"}},
 							},
 						},
 					},
@@ -104,13 +104,13 @@ var _ = Describe("MergeConfigs", func() {
 			},
 		}
 
-		result, err := merge.MergeConfigs(base, custom, registry)
+		result, err := merge.MergeConfigs(base, current, registry)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(result.Providers[0].Rulesets[0].RuleOptions).To(HaveLen(1))
 		Expect(result.Providers[0].Rulesets[0].RuleOptions[0].RuleID).To(Equal("rule-1"))
 	})
 
-	It("should pass through custom ruleset unchanged when base has no matching ruleset", func() {
+	It("should pass through current ruleset unchanged when base has no matching ruleset", func() {
 		base := &config.DikiConfig{
 			Providers: []config.ProviderConfig{
 				{
@@ -121,7 +121,7 @@ var _ = Describe("MergeConfigs", func() {
 				},
 			},
 		}
-		custom := &config.DikiConfig{
+		current := &config.DikiConfig{
 			Providers: []config.ProviderConfig{
 				{
 					ID: "test-provider",
@@ -130,7 +130,7 @@ var _ = Describe("MergeConfigs", func() {
 							ID:      "test-ruleset",
 							Version: "v1.0",
 							RuleOptions: []config.RuleOptionsConfig{
-								{RuleID: "rule-1", Args: map[string]any{"value": "custom"}},
+								{RuleID: "rule-1", Args: map[string]any{"value": "current"}},
 							},
 						},
 					},
@@ -138,13 +138,13 @@ var _ = Describe("MergeConfigs", func() {
 			},
 		}
 
-		result, err := merge.MergeConfigs(base, custom, registry)
+		result, err := merge.MergeConfigs(base, current, registry)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(result.Providers[0].Rulesets[0].RuleOptions).To(HaveLen(1))
 		Expect(result.Providers[0].Rulesets[0].RuleOptions[0].RuleID).To(Equal("rule-1"))
 	})
 
-	It("should keep custom-only rules as-is", func() {
+	It("should keep current-only rules as-is", func() {
 		base := &config.DikiConfig{
 			Providers: []config.ProviderConfig{
 				{
@@ -159,7 +159,7 @@ var _ = Describe("MergeConfigs", func() {
 				},
 			},
 		}
-		custom := &config.DikiConfig{
+		current := &config.DikiConfig{
 			Providers: []config.ProviderConfig{
 				{
 					ID: "test-provider",
@@ -168,7 +168,7 @@ var _ = Describe("MergeConfigs", func() {
 							ID:      "test-ruleset",
 							Version: "v1.0",
 							RuleOptions: []config.RuleOptionsConfig{
-								{RuleID: "rule-custom-only", Args: map[string]any{"key": "val"}},
+								{RuleID: "rule-current-only", Args: map[string]any{"key": "val"}},
 							},
 						},
 					},
@@ -176,10 +176,10 @@ var _ = Describe("MergeConfigs", func() {
 			},
 		}
 
-		result, err := merge.MergeConfigs(base, custom, registry)
+		result, err := merge.MergeConfigs(base, current, registry)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(result.Providers[0].Rulesets[0].RuleOptions).To(HaveLen(1))
-		Expect(result.Providers[0].Rulesets[0].RuleOptions[0].RuleID).To(Equal("rule-custom-only"))
+		Expect(result.Providers[0].Rulesets[0].RuleOptions[0].RuleID).To(Equal("rule-current-only"))
 	})
 
 	It("should append base-only rules to the output", func() {
@@ -199,7 +199,7 @@ var _ = Describe("MergeConfigs", func() {
 				},
 			},
 		}
-		custom := &config.DikiConfig{
+		current := &config.DikiConfig{
 			Providers: []config.ProviderConfig{
 				{
 					ID: "test-provider",
@@ -214,14 +214,14 @@ var _ = Describe("MergeConfigs", func() {
 			},
 		}
 
-		result, err := merge.MergeConfigs(base, custom, registry)
+		result, err := merge.MergeConfigs(base, current, registry)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(result.Providers[0].Rulesets[0].RuleOptions).To(HaveLen(1))
 		Expect(result.Providers[0].Rulesets[0].RuleOptions[0].RuleID).To(Equal("rule-base-only"))
 		Expect(result.Providers[0].Rulesets[0].RuleOptions[0].Args).To(Equal(map[string]any{"key": "base"}))
 	})
 
-	It("should use custom args when rule exists in both but is not mergeable", func() {
+	It("should use current args when rule exists in both but is not mergeable", func() {
 		base := &config.DikiConfig{
 			Providers: []config.ProviderConfig{
 				{
@@ -238,7 +238,7 @@ var _ = Describe("MergeConfigs", func() {
 				},
 			},
 		}
-		custom := &config.DikiConfig{
+		current := &config.DikiConfig{
 			Providers: []config.ProviderConfig{
 				{
 					ID: "test-provider",
@@ -247,7 +247,7 @@ var _ = Describe("MergeConfigs", func() {
 							ID:      "test-ruleset",
 							Version: "v1.0",
 							RuleOptions: []config.RuleOptionsConfig{
-								{RuleID: "rule-nonmergeable", Args: map[string]any{"value": "custom"}},
+								{RuleID: "rule-nonmergeable", Args: map[string]any{"value": "current"}},
 							},
 						},
 					},
@@ -255,10 +255,10 @@ var _ = Describe("MergeConfigs", func() {
 			},
 		}
 
-		result, err := merge.MergeConfigs(base, custom, registry)
+		result, err := merge.MergeConfigs(base, current, registry)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(result.Providers[0].Rulesets[0].RuleOptions).To(HaveLen(1))
-		Expect(result.Providers[0].Rulesets[0].RuleOptions[0].Args).To(Equal(map[string]any{"value": "custom"}))
+		Expect(result.Providers[0].Rulesets[0].RuleOptions[0].Args).To(Equal(map[string]any{"value": "current"}))
 	})
 
 	It("should merge args when rule implements MergeableOption", func() {
@@ -278,7 +278,7 @@ var _ = Describe("MergeConfigs", func() {
 				},
 			},
 		}
-		custom := &config.DikiConfig{
+		current := &config.DikiConfig{
 			Providers: []config.ProviderConfig{
 				{
 					ID: "test-provider",
@@ -287,7 +287,7 @@ var _ = Describe("MergeConfigs", func() {
 							ID:      "test-ruleset",
 							Version: "v1.0",
 							RuleOptions: []config.RuleOptionsConfig{
-								{RuleID: "rule-mergeable", Args: map[string]any{"items": []any{"custom-item"}}},
+								{RuleID: "rule-mergeable", Args: map[string]any{"items": []any{"current-item"}}},
 							},
 						},
 					},
@@ -295,7 +295,7 @@ var _ = Describe("MergeConfigs", func() {
 			},
 		}
 
-		result, err := merge.MergeConfigs(base, custom, registry)
+		result, err := merge.MergeConfigs(base, current, registry)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(result.Providers[0].Rulesets[0].RuleOptions).To(HaveLen(1))
 		mergedArgs := result.Providers[0].Rulesets[0].RuleOptions[0].Args
@@ -303,10 +303,10 @@ var _ = Describe("MergeConfigs", func() {
 		Expect(ok).To(BeTrue())
 		items, ok := mergedMap["items"].([]any)
 		Expect(ok).To(BeTrue())
-		Expect(items).To(ConsistOf("base-item", "custom-item"))
+		Expect(items).To(ConsistOf("base-item", "current-item"))
 	})
 
-	It("should use custom args when rule is not in registry", func() {
+	It("should use current args when rule is not in registry", func() {
 		base := &config.DikiConfig{
 			Providers: []config.ProviderConfig{
 				{
@@ -323,7 +323,7 @@ var _ = Describe("MergeConfigs", func() {
 				},
 			},
 		}
-		custom := &config.DikiConfig{
+		current := &config.DikiConfig{
 			Providers: []config.ProviderConfig{
 				{
 					ID: "test-provider",
@@ -332,7 +332,7 @@ var _ = Describe("MergeConfigs", func() {
 							ID:      "test-ruleset",
 							Version: "v1.0",
 							RuleOptions: []config.RuleOptionsConfig{
-								{RuleID: "rule-unknown", Args: map[string]any{"value": "custom"}},
+								{RuleID: "rule-unknown", Args: map[string]any{"value": "current"}},
 							},
 						},
 					},
@@ -340,9 +340,9 @@ var _ = Describe("MergeConfigs", func() {
 			},
 		}
 
-		result, err := merge.MergeConfigs(base, custom, registry)
+		result, err := merge.MergeConfigs(base, current, registry)
 		Expect(err).ToNot(HaveOccurred())
-		Expect(result.Providers[0].Rulesets[0].RuleOptions[0].Args).To(Equal(map[string]any{"value": "custom"}))
+		Expect(result.Providers[0].Rulesets[0].RuleOptions[0].Args).To(Equal(map[string]any{"value": "current"}))
 	})
 
 	Context("skip handling", func() {
@@ -367,7 +367,7 @@ var _ = Describe("MergeConfigs", func() {
 					},
 				},
 			}
-			custom := &config.DikiConfig{
+			current := &config.DikiConfig{
 				Providers: []config.ProviderConfig{
 					{
 						ID: "test-provider",
@@ -376,7 +376,7 @@ var _ = Describe("MergeConfigs", func() {
 								ID:      "test-ruleset",
 								Version: "v1.0",
 								RuleOptions: []config.RuleOptionsConfig{
-									{RuleID: "rule-nonmergeable", Args: map[string]any{"value": "custom"}},
+									{RuleID: "rule-nonmergeable", Args: map[string]any{"value": "current"}},
 								},
 							},
 						},
@@ -384,14 +384,14 @@ var _ = Describe("MergeConfigs", func() {
 				},
 			}
 
-			result, err := merge.MergeConfigs(base, custom, registry)
+			result, err := merge.MergeConfigs(base, current, registry)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(result.Providers[0].Rulesets[0].RuleOptions[0].Skip).ToNot(BeNil())
 			Expect(result.Providers[0].Rulesets[0].RuleOptions[0].Skip.Enabled).To(BeTrue())
 			Expect(result.Providers[0].Rulesets[0].RuleOptions[0].Skip.Justification).To(Equal("base skip reason"))
 		})
 
-		It("should skip when custom skips a rule", func() {
+		It("should skip when current skips a rule", func() {
 			base := &config.DikiConfig{
 				Providers: []config.ProviderConfig{
 					{
@@ -408,7 +408,7 @@ var _ = Describe("MergeConfigs", func() {
 					},
 				},
 			}
-			custom := &config.DikiConfig{
+			current := &config.DikiConfig{
 				Providers: []config.ProviderConfig{
 					{
 						ID: "test-provider",
@@ -419,8 +419,8 @@ var _ = Describe("MergeConfigs", func() {
 								RuleOptions: []config.RuleOptionsConfig{
 									{
 										RuleID: "rule-nonmergeable",
-										Skip:   &config.RuleOptionSkipConfig{Enabled: true, Justification: "custom skip reason"},
-										Args:   map[string]any{"value": "custom"},
+										Skip:   &config.RuleOptionSkipConfig{Enabled: true, Justification: "current skip reason"},
+										Args:   map[string]any{"value": "current"},
 									},
 								},
 							},
@@ -429,14 +429,14 @@ var _ = Describe("MergeConfigs", func() {
 				},
 			}
 
-			result, err := merge.MergeConfigs(base, custom, registry)
+			result, err := merge.MergeConfigs(base, current, registry)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(result.Providers[0].Rulesets[0].RuleOptions[0].Skip).ToNot(BeNil())
 			Expect(result.Providers[0].Rulesets[0].RuleOptions[0].Skip.Enabled).To(BeTrue())
-			Expect(result.Providers[0].Rulesets[0].RuleOptions[0].Skip.Justification).To(Equal("custom skip reason"))
+			Expect(result.Providers[0].Rulesets[0].RuleOptions[0].Skip.Justification).To(Equal("current skip reason"))
 		})
 
-		It("should prefer custom justification when both skip", func() {
+		It("should prefer current justification when both skip", func() {
 			base := &config.DikiConfig{
 				Providers: []config.ProviderConfig{
 					{
@@ -456,7 +456,7 @@ var _ = Describe("MergeConfigs", func() {
 					},
 				},
 			}
-			custom := &config.DikiConfig{
+			current := &config.DikiConfig{
 				Providers: []config.ProviderConfig{
 					{
 						ID: "test-provider",
@@ -467,7 +467,7 @@ var _ = Describe("MergeConfigs", func() {
 								RuleOptions: []config.RuleOptionsConfig{
 									{
 										RuleID: "rule-nonmergeable",
-										Skip:   &config.RuleOptionSkipConfig{Enabled: true, Justification: "custom reason"},
+										Skip:   &config.RuleOptionSkipConfig{Enabled: true, Justification: "current reason"},
 									},
 								},
 							},
@@ -476,13 +476,13 @@ var _ = Describe("MergeConfigs", func() {
 				},
 			}
 
-			result, err := merge.MergeConfigs(base, custom, registry)
+			result, err := merge.MergeConfigs(base, current, registry)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(result.Providers[0].Rulesets[0].RuleOptions[0].Skip.Justification).To(Equal("custom reason"))
+			Expect(result.Providers[0].Rulesets[0].RuleOptions[0].Skip.Justification).To(Equal("current reason"))
 		})
 	})
 
-	It("should preserve custom rule ordering and append base-only rules at the end", func() {
+	It("should preserve current rule ordering and append base-only rules at the end", func() {
 		base := &config.DikiConfig{
 			Providers: []config.ProviderConfig{
 				{
@@ -501,7 +501,7 @@ var _ = Describe("MergeConfigs", func() {
 				},
 			},
 		}
-		custom := &config.DikiConfig{
+		current := &config.DikiConfig{
 			Providers: []config.ProviderConfig{
 				{
 					ID: "test-provider",
@@ -510,9 +510,9 @@ var _ = Describe("MergeConfigs", func() {
 							ID:      "test-ruleset",
 							Version: "v1.0",
 							RuleOptions: []config.RuleOptionsConfig{
-								{RuleID: "rule-custom-1"},
+								{RuleID: "rule-current-1"},
 								{RuleID: "rule-both"},
-								{RuleID: "rule-custom-2"},
+								{RuleID: "rule-current-2"},
 							},
 						},
 					},
@@ -520,16 +520,16 @@ var _ = Describe("MergeConfigs", func() {
 			},
 		}
 
-		result, err := merge.MergeConfigs(base, custom, registry)
+		result, err := merge.MergeConfigs(base, current, registry)
 		Expect(err).ToNot(HaveOccurred())
 		ruleIDs := make([]string, 0, len(result.Providers[0].Rulesets[0].RuleOptions))
 		for _, opt := range result.Providers[0].Rulesets[0].RuleOptions {
 			ruleIDs = append(ruleIDs, opt.RuleID)
 		}
-		Expect(ruleIDs).To(Equal([]string{"rule-custom-1", "rule-both", "rule-custom-2", "rule-base-1", "rule-base-2"}))
+		Expect(ruleIDs).To(Equal([]string{"rule-current-1", "rule-both", "rule-current-2", "rule-base-1", "rule-base-2"}))
 	})
 
-	It("should use base args when custom args is nil but base has args", func() {
+	It("should use base args when current args is nil but base has args", func() {
 		base := &config.DikiConfig{
 			Providers: []config.ProviderConfig{
 				{
@@ -546,7 +546,7 @@ var _ = Describe("MergeConfigs", func() {
 				},
 			},
 		}
-		custom := &config.DikiConfig{
+		current := &config.DikiConfig{
 			Providers: []config.ProviderConfig{
 				{
 					ID: "test-provider",
@@ -563,7 +563,7 @@ var _ = Describe("MergeConfigs", func() {
 			},
 		}
 
-		result, err := merge.MergeConfigs(base, custom, registry)
+		result, err := merge.MergeConfigs(base, current, registry)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(result.Providers[0].Rulesets[0].RuleOptions[0].Args).To(Equal(map[string]any{"value": "base"}))
 	})
@@ -585,7 +585,7 @@ var _ = Describe("MergeConfigs", func() {
 				},
 			},
 		}
-		custom := &config.DikiConfig{
+		current := &config.DikiConfig{
 			Providers: []config.ProviderConfig{
 				{
 					ID: "test-provider",
@@ -594,7 +594,7 @@ var _ = Describe("MergeConfigs", func() {
 							ID:      "test-ruleset",
 							Version: "v1.0",
 							RuleOptions: []config.RuleOptionsConfig{
-								{RuleID: "rule-custom", Args: map[string]any{"from": "custom"}},
+								{RuleID: "rule-current", Args: map[string]any{"from": "current"}},
 							},
 						},
 					},
@@ -602,10 +602,10 @@ var _ = Describe("MergeConfigs", func() {
 			},
 		}
 
-		result, err := merge.MergeConfigs(base, custom, registry)
+		result, err := merge.MergeConfigs(base, current, registry)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(result.Providers[0].Rulesets[0].RuleOptions).To(HaveLen(1))
-		Expect(result.Providers[0].Rulesets[0].RuleOptions[0].RuleID).To(Equal("rule-custom"))
+		Expect(result.Providers[0].Rulesets[0].RuleOptions[0].RuleID).To(Equal("rule-current"))
 	})
 })
 
@@ -640,7 +640,7 @@ var _ = Describe("Registry", func() {
 		Expect(items).To(Equal([]any{"a", "b"}))
 	})
 
-	It("should return custom args for non-mergeable options", func() {
+	It("should return current args for non-mergeable options", func() {
 		registry := merge.NewRegistry()
 		merge.RegisterMergeFunc[nonMergeableOptions](registry, merge.RegistryKey{
 			ProviderID: "p",
@@ -652,12 +652,12 @@ var _ = Describe("Registry", func() {
 		fn := registry.Get(merge.RegistryKey{ProviderID: "p", RulesetID: "r", Version: "v", RuleID: "rule"})
 		Expect(fn).ToNot(BeNil())
 
-		customArgs := map[string]any{"value": "custom"}
+		currentArgs := map[string]any{"value": "current"}
 		result, err := fn(
 			map[string]any{"value": "base"},
-			customArgs,
+			currentArgs,
 		)
 		Expect(err).ToNot(HaveOccurred())
-		Expect(result).To(Equal(customArgs))
+		Expect(result).To(Equal(currentArgs))
 	})
 })

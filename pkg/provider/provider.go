@@ -55,5 +55,5 @@ type ProviderOption struct {
 	ValidateConfigFunc
 	MetadataFunc
 	DefaultDikiConfigFunc
-	MergeRegistryFunc
+	MergeRegistryFuncs []MergeRegistryFunc
 }

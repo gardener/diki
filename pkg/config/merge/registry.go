@@ -19,9 +19,9 @@ type RegistryKey struct {
 	RuleID     string
 }
 
-// RuleOptionMergeFunc merges base args with custom args for a specific rule.
-// If the option type implements MergeableOption, it calls Merge; otherwise it returns customArgs unchanged.
-type RuleOptionMergeFunc func(baseArgs, customArgs any) (any, error)
+// RuleOptionMergeFunc merges base args with current args for a specific rule.
+// If the option type implements MergeableOption, it calls Merge; otherwise it returns currentArgs unchanged.
+type RuleOptionMergeFunc func(baseArgs, currentArgs any) (any, error)
 
 // Registry maps rule option types to their merge functions.
 type Registry struct {
@@ -48,28 +48,28 @@ func (r *Registry) Get(key RegistryKey) RuleOptionMergeFunc {
 // RegisterMergeFunc registers a typed merge function for the given key.
 // It parses raw args into the concrete type O and checks if it implements MergeableOption.
 func RegisterMergeFunc[O any](r *Registry, key RegistryKey) {
-	r.Register(key, func(baseArgs, customArgs any) (any, error) {
+	r.Register(key, func(baseArgs, currentArgs any) (any, error) {
 		baseOpt, err := parseOption[O](baseArgs)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse base args for rule %s: %w", key.RuleID, err)
 		}
 
-		customOpt, err := parseOption[O](customArgs)
+		currentOpt, err := parseOption[O](currentArgs)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse custom args for rule %s: %w", key.RuleID, err)
+			return nil, fmt.Errorf("failed to parse current args for rule %s: %w", key.RuleID, err)
 		}
 
 		baseMergeable, ok := any(baseOpt).(option.MergeableOption)
 		if !ok {
-			return customArgs, nil
+			return currentArgs, nil
 		}
 
-		customMergeable, ok := any(customOpt).(option.MergeableOption)
+		currentMergeable, ok := any(currentOpt).(option.MergeableOption)
 		if !ok {
-			return customArgs, nil
+			return currentArgs, nil
 		}
 
-		merged, err := baseMergeable.Merge(customMergeable)
+		merged, err := baseMergeable.Merge(currentMergeable)
 		if err != nil {
 			return nil, fmt.Errorf("failed to merge args for rule %s: %w", key.RuleID, err)
 		}
