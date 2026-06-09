@@ -59,6 +59,13 @@ func RegisterMergeFunc[O any](r *Registry, key RegistryKey) {
 			return nil, fmt.Errorf("failed to parse current args for rule %s: %w", key.RuleID, err)
 		}
 
+		if baseOpt == nil {
+			return currentArgs, nil
+		}
+		if currentOpt == nil {
+			return baseArgs, nil
+		}
+
 		baseMergeable, ok := any(baseOpt).(option.MergeableOption)
 		if !ok {
 			return currentArgs, nil

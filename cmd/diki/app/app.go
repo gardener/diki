@@ -211,10 +211,12 @@ e.g. to check compliance of your hyperscaler accounts.`,
 
 	var configMergeOpts configMergeOptions
 	configMergeCmd := &cobra.Command{
-		Use:   "merge",
+		Use:   "merge [current-config]",
 		Short: "Merge a base config with a current config.",
 		Long:  "Merge combines rule options from a base (default) config with a current config. The current config is primary; only ruleOptions are merged.",
-		RunE: func(_ *cobra.Command, _ []string) error {
+		Args:  cobra.ExactArgs(1),
+		RunE: func(_ *cobra.Command, args []string) error {
+			configMergeOpts.currentPath = args[0]
 			return configMergeCmd(configMergeOpts, mergeRegistryFuncs, validateConfigFuncs, logger)
 		},
 	}
@@ -617,13 +619,11 @@ type configMergeOptions struct {
 
 func addConfigMergeFlags(cmd *cobra.Command, opts *configMergeOptions) {
 	cmd.PersistentFlags().StringVar(&opts.basePath, "base", "", "Path to the base (default) configuration file.")
-	cmd.PersistentFlags().StringVar(&opts.currentPath, "current", "", "Path to the current configuration file.")
 	cmd.PersistentFlags().StringVar(&opts.outputPath, "output", "", "Output path for the merged configuration. If not set, output is written to stdout.")
 	_ = cmd.MarkPersistentFlagRequired("base")
-	_ = cmd.MarkPersistentFlagRequired("current")
 }
 
-func configMergeCmd(opts configMergeOptions, registryFuncs []provider.MergeRegistryFunc, validateFuncs map[string]provider.ValidateConfigFunc, logger *slog.Logger) error {
+func configMergeCmd(opts configMergeOptions, registryFuncs []provider.MergeRegistryFunc, validateFuncs map[string]provider.ValidateConfigFunc, logger *slog.Logger) (err error) {
 
 	baseConfig, err := readConfig(opts.basePath)
 	if err != nil {
@@ -671,8 +671,8 @@ func configMergeCmd(opts configMergeOptions, registryFuncs []provider.MergeRegis
 			return err
 		}
 		defer func() {
-			if err := file.Close(); err != nil {
-				logger.Error(err.Error())
+			if closeErr := file.Close(); closeErr != nil && err == nil {
+				err = closeErr
 			}
 		}()
 		writer = file

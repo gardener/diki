@@ -17,7 +17,7 @@ import (
 //   - Rule in base only: appended to the output
 //   - Rule in both + MergeableOption: Merge() is called (base.Merge(current))
 //   - Rule in both + not MergeableOption: current args win
-//   - Skip always wins: if either config skips a rule, the merged result skips it
+//   - Skip: if either config skips a rule, the merged result skips it. If both skip, the current config's justification takes priority
 func MergeConfigs(base, current *config.DikiConfig, registry *Registry) (*config.DikiConfig, error) {
 	if base == nil {
 		return current, nil
@@ -26,20 +26,31 @@ func MergeConfigs(base, current *config.DikiConfig, registry *Registry) (*config
 		return nil, nil
 	}
 
+	result := &config.DikiConfig{
+		Metadata: current.Metadata,
+		Output:   current.Output,
+	}
+
+	result.Providers = make([]config.ProviderConfig, len(current.Providers))
+	copy(result.Providers, current.Providers)
+
 	baseProviders := indexProviders(base.Providers)
 
-	for pi := range current.Providers {
-		currentProvider := &current.Providers[pi]
-		baseProvider, found := baseProviders[currentProvider.ID]
+	for pi := range result.Providers {
+		resultProvider := &result.Providers[pi]
+		baseProvider, found := baseProviders[resultProvider.ID]
 		if !found {
 			continue
 		}
 
 		baseRulesets := indexRulesets(baseProvider.Rulesets)
 
-		for ri := range currentProvider.Rulesets {
-			currentRuleset := &currentProvider.Rulesets[ri]
-			rulesetKey := rulesetIndexKey{ID: currentRuleset.ID, Version: currentRuleset.Version}
+		resultProvider.Rulesets = make([]config.RulesetConfig, len(resultProvider.Rulesets))
+		copy(resultProvider.Rulesets, current.Providers[pi].Rulesets)
+
+		for ri := range resultProvider.Rulesets {
+			resultRuleset := &resultProvider.Rulesets[ri]
+			rulesetKey := rulesetIndexKey{ID: resultRuleset.ID, Version: resultRuleset.Version}
 			baseRuleset, found := baseRulesets[rulesetKey]
 			if !found {
 				continue
@@ -47,20 +58,20 @@ func MergeConfigs(base, current *config.DikiConfig, registry *Registry) (*config
 
 			merged, err := mergeRuleOptions(
 				baseRuleset.RuleOptions,
-				currentRuleset.RuleOptions,
-				currentProvider.ID,
-				currentRuleset.ID,
-				currentRuleset.Version,
+				resultRuleset.RuleOptions,
+				resultProvider.ID,
+				resultRuleset.ID,
+				resultRuleset.Version,
 				registry,
 			)
 			if err != nil {
 				return nil, err
 			}
-			currentRuleset.RuleOptions = merged
+			resultRuleset.RuleOptions = merged
 		}
 	}
 
-	return current, nil
+	return result, nil
 }
 
 func mergeRuleOptions(
@@ -106,10 +117,7 @@ func mergeSingleRuleOption(
 	providerID, rulesetID, version string,
 	registry *Registry,
 ) (config.RuleOptionsConfig, error) {
-	result := config.RuleOptionsConfig{
-		RuleID: currentOpt.RuleID,
-	}
-
+	result := currentOpt
 	result.Skip = mergeSkip(baseOpt.Skip, currentOpt.Skip)
 
 	if baseOpt.Args == nil && currentOpt.Args == nil {
@@ -148,10 +156,12 @@ func mergeSingleRuleOption(
 
 func mergeSkip(baseSkip, currentSkip *config.RuleOptionSkipConfig) *config.RuleOptionSkipConfig {
 	if currentSkip != nil && currentSkip.Enabled {
-		return currentSkip
+		s := *currentSkip
+		return &s
 	}
 	if baseSkip != nil && baseSkip.Enabled {
-		return baseSkip
+		s := *baseSkip
+		return &s
 	}
 	return nil
 }

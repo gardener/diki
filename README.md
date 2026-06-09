@@ -172,13 +172,13 @@ Merge behavior for `ruleOptions`:
 - Rules only in the current config are kept as-is
 - Rules only in the base config are appended to the output
 - Rules in both configs are merged if a merge strategy is registered, otherwise the current config wins
-- If either config skips a rule, the merged result will always skip it
+- If either config skips a rule, the merged result will skip it. If both configs skip a rule, the current config's justification takes priority
 
 ```bash
 diki config merge \
     --base=base.yaml \
-    --current=current.yaml \
-    --output=merged.yaml
+    --output=merged.yaml \
+    current.yaml
 ```
 
 ### Unit Tests
