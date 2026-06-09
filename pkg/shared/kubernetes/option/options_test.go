@@ -458,6 +458,26 @@ var _ = Describe("options", func() {
 			results := option.Validate(field.NewPath("foo"))
 			Expect(results).To(BeNil())
 		})
+
+		It("should validate the embedded namespaced object selector", func() {
+			option := option.AcceptedPodVolumes{
+				AcceptedNamespacedObject: option.AcceptedNamespacedObject{
+					NamespacedObjectSelector: option.NamespacedObjectSelector{},
+				},
+				VolumeNames: []string{"valid-volume"},
+			}
+
+			results := option.Validate(field.NewPath("foo"))
+
+			Expect(results).ToNot(BeEmpty())
+			Expect(results).To(ContainElement(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("foo"),
+					"Detail": ContainSubstring("labelSelector and namespaceLabelSelector must be set"),
+				})),
+			))
+		})
 	})
 
 	Describe("MatchesAcceptedPodVolumes", func() {

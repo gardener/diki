@@ -25,8 +25,10 @@ var _ = Describe("ValidateProviderConfig", func() {
 			ID:   "gardener",
 			Name: "Gardener",
 			Args: map[string]string{
-				"shootName":      "my-shoot",
-				"shootNamespace": "garden-dev",
+				"shootName":           "my-shoot",
+				"shootNamespace":      "garden-dev",
+				"shootKubeconfigPath": "/path/to/shoot/kubeconfig",
+				"seedKubeconfigPath":  "/path/to/seed/kubeconfig",
 			},
 			Rulesets: []config.RulesetConfig{
 				{ID: "disa-kubernetes-stig", Version: "v2r5"},
@@ -45,9 +47,11 @@ var _ = Describe("ValidateProviderConfig", func() {
 		}
 
 		errs := gardener.ValidateProviderConfig(conf, fldPath)
-		Expect(errs).To(HaveLen(2))
+		Expect(errs).To(HaveLen(4))
 		Expect(errs[0].Field).To(Equal("providers[0].args.shootName"))
 		Expect(errs[1].Field).To(Equal("providers[0].args.shootNamespace"))
+		Expect(errs[2].Field).To(Equal("providers[0].args.shootKubeconfigPath"))
+		Expect(errs[3].Field).To(Equal("providers[0].args.seedKubeconfigPath"))
 	})
 
 	It("should return error for unsupported ruleset ID", func() {
@@ -55,8 +59,10 @@ var _ = Describe("ValidateProviderConfig", func() {
 			ID:   "gardener",
 			Name: "Gardener",
 			Args: map[string]string{
-				"shootName":      "my-shoot",
-				"shootNamespace": "garden-dev",
+				"shootName":           "my-shoot",
+				"shootNamespace":      "garden-dev",
+				"shootKubeconfigPath": "/path/to/shoot/kubeconfig",
+				"seedKubeconfigPath":  "/path/to/seed/kubeconfig",
 			},
 			Rulesets: []config.RulesetConfig{
 				{ID: "unknown-ruleset", Version: "v1"},
@@ -73,8 +79,10 @@ var _ = Describe("ValidateProviderConfig", func() {
 			ID:   "gardener",
 			Name: "Gardener",
 			Args: map[string]string{
-				"shootName":      "my-shoot",
-				"shootNamespace": "garden-dev",
+				"shootName":           "my-shoot",
+				"shootNamespace":      "garden-dev",
+				"shootKubeconfigPath": "/path/to/shoot/kubeconfig",
+				"seedKubeconfigPath":  "/path/to/seed/kubeconfig",
 			},
 			Rulesets: []config.RulesetConfig{
 				{ID: "disa-kubernetes-stig", Version: "v2r5"},

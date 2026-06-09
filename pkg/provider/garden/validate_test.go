@@ -44,7 +44,9 @@ var _ = Describe("ValidateProviderConfig", func() {
 		conf := config.ProviderConfig{
 			ID:   "garden",
 			Name: "Garden",
-			Args: map[string]any{},
+			Args: map[string]string{
+				"kubeconfigPath": "/path/to/kubeconfig",
+			},
 			Rulesets: []config.RulesetConfig{
 				{ID: "unknown-ruleset", Version: "v1"},
 			},
@@ -59,7 +61,9 @@ var _ = Describe("ValidateProviderConfig", func() {
 		conf := config.ProviderConfig{
 			ID:   "garden",
 			Name: "Garden",
-			Args: map[string]any{},
+			Args: map[string]string{
+				"kubeconfigPath": "/path/to/kubeconfig",
+			},
 			Rulesets: []config.RulesetConfig{
 				{ID: "security-hardened-shoot-cluster", Version: "v0.2.1", Args: map[string]string{"shootName": "my-shoot", "projectNamespace": "garden-my-project"}},
 				{ID: "security-hardened-shoot-cluster", Version: "v0.2.1", Args: map[string]string{"shootName": "my-shoot", "projectNamespace": "garden-my-project"}},
@@ -76,7 +80,9 @@ var _ = Describe("ValidateProviderConfig", func() {
 		conf := config.ProviderConfig{
 			ID:   "garden",
 			Name: "Garden",
-			Args: map[string]any{},
+			Args: map[string]string{
+				"kubeconfigPath": "/path/to/kubeconfig",
+			},
 			Rulesets: []config.RulesetConfig{
 				{ID: "security-hardened-shoot-cluster", Version: "v0.2.1", Args: map[string]any{}},
 			},
@@ -88,6 +94,19 @@ var _ = Describe("ValidateProviderConfig", func() {
 		Expect(errs[0].Field).To(Equal("providers[0].rulesets[0].args.shootName"))
 		Expect(errs[1].Type).To(Equal(field.ErrorTypeRequired))
 		Expect(errs[1].Field).To(Equal("providers[0].rulesets[0].args.projectNamespace"))
+	})
+
+	It("should return error for missing required provider args", func() {
+		conf := config.ProviderConfig{
+			ID:   "garden",
+			Name: "Garden",
+			Args: map[string]any{},
+		}
+
+		errs := garden.ValidateProviderConfig(conf, fldPath)
+		Expect(errs).To(HaveLen(1))
+		Expect(errs[0].Type).To(Equal(field.ErrorTypeRequired))
+		Expect(errs[0].Field).To(Equal("providers[0].args.kubeconfigPath"))
 	})
 
 	It("should return error for invalid args", func() {

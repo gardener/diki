@@ -33,6 +33,12 @@ func ValidateProviderConfig(conf config.ProviderConfig, fldPath *field.Path) fie
 	if len(args.ShootNamespace) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("args", "shootNamespace"), ""))
 	}
+	if len(args.ShootKubeconfigPath) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("args", "shootKubeconfigPath"), ""))
+	}
+	if len(args.SeedKubeconfigPath) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("args", "seedKubeconfigPath"), ""))
+	}
 
 	seenRulesets := make(map[struct{ ID, Version string }]struct{})
 	for rulesetIdx, rulesetConfig := range conf.Rulesets {

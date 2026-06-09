@@ -40,7 +40,9 @@ var _ = Describe("ValidateProviderConfig", func() {
 		conf := config.ProviderConfig{
 			ID:   "virtualgarden",
 			Name: "Virtual Garden",
-			Args: map[string]any{},
+			Args: map[string]string{
+				"runtimeKubeconfigPath": "/path/to/kubeconfig",
+			},
 			Rulesets: []config.RulesetConfig{
 				{ID: "unknown-ruleset", Version: "v1"},
 			},
@@ -55,7 +57,9 @@ var _ = Describe("ValidateProviderConfig", func() {
 		conf := config.ProviderConfig{
 			ID:   "virtualgarden",
 			Name: "Virtual Garden",
-			Args: map[string]any{},
+			Args: map[string]string{
+				"runtimeKubeconfigPath": "/path/to/kubeconfig",
+			},
 			Rulesets: []config.RulesetConfig{
 				{ID: "disa-kubernetes-stig", Version: "v2r5"},
 				{ID: "disa-kubernetes-stig", Version: "v2r5"},
@@ -66,6 +70,19 @@ var _ = Describe("ValidateProviderConfig", func() {
 		Expect(errs).To(HaveLen(1))
 		Expect(errs[0].Field).To(Equal("providers[0].rulesets[1]"))
 		Expect(errs[0].Type).To(Equal(field.ErrorTypeDuplicate))
+	})
+
+	It("should return error for missing required provider args", func() {
+		conf := config.ProviderConfig{
+			ID:   "virtualgarden",
+			Name: "Virtual Garden",
+			Args: map[string]any{},
+		}
+
+		errs := virtualgarden.ValidateProviderConfig(conf, fldPath)
+		Expect(errs).To(HaveLen(1))
+		Expect(errs[0].Type).To(Equal(field.ErrorTypeRequired))
+		Expect(errs[0].Field).To(Equal("providers[0].args.runtimeKubeconfigPath"))
 	})
 
 	It("should return error for invalid args", func() {
