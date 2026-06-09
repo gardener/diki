@@ -211,12 +211,10 @@ e.g. to check compliance of your hyperscaler accounts.`,
 
 	var configMergeOpts configMergeOptions
 	configMergeCmd := &cobra.Command{
-		Use:   "merge [current-config]",
+		Use:   "merge",
 		Short: "Merge a base config with a current config.",
 		Long:  "Merge combines rule options from a base (default) config with a current config. The current config is primary; only ruleOptions are merged.",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(_ *cobra.Command, args []string) error {
-			configMergeOpts.currentPath = args[0]
+		RunE: func(_ *cobra.Command, _ []string) error {
 			return configMergeCmd(configMergeOpts, mergeRegistryFuncs, validateConfigFuncs, logger)
 		},
 	}
@@ -619,8 +617,10 @@ type configMergeOptions struct {
 
 func addConfigMergeFlags(cmd *cobra.Command, opts *configMergeOptions) {
 	cmd.PersistentFlags().StringVar(&opts.basePath, "base", "", "Path to the base (default) configuration file.")
+	cmd.PersistentFlags().StringVar(&opts.currentPath, "current", "", "Path to the current configuration file.")
 	cmd.PersistentFlags().StringVar(&opts.outputPath, "output", "", "Output path for the merged configuration. If not set, output is written to stdout.")
 	_ = cmd.MarkPersistentFlagRequired("base")
+	_ = cmd.MarkPersistentFlagRequired("current")
 }
 
 func configMergeCmd(opts configMergeOptions, registryFuncs []provider.MergeRegistryFunc, validateFuncs map[string]provider.ValidateConfigFunc, logger *slog.Logger) (err error) {

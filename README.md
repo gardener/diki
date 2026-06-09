@@ -177,8 +177,8 @@ Merge behavior for `ruleOptions`:
 ```bash
 diki config merge \
     --base=base.yaml \
-    --output=merged.yaml \
-    current.yaml
+    --current=current.yaml \
+    --output=merged.yaml
 ```
 
 ### Unit Tests
