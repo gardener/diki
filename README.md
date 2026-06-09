@@ -162,6 +162,25 @@ Diki can validate the structure and content of a configuration file.
 diki config validate config.yaml
 ```
 
+### Config Merge
+
+Diki can merge two configuration files, a base (default) config and a current config, into a single config.
+This is helpful when you want to reuse the same rule options across different diki runs.
+Only `ruleOptions` are merged, everything else (provider args, metadata, output) comes from the current config.
+
+Merge behavior for `ruleOptions`:
+- Rules only in the current config are kept as-is
+- Rules only in the base config are appended to the output
+- Rules in both configs are merged if a merge strategy is registered, otherwise the current config wins
+- If either config skips a rule, the merged result will skip it. If both configs skip a rule, the current config's justification takes priority
+
+```bash
+diki config merge \
+    --base=base.yaml \
+    --current=current.yaml \
+    --output=merged.yaml
+```
+
 ### Unit Tests
 
 You can manually run the tests via `make test`.
