@@ -590,6 +590,10 @@ func GetKubeletConfig(ctx context.Context, podExecutor pod.PodExecutor, rawKubel
 	}
 
 	kubeletConfig := &config.KubeletConfig{}
+	if len(strings.TrimSpace(rawKubeletConfig)) == 0 {
+		return kubeletConfig, nil
+	}
+
 	err = yaml.Unmarshal([]byte(rawKubeletConfig), kubeletConfig)
 	if err != nil {
 		return &config.KubeletConfig{}, err
@@ -607,6 +611,10 @@ func GetKubeProxyConfig(ctx context.Context, podExecutor pod.PodExecutor, kubePr
 	}
 
 	kubeProxyConfig := &config.KubeProxyConfig{}
+	if len(strings.TrimSpace(rawKubeProxyConfig)) == 0 {
+		return kubeProxyConfig, nil
+	}
+
 	err = yaml.Unmarshal([]byte(rawKubeProxyConfig), kubeProxyConfig)
 	if err != nil {
 		return &config.KubeProxyConfig{}, err
