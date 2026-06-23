@@ -231,4 +231,94 @@ var _ = Describe("#2007", func() {
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
 	})
+
+	Describe("#Merge Options2007", func() {
+		It("should merge two Options2007 by appending both slices", func() {
+			base := &rules.Options2007{
+				AcceptedRoles: []option.AcceptedNamespacedObject{
+					{
+						NamespacedObjectSelector: option.NamespacedObjectSelector{
+							LabelSelector:          &metav1.LabelSelector{MatchLabels: map[string]string{"role": "base"}},
+							NamespaceLabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"ns": "base"}},
+						},
+						Justification: "base role",
+					},
+				},
+				AcceptedClusterRoles: []option.AcceptedClusterObject{
+					{
+						ClusterObjectSelector: option.ClusterObjectSelector{
+							LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"cr": "base"}},
+						},
+						Justification: "base cluster role",
+					},
+				},
+			}
+
+			override := &rules.Options2007{
+				AcceptedRoles: []option.AcceptedNamespacedObject{
+					{
+						NamespacedObjectSelector: option.NamespacedObjectSelector{
+							LabelSelector:          &metav1.LabelSelector{MatchLabels: map[string]string{"role": "override"}},
+							NamespaceLabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"ns": "override"}},
+						},
+						Justification: "override role",
+					},
+				},
+				AcceptedClusterRoles: []option.AcceptedClusterObject{
+					{
+						ClusterObjectSelector: option.ClusterObjectSelector{
+							LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"cr": "override"}},
+						},
+						Justification: "override cluster role",
+					},
+				},
+			}
+
+			merged, err := base.Merge(override)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options2007)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AcceptedRoles).To(HaveLen(2))
+			Expect(mergedOpts.AcceptedRoles[0].Justification).To(Equal("base role"))
+			Expect(mergedOpts.AcceptedRoles[1].Justification).To(Equal("override role"))
+			Expect(mergedOpts.AcceptedClusterRoles).To(HaveLen(2))
+			Expect(mergedOpts.AcceptedClusterRoles[0].Justification).To(Equal("base cluster role"))
+			Expect(mergedOpts.AcceptedClusterRoles[1].Justification).To(Equal("override cluster role"))
+		})
+
+		It("should return the receiver when merging with nil", func() {
+			base := &rules.Options2007{
+				AcceptedRoles: []option.AcceptedNamespacedObject{
+					{Justification: "base"},
+				},
+			}
+
+			merged, err := base.Merge(nil)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(merged).To(Equal(base))
+		})
+
+		It("should handle merging two empty Options2007", func() {
+			base := &rules.Options2007{}
+			other := &rules.Options2007{}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options2007)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AcceptedRoles).To(BeEmpty())
+			Expect(mergedOpts.AcceptedClusterRoles).To(BeEmpty())
+		})
+
+		It("should return an error when merging with a different option type", func() {
+			base := &rules.Options2007{}
+			other := &rules.Options2000{}
+
+			merged, err := base.Merge(other)
+			Expect(err).To(MatchError(ContainSubstring("cannot merge options of type")))
+			Expect(merged).To(BeNil())
+		})
+	})
 })

@@ -7,6 +7,7 @@ package rules
 import (
 	"cmp"
 	"context"
+	"fmt"
 	"strings"
 
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -21,9 +22,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule2007{}
-	_ rule.Severity = &Rule2007{}
-	_ option.Option = &Options2007{}
+	_ rule.Rule              = &Rule2007{}
+	_ rule.Severity          = &Rule2007{}
+	_ option.Option          = &Options2007{}
+	_ option.MergeableOption = &Options2007{}
 )
 
 type Rule2007 struct {
@@ -49,6 +51,28 @@ func (o Options2007) Validate(fldPath *field.Path) field.ErrorList {
 	}
 
 	return allErrs
+}
+
+func (o *Options2007) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, ok := other.(*Options2007)
+	if !ok {
+		return nil, fmt.Errorf("cannot merge options of type %T into *Options2007", other)
+	}
+
+	merged := &Options2007{
+		AcceptedRoles:        make([]option.AcceptedNamespacedObject, 0, len(o.AcceptedRoles)+len(otherOpts.AcceptedRoles)),
+		AcceptedClusterRoles: make([]option.AcceptedClusterObject, 0, len(o.AcceptedClusterRoles)+len(otherOpts.AcceptedClusterRoles)),
+	}
+	merged.AcceptedRoles = append(merged.AcceptedRoles, o.AcceptedRoles...)
+	merged.AcceptedRoles = append(merged.AcceptedRoles, otherOpts.AcceptedRoles...)
+	merged.AcceptedClusterRoles = append(merged.AcceptedClusterRoles, o.AcceptedClusterRoles...)
+	merged.AcceptedClusterRoles = append(merged.AcceptedClusterRoles, otherOpts.AcceptedClusterRoles...)
+
+	return merged, nil
 }
 
 func (r *Rule2007) ID() string {
