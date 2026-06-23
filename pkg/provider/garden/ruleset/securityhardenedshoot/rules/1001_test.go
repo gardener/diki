@@ -335,4 +335,64 @@ var _ = Describe("#1001", func() {
 			}))
 		})
 	})
+
+	Describe("#Merge Options1001", func() {
+		It("should merge two Options1001 by appending AllowedClassifications", func() {
+			base := &rules.Options1001{
+				AllowedClassifications: []gardencorev1beta1.VersionClassification{
+					gardencorev1beta1.ClassificationSupported,
+				},
+			}
+			other := &rules.Options1001{
+				AllowedClassifications: []gardencorev1beta1.VersionClassification{
+					gardencorev1beta1.ClassificationPreview,
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options1001)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AllowedClassifications).To(HaveLen(2))
+			Expect(mergedOpts.AllowedClassifications[0]).To(Equal(gardencorev1beta1.ClassificationSupported))
+			Expect(mergedOpts.AllowedClassifications[1]).To(Equal(gardencorev1beta1.ClassificationPreview))
+		})
+
+		It("should return the receiver when merging with nil", func() {
+			base := &rules.Options1001{
+				AllowedClassifications: []gardencorev1beta1.VersionClassification{
+					gardencorev1beta1.ClassificationSupported,
+				},
+			}
+
+			merged, err := base.Merge(nil)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(merged).To(Equal(base))
+		})
+
+		It("should handle merging two empty Options1001", func() {
+			base := &rules.Options1001{}
+			other := &rules.Options1001{}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options1001)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AllowedClassifications).To(BeEmpty())
+		})
+
+		It("should return an error when merging with a different type", func() {
+			base := &rules.Options1001{
+				AllowedClassifications: []gardencorev1beta1.VersionClassification{
+					gardencorev1beta1.ClassificationSupported,
+				},
+			}
+
+			_, err := base.Merge(&rules.Options2000{})
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("cannot merge options of type"))
+		})
+	})
 })

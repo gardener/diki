@@ -21,9 +21,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule1001{}
-	_ rule.Severity = &Rule1001{}
-	_ option.Option = &Options1001{}
+	_ rule.Rule              = &Rule1001{}
+	_ rule.Severity          = &Rule1001{}
+	_ option.Option          = &Options1001{}
+	_ option.MergeableOption = &Options1001{}
 )
 
 type Rule1001 struct {
@@ -35,6 +36,25 @@ type Rule1001 struct {
 
 type Options1001 struct {
 	AllowedClassifications []gardencorev1beta1.VersionClassification `json:"allowedClassifications" yaml:"allowedClassifications"`
+}
+
+func (o *Options1001) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, ok := other.(*Options1001)
+	if !ok {
+		return nil, fmt.Errorf("cannot merge options of type %T into *Options1001", other)
+	}
+
+	merged := &Options1001{
+		AllowedClassifications: make([]gardencorev1beta1.VersionClassification, 0, len(o.AllowedClassifications)+len(otherOpts.AllowedClassifications)),
+	}
+	merged.AllowedClassifications = append(merged.AllowedClassifications, o.AllowedClassifications...)
+	merged.AllowedClassifications = append(merged.AllowedClassifications, otherOpts.AllowedClassifications...)
+
+	return merged, nil
 }
 
 func (o Options1001) Validate(fldPath *field.Path) field.ErrorList {
