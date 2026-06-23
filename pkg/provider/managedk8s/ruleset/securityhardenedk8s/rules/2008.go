@@ -7,6 +7,7 @@ package rules
 import (
 	"cmp"
 	"context"
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -20,9 +21,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule2008{}
-	_ rule.Severity = &Rule2008{}
-	_ option.Option = &Options2008{}
+	_ rule.Rule              = &Rule2008{}
+	_ rule.Severity          = &Rule2008{}
+	_ option.Option          = &Options2008{}
+	_ option.MergeableOption = &Options2008{}
 )
 
 type Rule2008 struct {
@@ -44,6 +46,25 @@ func (o Options2008) Validate(fldPath *field.Path) field.ErrorList {
 		allErrs = append(allErrs, p.Validate(acceptedPodsPath.Index(pIdx))...)
 	}
 	return allErrs
+}
+
+func (o *Options2008) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, ok := other.(*Options2008)
+	if !ok {
+		return nil, fmt.Errorf("cannot merge options of type %T into *Options2008", other)
+	}
+
+	merged := &Options2008{
+		AcceptedPods: make([]option.AcceptedPodVolumes, 0, len(o.AcceptedPods)+len(otherOpts.AcceptedPods)),
+	}
+	merged.AcceptedPods = append(merged.AcceptedPods, o.AcceptedPods...)
+	merged.AcceptedPods = append(merged.AcceptedPods, otherOpts.AcceptedPods...)
+
+	return merged, nil
 }
 
 func (r *Rule2008) ID() string {
