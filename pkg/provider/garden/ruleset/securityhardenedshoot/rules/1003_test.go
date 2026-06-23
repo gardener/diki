@@ -297,4 +297,56 @@ var _ = Describe("#1003", func() {
 			}))
 		})
 	})
+
+	Describe("#Merge Options1003", func() {
+		It("should merge two Options1003 by appending AllowedLakomScopes", func() {
+			base := &rules.Options1003{
+				AllowedLakomScopes: []lakomapi.ScopeType{lakomapi.KubeSystem},
+			}
+			other := &rules.Options1003{
+				AllowedLakomScopes: []lakomapi.ScopeType{lakomapi.Cluster},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options1003)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AllowedLakomScopes).To(HaveLen(2))
+			Expect(mergedOpts.AllowedLakomScopes[0]).To(Equal(lakomapi.KubeSystem))
+			Expect(mergedOpts.AllowedLakomScopes[1]).To(Equal(lakomapi.Cluster))
+		})
+
+		It("should return the receiver when merging with nil", func() {
+			base := &rules.Options1003{
+				AllowedLakomScopes: []lakomapi.ScopeType{lakomapi.KubeSystem},
+			}
+
+			merged, err := base.Merge(nil)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(merged).To(Equal(base))
+		})
+
+		It("should handle merging two empty Options1003", func() {
+			base := &rules.Options1003{}
+			other := &rules.Options1003{}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options1003)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AllowedLakomScopes).To(BeEmpty())
+		})
+
+		It("should return an error when merging with a different type", func() {
+			base := &rules.Options1003{
+				AllowedLakomScopes: []lakomapi.ScopeType{lakomapi.KubeSystem},
+			}
+
+			_, err := base.Merge(&rules.Options2000{})
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("cannot merge options of type"))
+		})
+	})
 })

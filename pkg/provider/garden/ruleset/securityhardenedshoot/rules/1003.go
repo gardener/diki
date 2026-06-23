@@ -25,9 +25,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule1003{}
-	_ rule.Severity = &Rule1003{}
-	_ option.Option = &Options1003{}
+	_ rule.Rule              = &Rule1003{}
+	_ rule.Severity          = &Rule1003{}
+	_ option.Option          = &Options1003{}
+	_ option.MergeableOption = &Options1003{}
 )
 
 type Rule1003 struct {
@@ -39,6 +40,25 @@ type Rule1003 struct {
 
 type Options1003 struct {
 	AllowedLakomScopes []lakomapi.ScopeType `json:"allowedLakomScopes" yaml:"allowedLakomScopes"`
+}
+
+func (o *Options1003) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, ok := other.(*Options1003)
+	if !ok {
+		return nil, fmt.Errorf("cannot merge options of type %T into *Options1003", other)
+	}
+
+	merged := &Options1003{
+		AllowedLakomScopes: make([]lakomapi.ScopeType, 0, len(o.AllowedLakomScopes)+len(otherOpts.AllowedLakomScopes)),
+	}
+	merged.AllowedLakomScopes = append(merged.AllowedLakomScopes, o.AllowedLakomScopes...)
+	merged.AllowedLakomScopes = append(merged.AllowedLakomScopes, otherOpts.AllowedLakomScopes...)
+
+	return merged, nil
 }
 
 func (o Options1003) Validate(fldPath *field.Path) field.ErrorList {
