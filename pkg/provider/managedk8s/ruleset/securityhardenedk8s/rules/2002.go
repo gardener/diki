@@ -7,6 +7,7 @@ package rules
 import (
 	"cmp"
 	"context"
+	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,9 +21,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule2002{}
-	_ rule.Severity = &Rule2002{}
-	_ option.Option = &Options2002{}
+	_ rule.Rule              = &Rule2002{}
+	_ rule.Severity          = &Rule2002{}
+	_ option.Option          = &Options2002{}
+	_ option.MergeableOption = &Options2002{}
 )
 
 type Rule2002 struct {
@@ -45,6 +47,25 @@ func (o Options2002) Validate(fldPath *field.Path) field.ErrorList {
 	}
 
 	return allErrs
+}
+
+func (o *Options2002) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, ok := other.(*Options2002)
+	if !ok {
+		return nil, fmt.Errorf("cannot merge options of type %T into *Options2002", other)
+	}
+
+	merged := &Options2002{
+		AcceptedStorageClasses: make([]option.AcceptedClusterObject, 0, len(o.AcceptedStorageClasses)+len(otherOpts.AcceptedStorageClasses)),
+	}
+	merged.AcceptedStorageClasses = append(merged.AcceptedStorageClasses, o.AcceptedStorageClasses...)
+	merged.AcceptedStorageClasses = append(merged.AcceptedStorageClasses, otherOpts.AcceptedStorageClasses...)
+
+	return merged, nil
 }
 
 func (r *Rule2002) ID() string {

@@ -156,4 +156,72 @@ var _ = Describe("#2002", func() {
 			},
 		),
 	)
+
+	Describe("#Merge Options2002", func() {
+		It("should merge two Options2002 by appending AcceptedStorageClasses", func() {
+			base := &rules.Options2002{
+				AcceptedStorageClasses: []option.AcceptedClusterObject{
+					{
+						ClusterObjectSelector: option.ClusterObjectSelector{
+							LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"type": "base"}},
+						},
+						Justification: "base justification",
+					},
+				},
+			}
+
+			override := &rules.Options2002{
+				AcceptedStorageClasses: []option.AcceptedClusterObject{
+					{
+						ClusterObjectSelector: option.ClusterObjectSelector{
+							LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"type": "override"}},
+						},
+						Justification: "override justification",
+					},
+				},
+			}
+
+			merged, err := base.Merge(override)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options2002)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AcceptedStorageClasses).To(HaveLen(2))
+			Expect(mergedOpts.AcceptedStorageClasses[0].Justification).To(Equal("base justification"))
+			Expect(mergedOpts.AcceptedStorageClasses[1].Justification).To(Equal("override justification"))
+		})
+
+		It("should return the receiver when merging with nil", func() {
+			base := &rules.Options2002{
+				AcceptedStorageClasses: []option.AcceptedClusterObject{
+					{Justification: "base"},
+				},
+			}
+
+			merged, err := base.Merge(nil)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(merged).To(Equal(base))
+		})
+
+		It("should handle merging two empty Options2002", func() {
+			base := &rules.Options2002{}
+			other := &rules.Options2002{}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options2002)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AcceptedStorageClasses).To(BeEmpty())
+		})
+
+		It("should return an error when merging with a different option type", func() {
+			base := &rules.Options2002{}
+			other := &rules.Options2000{}
+
+			merged, err := base.Merge(other)
+			Expect(err).To(MatchError(ContainSubstring("cannot merge options of type")))
+			Expect(merged).To(BeNil())
+		})
+	})
 })
