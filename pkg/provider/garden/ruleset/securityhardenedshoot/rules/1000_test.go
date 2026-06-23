@@ -283,4 +283,64 @@ var _ = Describe("#1000", func() {
 			}))
 		})
 	})
+
+	Describe("#Merge Options1000", func() {
+		It("should merge two Options1000 by appending Extensions", func() {
+			base := &rules.Options1000{
+				Extensions: []rules.Extension{
+					{Type: "ext-a"},
+				},
+			}
+			other := &rules.Options1000{
+				Extensions: []rules.Extension{
+					{Type: "ext-b"},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options1000)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.Extensions).To(HaveLen(2))
+			Expect(mergedOpts.Extensions[0].Type).To(Equal("ext-a"))
+			Expect(mergedOpts.Extensions[1].Type).To(Equal("ext-b"))
+		})
+
+		It("should return the receiver when merging with nil", func() {
+			base := &rules.Options1000{
+				Extensions: []rules.Extension{
+					{Type: "ext-a"},
+				},
+			}
+
+			merged, err := base.Merge(nil)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(merged).To(Equal(base))
+		})
+
+		It("should handle merging two empty Options1000", func() {
+			base := &rules.Options1000{}
+			other := &rules.Options1000{}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options1000)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.Extensions).To(BeEmpty())
+		})
+
+		It("should return an error when merging with a different type", func() {
+			base := &rules.Options1000{
+				Extensions: []rules.Extension{
+					{Type: "ext-a"},
+				},
+			}
+
+			_, err := base.Merge(&rules.Options2000{})
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("cannot merge options of type"))
+		})
+	})
 })
