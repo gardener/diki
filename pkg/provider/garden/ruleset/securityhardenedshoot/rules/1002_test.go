@@ -486,4 +486,64 @@ var _ = Describe("#1002", func() {
 			}))
 		})
 	})
+
+	Describe("#Merge Options1002", func() {
+		It("should merge two Options1002 by appending MachineImages", func() {
+			base := &rules.Options1002{
+				MachineImages: []rules.MachineImage{
+					{Name: "ubuntu", AllowedClassifications: []gardencorev1beta1.VersionClassification{gardencorev1beta1.ClassificationSupported}},
+				},
+			}
+			other := &rules.Options1002{
+				MachineImages: []rules.MachineImage{
+					{Name: "gardenlinux", AllowedClassifications: []gardencorev1beta1.VersionClassification{gardencorev1beta1.ClassificationPreview}},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options1002)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.MachineImages).To(HaveLen(2))
+			Expect(mergedOpts.MachineImages[0].Name).To(Equal("ubuntu"))
+			Expect(mergedOpts.MachineImages[1].Name).To(Equal("gardenlinux"))
+		})
+
+		It("should return the receiver when merging with nil", func() {
+			base := &rules.Options1002{
+				MachineImages: []rules.MachineImage{
+					{Name: "ubuntu"},
+				},
+			}
+
+			merged, err := base.Merge(nil)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(merged).To(Equal(base))
+		})
+
+		It("should handle merging two empty Options1002", func() {
+			base := &rules.Options1002{}
+			other := &rules.Options1002{}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options1002)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.MachineImages).To(BeEmpty())
+		})
+
+		It("should return an error when merging with a different type", func() {
+			base := &rules.Options1002{
+				MachineImages: []rules.MachineImage{
+					{Name: "ubuntu"},
+				},
+			}
+
+			_, err := base.Merge(&rules.Options2000{})
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("cannot merge options of type"))
+		})
+	})
 })
