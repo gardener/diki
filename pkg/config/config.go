@@ -21,11 +21,11 @@ type ProviderConfig struct {
 	// Name is the user friendly name of a provider.
 	Name string `yaml:"name"`
 	// Metadata represents additional values used to describe a provider.
-	Metadata map[string]string `yaml:"metadata"`
+	Metadata map[string]string `yaml:"metadata,omitempty"`
 	// Rulesets represents ruleset specific configurations.
 	Rulesets []RulesetConfig `yaml:"rulesets"`
 	// Args are provider specific arguments that each provider should be able to parse.
-	Args any `yaml:"args"`
+	Args any `yaml:"args,omitempty"`
 }
 
 // RulesetConfig is used to describe and configure a ruleset.
@@ -37,9 +37,9 @@ type RulesetConfig struct {
 	// Version is the ruleset's version.
 	Version string `yaml:"version"`
 	// RuleOptions is used to provide per rule configurations.
-	RuleOptions []RuleOptionsConfig `yaml:"ruleOptions"`
+	RuleOptions []RuleOptionsConfig `yaml:"ruleOptions,omitempty"`
 	// Args are ruleset specific arguments that each ruleset should be able to parse.
-	Args any `yaml:"args"`
+	Args any `yaml:"args,omitempty"`
 }
 
 // RuleOptionsConfig represents per rule options.
