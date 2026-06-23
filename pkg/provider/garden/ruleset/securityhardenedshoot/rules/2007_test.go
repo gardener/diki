@@ -290,4 +290,56 @@ var _ = Describe("#2007", func() {
 			}))
 		})
 	})
+
+	Describe("#Merge Options2007", func() {
+		It("should use the other value when it is non-empty", func() {
+			base := &rules.Options2007{
+				MinPodSecurityStandardsProfile: intkubeutils.PSSProfileBaseline,
+			}
+			other := &rules.Options2007{
+				MinPodSecurityStandardsProfile: intkubeutils.PSSProfileRestricted,
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options2007)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.MinPodSecurityStandardsProfile).To(Equal(intkubeutils.PSSProfileRestricted))
+		})
+
+		It("should keep the base value when the other value is empty", func() {
+			base := &rules.Options2007{
+				MinPodSecurityStandardsProfile: intkubeutils.PSSProfileBaseline,
+			}
+			other := &rules.Options2007{}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options2007)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.MinPodSecurityStandardsProfile).To(Equal(intkubeutils.PSSProfileBaseline))
+		})
+
+		It("should return the receiver when merging with nil", func() {
+			base := &rules.Options2007{
+				MinPodSecurityStandardsProfile: intkubeutils.PSSProfileRestricted,
+			}
+
+			merged, err := base.Merge(nil)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(merged).To(Equal(base))
+		})
+
+		It("should return an error when merging with a different type", func() {
+			base := &rules.Options2007{
+				MinPodSecurityStandardsProfile: intkubeutils.PSSProfileBaseline,
+			}
+
+			_, err := base.Merge(&rules.Options2000{})
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("cannot merge options of type"))
+		})
+	})
 })
