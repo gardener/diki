@@ -6,6 +6,7 @@ package rules
 
 import (
 	"context"
+	"fmt"
 	"slices"
 	"strings"
 
@@ -20,9 +21,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule2005{}
-	_ rule.Severity = &Rule2005{}
-	_ option.Option = &Options2005{}
+	_ rule.Rule              = &Rule2005{}
+	_ rule.Severity          = &Rule2005{}
+	_ option.Option          = &Options2005{}
+	_ option.MergeableOption = &Options2005{}
 )
 
 type Rule2005 struct {
@@ -36,6 +38,25 @@ type Options2005 struct {
 
 type AllowedImage struct {
 	Prefix string `json:"prefix" yaml:"prefix"`
+}
+
+func (o *Options2005) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, ok := other.(*Options2005)
+	if !ok {
+		return nil, fmt.Errorf("cannot merge options of type %T into *Options2005", other)
+	}
+
+	merged := &Options2005{
+		AllowedImages: make([]AllowedImage, 0, len(o.AllowedImages)+len(otherOpts.AllowedImages)),
+	}
+	merged.AllowedImages = append(merged.AllowedImages, o.AllowedImages...)
+	merged.AllowedImages = append(merged.AllowedImages, otherOpts.AllowedImages...)
+
+	return merged, nil
 }
 
 // Validate validates that option configurations are correctly defined.
