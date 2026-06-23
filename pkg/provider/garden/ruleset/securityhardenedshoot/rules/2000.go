@@ -23,9 +23,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule2000{}
-	_ rule.Severity = &Rule2000{}
-	_ option.Option = &Options2000{}
+	_ rule.Rule              = &Rule2000{}
+	_ rule.Severity          = &Rule2000{}
+	_ option.Option          = &Options2000{}
+	_ option.MergeableOption = &Options2000{}
 )
 
 type Rule2000 struct {
@@ -41,6 +42,25 @@ type Options2000 struct {
 
 type AcceptedEndpoint struct {
 	Path string `yaml:"path" json:"path"`
+}
+
+func (o *Options2000) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, ok := other.(*Options2000)
+	if !ok {
+		return nil, fmt.Errorf("cannot merge options of type %T into *Options2000", other)
+	}
+
+	merged := &Options2000{
+		AcceptedEndpoints: make([]AcceptedEndpoint, 0, len(o.AcceptedEndpoints)+len(otherOpts.AcceptedEndpoints)),
+	}
+	merged.AcceptedEndpoints = append(merged.AcceptedEndpoints, o.AcceptedEndpoints...)
+	merged.AcceptedEndpoints = append(merged.AcceptedEndpoints, otherOpts.AcceptedEndpoints...)
+
+	return merged, nil
 }
 
 func (o Options2000) Validate(fldPath *field.Path) field.ErrorList {

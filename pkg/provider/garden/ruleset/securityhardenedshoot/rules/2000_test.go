@@ -416,4 +416,64 @@ kind: AuthenticationConfiguration
 			))
 		})
 	})
+
+	Describe("#Merge Options2000", func() {
+		It("should merge two Options2000 by appending AcceptedEndpoints", func() {
+			base := &rules.Options2000{
+				AcceptedEndpoints: []rules.AcceptedEndpoint{
+					{Path: "/healthz"},
+				},
+			}
+			other := &rules.Options2000{
+				AcceptedEndpoints: []rules.AcceptedEndpoint{
+					{Path: "/readyz"},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options2000)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AcceptedEndpoints).To(HaveLen(2))
+			Expect(mergedOpts.AcceptedEndpoints[0].Path).To(Equal("/healthz"))
+			Expect(mergedOpts.AcceptedEndpoints[1].Path).To(Equal("/readyz"))
+		})
+
+		It("should return the receiver when merging with nil", func() {
+			base := &rules.Options2000{
+				AcceptedEndpoints: []rules.AcceptedEndpoint{
+					{Path: "/healthz"},
+				},
+			}
+
+			merged, err := base.Merge(nil)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(merged).To(Equal(base))
+		})
+
+		It("should handle merging two empty Options2000", func() {
+			base := &rules.Options2000{}
+			other := &rules.Options2000{}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options2000)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AcceptedEndpoints).To(BeEmpty())
+		})
+
+		It("should return an error when merging with a different type", func() {
+			base := &rules.Options2000{
+				AcceptedEndpoints: []rules.AcceptedEndpoint{
+					{Path: "/healthz"},
+				},
+			}
+
+			_, err := base.Merge(&rules.Options1000{})
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("cannot merge options of type"))
+		})
+	})
 })
