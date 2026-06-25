@@ -32,6 +32,7 @@ type ExpectedOwner struct {
 	Groups []string `json:"groups" yaml:"groups"`
 }
 
+// Merge implements MergeableOption by performing a set union on Users and Groups.
 func (o *FileOwnerOptions) Merge(other option.MergeableOption) (option.MergeableOption, error) {
 	if other == nil {
 		return o, nil
@@ -98,6 +99,7 @@ type AcceptedPods242414 struct {
 	Ports []int32 `json:"ports" yaml:"ports"`
 }
 
+// Merge implements MergeableOption by concatenating AcceptedPods from both options.
 func (o *Options242414) Merge(other option.MergeableOption) (option.MergeableOption, error) {
 	if other == nil {
 		return o, nil
@@ -153,6 +155,7 @@ type AcceptedPods242415 struct {
 	EnvironmentVariables []string `json:"environmentVariables" yaml:"environmentVariables"`
 }
 
+// Merge implements MergeableOption by concatenating AcceptedPods from both options.
 func (o *Options242415) Merge(other option.MergeableOption) (option.MergeableOption, error) {
 	if other == nil {
 		return o, nil
@@ -207,6 +210,7 @@ type ExpectedVersionedImage struct {
 	Name string `json:"name" yaml:"name"`
 }
 
+// Merge implements MergeableOption by concatenating ExpectedVersionedImages from both options.
 func (o *Options242442) Merge(other option.MergeableOption) (option.MergeableOption, error) {
 	if other == nil {
 		return o, nil
