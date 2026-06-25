@@ -6,6 +6,8 @@ package utils
 
 import (
 	"slices"
+
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 // EqualSets checks if two slices contain exactly the same elements independent of the ordering.
@@ -64,4 +66,9 @@ func MatchLabels(m1, m2 map[string]string) bool {
 	}
 
 	return true
+}
+
+// MergeStringSlices merges two string slices and removes duplicates.
+func MergeStringSlices(s1, s2 []string) []string {
+	return sets.New(s1...).Insert(s2...).UnsortedList()
 }

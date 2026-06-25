@@ -91,4 +91,27 @@ var _ = Describe("utils", func() {
 		Entry("should return false when m2 is nil",
 			map[string]string{"key1": "value1", "foo": "bar"}, nil, false),
 	)
+
+	Describe("#MergeStringSlices", func() {
+		It("should concatenate two slices", func() {
+			result := utils.MergeStringSlices([]string{"a", "b"}, []string{"c", "d"})
+			Expect(result).To(ConsistOf("a", "b", "c", "d"))
+		})
+
+		It("should deduplicate elements", func() {
+			result := utils.MergeStringSlices([]string{"a", "b", "c"}, []string{"b", "c", "d"})
+			Expect(result).To(ConsistOf("a", "b", "c", "d"))
+		})
+
+		It("should handle empty slices", func() {
+			Expect(utils.MergeStringSlices(nil, []string{"a"})).To(ConsistOf("a"))
+			Expect(utils.MergeStringSlices([]string{"a"}, nil)).To(ConsistOf("a"))
+			Expect(utils.MergeStringSlices(nil, nil)).To(BeEmpty())
+		})
+
+		It("should handle fully overlapping slices", func() {
+			result := utils.MergeStringSlices([]string{"a", "b"}, []string{"a", "b"})
+			Expect(result).To(ConsistOf("a", "b"))
+		})
+	})
 })
