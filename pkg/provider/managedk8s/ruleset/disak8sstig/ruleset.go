@@ -32,7 +32,7 @@ var (
 	_ ruleset.Ruleset = &Ruleset{}
 	// SupportedVersions is a list of available versions for the DISA Kubernetes STIG Ruleset.
 	// Versions are sorted from newest to oldest.
-	SupportedVersions = []string{"v2r5", "v2r4"}
+	SupportedVersions = []string{"v2r6", "v2r5"}
 )
 
 // Ruleset implements DISA Kubernetes STIG.
@@ -144,10 +144,10 @@ func ValidateRulesetConfig(rulesetConfig config.RulesetConfig, fldPath *field.Pa
 
 	r := &Ruleset{}
 	switch rulesetConfig.Version {
-	case "v2r4":
-		allErrs = append(allErrs, r.validateV2R4RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions"))...)
 	case "v2r5":
 		allErrs = append(allErrs, r.validateV2R5RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions"))...)
+	case "v2r6":
+		allErrs = append(allErrs, r.validateV2R6RuleOptions(indexedRuleOptions, fldPath.Child("ruleOptions"))...)
 	default:
 		allErrs = append(allErrs, field.NotSupported(fldPath.Child("version"), rulesetConfig.Version, SupportedVersions))
 	}
@@ -157,10 +157,10 @@ func ValidateRulesetConfig(rulesetConfig config.RulesetConfig, fldPath *field.Pa
 
 func (r *Ruleset) registerRules(ruleOptions map[string]config.RuleOptionsConfig) error {
 	switch r.version {
-	case "v2r4":
-		return r.registerV2R4Rules(ruleOptions)
 	case "v2r5":
 		return r.registerV2R5Rules(ruleOptions)
+	case "v2r6":
+		return r.registerV2R6Rules(ruleOptions)
 	default:
 		return sharedruleset.UnknownVersionError(r.ID(), r.Version(), "managedk8s")
 	}
