@@ -33,8 +33,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule242466{}
-	_ rule.Severity = &Rule242466{}
+	_ rule.Rule              = &Rule242466{}
+	_ rule.Severity          = &Rule242466{}
+	_ option.Option          = &Options242466{}
+	_ option.MergeableOption = &Options242466{}
 )
 
 type Rule242466 struct {
@@ -52,7 +54,20 @@ type Options242466 struct {
 	KubeProxy disaoption.KubeProxyOptionsWithoutSelectors `json:"kubeProxy" yaml:"kubeProxy"`
 }
 
-var _ option.Option = (*Options242466)(nil)
+func (o *Options242466) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, ok := other.(*Options242466)
+	if !ok {
+		return nil, fmt.Errorf("cannot merge options of type %T into *Options242466", other)
+	}
+
+	return &Options242466{
+		KubeProxy: otherOpts.KubeProxy,
+	}, nil
+}
 
 func (o Options242466) Validate(fldPath *field.Path) field.ErrorList {
 	return o.KubeProxy.Validate(fldPath.Child("kubeProxy"))
