@@ -5,12 +5,14 @@
 package option
 
 import (
+	"fmt"
 	"strconv"
 
 	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
+	intutils "github.com/gardener/diki/pkg/internal/utils"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 )
 
@@ -19,12 +21,35 @@ type FileOwnerOptions struct {
 	ExpectedFileOwner ExpectedOwner `json:"expectedFileOwner" yaml:"expectedFileOwner"`
 }
 
-var _ option.Option = (*FileOwnerOptions)(nil)
+var (
+	_ option.Option          = &FileOwnerOptions{}
+	_ option.MergeableOption = &FileOwnerOptions{}
+)
 
 // ExpectedOwner contains expected user and group owners
 type ExpectedOwner struct {
 	Users  []string `json:"users" yaml:"users"`
 	Groups []string `json:"groups" yaml:"groups"`
+}
+
+func (o *FileOwnerOptions) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, ok := other.(*FileOwnerOptions)
+	if !ok {
+		return nil, fmt.Errorf("cannot merge options of type %T into *FileOwnerOptions", other)
+	}
+
+	merged := &FileOwnerOptions{
+		ExpectedFileOwner: ExpectedOwner{
+			Users:  intutils.MergeStringSlices(o.ExpectedFileOwner.Users, otherOpts.ExpectedFileOwner.Users),
+			Groups: intutils.MergeStringSlices(o.ExpectedFileOwner.Groups, otherOpts.ExpectedFileOwner.Groups),
+		},
+	}
+
+	return merged, nil
 }
 
 // Validate validates that option configurations are correctly defined.
@@ -62,12 +87,34 @@ type Options242414 struct {
 	AcceptedPods []AcceptedPods242414 `json:"acceptedPods" yaml:"acceptedPods"`
 }
 
-var _ option.Option = (*Options242414)(nil)
+var (
+	_ option.Option          = &Options242414{}
+	_ option.MergeableOption = &Options242414{}
+)
 
 // AcceptedPods242414 contains option specifications for accepted pods
 type AcceptedPods242414 struct {
 	option.AcceptedNamespacedObject
 	Ports []int32 `json:"ports" yaml:"ports"`
+}
+
+func (o *Options242414) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, ok := other.(*Options242414)
+	if !ok {
+		return nil, fmt.Errorf("cannot merge options of type %T into *Options242414", other)
+	}
+
+	merged := &Options242414{
+		AcceptedPods: make([]AcceptedPods242414, 0, len(o.AcceptedPods)+len(otherOpts.AcceptedPods)),
+	}
+	merged.AcceptedPods = append(merged.AcceptedPods, o.AcceptedPods...)
+	merged.AcceptedPods = append(merged.AcceptedPods, otherOpts.AcceptedPods...)
+
+	return merged, nil
 }
 
 // Validate validates that option configurations are correctly defined.
@@ -95,12 +142,34 @@ type Options242415 struct {
 	AcceptedPods []AcceptedPods242415 `json:"acceptedPods" yaml:"acceptedPods"`
 }
 
-var _ option.Option = (*Options242415)(nil)
+var (
+	_ option.Option          = &Options242415{}
+	_ option.MergeableOption = &Options242415{}
+)
 
 // AcceptedPods242415 contains option specifications for accepted pods
 type AcceptedPods242415 struct {
 	option.AcceptedNamespacedObject
 	EnvironmentVariables []string `json:"environmentVariables" yaml:"environmentVariables"`
+}
+
+func (o *Options242415) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, ok := other.(*Options242415)
+	if !ok {
+		return nil, fmt.Errorf("cannot merge options of type %T into *Options242415", other)
+	}
+
+	merged := &Options242415{
+		AcceptedPods: make([]AcceptedPods242415, 0, len(o.AcceptedPods)+len(otherOpts.AcceptedPods)),
+	}
+	merged.AcceptedPods = append(merged.AcceptedPods, o.AcceptedPods...)
+	merged.AcceptedPods = append(merged.AcceptedPods, otherOpts.AcceptedPods...)
+
+	return merged, nil
 }
 
 // Validate validates that option configurations are correctly defined.
@@ -123,7 +192,10 @@ func (o Options242415) Validate(fldPath *field.Path) field.ErrorList {
 	return allErrs
 }
 
-var _ option.Option = (*Options242442)(nil)
+var (
+	_ option.Option          = &Options242442{}
+	_ option.MergeableOption = &Options242442{}
+)
 
 // Options242442 defines a slice of expected container images for rule 242442.
 type Options242442 struct {
@@ -133,6 +205,25 @@ type Options242442 struct {
 // ExpectedVersionedImage contains option specifications for expected to be versioned container images.
 type ExpectedVersionedImage struct {
 	Name string `json:"name" yaml:"name"`
+}
+
+func (o *Options242442) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, ok := other.(*Options242442)
+	if !ok {
+		return nil, fmt.Errorf("cannot merge options of type %T into *Options242442", other)
+	}
+
+	merged := &Options242442{
+		ExpectedVersionedImages: make([]ExpectedVersionedImage, 0, len(o.ExpectedVersionedImages)+len(otherOpts.ExpectedVersionedImages)),
+	}
+	merged.ExpectedVersionedImages = append(merged.ExpectedVersionedImages, o.ExpectedVersionedImages...)
+	merged.ExpectedVersionedImages = append(merged.ExpectedVersionedImages, otherOpts.ExpectedVersionedImages...)
+
+	return merged, nil
 }
 
 // Validate validates that option configurations are correctly defined.

@@ -12,6 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
 var _ = Describe("options", func() {
@@ -606,5 +607,77 @@ var _ = Describe("options", func() {
 			Expect(matches).To(BeFalse())
 		})
 
+	})
+
+	Describe("#Merge ClusterObjectSelector", func() {
+		It("should override with other's LabelSelector when set", func() {
+			base := &option.ClusterObjectSelector{
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"base": "selector"},
+				},
+			}
+			other := &option.ClusterObjectSelector{
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"other": "selector"},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedSelector, ok := merged.(*option.ClusterObjectSelector)
+			Expect(ok).To(BeTrue())
+			Expect(mergedSelector.LabelSelector.MatchLabels).To(Equal(map[string]string{"other": "selector"}))
+		})
+
+		It("should override with other's MatchLabels when set", func() {
+			base := &option.ClusterObjectSelector{
+				MatchLabels: map[string]string{"base": "selector"},
+			}
+			other := &option.ClusterObjectSelector{
+				MatchLabels: map[string]string{"other": "selector"},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedSelector, ok := merged.(*option.ClusterObjectSelector)
+			Expect(ok).To(BeTrue())
+			Expect(mergedSelector.MatchLabels).To(Equal(map[string]string{"other": "selector"}))
+		})
+
+		It("should keep base when other has no selector", func() {
+			base := &option.ClusterObjectSelector{
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"base": "selector"},
+				},
+			}
+			other := &option.ClusterObjectSelector{}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedSelector, ok := merged.(*option.ClusterObjectSelector)
+			Expect(ok).To(BeTrue())
+			Expect(mergedSelector.LabelSelector.MatchLabels).To(Equal(map[string]string{"base": "selector"}))
+		})
+
+		It("should return the receiver when merging with nil", func() {
+			base := &option.ClusterObjectSelector{
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"base": "selector"},
+				},
+			}
+
+			merged, err := base.Merge(nil)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(merged).To(Equal(base))
+		})
+
+		It("should return error when merging with wrong type", func() {
+			base := &option.ClusterObjectSelector{}
+			_, err := base.Merge(&disaoption.FileOwnerOptions{})
+			Expect(err).To(HaveOccurred())
+		})
 	})
 })
