@@ -32,8 +32,8 @@ type MergeableOption interface {
 type ClusterObjectSelector struct {
 	// Deprecated: This field is deprecated and will be forbidden in a future release.
 	// Please configure and use LabelSelector instead.
-	MatchLabels   map[string]string     `json:"matchLabels" yaml:"matchLabels"`
-	LabelSelector *metav1.LabelSelector `json:"labelSelector" yaml:"labelSelector"`
+	MatchLabels   map[string]string     `json:"matchLabels,omitempty" yaml:"matchLabels,omitempty"`
+	LabelSelector *metav1.LabelSelector `json:"labelSelector,omitempty" yaml:"labelSelector,omitempty"`
 }
 
 var _ Option = (*ClusterObjectSelector)(nil)
@@ -80,12 +80,12 @@ func (s *ClusterObjectSelector) Matches(objectLabels map[string]string) (bool, e
 type NamespacedObjectSelector struct {
 	// Deprecated: This field is deprecated and will be forbidden in a future release.
 	// Please configure and use LabelSelector instead.
-	MatchLabels map[string]string `json:"matchLabels" yaml:"matchLabels"`
+	MatchLabels map[string]string `json:"matchLabels,omitempty" yaml:"matchLabels,omitempty"`
 	// Deprecated: This field is deprecated and will be forbidden in a future release.
 	// Please configure and use NamespaceMatchLabels instead.
-	NamespaceMatchLabels   map[string]string     `json:"namespaceMatchLabels" yaml:"namespaceMatchLabels"`
-	LabelSelector          *metav1.LabelSelector `json:"labelSelector" yaml:"labelSelector"`
-	NamespaceLabelSelector *metav1.LabelSelector `json:"namespaceLabelSelector" yaml:"namespaceLabelSelector"`
+	NamespaceMatchLabels   map[string]string     `json:"namespaceMatchLabels,omitempty" yaml:"namespaceMatchLabels,omitempty"`
+	LabelSelector          *metav1.LabelSelector `json:"labelSelector,omitempty" yaml:"labelSelector,omitempty"`
+	NamespaceLabelSelector *metav1.LabelSelector `json:"namespaceLabelSelector,omitempty" yaml:"namespaceLabelSelector,omitempty"`
 }
 
 var _ Option = (*NamespacedObjectSelector)(nil)

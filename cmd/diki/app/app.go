@@ -659,7 +659,7 @@ func configMergeCmd(opts configMergeOptions, registryFuncs []provider.MergeRegis
 		return errors.New("merged configuration is not valid, please check the base configuration")
 	}
 
-	data, err := yaml.Marshal(merged)
+	data, err := yaml.Dump(merged, yaml.WithIndent(2))
 	if err != nil {
 		return fmt.Errorf("failed to marshal merged config: %w", err)
 	}
