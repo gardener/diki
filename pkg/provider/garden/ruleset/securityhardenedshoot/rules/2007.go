@@ -25,13 +25,35 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule2007{}
-	_ rule.Severity = &Rule2007{}
-	_ option.Option = &Options2007{}
+	_ rule.Rule              = &Rule2007{}
+	_ rule.Severity          = &Rule2007{}
+	_ option.Option          = &Options2007{}
+	_ option.MergeableOption = &Options2007{}
 )
 
 type Options2007 struct {
 	MinPodSecurityStandardsProfile intkubeutils.PodSecurityStandardProfile `json:"minPodSecurityStandardsProfile" yaml:"minPodSecurityStandardsProfile"`
+}
+
+func (o *Options2007) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, ok := other.(*Options2007)
+	if !ok {
+		return nil, fmt.Errorf("cannot merge options of type %T into *Options2007", other)
+	}
+
+	merged := &Options2007{
+		MinPodSecurityStandardsProfile: o.MinPodSecurityStandardsProfile,
+	}
+
+	if len(otherOpts.MinPodSecurityStandardsProfile) != 0 {
+		merged.MinPodSecurityStandardsProfile = otherOpts.MinPodSecurityStandardsProfile
+	}
+
+	return merged, nil
 }
 
 func (o Options2007) Validate(fldPath *field.Path) field.ErrorList {

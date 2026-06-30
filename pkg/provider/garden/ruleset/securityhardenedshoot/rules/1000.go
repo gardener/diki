@@ -20,9 +20,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule1000{}
-	_ rule.Severity = &Rule1000{}
-	_ option.Option = &Options1000{}
+	_ rule.Rule              = &Rule1000{}
+	_ rule.Severity          = &Rule1000{}
+	_ option.Option          = &Options1000{}
+	_ option.MergeableOption = &Options1000{}
 )
 
 type Options1000 struct {
@@ -31,6 +32,25 @@ type Options1000 struct {
 
 type Extension struct {
 	Type string `json:"type" yaml:"type"`
+}
+
+func (o *Options1000) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, ok := other.(*Options1000)
+	if !ok {
+		return nil, fmt.Errorf("cannot merge options of type %T into *Options1000", other)
+	}
+
+	merged := &Options1000{
+		Extensions: make([]Extension, 0, len(o.Extensions)+len(otherOpts.Extensions)),
+	}
+	merged.Extensions = append(merged.Extensions, o.Extensions...)
+	merged.Extensions = append(merged.Extensions, otherOpts.Extensions...)
+
+	return merged, nil
 }
 
 func (o Options1000) Validate(fldPath *field.Path) field.ErrorList {
