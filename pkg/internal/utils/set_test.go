@@ -93,25 +93,30 @@ var _ = Describe("utils", func() {
 	)
 
 	Describe("#MergeStringSlices", func() {
-		It("should concatenate two slices", func() {
+		It("should concatenate two slices preserving order", func() {
 			result := utils.MergeStringSlices([]string{"a", "b"}, []string{"c", "d"})
-			Expect(result).To(ConsistOf("a", "b", "c", "d"))
+			Expect(result).To(Equal([]string{"a", "b", "c", "d"}))
 		})
 
-		It("should deduplicate elements", func() {
+		It("should deduplicate elements preserving order of first occurrence", func() {
 			result := utils.MergeStringSlices([]string{"a", "b", "c"}, []string{"b", "c", "d"})
-			Expect(result).To(ConsistOf("a", "b", "c", "d"))
+			Expect(result).To(Equal([]string{"a", "b", "c", "d"}))
 		})
 
 		It("should handle empty slices", func() {
-			Expect(utils.MergeStringSlices(nil, []string{"a"})).To(ConsistOf("a"))
-			Expect(utils.MergeStringSlices([]string{"a"}, nil)).To(ConsistOf("a"))
+			Expect(utils.MergeStringSlices(nil, []string{"a"})).To(Equal([]string{"a"}))
+			Expect(utils.MergeStringSlices([]string{"a"}, nil)).To(Equal([]string{"a"}))
 			Expect(utils.MergeStringSlices(nil, nil)).To(BeEmpty())
 		})
 
-		It("should handle fully overlapping slices", func() {
+		It("should handle fully overlapping slices preserving s1 order", func() {
 			result := utils.MergeStringSlices([]string{"a", "b"}, []string{"a", "b"})
-			Expect(result).To(ConsistOf("a", "b"))
+			Expect(result).To(Equal([]string{"a", "b"}))
+		})
+
+		It("should preserve s1 order followed by new s2 elements", func() {
+			result := utils.MergeStringSlices([]string{"c", "a"}, []string{"b", "a", "d"})
+			Expect(result).To(Equal([]string{"c", "a", "b", "d"}))
 		})
 	})
 })
