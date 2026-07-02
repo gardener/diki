@@ -53,6 +53,8 @@ func (o Options2007) Validate(fldPath *field.Path) field.ErrorList {
 	return allErrs
 }
 
+// Merge returns a new Options2007 that is the result of merging other into the receiver.
+// AcceptedRoles and AcceptedClusterRoles slices are concatenated. If other is not *Options2007, an error is returned.
 func (o *Options2007) Merge(other option.MergeableOption) (option.MergeableOption, error) {
 	if other == nil {
 		return o, nil

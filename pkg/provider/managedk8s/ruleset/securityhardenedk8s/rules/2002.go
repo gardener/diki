@@ -49,6 +49,8 @@ func (o Options2002) Validate(fldPath *field.Path) field.ErrorList {
 	return allErrs
 }
 
+// Merge returns a new Options2002 that is the result of merging other into the receiver.
+// AcceptedStorageClasses slices are concatenated. If other is not *Options2002, an error is returned.
 func (o *Options2002) Merge(other option.MergeableOption) (option.MergeableOption, error) {
 	if other == nil {
 		return o, nil

@@ -40,6 +40,8 @@ type AllowedImage struct {
 	Prefix string `json:"prefix" yaml:"prefix"`
 }
 
+// Merge returns a new Options2005 that is the result of merging other into the receiver.
+// AllowedImages slices are concatenated. If other is not *Options2005, an error is returned.
 func (o *Options2005) Merge(other option.MergeableOption) (option.MergeableOption, error) {
 	if other == nil {
 		return o, nil
