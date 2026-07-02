@@ -725,5 +725,4 @@ var _ = Describe("#2003", func() {
 			Expect(merged).To(BeNil())
 		})
 	})
-
 })
