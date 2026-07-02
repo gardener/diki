@@ -7,6 +7,7 @@ package rules
 import (
 	"cmp"
 	"context"
+	"fmt"
 	"slices"
 	"strings"
 
@@ -23,9 +24,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule2001{}
-	_ rule.Severity = &Rule2001{}
-	_ option.Option = &Options2001{}
+	_ rule.Rule              = &Rule2001{}
+	_ rule.Severity          = &Rule2001{}
+	_ option.Option          = &Options2001{}
+	_ option.MergeableOption = &Options2001{}
 )
 
 type Rule2001 struct {
@@ -48,6 +50,27 @@ func (o Options2001) Validate(fldPath *field.Path) field.ErrorList {
 	}
 
 	return allErrs
+}
+
+// Merge returns a new Options2001 that is the result of merging other into the receiver.
+// AcceptedPods slices are concatenated. If other is not *Options2001, an error is returned.
+func (o *Options2001) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, ok := other.(*Options2001)
+	if !ok {
+		return nil, fmt.Errorf("cannot merge options of type %T into *Options2001", other)
+	}
+
+	merged := &Options2001{
+		AcceptedPods: make([]option.AcceptedNamespacedObject, 0, len(o.AcceptedPods)+len(otherOpts.AcceptedPods)),
+	}
+	merged.AcceptedPods = append(merged.AcceptedPods, o.AcceptedPods...)
+	merged.AcceptedPods = append(merged.AcceptedPods, otherOpts.AcceptedPods...)
+
+	return merged, nil
 }
 
 func (r *Rule2001) ID() string {

@@ -311,4 +311,62 @@ var _ = Describe("#2005", func() {
 			))
 		})
 	})
+
+	Describe("#Merge Options2005", func() {
+		It("should merge two Options2005 by appending AllowedImages", func() {
+			base := &rules.Options2005{
+				AllowedImages: []rules.AllowedImage{
+					{Prefix: "registry.example.com/"},
+				},
+			}
+
+			override := &rules.Options2005{
+				AllowedImages: []rules.AllowedImage{
+					{Prefix: "docker.io/library/"},
+				},
+			}
+
+			merged, err := base.Merge(override)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options2005)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AllowedImages).To(HaveLen(2))
+			Expect(mergedOpts.AllowedImages[0].Prefix).To(Equal("registry.example.com/"))
+			Expect(mergedOpts.AllowedImages[1].Prefix).To(Equal("docker.io/library/"))
+		})
+
+		It("should return the receiver when merging with nil", func() {
+			base := &rules.Options2005{
+				AllowedImages: []rules.AllowedImage{
+					{Prefix: "registry.example.com/"},
+				},
+			}
+
+			merged, err := base.Merge(nil)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(merged).To(Equal(base))
+		})
+
+		It("should handle merging two empty Options2005", func() {
+			base := &rules.Options2005{}
+			other := &rules.Options2005{}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options2005)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AllowedImages).To(BeEmpty())
+		})
+
+		It("should return an error when merging with a different option type", func() {
+			base := &rules.Options2005{}
+			other := &rules.Options2000{}
+
+			merged, err := base.Merge(other)
+			Expect(err).To(MatchError(ContainSubstring("cannot merge options of type")))
+			Expect(merged).To(BeNil())
+		})
+	})
 })

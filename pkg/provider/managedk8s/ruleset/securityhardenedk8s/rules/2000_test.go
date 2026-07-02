@@ -1256,5 +1256,14 @@ var _ = Describe("#2000", func() {
 			Expect(ok).To(BeTrue())
 			Expect(mergedOpts.AcceptedNamespaces).To(BeEmpty())
 		})
+
+		It("should return an error when merging with a different option type", func() {
+			base := &rules.Options2000{}
+			other := &rules.Options2001{}
+
+			merged, err := base.Merge(other)
+			Expect(err).To(MatchError(ContainSubstring("cannot merge options of type")))
+			Expect(merged).To(BeNil())
+		})
 	})
 })

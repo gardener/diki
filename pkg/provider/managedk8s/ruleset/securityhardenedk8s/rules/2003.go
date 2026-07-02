@@ -6,6 +6,7 @@ package rules
 
 import (
 	"context"
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -19,9 +20,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule2003{}
-	_ rule.Severity = &Rule2003{}
-	_ option.Option = &Options2003{}
+	_ rule.Rule              = &Rule2003{}
+	_ rule.Severity          = &Rule2003{}
+	_ option.Option          = &Options2003{}
+	_ option.MergeableOption = &Options2003{}
 )
 
 type Options2003 struct {
@@ -38,6 +40,27 @@ func (o Options2003) Validate(fldPath *field.Path) field.ErrorList {
 		allErrs = append(allErrs, p.Validate(acceptedPodsPath.Index(pIdx))...)
 	}
 	return allErrs
+}
+
+// Merge returns a new Options2003 that is the result of merging other into the receiver.
+// AcceptedPods slices are concatenated. If other is not *Options2003, an error is returned.
+func (o *Options2003) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, ok := other.(*Options2003)
+	if !ok {
+		return nil, fmt.Errorf("cannot merge options of type %T into *Options2003", other)
+	}
+
+	merged := &Options2003{
+		AcceptedPods: make([]option.AcceptedPodVolumes, 0, len(o.AcceptedPods)+len(otherOpts.AcceptedPods)),
+	}
+	merged.AcceptedPods = append(merged.AcceptedPods, o.AcceptedPods...)
+	merged.AcceptedPods = append(merged.AcceptedPods, otherOpts.AcceptedPods...)
+
+	return merged, nil
 }
 
 type Rule2003 struct {

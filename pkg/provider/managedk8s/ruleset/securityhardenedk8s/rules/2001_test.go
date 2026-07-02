@@ -208,4 +208,74 @@ var _ = Describe("#2001", func() {
 			},
 		))
 	})
+
+	Describe("#Merge Options2001", func() {
+		It("should merge two Options2001 by appending AcceptedPods", func() {
+			base := &rules.Options2001{
+				AcceptedPods: []option.AcceptedNamespacedObject{
+					{
+						NamespacedObjectSelector: option.NamespacedObjectSelector{
+							LabelSelector:          &metav1.LabelSelector{MatchLabels: map[string]string{"app": "base"}},
+							NamespaceLabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"ns": "base"}},
+						},
+						Justification: "base justification",
+					},
+				},
+			}
+
+			override := &rules.Options2001{
+				AcceptedPods: []option.AcceptedNamespacedObject{
+					{
+						NamespacedObjectSelector: option.NamespacedObjectSelector{
+							LabelSelector:          &metav1.LabelSelector{MatchLabels: map[string]string{"app": "override"}},
+							NamespaceLabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"ns": "override"}},
+						},
+						Justification: "override justification",
+					},
+				},
+			}
+
+			merged, err := base.Merge(override)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options2001)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AcceptedPods).To(HaveLen(2))
+			Expect(mergedOpts.AcceptedPods[0].Justification).To(Equal("base justification"))
+			Expect(mergedOpts.AcceptedPods[1].Justification).To(Equal("override justification"))
+		})
+
+		It("should return the receiver when merging with nil", func() {
+			base := &rules.Options2001{
+				AcceptedPods: []option.AcceptedNamespacedObject{
+					{Justification: "base"},
+				},
+			}
+
+			merged, err := base.Merge(nil)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(merged).To(Equal(base))
+		})
+
+		It("should handle merging two empty Options2001", func() {
+			base := &rules.Options2001{}
+			other := &rules.Options2001{}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options2001)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AcceptedPods).To(BeEmpty())
+		})
+
+		It("should return an error when merging with a different option type", func() {
+			base := &rules.Options2001{}
+			other := &rules.Options2000{}
+
+			merged, err := base.Merge(other)
+			Expect(err).To(MatchError(ContainSubstring("cannot merge options of type")))
+			Expect(merged).To(BeNil())
+		})
+	})
 })

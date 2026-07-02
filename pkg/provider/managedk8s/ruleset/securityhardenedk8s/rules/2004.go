@@ -7,6 +7,7 @@ package rules
 import (
 	"cmp"
 	"context"
+	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,9 +21,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule2004{}
-	_ rule.Severity = &Rule2004{}
-	_ option.Option = &Options2004{}
+	_ rule.Rule              = &Rule2004{}
+	_ rule.Severity          = &Rule2004{}
+	_ option.Option          = &Options2004{}
+	_ option.MergeableOption = &Options2004{}
 )
 
 type Rule2004 struct {
@@ -45,6 +47,27 @@ func (o Options2004) Validate(fldPath *field.Path) field.ErrorList {
 	}
 
 	return allErrs
+}
+
+// Merge returns a new Options2004 that is the result of merging other into the receiver.
+// AcceptedServices slices are concatenated. If other is not *Options2004, an error is returned.
+func (o *Options2004) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, ok := other.(*Options2004)
+	if !ok {
+		return nil, fmt.Errorf("cannot merge options of type %T into *Options2004", other)
+	}
+
+	merged := &Options2004{
+		AcceptedServices: make([]option.AcceptedNamespacedObject, 0, len(o.AcceptedServices)+len(otherOpts.AcceptedServices)),
+	}
+	merged.AcceptedServices = append(merged.AcceptedServices, o.AcceptedServices...)
+	merged.AcceptedServices = append(merged.AcceptedServices, otherOpts.AcceptedServices...)
+
+	return merged, nil
 }
 
 func (r *Rule2004) ID() string {
