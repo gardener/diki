@@ -500,4 +500,37 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.ErroredCheckResult("could not retrieve kubelet config: bar", rule.NewTarget("cluster", "shoot", "name", "diki-242466-bbbbbbbbbb", "namespace", "kube-system", "kind", "Pod")),
 			}),
 	)
+
+	Describe("#Merge Options242466", func() {
+		It("should override KubeProxy with other's value", func() {
+			base := &rules.Options242466{
+				KubeProxy: option.KubeProxyOptionsWithoutSelectors{Disabled: false},
+			}
+			other := &rules.Options242466{
+				KubeProxy: option.KubeProxyOptionsWithoutSelectors{Disabled: true},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242466)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.KubeProxy.Disabled).To(BeTrue())
+		})
+
+		It("should return the receiver when merging with nil", func() {
+			base := &rules.Options242466{
+				KubeProxy: option.KubeProxyOptionsWithoutSelectors{Disabled: true},
+			}
+			merged, err := base.Merge(nil)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(merged).To(Equal(base))
+		})
+
+		It("should return error when merging with wrong type", func() {
+			base := &rules.Options242466{}
+			_, err := base.Merge(&rules.Options242467{})
+			Expect(err).To(HaveOccurred())
+		})
+	})
 })

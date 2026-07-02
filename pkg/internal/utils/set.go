@@ -65,3 +65,25 @@ func MatchLabels(m1, m2 map[string]string) bool {
 
 	return true
 }
+
+// MergeStringSlices merges two string slices and removes duplicates, preserving the order of s1 followed by s2.
+func MergeStringSlices(s1, s2 []string) []string {
+	var (
+		result []string
+		seen   = map[string]struct{}{}
+	)
+
+	for _, s := range s1 {
+		if _, ok := seen[s]; !ok {
+			seen[s] = struct{}{}
+			result = append(result, s)
+		}
+	}
+	for _, s := range s2 {
+		if _, ok := seen[s]; !ok {
+			seen[s] = struct{}{}
+			result = append(result, s)
+		}
+	}
+	return result
+}

@@ -426,4 +426,37 @@ var _ = Describe("#242400", func() {
 		Expect(err).To(BeNil())
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
 	})
+
+	Describe("#Merge Options242400", func() {
+		It("should override KubeProxy with other's value", func() {
+			base := &rules.Options242400{
+				KubeProxy: option.KubeProxyOptionsWithoutSelectors{Disabled: false},
+			}
+			other := &rules.Options242400{
+				KubeProxy: option.KubeProxyOptionsWithoutSelectors{Disabled: true},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242400)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.KubeProxy.Disabled).To(BeTrue())
+		})
+
+		It("should return the receiver when merging with nil", func() {
+			base := &rules.Options242400{
+				KubeProxy: option.KubeProxyOptionsWithoutSelectors{Disabled: true},
+			}
+			merged, err := base.Merge(nil)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(merged).To(Equal(base))
+		})
+
+		It("should return error when merging with wrong type", func() {
+			base := &rules.Options242400{}
+			_, err := base.Merge(&rules.Options242451{})
+			Expect(err).To(HaveOccurred())
+		})
+	})
 })

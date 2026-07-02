@@ -36,7 +36,34 @@ type ClusterObjectSelector struct {
 	LabelSelector *metav1.LabelSelector `json:"labelSelector,omitempty" yaml:"labelSelector,omitempty"`
 }
 
-var _ Option = (*ClusterObjectSelector)(nil)
+var (
+	_ Option          = &ClusterObjectSelector{}
+	_ MergeableOption = &ClusterObjectSelector{}
+)
+
+// Merge implements MergeableOption using current-overrides-base semantics.
+func (s *ClusterObjectSelector) Merge(other MergeableOption) (MergeableOption, error) {
+	if other == nil {
+		return s, nil
+	}
+
+	otherSelector, ok := other.(*ClusterObjectSelector)
+	if !ok {
+		return nil, fmt.Errorf("cannot merge options of type %T into *ClusterObjectSelector", other)
+	}
+
+	merged := &ClusterObjectSelector{
+		MatchLabels:   s.MatchLabels,
+		LabelSelector: s.LabelSelector,
+	}
+
+	if otherSelector.LabelSelector != nil || len(otherSelector.MatchLabels) > 0 {
+		merged.MatchLabels = otherSelector.MatchLabels
+		merged.LabelSelector = otherSelector.LabelSelector
+	}
+
+	return merged, nil
+}
 
 // Validate validates that option configurations are correctly defined.
 func (s *ClusterObjectSelector) Validate(fldPath *field.Path) field.ErrorList {
