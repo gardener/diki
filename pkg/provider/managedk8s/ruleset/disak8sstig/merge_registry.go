@@ -31,6 +31,7 @@ func registerMergeFuncs(r *merge.Registry, version string) {
 	}
 
 	merge.RegisterMergeFunc[sharedrules.Options242383](r, key(sharedrules.ID242383))
+	merge.RegisterMergeFunc[sharedrules.Options242390](r, key(sharedrules.ID242390))
 	merge.RegisterMergeFunc[sharedrules.Options242393](r, key(sharedrules.ID242393))
 	merge.RegisterMergeFunc[sharedrules.Options242394](r, key(sharedrules.ID242394))
 	merge.RegisterMergeFunc[sharedrules.Options242396](r, key(sharedrules.ID242396))
@@ -49,6 +50,8 @@ func registerMergeFuncs(r *merge.Registry, version string) {
 	merge.RegisterMergeFunc[rules.Options242451](r, key(sharedrules.ID242451))
 	merge.RegisterMergeFunc[sharedrules.Options242452](r, key(sharedrules.ID242452))
 	merge.RegisterMergeFunc[sharedrules.Options242453](r, key(sharedrules.ID242453))
+	merge.RegisterMergeFunc[sharedrules.Options245543](r, key(sharedrules.ID245543))
+	merge.RegisterMergeFunc[sharedrules.Options254800](r, key(sharedrules.ID254800))
 	merge.RegisterMergeFunc[rules.Options242466](r, key(sharedrules.ID242466))
 	merge.RegisterMergeFunc[rules.Options242467](r, key(sharedrules.ID242467))
 }

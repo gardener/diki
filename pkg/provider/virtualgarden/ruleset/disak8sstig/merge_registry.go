@@ -28,10 +28,26 @@ func registerMergeFuncs(r *merge.Registry, version string) {
 		}
 	}
 
+	merge.RegisterMergeFunc[sharedrules.Options242383](r, key(sharedrules.ID242383))
 	merge.RegisterMergeFunc[sharedrules.Options242390](r, key(sharedrules.ID242390))
+	merge.RegisterMergeFunc[sharedrules.Options242393](r, key(sharedrules.ID242393))
+	merge.RegisterMergeFunc[sharedrules.Options242394](r, key(sharedrules.ID242394))
+	merge.RegisterMergeFunc[sharedrules.Options242396](r, key(sharedrules.ID242396))
+	merge.RegisterMergeFunc[sharedrules.Options242404](r, key(sharedrules.ID242404))
+	merge.RegisterMergeFunc[sharedrules.Options242406](r, key(sharedrules.ID242406))
+	merge.RegisterMergeFunc[sharedrules.Options242407](r, key(sharedrules.ID242407))
+	merge.RegisterMergeFunc[disaoption.Options242414](r, key(sharedrules.ID242414))
+	merge.RegisterMergeFunc[disaoption.Options242415](r, key(sharedrules.ID242415))
+	merge.RegisterMergeFunc[sharedrules.Options242417](r, key(sharedrules.ID242417))
 	merge.RegisterMergeFunc[disaoption.Options242442](r, key(sharedrules.ID242442))
 	merge.RegisterMergeFunc[disaoption.FileOwnerOptions](r, key(sharedrules.ID242445))
 	merge.RegisterMergeFunc[disaoption.FileOwnerOptions](r, key(sharedrules.ID242446))
+	merge.RegisterMergeFunc[sharedrules.Options242448](r, key(sharedrules.ID242448))
+	merge.RegisterMergeFunc[sharedrules.Options242449](r, key(sharedrules.ID242449))
+	merge.RegisterMergeFunc[sharedrules.Options242450](r, key(sharedrules.ID242450))
 	merge.RegisterMergeFunc[disaoption.FileOwnerOptions](r, key(sharedrules.ID242451))
+	merge.RegisterMergeFunc[sharedrules.Options242452](r, key(sharedrules.ID242452))
+	merge.RegisterMergeFunc[sharedrules.Options242453](r, key(sharedrules.ID242453))
 	merge.RegisterMergeFunc[sharedrules.Options245543](r, key(sharedrules.ID245543))
+	merge.RegisterMergeFunc[sharedrules.Options254800](r, key(sharedrules.ID254800))
 }
