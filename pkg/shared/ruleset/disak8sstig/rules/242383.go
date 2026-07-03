@@ -23,8 +23,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule242383{}
-	_ rule.Severity = &Rule242383{}
+	_ rule.Rule              = &Rule242383{}
+	_ rule.Severity          = &Rule242383{}
+	_ option.Option          = &Options242383{}
+	_ option.MergeableOption = &Options242383{}
 )
 
 type Rule242383 struct {
@@ -36,11 +38,28 @@ type Options242383 struct {
 	AcceptedResources []AcceptedResources242383 `json:"acceptedResources" yaml:"acceptedResources"`
 }
 
-var _ option.Option = (*Options242383)(nil)
-
 type AcceptedResources242383 struct {
 	AcceptedObjectSelector
 	Status string `json:"status" yaml:"status"`
+}
+
+func (o *Options242383) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, err := option.AssertSameType[*Options242383](other)
+	if err != nil {
+		return nil, err
+	}
+
+	merged := &Options242383{
+		AcceptedResources: make([]AcceptedResources242383, 0, len(o.AcceptedResources)+len(otherOpts.AcceptedResources)),
+	}
+	merged.AcceptedResources = append(merged.AcceptedResources, o.AcceptedResources...)
+	merged.AcceptedResources = append(merged.AcceptedResources, otherOpts.AcceptedResources...)
+
+	return merged, nil
 }
 
 func (o Options242383) Validate(fldPath *field.Path) field.ErrorList {

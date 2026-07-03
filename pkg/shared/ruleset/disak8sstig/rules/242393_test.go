@@ -20,6 +20,7 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -122,4 +123,33 @@ var _ = Describe("#242393", func() {
 				rule.PassedCheckResult("SSH daemon inactive (or could not be probed)", rule.NewTarget("kind", "Node", "name", "node4")),
 			}),
 	)
+
+	Describe("#Merge Options242393", func() {
+		It("should merge by appending NodeGroupByLabels", func() {
+			base := &rules.Options242393{NodeGroupByLabels: []string{"label1"}}
+			other := &rules.Options242393{NodeGroupByLabels: []string{"label2"}}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242393)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.NodeGroupByLabels).To(ConsistOf("label1", "label2"))
+		})
+
+		It("should deduplicate NodeGroupByLabels", func() {
+			base := &rules.Options242393{NodeGroupByLabels: []string{"label1", "label2"}}
+			other := &rules.Options242393{NodeGroupByLabels: []string{"label2", "label3"}}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242393)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.NodeGroupByLabels).To(ConsistOf("label1", "label2", "label3"))
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options242393{NodeGroupByLabels: []string{"label1"}})
+		mergetest.AssertWrongTypeErrors(&rules.Options242393{}, &rules.Options242383{})
+	})
 })

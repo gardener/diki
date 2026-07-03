@@ -20,6 +20,7 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -128,4 +129,21 @@ var _ = Describe("#242396", func() {
 				rule.PassedCheckResult("Node uses allowed kubectl version", rule.NewTarget("kind", "Node", "name", "node4", "details", "Kubectl client version 1.12.9")),
 			}),
 	)
+
+	Describe("#Merge Options242396", func() {
+		It("should merge by appending NodeGroupByLabels", func() {
+			base := &rules.Options242396{NodeGroupByLabels: []string{"label1"}}
+			other := &rules.Options242396{NodeGroupByLabels: []string{"label2"}}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242396)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.NodeGroupByLabels).To(ConsistOf("label1", "label2"))
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options242396{NodeGroupByLabels: []string{"label1"}})
+		mergetest.AssertWrongTypeErrors(&rules.Options242396{}, &rules.Options242383{})
+	})
 })
