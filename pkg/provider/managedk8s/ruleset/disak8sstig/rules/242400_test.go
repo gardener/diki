@@ -29,6 +29,7 @@ import (
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
@@ -450,5 +451,28 @@ var _ = Describe("#242400", func() {
 
 		Expect(err).To(BeNil())
 		Expect(ruleResult.CheckResults).To(ConsistOf(expectedCheckResults))
+	})
+
+	Describe("#Merge Options242400", func() {
+		It("should override KubeProxy with other's value", func() {
+			base := &rules.Options242400{
+				KubeProxy: disaoption.KubeProxyOptions{Disabled: false},
+			}
+			other := &rules.Options242400{
+				KubeProxy: disaoption.KubeProxyOptions{Disabled: true},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242400)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.KubeProxy.Disabled).To(BeTrue())
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options242400{
+			KubeProxy: disaoption.KubeProxyOptions{Disabled: true},
+		})
+		mergetest.AssertWrongTypeErrors(&rules.Options242400{}, &rules.Options242451{})
 	})
 })
