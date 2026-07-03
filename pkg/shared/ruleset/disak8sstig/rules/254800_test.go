@@ -20,6 +20,7 @@ import (
 
 	intkubeutils "github.com/gardener/diki/pkg/internal/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -226,5 +227,34 @@ kind: PodSecurityConfiguration`
 				"Detail":   Equal("must be one of 'restricted', 'baseline' or 'privileged'"),
 			}))))
 		})
+	})
+
+	Describe("#Merge Options254800", func() {
+		It("should override MinPodSecurityStandardsProfile with non-empty value", func() {
+			base := &rules.Options254800{MinPodSecurityStandardsProfile: intkubeutils.PSSProfileBaseline}
+			other := &rules.Options254800{MinPodSecurityStandardsProfile: intkubeutils.PSSProfileRestricted}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options254800)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.MinPodSecurityStandardsProfile).To(Equal(intkubeutils.PSSProfileRestricted))
+		})
+
+		It("should keep base value when other is empty", func() {
+			base := &rules.Options254800{MinPodSecurityStandardsProfile: intkubeutils.PSSProfileBaseline}
+			other := &rules.Options254800{}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options254800)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.MinPodSecurityStandardsProfile).To(Equal(intkubeutils.PSSProfileBaseline))
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options254800{MinPodSecurityStandardsProfile: intkubeutils.PSSProfileBaseline})
+		mergetest.AssertWrongTypeErrors(&rules.Options254800{}, &rules.Options242383{})
 	})
 })
