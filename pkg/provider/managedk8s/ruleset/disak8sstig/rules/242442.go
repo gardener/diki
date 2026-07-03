@@ -23,8 +23,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule242442{}
-	_ rule.Severity = &Rule242442{}
+	_ rule.Rule              = &Rule242442{}
+	_ rule.Severity          = &Rule242442{}
+	_ option.Option          = &Options242442{}
+	_ option.MergeableOption = &Options242442{}
 )
 
 type Rule242442 struct {
@@ -37,7 +39,36 @@ type Options242442 struct {
 	ImageSelector *disaoption.Options242442
 }
 
-var _ option.Option = (*Options242442)(nil)
+func (o *Options242442) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, err := option.AssertSameType[*Options242442](other)
+	if err != nil {
+		return nil, err
+	}
+
+	merged := &Options242442{}
+
+	if otherOpts.KubeProxy != nil {
+		merged.KubeProxy = otherOpts.KubeProxy
+	} else {
+		merged.KubeProxy = o.KubeProxy
+	}
+
+	if o.ImageSelector != nil {
+		mergedImageSelector, err := o.ImageSelector.Merge(otherOpts.ImageSelector)
+		if err != nil {
+			return nil, err
+		}
+		merged.ImageSelector = mergedImageSelector.(*disaoption.Options242442)
+	} else {
+		merged.ImageSelector = otherOpts.ImageSelector
+	}
+
+	return merged, nil
+}
 
 func (o Options242442) Validate(fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
