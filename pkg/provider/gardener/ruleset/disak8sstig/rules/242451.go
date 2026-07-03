@@ -33,8 +33,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule242451{}
-	_ rule.Severity = &Rule242451{}
+	_ rule.Rule              = &Rule242451{}
+	_ rule.Severity          = &Rule242451{}
+	_ option.Option          = &Options242451{}
+	_ option.MergeableOption = &Options242451{}
 )
 
 type Rule242451 struct {
@@ -53,7 +55,39 @@ type Options242451 struct {
 	*disaoption.FileOwnerOptions
 }
 
-var _ option.Option = (*Options242451)(nil)
+func (o *Options242451) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, err := option.AssertSameType[*Options242451](other)
+	if err != nil {
+		return nil, err
+	}
+
+	merged := &Options242451{
+		KubeProxy: otherOpts.KubeProxy,
+	}
+
+	switch {
+	case o.FileOwnerOptions != nil && otherOpts.FileOwnerOptions != nil:
+		mergedFileOwner, err := o.FileOwnerOptions.Merge(otherOpts.FileOwnerOptions)
+		if err != nil {
+			return nil, err
+		}
+		typedFileOwner, err := option.AssertSameType[*disaoption.FileOwnerOptions](mergedFileOwner)
+		if err != nil {
+			return nil, err
+		}
+		merged.FileOwnerOptions = typedFileOwner
+	case otherOpts.FileOwnerOptions != nil:
+		merged.FileOwnerOptions = otherOpts.FileOwnerOptions
+	case o.FileOwnerOptions != nil:
+		merged.FileOwnerOptions = o.FileOwnerOptions
+	}
+
+	return merged, nil
+}
 
 func (o Options242451) Validate(fldPath *field.Path) field.ErrorList {
 	allErrors := o.KubeProxy.Validate(fldPath.Child("kubeProxy"))

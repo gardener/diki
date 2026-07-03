@@ -12,6 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	k8soption "github.com/gardener/diki/pkg/shared/kubernetes/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
@@ -245,5 +246,145 @@ var _ = Describe("options", func() {
 
 			Expect(result).To(BeEmpty())
 		})
+	})
+
+	Describe("#Merge FileOwnerOptions", func() {
+		It("should merge by appending Users and Groups", func() {
+			base := &option.FileOwnerOptions{
+				ExpectedFileOwner: option.ExpectedOwner{
+					Users:  []string{"0"},
+					Groups: []string{"0"},
+				},
+			}
+			other := &option.FileOwnerOptions{
+				ExpectedFileOwner: option.ExpectedOwner{
+					Users:  []string{"1000"},
+					Groups: []string{"1000"},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*option.FileOwnerOptions)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.ExpectedFileOwner.Users).To(ConsistOf("0", "1000"))
+			Expect(mergedOpts.ExpectedFileOwner.Groups).To(ConsistOf("0", "1000"))
+		})
+
+		It("should deduplicate Users and Groups", func() {
+			base := &option.FileOwnerOptions{
+				ExpectedFileOwner: option.ExpectedOwner{
+					Users:  []string{"0", "1000"},
+					Groups: []string{"0", "65534"},
+				},
+			}
+			other := &option.FileOwnerOptions{
+				ExpectedFileOwner: option.ExpectedOwner{
+					Users:  []string{"0", "65534"},
+					Groups: []string{"0"},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*option.FileOwnerOptions)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.ExpectedFileOwner.Users).To(ConsistOf("0", "1000", "65534"))
+			Expect(mergedOpts.ExpectedFileOwner.Groups).To(ConsistOf("0", "65534"))
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&option.FileOwnerOptions{
+			ExpectedFileOwner: option.ExpectedOwner{Users: []string{"0"}},
+		})
+		mergetest.AssertWrongTypeErrors(&option.FileOwnerOptions{}, &option.Options242414{})
+	})
+
+	Describe("#Merge Options242414", func() {
+		It("should merge by appending AcceptedPods", func() {
+			base := &option.Options242414{
+				AcceptedPods: []option.AcceptedPods242414{
+					{Ports: []int32{80}},
+				},
+			}
+			other := &option.Options242414{
+				AcceptedPods: []option.AcceptedPods242414{
+					{Ports: []int32{443}},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*option.Options242414)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AcceptedPods).To(HaveLen(2))
+			Expect(mergedOpts.AcceptedPods[0].Ports).To(Equal([]int32{80}))
+			Expect(mergedOpts.AcceptedPods[1].Ports).To(Equal([]int32{443}))
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&option.Options242414{
+			AcceptedPods: []option.AcceptedPods242414{{Ports: []int32{80}}},
+		})
+		mergetest.AssertWrongTypeErrors(&option.Options242414{}, &option.FileOwnerOptions{})
+	})
+
+	Describe("#Merge Options242415", func() {
+		It("should merge by appending AcceptedPods", func() {
+			base := &option.Options242415{
+				AcceptedPods: []option.AcceptedPods242415{
+					{EnvironmentVariables: []string{"FOO"}},
+				},
+			}
+			other := &option.Options242415{
+				AcceptedPods: []option.AcceptedPods242415{
+					{EnvironmentVariables: []string{"BAR"}},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*option.Options242415)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AcceptedPods).To(HaveLen(2))
+			Expect(mergedOpts.AcceptedPods[0].EnvironmentVariables).To(Equal([]string{"FOO"}))
+			Expect(mergedOpts.AcceptedPods[1].EnvironmentVariables).To(Equal([]string{"BAR"}))
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&option.Options242415{
+			AcceptedPods: []option.AcceptedPods242415{{EnvironmentVariables: []string{"FOO"}}},
+		})
+		mergetest.AssertWrongTypeErrors(&option.Options242415{}, &option.FileOwnerOptions{})
+	})
+
+	Describe("#Merge Options242442", func() {
+		It("should merge by appending ExpectedVersionedImages", func() {
+			base := &option.Options242442{
+				ExpectedVersionedImages: []option.ExpectedVersionedImage{
+					{Name: "image-a"},
+				},
+			}
+			other := &option.Options242442{
+				ExpectedVersionedImages: []option.ExpectedVersionedImage{
+					{Name: "image-b"},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*option.Options242442)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.ExpectedVersionedImages).To(HaveLen(2))
+			Expect(mergedOpts.ExpectedVersionedImages[0].Name).To(Equal("image-a"))
+			Expect(mergedOpts.ExpectedVersionedImages[1].Name).To(Equal("image-b"))
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&option.Options242442{
+			ExpectedVersionedImages: []option.ExpectedVersionedImage{{Name: "image-a"}},
+		})
+		mergetest.AssertWrongTypeErrors(&option.Options242442{}, &option.FileOwnerOptions{})
 	})
 })

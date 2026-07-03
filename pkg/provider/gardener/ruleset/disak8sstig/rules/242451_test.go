@@ -24,6 +24,7 @@ import (
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	option "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
@@ -541,4 +542,41 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.ErroredCheckResult("could not retrieve kubelet config: bar", rule.NewTarget("cluster", "shoot", "name", "diki-242451-bbbbbbbbbb", "namespace", "kube-system", "kind", "Pod")),
 			}),
 	)
+
+	Describe("#Merge Options242451", func() {
+		It("should override KubeProxy and merge FileOwnerOptions", func() {
+			base := &rules.Options242451{
+				KubeProxy: option.KubeProxyOptionsWithoutSelectors{Disabled: false},
+				FileOwnerOptions: &option.FileOwnerOptions{
+					ExpectedFileOwner: option.ExpectedOwner{
+						Users:  []string{"0"},
+						Groups: []string{"0"},
+					},
+				},
+			}
+			other := &rules.Options242451{
+				KubeProxy: option.KubeProxyOptionsWithoutSelectors{Disabled: true},
+				FileOwnerOptions: &option.FileOwnerOptions{
+					ExpectedFileOwner: option.ExpectedOwner{
+						Users:  []string{"1000"},
+						Groups: []string{"1000"},
+					},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242451)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.KubeProxy.Disabled).To(BeTrue())
+			Expect(mergedOpts.FileOwnerOptions.ExpectedFileOwner.Users).To(ConsistOf("0", "1000"))
+			Expect(mergedOpts.FileOwnerOptions.ExpectedFileOwner.Groups).To(ConsistOf("0", "1000"))
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options242451{
+			KubeProxy: option.KubeProxyOptionsWithoutSelectors{Disabled: true},
+		})
+		mergetest.AssertWrongTypeErrors(&rules.Options242451{}, &rules.Options242400{})
+	})
 })

@@ -24,6 +24,7 @@ import (
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
@@ -494,4 +495,27 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.ErroredCheckResult("could not retrieve kubelet config: bar", rule.NewTarget("cluster", "shoot", "name", "diki-242467-bbbbbbbbbb", "namespace", "kube-system", "kind", "Pod")),
 			}),
 	)
+
+	Describe("#Merge Options242467", func() {
+		It("should override KubeProxy with other's value", func() {
+			base := &rules.Options242467{
+				KubeProxy: option.KubeProxyOptionsWithoutSelectors{Disabled: false},
+			}
+			other := &rules.Options242467{
+				KubeProxy: option.KubeProxyOptionsWithoutSelectors{Disabled: true},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242467)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.KubeProxy.Disabled).To(BeTrue())
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options242467{
+			KubeProxy: option.KubeProxyOptionsWithoutSelectors{Disabled: true},
+		})
+		mergetest.AssertWrongTypeErrors(&rules.Options242467{}, &rules.Options242466{})
+	})
 })

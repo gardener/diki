@@ -28,6 +28,19 @@ type MergeableOption interface {
 	Merge(other MergeableOption) (MergeableOption, error)
 }
 
+// AssertSameType type-asserts other to T and returns a descriptive error when
+// the assertion fails. It is intended to be used at the top of MergeableOption.Merge
+// implementations, where the assertion result is required to be of the same concrete
+// type as the receiver.
+func AssertSameType[T MergeableOption](other MergeableOption) (T, error) {
+	typed, ok := other.(T)
+	if !ok {
+		var zero T
+		return zero, fmt.Errorf("cannot merge options of type %T into %T", other, zero)
+	}
+	return typed, nil
+}
+
 // ClusterObjectSelector contains generalized options for matching entities by their attribute labels.
 type ClusterObjectSelector struct {
 	// Deprecated: This field is deprecated and will be forbidden in a future release.
@@ -36,7 +49,34 @@ type ClusterObjectSelector struct {
 	LabelSelector *metav1.LabelSelector `json:"labelSelector,omitempty" yaml:"labelSelector,omitempty"`
 }
 
-var _ Option = (*ClusterObjectSelector)(nil)
+var (
+	_ Option          = &ClusterObjectSelector{}
+	_ MergeableOption = &ClusterObjectSelector{}
+)
+
+// Merge implements MergeableOption using current-overrides-base semantics.
+func (s *ClusterObjectSelector) Merge(other MergeableOption) (MergeableOption, error) {
+	if other == nil {
+		return s, nil
+	}
+
+	otherSelector, err := AssertSameType[*ClusterObjectSelector](other)
+	if err != nil {
+		return nil, err
+	}
+
+	merged := &ClusterObjectSelector{
+		MatchLabels:   s.MatchLabels,
+		LabelSelector: s.LabelSelector,
+	}
+
+	if otherSelector.LabelSelector != nil || len(otherSelector.MatchLabels) > 0 {
+		merged.MatchLabels = otherSelector.MatchLabels
+		merged.LabelSelector = otherSelector.LabelSelector
+	}
+
+	return merged, nil
+}
 
 // Validate validates that option configurations are correctly defined.
 func (s *ClusterObjectSelector) Validate(fldPath *field.Path) field.ErrorList {
