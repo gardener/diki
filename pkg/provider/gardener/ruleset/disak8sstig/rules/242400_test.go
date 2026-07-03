@@ -29,6 +29,7 @@ import (
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
@@ -444,19 +445,9 @@ var _ = Describe("#242400", func() {
 			Expect(mergedOpts.KubeProxy.Disabled).To(BeTrue())
 		})
 
-		It("should return the receiver when merging with nil", func() {
-			base := &rules.Options242400{
-				KubeProxy: option.KubeProxyOptionsWithoutSelectors{Disabled: true},
-			}
-			merged, err := base.Merge(nil)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(merged).To(Equal(base))
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options242400{
+			KubeProxy: option.KubeProxyOptionsWithoutSelectors{Disabled: true},
 		})
-
-		It("should return error when merging with wrong type", func() {
-			base := &rules.Options242400{}
-			_, err := base.Merge(&rules.Options242451{})
-			Expect(err).To(HaveOccurred())
-		})
+		mergetest.AssertWrongTypeErrors(&rules.Options242400{}, &rules.Options242451{})
 	})
 })

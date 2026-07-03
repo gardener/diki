@@ -12,6 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	k8soption "github.com/gardener/diki/pkg/shared/kubernetes/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
@@ -294,20 +295,10 @@ var _ = Describe("options", func() {
 			Expect(mergedOpts.ExpectedFileOwner.Groups).To(ConsistOf("0", "65534"))
 		})
 
-		It("should return the receiver when merging with nil", func() {
-			base := &option.FileOwnerOptions{
-				ExpectedFileOwner: option.ExpectedOwner{Users: []string{"0"}},
-			}
-			merged, err := base.Merge(nil)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(merged).To(Equal(base))
+		mergetest.AssertNilOtherReturnsReceiver(&option.FileOwnerOptions{
+			ExpectedFileOwner: option.ExpectedOwner{Users: []string{"0"}},
 		})
-
-		It("should return error when merging with wrong type", func() {
-			base := &option.FileOwnerOptions{}
-			_, err := base.Merge(&option.Options242414{})
-			Expect(err).To(HaveOccurred())
-		})
+		mergetest.AssertWrongTypeErrors(&option.FileOwnerOptions{}, &option.Options242414{})
 	})
 
 	Describe("#Merge Options242414", func() {
@@ -333,20 +324,10 @@ var _ = Describe("options", func() {
 			Expect(mergedOpts.AcceptedPods[1].Ports).To(Equal([]int32{443}))
 		})
 
-		It("should return the receiver when merging with nil", func() {
-			base := &option.Options242414{
-				AcceptedPods: []option.AcceptedPods242414{{Ports: []int32{80}}},
-			}
-			merged, err := base.Merge(nil)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(merged).To(Equal(base))
+		mergetest.AssertNilOtherReturnsReceiver(&option.Options242414{
+			AcceptedPods: []option.AcceptedPods242414{{Ports: []int32{80}}},
 		})
-
-		It("should return error when merging with wrong type", func() {
-			base := &option.Options242414{}
-			_, err := base.Merge(&option.FileOwnerOptions{})
-			Expect(err).To(HaveOccurred())
-		})
+		mergetest.AssertWrongTypeErrors(&option.Options242414{}, &option.FileOwnerOptions{})
 	})
 
 	Describe("#Merge Options242415", func() {
@@ -372,20 +353,10 @@ var _ = Describe("options", func() {
 			Expect(mergedOpts.AcceptedPods[1].EnvironmentVariables).To(Equal([]string{"BAR"}))
 		})
 
-		It("should return the receiver when merging with nil", func() {
-			base := &option.Options242415{
-				AcceptedPods: []option.AcceptedPods242415{{EnvironmentVariables: []string{"FOO"}}},
-			}
-			merged, err := base.Merge(nil)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(merged).To(Equal(base))
+		mergetest.AssertNilOtherReturnsReceiver(&option.Options242415{
+			AcceptedPods: []option.AcceptedPods242415{{EnvironmentVariables: []string{"FOO"}}},
 		})
-
-		It("should return error when merging with wrong type", func() {
-			base := &option.Options242415{}
-			_, err := base.Merge(&option.FileOwnerOptions{})
-			Expect(err).To(HaveOccurred())
-		})
+		mergetest.AssertWrongTypeErrors(&option.Options242415{}, &option.FileOwnerOptions{})
 	})
 
 	Describe("#Merge Options242442", func() {
@@ -411,19 +382,9 @@ var _ = Describe("options", func() {
 			Expect(mergedOpts.ExpectedVersionedImages[1].Name).To(Equal("image-b"))
 		})
 
-		It("should return the receiver when merging with nil", func() {
-			base := &option.Options242442{
-				ExpectedVersionedImages: []option.ExpectedVersionedImage{{Name: "image-a"}},
-			}
-			merged, err := base.Merge(nil)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(merged).To(Equal(base))
+		mergetest.AssertNilOtherReturnsReceiver(&option.Options242442{
+			ExpectedVersionedImages: []option.ExpectedVersionedImage{{Name: "image-a"}},
 		})
-
-		It("should return error when merging with wrong type", func() {
-			base := &option.Options242442{}
-			_, err := base.Merge(&option.FileOwnerOptions{})
-			Expect(err).To(HaveOccurred())
-		})
+		mergetest.AssertWrongTypeErrors(&option.Options242442{}, &option.FileOwnerOptions{})
 	})
 })

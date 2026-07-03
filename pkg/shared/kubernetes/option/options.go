@@ -28,6 +28,19 @@ type MergeableOption interface {
 	Merge(other MergeableOption) (MergeableOption, error)
 }
 
+// AssertSameType type-asserts other to T and returns a descriptive error when
+// the assertion fails. It is intended to be used at the top of MergeableOption.Merge
+// implementations, where the assertion result is required to be of the same concrete
+// type as the receiver.
+func AssertSameType[T MergeableOption](other MergeableOption) (T, error) {
+	typed, ok := other.(T)
+	if !ok {
+		var zero T
+		return zero, fmt.Errorf("cannot merge options of type %T into %T", other, zero)
+	}
+	return typed, nil
+}
+
 // ClusterObjectSelector contains generalized options for matching entities by their attribute labels.
 type ClusterObjectSelector struct {
 	// Deprecated: This field is deprecated and will be forbidden in a future release.
@@ -47,9 +60,9 @@ func (s *ClusterObjectSelector) Merge(other MergeableOption) (MergeableOption, e
 		return s, nil
 	}
 
-	otherSelector, ok := other.(*ClusterObjectSelector)
-	if !ok {
-		return nil, fmt.Errorf("cannot merge options of type %T into *ClusterObjectSelector", other)
+	otherSelector, err := AssertSameType[*ClusterObjectSelector](other)
+	if err != nil {
+		return nil, err
 	}
 
 	merged := &ClusterObjectSelector{

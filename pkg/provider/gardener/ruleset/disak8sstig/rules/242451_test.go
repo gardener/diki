@@ -25,6 +25,7 @@ import (
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
 	option "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -573,19 +574,9 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			Expect(mergedOpts.FileOwnerOptions.ExpectedFileOwner.Groups).To(ConsistOf("0", "1000"))
 		})
 
-		It("should return the receiver when merging with nil", func() {
-			base := &rules.Options242451{
-				KubeProxy: option.KubeProxyOptionsWithoutSelectors{Disabled: true},
-			}
-			merged, err := base.Merge(nil)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(merged).To(Equal(base))
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options242451{
+			KubeProxy: option.KubeProxyOptionsWithoutSelectors{Disabled: true},
 		})
-
-		It("should return error when merging with wrong type", func() {
-			base := &rules.Options242451{}
-			_, err := base.Merge(&rules.Options242400{})
-			Expect(err).To(HaveOccurred())
-		})
+		mergetest.AssertWrongTypeErrors(&rules.Options242451{}, &rules.Options242400{})
 	})
 })

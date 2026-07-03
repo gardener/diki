@@ -5,7 +5,6 @@
 package option
 
 import (
-	"fmt"
 	"strconv"
 
 	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
@@ -38,9 +37,9 @@ func (o *FileOwnerOptions) Merge(other option.MergeableOption) (option.Mergeable
 		return o, nil
 	}
 
-	otherOpts, ok := other.(*FileOwnerOptions)
-	if !ok {
-		return nil, fmt.Errorf("cannot merge options of type %T into *FileOwnerOptions", other)
+	otherOpts, err := option.AssertSameType[*FileOwnerOptions](other)
+	if err != nil {
+		return nil, err
 	}
 
 	merged := &FileOwnerOptions{
@@ -105,9 +104,9 @@ func (o *Options242414) Merge(other option.MergeableOption) (option.MergeableOpt
 		return o, nil
 	}
 
-	otherOpts, ok := other.(*Options242414)
-	if !ok {
-		return nil, fmt.Errorf("cannot merge options of type %T into *Options242414", other)
+	otherOpts, err := option.AssertSameType[*Options242414](other)
+	if err != nil {
+		return nil, err
 	}
 
 	merged := &Options242414{
@@ -161,9 +160,9 @@ func (o *Options242415) Merge(other option.MergeableOption) (option.MergeableOpt
 		return o, nil
 	}
 
-	otherOpts, ok := other.(*Options242415)
-	if !ok {
-		return nil, fmt.Errorf("cannot merge options of type %T into *Options242415", other)
+	otherOpts, err := option.AssertSameType[*Options242415](other)
+	if err != nil {
+		return nil, err
 	}
 
 	merged := &Options242415{
@@ -216,9 +215,9 @@ func (o *Options242442) Merge(other option.MergeableOption) (option.MergeableOpt
 		return o, nil
 	}
 
-	otherOpts, ok := other.(*Options242442)
-	if !ok {
-		return nil, fmt.Errorf("cannot merge options of type %T into *Options242442", other)
+	otherOpts, err := option.AssertSameType[*Options242442](other)
+	if err != nil {
+		return nil, err
 	}
 
 	merged := &Options242442{

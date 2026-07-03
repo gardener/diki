@@ -12,6 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
@@ -662,22 +663,29 @@ var _ = Describe("options", func() {
 			Expect(mergedSelector.LabelSelector.MatchLabels).To(Equal(map[string]string{"base": "selector"}))
 		})
 
-		It("should return the receiver when merging with nil", func() {
-			base := &option.ClusterObjectSelector{
-				LabelSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{"base": "selector"},
-				},
-			}
+		mergetest.AssertNilOtherReturnsReceiver(&option.ClusterObjectSelector{
+			LabelSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"base": "selector"},
+			},
+		})
+		mergetest.AssertWrongTypeErrors(&option.ClusterObjectSelector{}, &disaoption.FileOwnerOptions{})
+	})
 
-			merged, err := base.Merge(nil)
+	Describe("#AssertSameType", func() {
+		It("should return the typed value when types match", func() {
+			in := &option.ClusterObjectSelector{
+				LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"foo": "bar"}},
+			}
+			got, err := option.AssertSameType[*option.ClusterObjectSelector](in)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(merged).To(Equal(base))
+			Expect(got).To(BeIdenticalTo(in))
 		})
 
-		It("should return error when merging with wrong type", func() {
-			base := &option.ClusterObjectSelector{}
-			_, err := base.Merge(&disaoption.FileOwnerOptions{})
+		It("should return a descriptive error when types differ", func() {
+			_, err := option.AssertSameType[*option.ClusterObjectSelector](&disaoption.FileOwnerOptions{})
 			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("*option.FileOwnerOptions"))
+			Expect(err.Error()).To(ContainSubstring("*option.ClusterObjectSelector"))
 		})
 	})
 })

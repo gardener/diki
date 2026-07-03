@@ -59,9 +59,9 @@ func (o *Options242466) Merge(other option.MergeableOption) (option.MergeableOpt
 		return o, nil
 	}
 
-	otherOpts, ok := other.(*Options242466)
-	if !ok {
-		return nil, fmt.Errorf("cannot merge options of type %T into *Options242466", other)
+	otherOpts, err := option.AssertSameType[*Options242466](other)
+	if err != nil {
+		return nil, err
 	}
 
 	return &Options242466{
