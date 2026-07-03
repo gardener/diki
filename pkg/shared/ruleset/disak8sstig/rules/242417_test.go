@@ -19,6 +19,7 @@ import (
 
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -433,5 +434,34 @@ var _ = Describe("#242417", func() {
 			})),
 			))
 		})
+	})
+
+	Describe("#Merge Options242417", func() {
+		It("should merge by appending AcceptedPods", func() {
+			base := &rules.Options242417{
+				AcceptedPods: []rules.AcceptedPods242417{
+					{Status: "Running"},
+				},
+			}
+			other := &rules.Options242417{
+				AcceptedPods: []rules.AcceptedPods242417{
+					{Status: "Pending"},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242417)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AcceptedPods).To(HaveLen(2))
+			Expect(mergedOpts.AcceptedPods[0].Status).To(Equal("Running"))
+			Expect(mergedOpts.AcceptedPods[1].Status).To(Equal("Pending"))
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options242417{
+			AcceptedPods: []rules.AcceptedPods242417{{Status: "Running"}},
+		})
+		mergetest.AssertWrongTypeErrors(&rules.Options242417{}, &rules.Options242383{})
 	})
 })

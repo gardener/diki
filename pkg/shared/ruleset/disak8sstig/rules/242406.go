@@ -28,8 +28,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule242406{}
-	_ rule.Severity = &Rule242406{}
+	_ rule.Rule              = &Rule242406{}
+	_ rule.Severity          = &Rule242406{}
+	_ option.Option          = &Options242406{}
+	_ option.MergeableOption = &Options242406{}
 )
 
 type Rule242406 struct {
@@ -45,7 +47,32 @@ type Options242406 struct {
 	*disaoption.FileOwnerOptions
 }
 
-var _ option.Option = (*Options242406)(nil)
+func (o *Options242406) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, err := option.AssertSameType[*Options242406](other)
+	if err != nil {
+		return nil, err
+	}
+
+	merged := &Options242406{
+		NodeGroupByLabels: intutils.MergeStringSlices(o.NodeGroupByLabels, otherOpts.NodeGroupByLabels),
+	}
+
+	if o.FileOwnerOptions != nil {
+		mergedFileOwner, err := o.FileOwnerOptions.Merge(otherOpts.FileOwnerOptions)
+		if err != nil {
+			return nil, err
+		}
+		merged.FileOwnerOptions = mergedFileOwner.(*disaoption.FileOwnerOptions)
+	} else {
+		merged.FileOwnerOptions = otherOpts.FileOwnerOptions
+	}
+
+	return merged, nil
+}
 
 func (o Options242406) Validate(fldPath *field.Path) field.ErrorList {
 	allErrs := disaoption.ValidateLabelNames(o.NodeGroupByLabels, fldPath.Child("nodeGroupByLabels"))

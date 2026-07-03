@@ -20,6 +20,7 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -129,4 +130,21 @@ var _ = Describe("#242407", func() {
 				rule.PassedCheckResult("File has expected permissions", rule.NewTarget("kind", "Node", "name", "node4", "details", "fileName: /etc/systemd/system/kubelet.service, permissions: 644")),
 			}),
 	)
+
+	Describe("#Merge Options242407", func() {
+		It("should merge by appending NodeGroupByLabels", func() {
+			base := &rules.Options242407{NodeGroupByLabels: []string{"label1"}}
+			other := &rules.Options242407{NodeGroupByLabels: []string{"label2"}}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242407)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.NodeGroupByLabels).To(ConsistOf("label1", "label2"))
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options242407{NodeGroupByLabels: []string{"label1"}})
+		mergetest.AssertWrongTypeErrors(&rules.Options242407{}, &rules.Options242383{})
+	})
 })

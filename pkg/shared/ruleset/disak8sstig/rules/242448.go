@@ -31,8 +31,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule242448{}
-	_ rule.Severity = &Rule242448{}
+	_ rule.Rule              = &Rule242448{}
+	_ rule.Severity          = &Rule242448{}
+	_ option.Option          = &Options242448{}
+	_ option.MergeableOption = &Options242448{}
 )
 
 type Rule242448 struct {
@@ -48,7 +50,36 @@ type Options242448 struct {
 	*disaoption.FileOwnerOptions
 }
 
-var _ option.Option = (*Options242448)(nil)
+func (o *Options242448) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, err := option.AssertSameType[*Options242448](other)
+	if err != nil {
+		return nil, err
+	}
+
+	merged := &Options242448{}
+
+	if otherOpts.ClusterObjectSelector != nil {
+		merged.ClusterObjectSelector = otherOpts.ClusterObjectSelector
+	} else {
+		merged.ClusterObjectSelector = o.ClusterObjectSelector
+	}
+
+	if o.FileOwnerOptions != nil {
+		mergedFileOwner, err := o.FileOwnerOptions.Merge(otherOpts.FileOwnerOptions)
+		if err != nil {
+			return nil, err
+		}
+		merged.FileOwnerOptions = mergedFileOwner.(*disaoption.FileOwnerOptions)
+	} else {
+		merged.FileOwnerOptions = otherOpts.FileOwnerOptions
+	}
+
+	return merged, nil
+}
 
 func (o Options242448) Validate(fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
