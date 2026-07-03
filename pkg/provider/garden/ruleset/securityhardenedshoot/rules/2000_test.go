@@ -21,6 +21,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/garden/ruleset/securityhardenedshoot/rules"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 )
 
 var _ = Describe("#2000", func() {
@@ -440,18 +441,6 @@ kind: AuthenticationConfiguration
 			Expect(mergedOpts.AcceptedEndpoints[1].Path).To(Equal("/readyz"))
 		})
 
-		It("should return the receiver when merging with nil", func() {
-			base := &rules.Options2000{
-				AcceptedEndpoints: []rules.AcceptedEndpoint{
-					{Path: "/healthz"},
-				},
-			}
-
-			merged, err := base.Merge(nil)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(merged).To(Equal(base))
-		})
-
 		It("should handle merging two empty Options2000", func() {
 			base := &rules.Options2000{}
 			other := &rules.Options2000{}
@@ -464,16 +453,9 @@ kind: AuthenticationConfiguration
 			Expect(mergedOpts.AcceptedEndpoints).To(BeEmpty())
 		})
 
-		It("should return an error when merging with a different type", func() {
-			base := &rules.Options2000{
-				AcceptedEndpoints: []rules.AcceptedEndpoint{
-					{Path: "/healthz"},
-				},
-			}
-
-			_, err := base.Merge(&rules.Options1000{})
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("cannot merge options of type"))
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options2000{
+			AcceptedEndpoints: []rules.AcceptedEndpoint{{Path: "/healthz"}},
 		})
+		mergetest.AssertWrongTypeErrors(&rules.Options2000{}, &rules.Options1000{})
 	})
 })

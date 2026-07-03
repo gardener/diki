@@ -6,7 +6,6 @@ package rules
 
 import (
 	"context"
-	"fmt"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -49,9 +48,9 @@ func (o *Options2003) Merge(other option.MergeableOption) (option.MergeableOptio
 		return o, nil
 	}
 
-	otherOpts, ok := other.(*Options2003)
-	if !ok {
-		return nil, fmt.Errorf("cannot merge options of type %T into *Options2003", other)
+	otherOpts, err := option.AssertSameType[*Options2003](other)
+	if err != nil {
+		return nil, err
 	}
 
 	merged := &Options2003{

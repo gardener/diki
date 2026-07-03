@@ -19,6 +19,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/securityhardenedk8s/rules"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 )
 
 var _ = Describe("#2005", func() {
@@ -336,18 +337,6 @@ var _ = Describe("#2005", func() {
 			Expect(mergedOpts.AllowedImages[1].Prefix).To(Equal("docker.io/library/"))
 		})
 
-		It("should return the receiver when merging with nil", func() {
-			base := &rules.Options2005{
-				AllowedImages: []rules.AllowedImage{
-					{Prefix: "registry.example.com/"},
-				},
-			}
-
-			merged, err := base.Merge(nil)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(merged).To(Equal(base))
-		})
-
 		It("should handle merging two empty Options2005", func() {
 			base := &rules.Options2005{}
 			other := &rules.Options2005{}
@@ -360,13 +349,9 @@ var _ = Describe("#2005", func() {
 			Expect(mergedOpts.AllowedImages).To(BeEmpty())
 		})
 
-		It("should return an error when merging with a different option type", func() {
-			base := &rules.Options2005{}
-			other := &rules.Options2000{}
-
-			merged, err := base.Merge(other)
-			Expect(err).To(MatchError(ContainSubstring("cannot merge options of type")))
-			Expect(merged).To(BeNil())
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options2005{
+			AllowedImages: []rules.AllowedImage{{Prefix: "registry.example.com/"}},
 		})
+		mergetest.AssertWrongTypeErrors(&rules.Options2005{}, &rules.Options2000{})
 	})
 })

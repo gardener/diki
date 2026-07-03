@@ -19,6 +19,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/garden/ruleset/securityhardenedshoot/rules"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 )
 
 var _ = Describe("#1001", func() {
@@ -359,18 +360,6 @@ var _ = Describe("#1001", func() {
 			Expect(mergedOpts.AllowedClassifications[1]).To(Equal(gardencorev1beta1.ClassificationPreview))
 		})
 
-		It("should return the receiver when merging with nil", func() {
-			base := &rules.Options1001{
-				AllowedClassifications: []gardencorev1beta1.VersionClassification{
-					gardencorev1beta1.ClassificationSupported,
-				},
-			}
-
-			merged, err := base.Merge(nil)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(merged).To(Equal(base))
-		})
-
 		It("should handle merging two empty Options1001", func() {
 			base := &rules.Options1001{}
 			other := &rules.Options1001{}
@@ -383,16 +372,9 @@ var _ = Describe("#1001", func() {
 			Expect(mergedOpts.AllowedClassifications).To(BeEmpty())
 		})
 
-		It("should return an error when merging with a different type", func() {
-			base := &rules.Options1001{
-				AllowedClassifications: []gardencorev1beta1.VersionClassification{
-					gardencorev1beta1.ClassificationSupported,
-				},
-			}
-
-			_, err := base.Merge(&rules.Options2000{})
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("cannot merge options of type"))
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options1001{
+			AllowedClassifications: []gardencorev1beta1.VersionClassification{gardencorev1beta1.ClassificationSupported},
 		})
+		mergetest.AssertWrongTypeErrors(&rules.Options1001{}, &rules.Options2000{})
 	})
 })

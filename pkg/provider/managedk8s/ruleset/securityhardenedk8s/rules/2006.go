@@ -7,7 +7,6 @@ package rules
 import (
 	"cmp"
 	"context"
-	"fmt"
 	"strings"
 
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -60,9 +59,9 @@ func (o *Options2006) Merge(other option.MergeableOption) (option.MergeableOptio
 		return o, nil
 	}
 
-	otherOpts, ok := other.(*Options2006)
-	if !ok {
-		return nil, fmt.Errorf("cannot merge options of type %T into *Options2006", other)
+	otherOpts, err := option.AssertSameType[*Options2006](other)
+	if err != nil {
+		return nil, err
 	}
 
 	merged := &Options2006{

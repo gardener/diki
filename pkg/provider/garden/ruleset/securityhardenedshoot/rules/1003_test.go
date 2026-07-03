@@ -23,6 +23,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/garden/ruleset/securityhardenedshoot/rules"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 )
 
 var _ = Describe("#1003", func() {
@@ -317,16 +318,6 @@ var _ = Describe("#1003", func() {
 			Expect(mergedOpts.AllowedLakomScopes[1]).To(Equal(lakomapi.Cluster))
 		})
 
-		It("should return the receiver when merging with nil", func() {
-			base := &rules.Options1003{
-				AllowedLakomScopes: []lakomapi.ScopeType{lakomapi.KubeSystem},
-			}
-
-			merged, err := base.Merge(nil)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(merged).To(Equal(base))
-		})
-
 		It("should handle merging two empty Options1003", func() {
 			base := &rules.Options1003{}
 			other := &rules.Options1003{}
@@ -339,14 +330,9 @@ var _ = Describe("#1003", func() {
 			Expect(mergedOpts.AllowedLakomScopes).To(BeEmpty())
 		})
 
-		It("should return an error when merging with a different type", func() {
-			base := &rules.Options1003{
-				AllowedLakomScopes: []lakomapi.ScopeType{lakomapi.KubeSystem},
-			}
-
-			_, err := base.Merge(&rules.Options2000{})
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("cannot merge options of type"))
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options1003{
+			AllowedLakomScopes: []lakomapi.ScopeType{lakomapi.KubeSystem},
 		})
+		mergetest.AssertWrongTypeErrors(&rules.Options1003{}, &rules.Options2000{})
 	})
 })
