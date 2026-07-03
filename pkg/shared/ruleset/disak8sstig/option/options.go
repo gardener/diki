@@ -276,7 +276,33 @@ type KubeProxyOptions struct {
 	Disabled bool `json:"disabled" yaml:"disabled"`
 }
 
-var _ option.Option = (*KubeProxyOptions)(nil)
+var (
+	_ option.Option          = &KubeProxyOptions{}
+	_ option.MergeableOption = &KubeProxyOptions{}
+)
+
+// Merge implements MergeableOption. The Disabled field is always taken
+// from other. ClusterObjectSelector is taken from other only if non-nil.
+func (o *KubeProxyOptions) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if other == nil {
+		return o, nil
+	}
+
+	otherOpts, err := option.AssertSameType[*KubeProxyOptions](other)
+	if err != nil {
+		return nil, err
+	}
+
+	merged := &KubeProxyOptions{
+		Disabled: otherOpts.Disabled,
+	}
+	if otherOpts.ClusterObjectSelector != nil {
+		merged.ClusterObjectSelector = otherOpts.ClusterObjectSelector
+	} else {
+		merged.ClusterObjectSelector = o.ClusterObjectSelector
+	}
+	return merged, nil
+}
 
 // Validate validates that option configurations are correctly defined.
 func (o KubeProxyOptions) Validate(fldPath *field.Path) field.ErrorList {
