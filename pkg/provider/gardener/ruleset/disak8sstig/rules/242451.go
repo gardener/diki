@@ -69,21 +69,14 @@ func (o *Options242451) Merge(other option.MergeableOption) (option.MergeableOpt
 		KubeProxy: otherOpts.KubeProxy,
 	}
 
-	switch {
-	case o.FileOwnerOptions != nil && otherOpts.FileOwnerOptions != nil:
+	if o.FileOwnerOptions != nil {
 		mergedFileOwner, err := o.FileOwnerOptions.Merge(otherOpts.FileOwnerOptions)
 		if err != nil {
 			return nil, err
 		}
-		typedFileOwner, err := option.AssertSameType[*disaoption.FileOwnerOptions](mergedFileOwner)
-		if err != nil {
-			return nil, err
-		}
-		merged.FileOwnerOptions = typedFileOwner
-	case otherOpts.FileOwnerOptions != nil:
+		merged.FileOwnerOptions = mergedFileOwner.(*disaoption.FileOwnerOptions)
+	} else {
 		merged.FileOwnerOptions = otherOpts.FileOwnerOptions
-	case o.FileOwnerOptions != nil:
-		merged.FileOwnerOptions = o.FileOwnerOptions
 	}
 
 	return merged, nil
