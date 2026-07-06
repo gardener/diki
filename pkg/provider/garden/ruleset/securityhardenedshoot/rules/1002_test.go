@@ -19,6 +19,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/garden/ruleset/securityhardenedshoot/rules"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 )
 
 var _ = Describe("#1002", func() {
@@ -510,18 +511,6 @@ var _ = Describe("#1002", func() {
 			Expect(mergedOpts.MachineImages[1].Name).To(Equal("gardenlinux"))
 		})
 
-		It("should return the receiver when merging with nil", func() {
-			base := &rules.Options1002{
-				MachineImages: []rules.MachineImage{
-					{Name: "ubuntu"},
-				},
-			}
-
-			merged, err := base.Merge(nil)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(merged).To(Equal(base))
-		})
-
 		It("should handle merging two empty Options1002", func() {
 			base := &rules.Options1002{}
 			other := &rules.Options1002{}
@@ -534,16 +523,9 @@ var _ = Describe("#1002", func() {
 			Expect(mergedOpts.MachineImages).To(BeEmpty())
 		})
 
-		It("should return an error when merging with a different type", func() {
-			base := &rules.Options1002{
-				MachineImages: []rules.MachineImage{
-					{Name: "ubuntu"},
-				},
-			}
-
-			_, err := base.Merge(&rules.Options2000{})
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("cannot merge options of type"))
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options1002{
+			MachineImages: []rules.MachineImage{{Name: "ubuntu"}},
 		})
+		mergetest.AssertWrongTypeErrors(&rules.Options1002{}, &rules.Options2000{})
 	})
 })

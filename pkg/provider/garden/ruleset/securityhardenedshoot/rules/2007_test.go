@@ -23,6 +23,7 @@ import (
 	intkubeutils "github.com/gardener/diki/pkg/internal/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider/garden/ruleset/securityhardenedshoot/rules"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 )
 
 var _ = Describe("#2007", func() {
@@ -322,24 +323,9 @@ var _ = Describe("#2007", func() {
 			Expect(mergedOpts.MinPodSecurityStandardsProfile).To(Equal(intkubeutils.PSSProfileBaseline))
 		})
 
-		It("should return the receiver when merging with nil", func() {
-			base := &rules.Options2007{
-				MinPodSecurityStandardsProfile: intkubeutils.PSSProfileRestricted,
-			}
-
-			merged, err := base.Merge(nil)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(merged).To(Equal(base))
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options2007{
+			MinPodSecurityStandardsProfile: intkubeutils.PSSProfileRestricted,
 		})
-
-		It("should return an error when merging with a different type", func() {
-			base := &rules.Options2007{
-				MinPodSecurityStandardsProfile: intkubeutils.PSSProfileBaseline,
-			}
-
-			_, err := base.Merge(&rules.Options2000{})
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("cannot merge options of type"))
-		})
+		mergetest.AssertWrongTypeErrors(&rules.Options2007{}, &rules.Options2000{})
 	})
 })

@@ -7,7 +7,6 @@ package rules
 import (
 	"cmp"
 	"context"
-	"fmt"
 	"slices"
 	"strings"
 
@@ -59,9 +58,9 @@ func (o *Options2001) Merge(other option.MergeableOption) (option.MergeableOptio
 		return o, nil
 	}
 
-	otherOpts, ok := other.(*Options2001)
-	if !ok {
-		return nil, fmt.Errorf("cannot merge options of type %T into *Options2001", other)
+	otherOpts, err := option.AssertSameType[*Options2001](other)
+	if err != nil {
+		return nil, err
 	}
 
 	merged := &Options2001{

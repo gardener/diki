@@ -18,6 +18,7 @@ import (
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/securityhardenedk8s/rules"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 )
 
 var _ = Describe("#2008", func() {
@@ -585,21 +586,6 @@ var _ = Describe("#2008", func() {
 			Expect(mergedOpts.AcceptedPods[1].Justification).To(Equal("override justification"))
 		})
 
-		It("should return the receiver when merging with nil", func() {
-			base := &rules.Options2008{
-				AcceptedPods: []option.AcceptedPodVolumes{
-					{
-						AcceptedNamespacedObject: option.AcceptedNamespacedObject{Justification: "base"},
-						VolumeNames:              []string{"vol1"},
-					},
-				},
-			}
-
-			merged, err := base.Merge(nil)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(merged).To(Equal(base))
-		})
-
 		It("should handle merging two empty Options2008", func() {
 			base := &rules.Options2008{}
 			other := &rules.Options2008{}
@@ -612,13 +598,14 @@ var _ = Describe("#2008", func() {
 			Expect(mergedOpts.AcceptedPods).To(BeEmpty())
 		})
 
-		It("should return an error when merging with a different option type", func() {
-			base := &rules.Options2008{}
-			other := &rules.Options2000{}
-
-			merged, err := base.Merge(other)
-			Expect(err).To(MatchError(ContainSubstring("cannot merge options of type")))
-			Expect(merged).To(BeNil())
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options2008{
+			AcceptedPods: []option.AcceptedPodVolumes{
+				{
+					AcceptedNamespacedObject: option.AcceptedNamespacedObject{Justification: "base"},
+					VolumeNames:              []string{"vol1"},
+				},
+			},
 		})
+		mergetest.AssertWrongTypeErrors(&rules.Options2008{}, &rules.Options2000{})
 	})
 })

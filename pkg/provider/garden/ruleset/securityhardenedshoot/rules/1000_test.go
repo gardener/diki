@@ -19,6 +19,7 @@ import (
 
 	"github.com/gardener/diki/pkg/provider/garden/ruleset/securityhardenedshoot/rules"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 )
 
 var _ = Describe("#1000", func() {
@@ -307,18 +308,6 @@ var _ = Describe("#1000", func() {
 			Expect(mergedOpts.Extensions[1].Type).To(Equal("ext-b"))
 		})
 
-		It("should return the receiver when merging with nil", func() {
-			base := &rules.Options1000{
-				Extensions: []rules.Extension{
-					{Type: "ext-a"},
-				},
-			}
-
-			merged, err := base.Merge(nil)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(merged).To(Equal(base))
-		})
-
 		It("should handle merging two empty Options1000", func() {
 			base := &rules.Options1000{}
 			other := &rules.Options1000{}
@@ -331,16 +320,9 @@ var _ = Describe("#1000", func() {
 			Expect(mergedOpts.Extensions).To(BeEmpty())
 		})
 
-		It("should return an error when merging with a different type", func() {
-			base := &rules.Options1000{
-				Extensions: []rules.Extension{
-					{Type: "ext-a"},
-				},
-			}
-
-			_, err := base.Merge(&rules.Options2000{})
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("cannot merge options of type"))
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options1000{
+			Extensions: []rules.Extension{{Type: "ext-a"}},
 		})
+		mergetest.AssertWrongTypeErrors(&rules.Options1000{}, &rules.Options2000{})
 	})
 })

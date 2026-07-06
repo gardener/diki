@@ -7,7 +7,6 @@ package rules
 import (
 	"cmp"
 	"context"
-	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -56,9 +55,9 @@ func (o *Options2002) Merge(other option.MergeableOption) (option.MergeableOptio
 		return o, nil
 	}
 
-	otherOpts, ok := other.(*Options2002)
-	if !ok {
-		return nil, fmt.Errorf("cannot merge options of type %T into *Options2002", other)
+	otherOpts, err := option.AssertSameType[*Options2002](other)
+	if err != nil {
+		return nil, err
 	}
 
 	merged := &Options2002{
