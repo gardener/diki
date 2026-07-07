@@ -33,7 +33,7 @@ type ExpectedOwner struct {
 
 // Merge implements MergeableOption by performing a set union on Users and Groups.
 func (o *FileOwnerOptions) Merge(other option.MergeableOption) (option.MergeableOption, error) {
-	if other == nil {
+	if option.IsNilValue(other) {
 		return o, nil
 	}
 
@@ -211,7 +211,7 @@ type ExpectedVersionedImage struct {
 
 // Merge implements MergeableOption by concatenating ExpectedVersionedImages from both options.
 func (o *Options242442) Merge(other option.MergeableOption) (option.MergeableOption, error) {
-	if other == nil {
+	if option.IsNilValue(other) {
 		return o, nil
 	}
 
@@ -284,7 +284,7 @@ var (
 // Merge implements MergeableOption. The Disabled field is always taken
 // from other. ClusterObjectSelector is merged using its own Merge method.
 func (o *KubeProxyOptions) Merge(other option.MergeableOption) (option.MergeableOption, error) {
-	if other == nil {
+	if option.IsNilValue(other) {
 		return o, nil
 	}
 

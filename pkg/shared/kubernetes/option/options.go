@@ -62,7 +62,7 @@ var (
 
 // Merge implements MergeableOption using current-overrides-base semantics.
 func (s *ClusterObjectSelector) Merge(other MergeableOption) (MergeableOption, error) {
-	if other == nil {
+	if IsNilValue(other) {
 		return s, nil
 	}
 
