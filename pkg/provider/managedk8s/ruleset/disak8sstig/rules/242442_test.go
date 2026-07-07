@@ -403,6 +403,28 @@ var _ = Describe("#242442", func() {
 			Expect(mergedOpts.ImageSelector.ExpectedVersionedImages[1].Name).To(Equal("image-b"))
 		})
 
+		It("should use other's fields when base has nil fields", func() {
+			base := &rules.Options242442{}
+			other := &rules.Options242442{
+				KubeProxy: &option.ClusterObjectSelector{
+					MatchLabels: map[string]string{"other": "selector"},
+				},
+				ImageSelector: &disaoption.Options242442{
+					ExpectedVersionedImages: []disaoption.ExpectedVersionedImage{
+						{Name: "image-b"},
+					},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242442)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.KubeProxy).To(Equal(other.KubeProxy))
+			Expect(mergedOpts.ImageSelector).To(Equal(other.ImageSelector))
+		})
+
 		mergetest.AssertNilOtherReturnsReceiver(&rules.Options242442{
 			KubeProxy: &option.ClusterObjectSelector{
 				MatchLabels: map[string]string{"base": "selector"},

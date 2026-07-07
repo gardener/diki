@@ -380,6 +380,32 @@ tlsCertFile: /var/lib/certs/tls.crt`
 			Expect(mergedOpts.FileOwnerOptions.ExpectedFileOwner.Groups).To(ConsistOf("0", "1000"))
 		})
 
+		It("should use other's FileOwnerOptions when base has nil FileOwnerOptions", func() {
+			base := &rules.Options242451{
+				KubeProxy:         disaoption.KubeProxyOptions{Disabled: false},
+				NodeGroupByLabels: []string{"label1"},
+			}
+			other := &rules.Options242451{
+				KubeProxy:         disaoption.KubeProxyOptions{Disabled: true},
+				NodeGroupByLabels: []string{"label2"},
+				FileOwnerOptions: &disaoption.FileOwnerOptions{
+					ExpectedFileOwner: disaoption.ExpectedOwner{
+						Users:  []string{"1000"},
+						Groups: []string{"2000"},
+					},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242451)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.KubeProxy.Disabled).To(BeTrue())
+			Expect(mergedOpts.NodeGroupByLabels).To(ConsistOf("label1", "label2"))
+			Expect(mergedOpts.FileOwnerOptions).To(Equal(other.FileOwnerOptions))
+		})
+
 		mergetest.AssertNilOtherReturnsReceiver(&rules.Options242451{
 			KubeProxy:         disaoption.KubeProxyOptions{Disabled: true},
 			NodeGroupByLabels: []string{"label1"},

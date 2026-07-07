@@ -300,6 +300,27 @@ var _ = Describe("options", func() {
 			Expect(mergedOpts.ClusterObjectSelector.LabelSelector.MatchLabels).To(Equal(map[string]string{"role": "proxy"}))
 		})
 
+		It("should use other's ClusterObjectSelector when base has nil", func() {
+			base := &option.KubeProxyOptions{Disabled: false}
+			other := &option.KubeProxyOptions{
+				Disabled: true,
+				ClusterObjectSelector: &k8soption.ClusterObjectSelector{
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"component": "kube-proxy"},
+					},
+				},
+			}
+
+			merged, err := base.Merge(other)
+
+			Expect(err).ToNot(HaveOccurred())
+			mergedOpts, ok := merged.(*option.KubeProxyOptions)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.Disabled).To(BeTrue())
+			Expect(mergedOpts.ClusterObjectSelector).ToNot(BeNil())
+			Expect(mergedOpts.ClusterObjectSelector.LabelSelector.MatchLabels).To(Equal(map[string]string{"component": "kube-proxy"}))
+		})
+
 		It("should return nil ClusterObjectSelector when both have nil", func() {
 			base := &option.KubeProxyOptions{Disabled: false}
 			other := &option.KubeProxyOptions{Disabled: true}
