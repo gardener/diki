@@ -51,10 +51,14 @@ func (o *Options242442) Merge(other option.MergeableOption) (option.MergeableOpt
 
 	merged := &Options242442{}
 
-	if otherOpts.KubeProxy != nil {
-		merged.KubeProxy = otherOpts.KubeProxy
+	if o.KubeProxy != nil {
+		mergedKubeProxy, err := o.KubeProxy.Merge(otherOpts.KubeProxy)
+		if err != nil {
+			return nil, err
+		}
+		merged.KubeProxy = mergedKubeProxy.(*option.ClusterObjectSelector)
 	} else {
-		merged.KubeProxy = o.KubeProxy
+		merged.KubeProxy = otherOpts.KubeProxy
 	}
 
 	if o.ImageSelector != nil {

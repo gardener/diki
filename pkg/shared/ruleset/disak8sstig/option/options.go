@@ -282,7 +282,7 @@ var (
 )
 
 // Merge implements MergeableOption. The Disabled field is always taken
-// from other. ClusterObjectSelector is taken from other only if non-nil.
+// from other. ClusterObjectSelector is merged using its own Merge method.
 func (o *KubeProxyOptions) Merge(other option.MergeableOption) (option.MergeableOption, error) {
 	if other == nil {
 		return o, nil
@@ -296,11 +296,17 @@ func (o *KubeProxyOptions) Merge(other option.MergeableOption) (option.Mergeable
 	merged := &KubeProxyOptions{
 		Disabled: otherOpts.Disabled,
 	}
-	if otherOpts.ClusterObjectSelector != nil {
-		merged.ClusterObjectSelector = otherOpts.ClusterObjectSelector
+
+	if o.ClusterObjectSelector != nil {
+		mergedSelector, err := o.ClusterObjectSelector.Merge(otherOpts.ClusterObjectSelector)
+		if err != nil {
+			return nil, err
+		}
+		merged.ClusterObjectSelector = mergedSelector.(*option.ClusterObjectSelector)
 	} else {
-		merged.ClusterObjectSelector = o.ClusterObjectSelector
+		merged.ClusterObjectSelector = otherOpts.ClusterObjectSelector
 	}
+
 	return merged, nil
 }
 
