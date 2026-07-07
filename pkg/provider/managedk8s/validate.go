@@ -11,6 +11,7 @@ import (
 
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig"
+	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/gardenlinux"
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/securityhardenedk8s"
 )
 
@@ -45,8 +46,10 @@ func ValidateProviderConfig(conf config.ProviderConfig, fldPath *field.Path) fie
 			allErrs = append(allErrs, disak8sstig.ValidateRulesetConfig(rulesetConfig, rulesetPath)...)
 		case securityhardenedk8s.RulesetID:
 			allErrs = append(allErrs, securityhardenedk8s.ValidateRulesetConfig(rulesetConfig, rulesetPath)...)
+		case gardenlinux.RulesetID:
+			allErrs = append(allErrs, gardenlinux.ValidateRulesetConfig(rulesetConfig, rulesetPath)...)
 		default:
-			allErrs = append(allErrs, field.NotSupported(rulesetPath.Child("id"), rulesetConfig.ID, []string{disak8sstig.RulesetID, securityhardenedk8s.RulesetID}))
+			allErrs = append(allErrs, field.NotSupported(rulesetPath.Child("id"), rulesetConfig.ID, []string{disak8sstig.RulesetID, securityhardenedk8s.RulesetID, gardenlinux.RulesetID}))
 		}
 	}
 
