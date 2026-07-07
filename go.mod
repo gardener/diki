@@ -23,7 +23,7 @@ require (
 	k8s.io/component-base v0.35.5
 	k8s.io/kubectl v0.35.1
 	k8s.io/pod-security-admission v0.35.5
-	k8s.io/utils v0.0.0-20260617174310-a95e086a2553
+	k8s.io/utils v0.0.0-20260707023825-cf1189d6abe3
 	sigs.k8s.io/controller-runtime v0.23.3
 )
 
