@@ -688,4 +688,24 @@ var _ = Describe("options", func() {
 			Expect(err.Error()).To(ContainSubstring("*option.ClusterObjectSelector"))
 		})
 	})
+
+	Describe("#IsNilValue", func() {
+		It("should return true for untyped nil", func() {
+			Expect(option.IsNilValue(nil)).To(BeTrue())
+		})
+
+		It("should return true for typed nil pointer", func() {
+			var sel *option.ClusterObjectSelector
+			Expect(option.IsNilValue(sel)).To(BeTrue())
+		})
+
+		It("should return false for non-nil pointer", func() {
+			sel := &option.ClusterObjectSelector{
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"foo": "bar"},
+				},
+			}
+			Expect(option.IsNilValue(sel)).To(BeFalse())
+		})
+	})
 })

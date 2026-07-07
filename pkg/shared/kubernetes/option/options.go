@@ -7,6 +7,7 @@ package option
 import (
 	"fmt"
 	"path/filepath"
+	"reflect"
 	"regexp"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,6 +40,11 @@ func AssertSameType[T MergeableOption](other MergeableOption) (T, error) {
 		return zero, fmt.Errorf("cannot merge options of type %T into %T", other, zero)
 	}
 	return typed, nil
+}
+
+// IsNilValue reports whether a MergeableOption is nil or holds a nil pointer.
+func IsNilValue(v MergeableOption) bool {
+	return v == nil || reflect.ValueOf(v).IsNil()
 }
 
 // ClusterObjectSelector contains generalized options for matching entities by their attribute labels.
