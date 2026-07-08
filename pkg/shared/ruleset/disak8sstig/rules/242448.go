@@ -62,10 +62,14 @@ func (o *Options242448) Merge(other option.MergeableOption) (option.MergeableOpt
 
 	merged := &Options242448{}
 
-	if otherOpts.ClusterObjectSelector != nil {
-		merged.ClusterObjectSelector = otherOpts.ClusterObjectSelector
+	if o.ClusterObjectSelector != nil {
+		mergedSelector, err := o.ClusterObjectSelector.Merge(otherOpts.ClusterObjectSelector)
+		if err != nil {
+			return nil, err
+		}
+		merged.ClusterObjectSelector = mergedSelector.(*option.ClusterObjectSelector)
 	} else {
-		merged.ClusterObjectSelector = o.ClusterObjectSelector
+		merged.ClusterObjectSelector = otherOpts.ClusterObjectSelector
 	}
 
 	if o.FileOwnerOptions != nil {
