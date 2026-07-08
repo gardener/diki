@@ -33,7 +33,7 @@ type ExpectedOwner struct {
 
 // Merge implements MergeableOption by performing a set union on Users and Groups.
 func (o *FileOwnerOptions) Merge(other option.MergeableOption) (option.MergeableOption, error) {
-	if other == nil {
+	if option.IsNilValue(other) {
 		return o, nil
 	}
 
@@ -211,7 +211,7 @@ type ExpectedVersionedImage struct {
 
 // Merge implements MergeableOption by concatenating ExpectedVersionedImages from both options.
 func (o *Options242442) Merge(other option.MergeableOption) (option.MergeableOption, error) {
-	if other == nil {
+	if option.IsNilValue(other) {
 		return o, nil
 	}
 
@@ -276,7 +276,39 @@ type KubeProxyOptions struct {
 	Disabled bool `json:"disabled" yaml:"disabled"`
 }
 
-var _ option.Option = (*KubeProxyOptions)(nil)
+var (
+	_ option.Option          = &KubeProxyOptions{}
+	_ option.MergeableOption = &KubeProxyOptions{}
+)
+
+// Merge implements MergeableOption. The Disabled field is always taken
+// from other. ClusterObjectSelector is merged using its own Merge method.
+func (o *KubeProxyOptions) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if option.IsNilValue(other) {
+		return o, nil
+	}
+
+	otherOpts, err := option.AssertSameType[*KubeProxyOptions](other)
+	if err != nil {
+		return nil, err
+	}
+
+	merged := &KubeProxyOptions{
+		Disabled: otherOpts.Disabled,
+	}
+
+	if o.ClusterObjectSelector != nil {
+		mergedSelector, err := o.ClusterObjectSelector.Merge(otherOpts.ClusterObjectSelector)
+		if err != nil {
+			return nil, err
+		}
+		merged.ClusterObjectSelector = mergedSelector.(*option.ClusterObjectSelector)
+	} else {
+		merged.ClusterObjectSelector = otherOpts.ClusterObjectSelector
+	}
+
+	return merged, nil
+}
 
 // Validate validates that option configurations are correctly defined.
 func (o KubeProxyOptions) Validate(fldPath *field.Path) field.ErrorList {

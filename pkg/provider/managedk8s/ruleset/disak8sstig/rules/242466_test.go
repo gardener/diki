@@ -23,6 +23,7 @@ import (
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
@@ -305,4 +306,31 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.ErroredCheckResult("could not retrieve kubelet config: bar", rule.NewTarget("name", "diki-242466-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
 			}),
 	)
+
+	Describe("#Merge Options242466", func() {
+		It("should override KubeProxy and concat NodeGroupByLabels", func() {
+			base := &rules.Options242466{
+				KubeProxy:         disaoption.KubeProxyOptions{Disabled: false},
+				NodeGroupByLabels: []string{"label1"},
+			}
+			other := &rules.Options242466{
+				KubeProxy:         disaoption.KubeProxyOptions{Disabled: true},
+				NodeGroupByLabels: []string{"label2"},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242466)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.KubeProxy.Disabled).To(BeTrue())
+			Expect(mergedOpts.NodeGroupByLabels).To(ConsistOf("label1", "label2"))
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options242466{
+			KubeProxy:         disaoption.KubeProxyOptions{Disabled: true},
+			NodeGroupByLabels: []string{"label1"},
+		})
+		mergetest.AssertWrongTypeErrors(&rules.Options242466{}, &rules.Options242400{})
+	})
 })

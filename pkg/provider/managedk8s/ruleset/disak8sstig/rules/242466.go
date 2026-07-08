@@ -33,8 +33,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule242466{}
-	_ rule.Severity = &Rule242466{}
+	_ rule.Rule              = &Rule242466{}
+	_ rule.Severity          = &Rule242466{}
+	_ option.Option          = &Options242466{}
+	_ option.MergeableOption = &Options242466{}
 )
 
 type Rule242466 struct {
@@ -50,7 +52,28 @@ type Options242466 struct {
 	NodeGroupByLabels []string                    `json:"nodeGroupByLabels" yaml:"nodeGroupByLabels"`
 }
 
-var _ option.Option = (*Options242466)(nil)
+func (o *Options242466) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if option.IsNilValue(other) {
+		return o, nil
+	}
+
+	otherOpts, err := option.AssertSameType[*Options242466](other)
+	if err != nil {
+		return nil, err
+	}
+
+	mergedKubeProxy, err := o.KubeProxy.Merge(&otherOpts.KubeProxy)
+	if err != nil {
+		return nil, err
+	}
+
+	merged := &Options242466{
+		KubeProxy:         *mergedKubeProxy.(*disaoption.KubeProxyOptions),
+		NodeGroupByLabels: intutils.MergeStringSlices(o.NodeGroupByLabels, otherOpts.NodeGroupByLabels),
+	}
+
+	return merged, nil
+}
 
 func (o Options242466) Validate(fldPath *field.Path) field.ErrorList {
 	allErrs := o.KubeProxy.Validate(fldPath.Child("kubeProxy"))

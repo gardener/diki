@@ -248,6 +248,103 @@ var _ = Describe("options", func() {
 		})
 	})
 
+	Describe("#Merge KubeProxyOptions", func() {
+		It("should take ClusterObjectSelector from other when non-nil", func() {
+			base := &option.KubeProxyOptions{
+				Disabled: false,
+				ClusterObjectSelector: &k8soption.ClusterObjectSelector{
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"role": "proxy"},
+					},
+				},
+			}
+			other := &option.KubeProxyOptions{
+				Disabled: true,
+				ClusterObjectSelector: &k8soption.ClusterObjectSelector{
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"component": "kube-proxy"},
+					},
+				},
+			}
+
+			merged, err := base.Merge(other)
+
+			Expect(err).ToNot(HaveOccurred())
+			mergedOpts, ok := merged.(*option.KubeProxyOptions)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.Disabled).To(BeTrue())
+			Expect(mergedOpts.ClusterObjectSelector).ToNot(BeNil())
+			Expect(mergedOpts.ClusterObjectSelector.LabelSelector.MatchLabels).To(Equal(map[string]string{"component": "kube-proxy"}))
+		})
+
+		It("should keep ClusterObjectSelector from base when other has nil", func() {
+			base := &option.KubeProxyOptions{
+				Disabled: false,
+				ClusterObjectSelector: &k8soption.ClusterObjectSelector{
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"role": "proxy"},
+					},
+				},
+			}
+			other := &option.KubeProxyOptions{
+				Disabled: true,
+			}
+
+			merged, err := base.Merge(other)
+
+			Expect(err).ToNot(HaveOccurred())
+			mergedOpts, ok := merged.(*option.KubeProxyOptions)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.Disabled).To(BeTrue())
+			Expect(mergedOpts.ClusterObjectSelector).ToNot(BeNil())
+			Expect(mergedOpts.ClusterObjectSelector.LabelSelector.MatchLabels).To(Equal(map[string]string{"role": "proxy"}))
+		})
+
+		It("should use other's ClusterObjectSelector when base has nil", func() {
+			base := &option.KubeProxyOptions{Disabled: false}
+			other := &option.KubeProxyOptions{
+				Disabled: true,
+				ClusterObjectSelector: &k8soption.ClusterObjectSelector{
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"component": "kube-proxy"},
+					},
+				},
+			}
+
+			merged, err := base.Merge(other)
+
+			Expect(err).ToNot(HaveOccurred())
+			mergedOpts, ok := merged.(*option.KubeProxyOptions)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.Disabled).To(BeTrue())
+			Expect(mergedOpts.ClusterObjectSelector).ToNot(BeNil())
+			Expect(mergedOpts.ClusterObjectSelector.LabelSelector.MatchLabels).To(Equal(map[string]string{"component": "kube-proxy"}))
+		})
+
+		It("should return nil ClusterObjectSelector when both have nil", func() {
+			base := &option.KubeProxyOptions{Disabled: false}
+			other := &option.KubeProxyOptions{Disabled: true}
+
+			merged, err := base.Merge(other)
+
+			Expect(err).ToNot(HaveOccurred())
+			mergedOpts, ok := merged.(*option.KubeProxyOptions)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.Disabled).To(BeTrue())
+			Expect(mergedOpts.ClusterObjectSelector).To(BeNil())
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&option.KubeProxyOptions{
+			Disabled: true,
+			ClusterObjectSelector: &k8soption.ClusterObjectSelector{
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"role": "proxy"},
+				},
+			},
+		})
+		mergetest.AssertWrongTypeErrors(&option.KubeProxyOptions{}, &option.FileOwnerOptions{})
+	})
+
 	Describe("#Merge FileOwnerOptions", func() {
 		It("should merge by appending Users and Groups", func() {
 			base := &option.FileOwnerOptions{

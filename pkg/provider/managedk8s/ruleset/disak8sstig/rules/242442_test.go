@@ -17,6 +17,7 @@ import (
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 )
 
@@ -366,5 +367,69 @@ var _ = Describe("#242442", func() {
 		}
 
 		Expect(ruleResult.CheckResults).To(Equal(expectedCheckResults))
+	})
+
+	Describe("#Merge Options242442", func() {
+		It("should override KubeProxy and merge ImageSelector", func() {
+			base := &rules.Options242442{
+				KubeProxy: &option.ClusterObjectSelector{
+					MatchLabels: map[string]string{"base": "selector"},
+				},
+				ImageSelector: &disaoption.Options242442{
+					ExpectedVersionedImages: []disaoption.ExpectedVersionedImage{
+						{Name: "image-a"},
+					},
+				},
+			}
+			other := &rules.Options242442{
+				KubeProxy: &option.ClusterObjectSelector{
+					MatchLabels: map[string]string{"other": "selector"},
+				},
+				ImageSelector: &disaoption.Options242442{
+					ExpectedVersionedImages: []disaoption.ExpectedVersionedImage{
+						{Name: "image-b"},
+					},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242442)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.KubeProxy.MatchLabels).To(Equal(map[string]string{"other": "selector"}))
+			Expect(mergedOpts.ImageSelector.ExpectedVersionedImages).To(HaveLen(2))
+			Expect(mergedOpts.ImageSelector.ExpectedVersionedImages[0].Name).To(Equal("image-a"))
+			Expect(mergedOpts.ImageSelector.ExpectedVersionedImages[1].Name).To(Equal("image-b"))
+		})
+
+		It("should use other's fields when base has nil fields", func() {
+			base := &rules.Options242442{}
+			other := &rules.Options242442{
+				KubeProxy: &option.ClusterObjectSelector{
+					MatchLabels: map[string]string{"other": "selector"},
+				},
+				ImageSelector: &disaoption.Options242442{
+					ExpectedVersionedImages: []disaoption.ExpectedVersionedImage{
+						{Name: "image-b"},
+					},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242442)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.KubeProxy).To(Equal(other.KubeProxy))
+			Expect(mergedOpts.ImageSelector).To(Equal(other.ImageSelector))
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options242442{
+			KubeProxy: &option.ClusterObjectSelector{
+				MatchLabels: map[string]string{"base": "selector"},
+			},
+		})
+		mergetest.AssertWrongTypeErrors(&rules.Options242442{}, &rules.Options242400{})
 	})
 })

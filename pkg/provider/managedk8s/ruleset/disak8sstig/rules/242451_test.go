@@ -23,6 +23,7 @@ import (
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig/rules"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
@@ -344,4 +345,71 @@ tlsCertFile: /var/lib/certs/tls.crt`
 				rule.ErroredCheckResult("could not retrieve kubelet config: bar", rule.NewTarget("name", "diki-242451-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
 			}),
 	)
+
+	Describe("#Merge Options242451", func() {
+		It("should override KubeProxy, concat NodeGroupByLabels, and merge FileOwnerOptions", func() {
+			base := &rules.Options242451{
+				KubeProxy:         disaoption.KubeProxyOptions{Disabled: false},
+				NodeGroupByLabels: []string{"label1"},
+				FileOwnerOptions: &disaoption.FileOwnerOptions{
+					ExpectedFileOwner: disaoption.ExpectedOwner{
+						Users:  []string{"0"},
+						Groups: []string{"0"},
+					},
+				},
+			}
+			other := &rules.Options242451{
+				KubeProxy:         disaoption.KubeProxyOptions{Disabled: true},
+				NodeGroupByLabels: []string{"label2"},
+				FileOwnerOptions: &disaoption.FileOwnerOptions{
+					ExpectedFileOwner: disaoption.ExpectedOwner{
+						Users:  []string{"1000"},
+						Groups: []string{"1000"},
+					},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242451)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.KubeProxy.Disabled).To(BeTrue())
+			Expect(mergedOpts.NodeGroupByLabels).To(ConsistOf("label1", "label2"))
+			Expect(mergedOpts.FileOwnerOptions.ExpectedFileOwner.Users).To(ConsistOf("0", "1000"))
+			Expect(mergedOpts.FileOwnerOptions.ExpectedFileOwner.Groups).To(ConsistOf("0", "1000"))
+		})
+
+		It("should use other's FileOwnerOptions when base has nil FileOwnerOptions", func() {
+			base := &rules.Options242451{
+				KubeProxy:         disaoption.KubeProxyOptions{Disabled: false},
+				NodeGroupByLabels: []string{"label1"},
+			}
+			other := &rules.Options242451{
+				KubeProxy:         disaoption.KubeProxyOptions{Disabled: true},
+				NodeGroupByLabels: []string{"label2"},
+				FileOwnerOptions: &disaoption.FileOwnerOptions{
+					ExpectedFileOwner: disaoption.ExpectedOwner{
+						Users:  []string{"1000"},
+						Groups: []string{"2000"},
+					},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242451)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.KubeProxy.Disabled).To(BeTrue())
+			Expect(mergedOpts.NodeGroupByLabels).To(ConsistOf("label1", "label2"))
+			Expect(mergedOpts.FileOwnerOptions).To(Equal(other.FileOwnerOptions))
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options242451{
+			KubeProxy:         disaoption.KubeProxyOptions{Disabled: true},
+			NodeGroupByLabels: []string{"label1"},
+		})
+		mergetest.AssertWrongTypeErrors(&rules.Options242451{}, &rules.Options242400{})
+	})
 })
