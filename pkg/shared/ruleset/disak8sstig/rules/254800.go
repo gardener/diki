@@ -47,7 +47,7 @@ type Options254800 struct {
 }
 
 func (o *Options254800) Merge(other option.MergeableOption) (option.MergeableOption, error) {
-	if other == nil {
+	if option.IsNilValue(other) {
 		return o, nil
 	}
 
