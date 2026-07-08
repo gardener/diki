@@ -80,7 +80,7 @@ type AcceptedTraffic struct {
 // Merge returns a new Options2000 that is the result of merging other into the receiver.
 // AcceptedNamespaces slices are concatenated. If other is not *Options2000, an error is returned.
 func (o *Options2000) Merge(other option.MergeableOption) (option.MergeableOption, error) {
-	if other == nil {
+	if option.IsNilValue(other) {
 		return o, nil
 	}
 

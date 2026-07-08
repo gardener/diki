@@ -100,7 +100,7 @@ type AcceptedPods242414 struct {
 
 // Merge implements MergeableOption by concatenating AcceptedPods from both options.
 func (o *Options242414) Merge(other option.MergeableOption) (option.MergeableOption, error) {
-	if other == nil {
+	if option.IsNilValue(other) {
 		return o, nil
 	}
 
@@ -156,7 +156,7 @@ type AcceptedPods242415 struct {
 
 // Merge implements MergeableOption by concatenating AcceptedPods from both options.
 func (o *Options242415) Merge(other option.MergeableOption) (option.MergeableOption, error) {
-	if other == nil {
+	if option.IsNilValue(other) {
 		return o, nil
 	}
 

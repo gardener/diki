@@ -54,7 +54,7 @@ func (o Options2001) Validate(fldPath *field.Path) field.ErrorList {
 // Merge returns a new Options2001 that is the result of merging other into the receiver.
 // AcceptedPods slices are concatenated. If other is not *Options2001, an error is returned.
 func (o *Options2001) Merge(other option.MergeableOption) (option.MergeableOption, error) {
-	if other == nil {
+	if option.IsNilValue(other) {
 		return o, nil
 	}
 
