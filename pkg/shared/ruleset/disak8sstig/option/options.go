@@ -5,6 +5,7 @@
 package option
 
 import (
+	"fmt"
 	"strconv"
 
 	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
@@ -302,7 +303,10 @@ func (o *KubeProxyOptions) Merge(other option.MergeableOption) (option.Mergeable
 		if err != nil {
 			return nil, err
 		}
-		merged.ClusterObjectSelector = mergedSelector.(*option.ClusterObjectSelector)
+		var ok bool
+		if merged.ClusterObjectSelector, ok = mergedSelector.(*option.ClusterObjectSelector); !ok {
+			return nil, fmt.Errorf("unexpected type %T from ClusterObjectSelector.Merge", mergedSelector)
+		}
 	} else {
 		merged.ClusterObjectSelector = otherOpts.ClusterObjectSelector
 	}

@@ -67,8 +67,13 @@ func (o *Options242467) Merge(other option.MergeableOption) (option.MergeableOpt
 		return nil, err
 	}
 
+	kubeProxy, ok := mergedKubeProxy.(*disaoption.KubeProxyOptions)
+	if !ok {
+		return nil, fmt.Errorf("unexpected type %T from KubeProxyOptions.Merge", mergedKubeProxy)
+	}
+
 	merged := &Options242467{
-		KubeProxy:         *mergedKubeProxy.(*disaoption.KubeProxyOptions),
+		KubeProxy:         *kubeProxy,
 		NodeGroupByLabels: intutils.MergeStringSlices(o.NodeGroupByLabels, otherOpts.NodeGroupByLabels),
 	}
 

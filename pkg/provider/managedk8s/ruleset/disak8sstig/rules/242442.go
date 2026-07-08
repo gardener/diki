@@ -6,6 +6,7 @@ package rules
 
 import (
 	"context"
+	"fmt"
 	"slices"
 
 	imageref "github.com/distribution/reference"
@@ -49,14 +50,19 @@ func (o *Options242442) Merge(other option.MergeableOption) (option.MergeableOpt
 		return nil, err
 	}
 
-	merged := &Options242442{}
+	var (
+		ok     bool
+		merged = &Options242442{}
+	)
 
 	if o.KubeProxy != nil {
 		mergedKubeProxy, err := o.KubeProxy.Merge(otherOpts.KubeProxy)
 		if err != nil {
 			return nil, err
 		}
-		merged.KubeProxy = mergedKubeProxy.(*option.ClusterObjectSelector)
+		if merged.KubeProxy, ok = mergedKubeProxy.(*option.ClusterObjectSelector); !ok {
+			return nil, fmt.Errorf("unexpected type %T from ClusterObjectSelector.Merge", mergedKubeProxy)
+		}
 	} else {
 		merged.KubeProxy = otherOpts.KubeProxy
 	}
@@ -66,7 +72,9 @@ func (o *Options242442) Merge(other option.MergeableOption) (option.MergeableOpt
 		if err != nil {
 			return nil, err
 		}
-		merged.ImageSelector = mergedImageSelector.(*disaoption.Options242442)
+		if merged.ImageSelector, ok = mergedImageSelector.(*disaoption.Options242442); !ok {
+			return nil, fmt.Errorf("unexpected type %T from Options242442.Merge", mergedImageSelector)
+		}
 	} else {
 		merged.ImageSelector = otherOpts.ImageSelector
 	}
