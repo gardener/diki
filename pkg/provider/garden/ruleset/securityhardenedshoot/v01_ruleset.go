@@ -24,7 +24,7 @@ func (r *Ruleset) validateV01RuleOptions(ruleOptions map[string]internalconfig.I
 
 	allErrs = append(allErrs, validateV01Options[rules.Options1000](ruleOptions["1000"].Args, fldPath.Index(ruleOptions["1000"].Index).Child("args"))...)
 	allErrs = append(allErrs, validateV01Options[rules.Options2000](ruleOptions["2000"].Args, fldPath.Index(ruleOptions["2000"].Index).Child("args"))...)
-	allErrs = append(allErrs, validateV01Options[rules.Options2000](ruleOptions["2007"].Args, fldPath.Index(ruleOptions["2007"].Index).Child("args"))...)
+	allErrs = append(allErrs, validateV01Options[rules.Options2007](ruleOptions["2007"].Args, fldPath.Index(ruleOptions["2007"].Index).Child("args"))...)
 
 	return allErrs
 }
