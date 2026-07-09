@@ -102,6 +102,10 @@ func ManagedK8SProviderMetadata() metadata.ProviderDetailed {
 				ID:   disak8sstig.RulesetID,
 				Name: disak8sstig.RulesetName,
 			},
+			{
+				ID:   gardenlinux.RulesetID,
+				Name: gardenlinux.RulesetName,
+			},
 		},
 	}
 
