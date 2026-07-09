@@ -20,6 +20,7 @@ import (
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
@@ -153,4 +154,39 @@ var _ = Describe("#242450", func() {
 				rule.PassedCheckResult("File has expected owners", rule.NewTarget("kind", "Node", "name", "node4", "details", "fileName: /var/lib/kubelet/ca.crt, ownerUser: 0, ownerGroup: 0")),
 			}),
 	)
+
+	Describe("#Merge Options242450", func() {
+		It("should merge NodeGroupByLabels and FileOwnerOptions", func() {
+			base := &rules.Options242450{
+				NodeGroupByLabels: []string{"label1"},
+				FileOwnerOptions: &option.FileOwnerOptions{
+					ExpectedFileOwner: option.ExpectedOwner{
+						Users:  []string{"0"},
+						Groups: []string{"0"},
+					},
+				},
+			}
+			other := &rules.Options242450{
+				NodeGroupByLabels: []string{"label2"},
+				FileOwnerOptions: &option.FileOwnerOptions{
+					ExpectedFileOwner: option.ExpectedOwner{
+						Users:  []string{"1000"},
+						Groups: []string{"1000"},
+					},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242450)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.NodeGroupByLabels).To(ConsistOf("label1", "label2"))
+			Expect(mergedOpts.FileOwnerOptions.ExpectedFileOwner.Users).To(ConsistOf("0", "1000"))
+			Expect(mergedOpts.FileOwnerOptions.ExpectedFileOwner.Groups).To(ConsistOf("0", "1000"))
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options242450{NodeGroupByLabels: []string{"label1"}})
+		mergetest.AssertWrongTypeErrors(&rules.Options242450{}, &rules.Options242383{})
+	})
 })

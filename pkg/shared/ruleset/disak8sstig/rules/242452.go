@@ -29,8 +29,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule242452{}
-	_ rule.Severity = &Rule242452{}
+	_ rule.Rule              = &Rule242452{}
+	_ rule.Severity          = &Rule242452{}
+	_ option.Option          = &Options242452{}
+	_ option.MergeableOption = &Options242452{}
 )
 
 type Rule242452 struct {
@@ -45,7 +47,22 @@ type Options242452 struct {
 	NodeGroupByLabels []string `json:"nodeGroupByLabels" yaml:"nodeGroupByLabels"`
 }
 
-var _ option.Option = (*Options242452)(nil)
+func (o *Options242452) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if option.IsNilValue(other) {
+		return o, nil
+	}
+
+	otherOpts, err := option.AssertSameType[*Options242452](other)
+	if err != nil {
+		return nil, err
+	}
+
+	merged := &Options242452{
+		NodeGroupByLabels: intutils.MergeStringSlices(o.NodeGroupByLabels, otherOpts.NodeGroupByLabels),
+	}
+
+	return merged, nil
+}
 
 func (o Options242452) Validate(fldPath *field.Path) field.ErrorList {
 	return disaoption.ValidateLabelNames(o.NodeGroupByLabels, fldPath.Child("nodeGroupByLabels"))

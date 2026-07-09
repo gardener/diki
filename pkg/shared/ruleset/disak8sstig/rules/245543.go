@@ -20,8 +20,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule245543{}
-	_ rule.Severity = &Rule245543{}
+	_ rule.Rule              = &Rule245543{}
+	_ rule.Severity          = &Rule245543{}
+	_ option.Option          = &Options245543{}
+	_ option.MergeableOption = &Options245543{}
 )
 
 type Rule245543 struct {
@@ -32,15 +34,34 @@ type Rule245543 struct {
 	ContainerName  string
 }
 
-type Options245543 struct {
-	AcceptedTokens []struct {
-		User   string `yaml:"user"`
-		UID    string `yaml:"uid"`
-		Groups string `yaml:"groups"`
-	}
+type AcceptedToken245543 struct {
+	User   string `json:"user" yaml:"user"`
+	UID    string `json:"uid" yaml:"uid"`
+	Groups string `json:"groups" yaml:"groups"`
 }
 
-var _ option.Option = (*Options245543)(nil)
+type Options245543 struct {
+	AcceptedTokens []AcceptedToken245543 `json:"acceptedTokens" yaml:"acceptedTokens"`
+}
+
+func (o *Options245543) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if option.IsNilValue(other) {
+		return o, nil
+	}
+
+	otherOpts, err := option.AssertSameType[*Options245543](other)
+	if err != nil {
+		return nil, err
+	}
+
+	merged := &Options245543{
+		AcceptedTokens: make([]AcceptedToken245543, 0, len(o.AcceptedTokens)+len(otherOpts.AcceptedTokens)),
+	}
+	merged.AcceptedTokens = append(merged.AcceptedTokens, o.AcceptedTokens...)
+	merged.AcceptedTokens = append(merged.AcceptedTokens, otherOpts.AcceptedTokens...)
+
+	return merged, nil
+}
 
 func (o Options245543) Validate(fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList

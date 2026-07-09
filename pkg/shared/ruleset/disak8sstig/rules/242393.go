@@ -20,6 +20,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/imagevector"
+	intutils "github.com/gardener/diki/pkg/internal/utils"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
@@ -30,8 +31,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule242393{}
-	_ rule.Severity = &Rule242393{}
+	_ rule.Rule              = &Rule242393{}
+	_ rule.Severity          = &Rule242393{}
+	_ option.Option          = &Options242393{}
+	_ option.MergeableOption = &Options242393{}
 )
 
 type Rule242393 struct {
@@ -46,7 +49,22 @@ type Options242393 struct {
 	NodeGroupByLabels []string `json:"nodeGroupByLabels" yaml:"nodeGroupByLabels"`
 }
 
-var _ option.Option = (*Options242393)(nil)
+func (o *Options242393) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if option.IsNilValue(other) {
+		return o, nil
+	}
+
+	otherOpts, err := option.AssertSameType[*Options242393](other)
+	if err != nil {
+		return nil, err
+	}
+
+	merged := &Options242393{
+		NodeGroupByLabels: intutils.MergeStringSlices(o.NodeGroupByLabels, otherOpts.NodeGroupByLabels),
+	}
+
+	return merged, nil
+}
 
 func (o Options242393) Validate(fldPath *field.Path) field.ErrorList {
 	return disaoption.ValidateLabelNames(o.NodeGroupByLabels, fldPath.Child("nodeGroupByLabels"))

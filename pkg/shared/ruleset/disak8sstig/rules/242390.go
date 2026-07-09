@@ -22,9 +22,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule242390{}
-	_ rule.Severity = &Rule242390{}
-	_ option.Option = &Options242390{}
+	_ rule.Rule              = &Rule242390{}
+	_ rule.Severity          = &Rule242390{}
+	_ option.Option          = &Options242390{}
+	_ option.MergeableOption = &Options242390{}
 )
 
 type Rule242390 struct {
@@ -41,6 +42,25 @@ type Options242390 struct {
 
 type AcceptedEndpoint struct {
 	Path string `yaml:"path" json:"path"`
+}
+
+func (o *Options242390) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if option.IsNilValue(other) {
+		return o, nil
+	}
+
+	otherOpts, err := option.AssertSameType[*Options242390](other)
+	if err != nil {
+		return nil, err
+	}
+
+	merged := &Options242390{
+		AcceptedEndpoints: make([]AcceptedEndpoint, 0, len(o.AcceptedEndpoints)+len(otherOpts.AcceptedEndpoints)),
+	}
+	merged.AcceptedEndpoints = append(merged.AcceptedEndpoints, o.AcceptedEndpoints...)
+	merged.AcceptedEndpoints = append(merged.AcceptedEndpoints, otherOpts.AcceptedEndpoints...)
+
+	return merged, nil
 }
 
 func (o Options242390) Validate(fldPath *field.Path) field.ErrorList {

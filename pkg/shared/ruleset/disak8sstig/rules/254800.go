@@ -28,8 +28,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule254800{}
-	_ rule.Severity = &Rule254800{}
+	_ rule.Rule              = &Rule254800{}
+	_ rule.Severity          = &Rule254800{}
+	_ option.Option          = &Options254800{}
+	_ option.MergeableOption = &Options254800{}
 )
 
 type Rule254800 struct {
@@ -44,7 +46,26 @@ type Options254800 struct {
 	MinPodSecurityStandardsProfile intkubeutils.PodSecurityStandardProfile `json:"minPodSecurityStandardsProfile" yaml:"minPodSecurityStandardsProfile"`
 }
 
-var _ option.Option = (*Options254800)(nil)
+func (o *Options254800) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if option.IsNilValue(other) {
+		return o, nil
+	}
+
+	otherOpts, err := option.AssertSameType[*Options254800](other)
+	if err != nil {
+		return nil, err
+	}
+
+	merged := &Options254800{
+		MinPodSecurityStandardsProfile: o.MinPodSecurityStandardsProfile,
+	}
+
+	if len(otherOpts.MinPodSecurityStandardsProfile) != 0 {
+		merged.MinPodSecurityStandardsProfile = otherOpts.MinPodSecurityStandardsProfile
+	}
+
+	return merged, nil
+}
 
 func (o Options254800) Validate(fldPath *field.Path) field.ErrorList {
 	if !slices.Contains([]intkubeutils.PodSecurityStandardProfile{intkubeutils.PSSProfileBaseline, intkubeutils.PSSProfilePrivileged, intkubeutils.PSSProfileRestricted}, o.MinPodSecurityStandardsProfile) {

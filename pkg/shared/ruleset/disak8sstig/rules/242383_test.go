@@ -20,6 +20,7 @@ import (
 
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -575,5 +576,34 @@ var _ = Describe("#242383", func() {
 				})),
 			))
 		})
+	})
+
+	Describe("#Merge Options242383", func() {
+		It("should merge by appending AcceptedResources", func() {
+			base := &rules.Options242383{
+				AcceptedResources: []rules.AcceptedResources242383{
+					{Status: "Passed"},
+				},
+			}
+			other := &rules.Options242383{
+				AcceptedResources: []rules.AcceptedResources242383{
+					{Status: "Accepted"},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242383)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AcceptedResources).To(HaveLen(2))
+			Expect(mergedOpts.AcceptedResources[0].Status).To(Equal("Passed"))
+			Expect(mergedOpts.AcceptedResources[1].Status).To(Equal("Accepted"))
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options242383{
+			AcceptedResources: []rules.AcceptedResources242383{{Status: "Passed"}},
+		})
+		mergetest.AssertWrongTypeErrors(&rules.Options242383{}, &rules.Options242393{})
 	})
 })

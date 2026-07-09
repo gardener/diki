@@ -19,6 +19,7 @@ import (
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -517,5 +518,34 @@ anonymous:
 				})),
 			))
 		})
+	})
+
+	Describe("#Merge Options242390", func() {
+		It("should merge by appending AcceptedEndpoints", func() {
+			base := &rules.Options242390{
+				AcceptedEndpoints: []rules.AcceptedEndpoint{
+					{Path: "/healthz"},
+				},
+			}
+			other := &rules.Options242390{
+				AcceptedEndpoints: []rules.AcceptedEndpoint{
+					{Path: "/readyz"},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242390)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AcceptedEndpoints).To(HaveLen(2))
+			Expect(mergedOpts.AcceptedEndpoints[0].Path).To(Equal("/healthz"))
+			Expect(mergedOpts.AcceptedEndpoints[1].Path).To(Equal("/readyz"))
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options242390{
+			AcceptedEndpoints: []rules.AcceptedEndpoint{{Path: "/healthz"}},
+		})
+		mergetest.AssertWrongTypeErrors(&rules.Options242390{}, &rules.Options242383{})
 	})
 })

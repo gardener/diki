@@ -19,6 +19,7 @@ import (
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	"github.com/gardener/diki/pkg/rule"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
@@ -43,11 +44,7 @@ bar,for,bar,`
 		kapiDeployment *appsv1.Deployment
 		target         = rule.NewTarget("kind", "Deployment", "name", "kube-apiserver", "namespace", namespace)
 		options        = rules.Options245543{
-			AcceptedTokens: []struct {
-				User   string `yaml:"user"`
-				UID    string `yaml:"uid"`
-				Groups string `yaml:"groups"`
-			}{
+			AcceptedTokens: []rules.AcceptedToken245543{
 				{
 					User: "health-check",
 					UID:  "health-check",
@@ -251,11 +248,7 @@ bar,for,bar,`
 	Describe("#Validate", func() {
 		It("should correctly validate options", func() {
 			options = rules.Options245543{
-				AcceptedTokens: []struct {
-					User   string `yaml:"user"`
-					UID    string `yaml:"uid"`
-					Groups string `yaml:"groups"`
-				}{
+				AcceptedTokens: []rules.AcceptedToken245543{
 					{
 						User: "health-check",
 						UID:  "health-check",
@@ -287,5 +280,34 @@ bar,for,bar,`
 				})),
 			))
 		})
+	})
+
+	Describe("#Merge Options245543", func() {
+		It("should merge by appending AcceptedTokens", func() {
+			base := &rules.Options245543{
+				AcceptedTokens: []rules.AcceptedToken245543{
+					{User: "admin", UID: "1", Groups: "system:masters"},
+				},
+			}
+			other := &rules.Options245543{
+				AcceptedTokens: []rules.AcceptedToken245543{
+					{User: "reader", UID: "2", Groups: "system:readers"},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options245543)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.AcceptedTokens).To(HaveLen(2))
+			Expect(mergedOpts.AcceptedTokens[0].User).To(Equal("admin"))
+			Expect(mergedOpts.AcceptedTokens[1].User).To(Equal("reader"))
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options245543{
+			AcceptedTokens: []rules.AcceptedToken245543{{User: "admin"}},
+		})
+		mergetest.AssertWrongTypeErrors(&rules.Options245543{}, &rules.Options242383{})
 	})
 })

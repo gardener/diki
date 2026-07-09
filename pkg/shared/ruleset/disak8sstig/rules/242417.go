@@ -22,8 +22,10 @@ import (
 )
 
 var (
-	_ rule.Rule     = &Rule242417{}
-	_ rule.Severity = &Rule242417{}
+	_ rule.Rule              = &Rule242417{}
+	_ rule.Severity          = &Rule242417{}
+	_ option.Option          = &Options242417{}
+	_ option.MergeableOption = &Options242417{}
 )
 
 type Rule242417 struct {
@@ -35,11 +37,28 @@ type Options242417 struct {
 	AcceptedPods []AcceptedPods242417 `json:"acceptedPods" yaml:"acceptedPods"`
 }
 
-var _ option.Option = (*Options242417)(nil)
-
 type AcceptedPods242417 struct {
 	option.AcceptedNamespacedObject
 	Status string `json:"status" yaml:"status"`
+}
+
+func (o *Options242417) Merge(other option.MergeableOption) (option.MergeableOption, error) {
+	if option.IsNilValue(other) {
+		return o, nil
+	}
+
+	otherOpts, err := option.AssertSameType[*Options242417](other)
+	if err != nil {
+		return nil, err
+	}
+
+	merged := &Options242417{
+		AcceptedPods: make([]AcceptedPods242417, 0, len(o.AcceptedPods)+len(otherOpts.AcceptedPods)),
+	}
+	merged.AcceptedPods = append(merged.AcceptedPods, o.AcceptedPods...)
+	merged.AcceptedPods = append(merged.AcceptedPods, otherOpts.AcceptedPods...)
+
+	return merged, nil
 }
 
 func (o Options242417) Validate(fldPath *field.Path) field.ErrorList {

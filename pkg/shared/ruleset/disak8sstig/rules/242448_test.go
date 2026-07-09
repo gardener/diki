@@ -22,6 +22,7 @@ import (
 	fakepod "github.com/gardener/diki/pkg/kubernetes/pod/fake"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
+	"github.com/gardener/diki/pkg/shared/kubernetes/option/mergetest"
 	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	"github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
@@ -337,4 +338,47 @@ var _ = Describe("#242448", func() {
 				rule.ErroredCheckResult("bar", rule.NewTarget("name", "diki-242448-aaaaaaaaaa", "namespace", "kube-system", "kind", "Pod")),
 			}),
 	)
+
+	Describe("#Merge Options242448", func() {
+		It("should merge ClusterObjectSelector (override) and FileOwnerOptions (concat)", func() {
+			base := &rules.Options242448{
+				ClusterObjectSelector: &option.ClusterObjectSelector{
+					MatchLabels: map[string]string{"base": "selector"},
+				},
+				FileOwnerOptions: &disaoption.FileOwnerOptions{
+					ExpectedFileOwner: disaoption.ExpectedOwner{
+						Users:  []string{"0"},
+						Groups: []string{"0"},
+					},
+				},
+			}
+			other := &rules.Options242448{
+				ClusterObjectSelector: &option.ClusterObjectSelector{
+					MatchLabels: map[string]string{"other": "selector"},
+				},
+				FileOwnerOptions: &disaoption.FileOwnerOptions{
+					ExpectedFileOwner: disaoption.ExpectedOwner{
+						Users:  []string{"1000"},
+						Groups: []string{"1000"},
+					},
+				},
+			}
+
+			merged, err := base.Merge(other)
+			Expect(err).ToNot(HaveOccurred())
+
+			mergedOpts, ok := merged.(*rules.Options242448)
+			Expect(ok).To(BeTrue())
+			Expect(mergedOpts.ClusterObjectSelector.MatchLabels).To(Equal(map[string]string{"other": "selector"}))
+			Expect(mergedOpts.FileOwnerOptions.ExpectedFileOwner.Users).To(ConsistOf("0", "1000"))
+			Expect(mergedOpts.FileOwnerOptions.ExpectedFileOwner.Groups).To(ConsistOf("0", "1000"))
+		})
+
+		mergetest.AssertNilOtherReturnsReceiver(&rules.Options242448{
+			ClusterObjectSelector: &option.ClusterObjectSelector{
+				MatchLabels: map[string]string{"base": "selector"},
+			},
+		})
+		mergetest.AssertWrongTypeErrors(&rules.Options242448{}, &rules.Options242383{})
+	})
 })
