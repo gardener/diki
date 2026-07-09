@@ -6,7 +6,6 @@ package rules
 
 import (
 	"context"
-	"fmt"
 	"slices"
 
 	imageref "github.com/distribution/reference"
@@ -16,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	intutils "github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
@@ -50,18 +50,15 @@ func (o *Options242442) Merge(other option.MergeableOption) (option.MergeableOpt
 		return nil, err
 	}
 
-	var (
-		ok     bool
-		merged = &Options242442{}
-	)
+	merged := &Options242442{}
 
 	if o.KubeProxy != nil {
 		mergedKubeProxy, err := o.KubeProxy.Merge(otherOpts.KubeProxy)
 		if err != nil {
 			return nil, err
 		}
-		if merged.KubeProxy, ok = mergedKubeProxy.(*option.ClusterObjectSelector); !ok {
-			return nil, fmt.Errorf("unexpected type %T from ClusterObjectSelector.Merge", mergedKubeProxy)
+		if merged.KubeProxy, err = intutils.AssertType[*option.ClusterObjectSelector](mergedKubeProxy); err != nil {
+			return nil, err
 		}
 	} else {
 		merged.KubeProxy = otherOpts.KubeProxy
@@ -72,8 +69,8 @@ func (o *Options242442) Merge(other option.MergeableOption) (option.MergeableOpt
 		if err != nil {
 			return nil, err
 		}
-		if merged.ImageSelector, ok = mergedImageSelector.(*disaoption.Options242442); !ok {
-			return nil, fmt.Errorf("unexpected type %T from Options242442.Merge", mergedImageSelector)
+		if merged.ImageSelector, err = intutils.AssertType[*disaoption.Options242442](mergedImageSelector); err != nil {
+			return nil, err
 		}
 	} else {
 		merged.ImageSelector = otherOpts.ImageSelector

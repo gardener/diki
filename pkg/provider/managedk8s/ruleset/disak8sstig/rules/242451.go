@@ -68,9 +68,9 @@ func (o *Options242451) Merge(other option.MergeableOption) (option.MergeableOpt
 		return nil, err
 	}
 
-	kubeProxy, ok := mergedKubeProxy.(*disaoption.KubeProxyOptions)
-	if !ok {
-		return nil, fmt.Errorf("unexpected type %T from KubeProxyOptions.Merge", mergedKubeProxy)
+	kubeProxy, err := intutils.AssertType[*disaoption.KubeProxyOptions](mergedKubeProxy)
+	if err != nil {
+		return nil, err
 	}
 
 	merged := &Options242451{
@@ -83,8 +83,8 @@ func (o *Options242451) Merge(other option.MergeableOption) (option.MergeableOpt
 		if err != nil {
 			return nil, err
 		}
-		if merged.FileOwnerOptions, ok = mergedFileOwner.(*disaoption.FileOwnerOptions); !ok {
-			return nil, fmt.Errorf("unexpected type %T from FileOwnerOptions.Merge", mergedFileOwner)
+		if merged.FileOwnerOptions, err = intutils.AssertType[*disaoption.FileOwnerOptions](mergedFileOwner); err != nil {
+			return nil, err
 		}
 	} else {
 		merged.FileOwnerOptions = otherOpts.FileOwnerOptions

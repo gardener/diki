@@ -119,4 +119,33 @@ var _ = Describe("utils", func() {
 			Expect(result).To(Equal([]string{"c", "a", "b", "d"}))
 		})
 	})
+
+	Describe("#Assert", func() {
+		It("should return the value when the type assertion succeeds", func() {
+			var v any = "hello"
+			result, err := utils.AssertType[string](v)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(Equal("hello"))
+		})
+
+		It("should return an error with expected and actual types when the assertion fails", func() {
+			var v any = 42
+			_, err := utils.AssertType[string](v)
+			Expect(err).To(MatchError("expected type string, got int"))
+		})
+
+		It("should work with pointer types", func() {
+			type foo struct{ X int }
+			var v any = &foo{X: 1}
+			result, err := utils.AssertType[*foo](v)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result.X).To(Equal(1))
+		})
+
+		It("should return an error for nil when asserting to a non-interface type", func() {
+			var v any
+			_, err := utils.AssertType[string](v)
+			Expect(err).To(HaveOccurred())
+		})
+	})
 })

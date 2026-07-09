@@ -74,9 +74,8 @@ func (o *Options242451) Merge(other option.MergeableOption) (option.MergeableOpt
 		if err != nil {
 			return nil, err
 		}
-		var ok bool
-		if merged.FileOwnerOptions, ok = mergedFileOwner.(*disaoption.FileOwnerOptions); !ok {
-			return nil, fmt.Errorf("unexpected type %T from FileOwnerOptions.Merge", mergedFileOwner)
+		if merged.FileOwnerOptions, err = intutils.AssertType[*disaoption.FileOwnerOptions](mergedFileOwner); err != nil {
+			return nil, err
 		}
 	} else {
 		merged.FileOwnerOptions = otherOpts.FileOwnerOptions
