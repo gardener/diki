@@ -40,7 +40,6 @@ var (
 type Ruleset struct {
 	version    string
 	Config     *rest.Config
-	numWorkers int
 	args       Args
 	instanceID string
 	logger     *slog.Logger
@@ -54,7 +53,6 @@ type Args struct {
 // New creates a new Ruleset.
 func New(options ...CreateOption) (*Ruleset, error) {
 	r := &Ruleset{
-		numWorkers: 5,
 		instanceID: uuid.New().String(),
 	}
 

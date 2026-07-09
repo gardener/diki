@@ -35,18 +35,6 @@ func WithArgs(args Args) CreateOption {
 	}
 }
 
-// WithNumberOfWorkers sets the max number of workers (concurrent test pods) of a [Ruleset].
-// A worker corresponds to one gardenlinux test pod running on one selected node; the ruleset
-// will never schedule more than this many pods at once.
-func WithNumberOfWorkers(numWorkers int) CreateOption {
-	return func(r *Ruleset) {
-		if numWorkers <= 0 {
-			panic("number of workers should be a positive number")
-		}
-		r.numWorkers = numWorkers
-	}
-}
-
 // WithLogger sets the logger of a [Ruleset].
 func WithLogger(logger *slog.Logger) CreateOption {
 	return func(r *Ruleset) {
