@@ -60,18 +60,15 @@ func (o *Options242448) Merge(other option.MergeableOption) (option.MergeableOpt
 		return nil, err
 	}
 
-	var (
-		ok     bool
-		merged = &Options242448{}
-	)
+	merged := &Options242448{}
 
 	if o.ClusterObjectSelector != nil {
 		mergedSelector, err := o.ClusterObjectSelector.Merge(otherOpts.ClusterObjectSelector)
 		if err != nil {
 			return nil, err
 		}
-		if merged.ClusterObjectSelector, ok = mergedSelector.(*option.ClusterObjectSelector); !ok {
-			return nil, fmt.Errorf("unexpected type %T from ClusterObjectSelector.Merge", mergedSelector)
+		if merged.ClusterObjectSelector, err = intutils.AssertType[*option.ClusterObjectSelector](mergedSelector); err != nil {
+			return nil, err
 		}
 	} else {
 		merged.ClusterObjectSelector = otherOpts.ClusterObjectSelector
@@ -82,8 +79,8 @@ func (o *Options242448) Merge(other option.MergeableOption) (option.MergeableOpt
 		if err != nil {
 			return nil, err
 		}
-		if merged.FileOwnerOptions, ok = mergedFileOwner.(*disaoption.FileOwnerOptions); !ok {
-			return nil, fmt.Errorf("unexpected type %T from FileOwnerOptions.Merge", mergedFileOwner)
+		if merged.FileOwnerOptions, err = intutils.AssertType[*disaoption.FileOwnerOptions](mergedFileOwner); err != nil {
+			return nil, err
 		}
 	} else {
 		merged.FileOwnerOptions = otherOpts.FileOwnerOptions
