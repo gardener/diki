@@ -15,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	intutils "github.com/gardener/diki/pkg/internal/utils"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
@@ -56,7 +57,9 @@ func (o *Options242442) Merge(other option.MergeableOption) (option.MergeableOpt
 		if err != nil {
 			return nil, err
 		}
-		merged.KubeProxy = mergedKubeProxy.(*option.ClusterObjectSelector)
+		if merged.KubeProxy, err = intutils.AssertType[*option.ClusterObjectSelector](mergedKubeProxy); err != nil {
+			return nil, err
+		}
 	} else {
 		merged.KubeProxy = otherOpts.KubeProxy
 	}
@@ -66,7 +69,9 @@ func (o *Options242442) Merge(other option.MergeableOption) (option.MergeableOpt
 		if err != nil {
 			return nil, err
 		}
-		merged.ImageSelector = mergedImageSelector.(*disaoption.Options242442)
+		if merged.ImageSelector, err = intutils.AssertType[*disaoption.Options242442](mergedImageSelector); err != nil {
+			return nil, err
+		}
 	} else {
 		merged.ImageSelector = otherOpts.ImageSelector
 	}

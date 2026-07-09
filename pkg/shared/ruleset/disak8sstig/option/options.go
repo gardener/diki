@@ -302,7 +302,9 @@ func (o *KubeProxyOptions) Merge(other option.MergeableOption) (option.Mergeable
 		if err != nil {
 			return nil, err
 		}
-		merged.ClusterObjectSelector = mergedSelector.(*option.ClusterObjectSelector)
+		if merged.ClusterObjectSelector, err = intutils.AssertType[*option.ClusterObjectSelector](mergedSelector); err != nil {
+			return nil, err
+		}
 	} else {
 		merged.ClusterObjectSelector = otherOpts.ClusterObjectSelector
 	}

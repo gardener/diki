@@ -74,7 +74,9 @@ func (o *Options242451) Merge(other option.MergeableOption) (option.MergeableOpt
 		if err != nil {
 			return nil, err
 		}
-		merged.FileOwnerOptions = mergedFileOwner.(*disaoption.FileOwnerOptions)
+		if merged.FileOwnerOptions, err = intutils.AssertType[*disaoption.FileOwnerOptions](mergedFileOwner); err != nil {
+			return nil, err
+		}
 	} else {
 		merged.FileOwnerOptions = otherOpts.FileOwnerOptions
 	}

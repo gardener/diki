@@ -69,8 +69,13 @@ func (o *Options242400) Merge(other option.MergeableOption) (option.MergeableOpt
 		return nil, err
 	}
 
+	kubeProxy, err := intutils.AssertType[*disaoption.KubeProxyOptions](mergedKubeProxy)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Options242400{
-		KubeProxy: *mergedKubeProxy.(*disaoption.KubeProxyOptions),
+		KubeProxy: *kubeProxy,
 	}, nil
 }
 

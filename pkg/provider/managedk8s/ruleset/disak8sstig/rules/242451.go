@@ -68,8 +68,13 @@ func (o *Options242451) Merge(other option.MergeableOption) (option.MergeableOpt
 		return nil, err
 	}
 
+	kubeProxy, err := intutils.AssertType[*disaoption.KubeProxyOptions](mergedKubeProxy)
+	if err != nil {
+		return nil, err
+	}
+
 	merged := &Options242451{
-		KubeProxy:         *mergedKubeProxy.(*disaoption.KubeProxyOptions),
+		KubeProxy:         *kubeProxy,
 		NodeGroupByLabels: intutils.MergeStringSlices(o.NodeGroupByLabels, otherOpts.NodeGroupByLabels),
 	}
 
@@ -78,7 +83,9 @@ func (o *Options242451) Merge(other option.MergeableOption) (option.MergeableOpt
 		if err != nil {
 			return nil, err
 		}
-		merged.FileOwnerOptions = mergedFileOwner.(*disaoption.FileOwnerOptions)
+		if merged.FileOwnerOptions, err = intutils.AssertType[*disaoption.FileOwnerOptions](mergedFileOwner); err != nil {
+			return nil, err
+		}
 	} else {
 		merged.FileOwnerOptions = otherOpts.FileOwnerOptions
 	}

@@ -340,3 +340,14 @@ func MatchFileOwnersCases(
 
 	return checkResults
 }
+
+// AssertType type-asserts v to T and returns a descriptive error including the
+// expected and actual types when the assertion fails.
+func AssertType[T any](v any) (T, error) {
+	typed, ok := v.(T)
+	if !ok {
+		var zero T
+		return zero, fmt.Errorf("expected type %T, got %T", zero, v)
+	}
+	return typed, nil
+}
