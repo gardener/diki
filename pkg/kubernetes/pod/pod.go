@@ -20,6 +20,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/httpstream"
+	"k8s.io/client-go/kubernetes/scheme"
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
@@ -143,13 +144,16 @@ func (spe *SimplePodExecutor) Execute(ctx context.Context, command string, comma
 		Resource("pods").
 		Name(spe.name).
 		Namespace(spe.namespace).
-		SubResource("exec").
-		Param("container", "container").
-		Param("command", command).
-		Param("stdin", "true").
-		Param("stdout", "true").
-		Param("stderr", "true").
-		Param("tty", "false")
+		SubResource("exec")
+
+	request.VersionedParams(&corev1.PodExecOptions{
+		Stdin:     true,
+		Stdout:    true,
+		Stderr:    true,
+		TTY:       false,
+		Container: "container",
+		Command:   strings.Fields(command),
+	}, scheme.ParameterCodec)
 
 	// Use a fallback executor with websocket as primary and spdy as fallback similar to kubectl.
 	// https://github.com/kubernetes/kubectl/blob/2e38fc220409bbc92f8270c49612f0f9d8e36c89/pkg/cmd/exec/exec.go#L143-L155
