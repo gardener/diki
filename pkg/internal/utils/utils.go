@@ -60,6 +60,12 @@ func (fs FileStats) Dir() string {
 	return filepath.Dir(fs.Path)
 }
 
+// ShellEscape wraps s in single quotes, escaping any embedded single quotes.
+// This prevents shell metacharacter interpretation when s is interpolated into a shell command.
+func ShellEscape(s string) string {
+	return "'" + strings.ReplaceAll(strings.TrimSpace(s), "'", "'\\''") + "'"
+}
+
 // GetSingleFileStats returns file stats for a specified file
 func GetSingleFileStats(
 	ctx context.Context,
@@ -68,7 +74,7 @@ func GetSingleFileStats(
 ) (FileStats, error) {
 	stats := FileStats{}
 	delimiter := "\t"
-	statsRaw, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`stat -Lc "%%a%[1]s%%u%[1]s%%g%[1]s%%F%[1]s%%n" %s`, delimiter, filePath))
+	statsRaw, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`stat -Lc "%%a%[1]s%%u%[1]s%%g%[1]s%%F%[1]s%%n" %s`, delimiter, ShellEscape(filePath)))
 	if err != nil {
 		return stats, err
 	}
@@ -94,12 +100,12 @@ func GetFileStatsByDir(
 ) ([]FileStats, error) {
 	var fileStats []FileStats
 	delimiter := "\t"
-	statsRaw, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`find %s -type f -exec stat -Lc "%%a%[2]s%%u%[2]s%%g%[2]s%%F%[2]s%%n" {} \;`, dirPath, delimiter))
+	statsRaw, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`find %s -type f -exec stat -Lc "%%a%[2]s%%u%[2]s%%g%[2]s%%F%[2]s%%n" {} \;`, ShellEscape(dirPath), delimiter))
 	if err != nil {
 		return fileStats, err
 	}
 	if len(statsRaw) == 0 {
-		fileNum, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`find %s -type f | wc -l`, dirPath))
+		fileNum, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`find %s -type f | wc -l`, ShellEscape(dirPath)))
 		if err != nil {
 			return fileStats, err
 		}
@@ -197,7 +203,7 @@ func GetContainerMounts(
 	podExecutor pod.PodExecutor,
 	containerID string,
 ) ([]config.Mount, error) {
-	commandResult, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`%s/usr/local/bin/nerdctl --namespace k8s.io inspect --mode=native %s | jq -r .[0].Spec.mounts`, podExecutorRootPath, containerID))
+	commandResult, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`%s --namespace k8s.io inspect --mode=native %s | jq -r .[0].Spec.mounts`, ShellEscape(podExecutorRootPath+"/usr/local/bin/nerdctl"), ShellEscape(containerID)))
 	if err != nil {
 		return nil, err
 	}
