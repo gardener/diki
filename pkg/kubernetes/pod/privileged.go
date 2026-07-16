@@ -22,13 +22,14 @@ const (
 	// LabelComplianceRolePrivPod is used as the label value for LabelComplianceRoleKey indicating privileged diki pods.
 	LabelComplianceRolePrivPod = "diki-privileged-pod"
 
-	maxNameLength = 63
+	// MaxPodNameLength is the maximum length of a Kubernetes pod name.
+	MaxPodNameLength = 63
 )
 
 // NewPrivilegedPod creates a new privileged Pod.
 func NewPrivilegedPod(name, namespace, image, nodeName string, additionalLabels map[string]string) func() *corev1.Pod {
-	if len(name) > maxNameLength {
-		name = name[:maxNameLength]
+	if len(name) > MaxPodNameLength {
+		name = name[:MaxPodNameLength]
 	}
 
 	labels := map[string]string{}
