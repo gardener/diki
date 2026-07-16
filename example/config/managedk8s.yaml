@@ -320,8 +320,7 @@ providers:                   # contains information about known providers
     #       - "*" # a wildcard can be used to match against all volumes in an accepted pod
   - id: gardenlinux
     name: Gardenlinux Testing Framework
-    # TODO(georgibaltiev): replace with a real version once implementation for the gardenlinux support is added.
-    version: v0.1.0
+    version: 2298.0.0
     # args:
     #   # node labels used to group nodes by specified label value combinations. 
     #   # Only one node per combination will be tested
