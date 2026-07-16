@@ -7,18 +7,30 @@ package gardenlinux
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"slices"
+	"sync"
 
+	"github.com/gardener/gardener/pkg/utils/retry"
 	"github.com/google/uuid"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/gardener/diki/imagevector"
 	"github.com/gardener/diki/pkg/config"
+	"github.com/gardener/diki/pkg/kubernetes/pod"
+	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
+	gardenlinuxpod "github.com/gardener/diki/pkg/provider/managedk8s/ruleset/gardenlinux/pod"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
+	"github.com/gardener/diki/pkg/shared/images"
 	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
+	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
 )
 
 const (
@@ -38,11 +50,13 @@ var (
 
 // Ruleset implements the Gardenlinux Testing Framework ruleset.
 type Ruleset struct {
-	version    string
-	Config     *rest.Config
-	args       Args
-	instanceID string
-	logger     *slog.Logger
+	version           string
+	Config            *rest.Config
+	Client            client.Client
+	ClusterPodContext pod.SimplePodContext
+	args              Args
+	instanceID        string
+	logger            *slog.Logger
 }
 
 // Args are Ruleset specific arguments.
@@ -59,6 +73,22 @@ func New(options ...CreateOption) (*Ruleset, error) {
 	for _, o := range options {
 		o(r)
 	}
+
+	if r.logger == nil {
+		r.logger = slog.Default().With("ruleset", r.ID(), "version", r.Version())
+	}
+
+	c, err := client.New(r.Config, client.Options{})
+	if err != nil {
+		return nil, err
+	}
+	r.Client = c
+
+	podContext, err := gardenlinuxpod.NewPodContext(r.Client, r.Config, nil)
+	if err != nil {
+		return nil, err
+	}
+	r.ClusterPodContext = *podContext
 
 	return r, nil
 }
@@ -132,24 +162,161 @@ func ValidateRulesetConfig(rulesetConfig config.RulesetConfig, fldPath *field.Pa
 	return allErrs
 }
 
-// Run executes the gardenlinux test Pods and collects the test results.
-// TODO(georgibaltiev): add implementation for the integration of the Gardenlinux ruleset here.
-func (r *Ruleset) Run(_ context.Context) (ruleset.RulesetResult, error) {
-	r.Logger().Warn("the gardenlinux ruleset is not yet supported")
-	return ruleset.RulesetResult{}, nil
-}
-
 // RunRule executes specific Rule of a known Ruleset.
-// The function is not supported for this ruleset, since the implementation of the framework is external
+// The function is not supported for this ruleset, since the implementation of the framework is external.
 func (r *Ruleset) RunRule(_ context.Context, _ string) (rule.RuleResult, error) {
 	return rule.RuleResult{}, fmt.Errorf("the gardenlinux ruleset does not support running rules individually")
 }
 
-// Logger returns the Ruleset's logger.
-// If not set, set it to slog.Default().With("ruleset", r.ID(), "version", r.Version() then return it.
-func (r *Ruleset) Logger() *slog.Logger {
-	if r.logger == nil {
-		r.logger = slog.Default().With("ruleset", r.ID(), "version", r.Version())
+// Run deploys the gardenlinux test Pod on every selected Node in parallel and merges the collected test results into a single RulesetResult.
+func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
+	testImage, err := imagevector.ImageVector().FindImage(images.GardenlinuxTestImageName)
+	if err != nil {
+		return ruleset.RulesetResult{}, fmt.Errorf("failed to find image version for %s: %w", images.GardenlinuxTestImageName, err)
 	}
+	testImage.WithOptionalTag(r.version)
+
+	sidecarImage, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
+	if err != nil {
+		return ruleset.RulesetResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
+	}
+
+	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
+	if err != nil {
+		return ruleset.RulesetResult{}, err
+	}
+
+	allClusterPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
+	if err != nil {
+		return ruleset.RulesetResult{}, err
+	}
+
+	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allClusterPods, nodes)
+	selectedNodes, _ := kubeutils.SelectNodes(nodes, nodesAllocatablePods, r.args.NodeGroupByLabels)
+
+	type rulesetRun struct {
+		result   ruleset.RulesetResult
+		err      error
+		nodeName string
+	}
+
+	var (
+		rulesetResults []ruleset.RulesetResult
+		wg             sync.WaitGroup
+		resultCh       = make(chan rulesetRun)
+	)
+
+	for _, node := range selectedNodes {
+		wg.Go(func() {
+			result, err := r.runOnNode(ctx, node.Name, testImage.String(), sidecarImage.String())
+			resultCh <- rulesetRun{result: result, err: err, nodeName: node.Name}
+		})
+	}
+
+	go func() {
+		wg.Wait()
+		close(resultCh)
+	}()
+
+	finishMsg := "finished ruleset run"
+	resultCount := 0
+	for rulesetRun := range resultCh {
+		resultCount++
+		remaining := len(selectedNodes) - resultCount
+		if rulesetRun.err != nil {
+			r.Logger().Error(finishMsg, "ruleset_id", RulesetID, "node_name", rulesetRun.nodeName, "remaining_nodes", remaining, "error", rulesetRun.err)
+			err = errors.Join(err, fmt.Errorf("ruleset %s on node %s errored: %w", RulesetID, rulesetRun.nodeName, rulesetRun.err))
+		} else {
+			r.Logger().Info(finishMsg, "ruleset_id", RulesetID, "node_name", rulesetRun.nodeName, "remaining_nodes", remaining)
+			rulesetResults = append(rulesetResults, rulesetRun.result)
+		}
+	}
+
+	if err := ctx.Err(); err != nil {
+		return ruleset.RulesetResult{}, err
+	}
+
+	// TODO: maybe return both result and err
+	if err != nil {
+		return ruleset.RulesetResult{}, err
+	}
+
+	// TODO (georgibaltiev): return a merged RulesetResult, based on the gathered results from the slices
+	if len(rulesetResults) == 0 {
+		return ruleset.RulesetResult{}, nil
+	}
+	return rulesetResults[0], nil
+}
+
+func (r *Ruleset) runOnNode(ctx context.Context, nodeName, testImage, sidecarImage string) (ruleset.RulesetResult, error) {
+	podName := fmt.Sprintf("test-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
+
+	defer func() {
+		timeoutCtx, cancel := context.WithTimeout(context.Background(), r.ClusterPodContext.WaitTimeout)
+		defer cancel()
+
+		if err := r.ClusterPodContext.Delete(timeoutCtx, podName, gardenlinuxpod.SystemNamespace); err != nil {
+			r.Logger().Error(err.Error())
+		}
+	}()
+
+	additionalLabels := map[string]string{pod.LabelInstanceID: r.instanceID}
+
+	podExecutor, err := r.ClusterPodContext.Create(ctx, gardenlinuxpod.NewTestPod(podName, testImage, sidecarImage, nodeName, additionalLabels))
+	if err != nil {
+		return ruleset.RulesetResult{}, fmt.Errorf("failed to create test pod on node %s: %w", nodeName, err)
+	}
+
+	// TODO (georgibaltiev): Add parsing logic for the report result. Remove the currently defaulted empty RuleResult
+	if _, err = r.readReport(ctx, podExecutor, podName); err != nil {
+		return ruleset.RulesetResult{}, fmt.Errorf("failed to read test report on node %s: %w", nodeName, err)
+	}
+
+	return ruleset.RulesetResult{}, nil
+}
+
+func (r *Ruleset) readReport(ctx context.Context, podExecutor pod.PodExecutor, podName string) (string, error) {
+	timeoutCtx, cancel := context.WithTimeout(ctx, r.ClusterPodContext.WaitTimeout)
+	defer cancel()
+
+	var report string
+	if err := retry.Until(timeoutCtx, r.ClusterPodContext.WaitInterval, func(ctx context.Context) (bool, error) {
+		terminated, err := r.testContainerTerminated(ctx, podName)
+		if err != nil {
+			return retry.MinorError(err)
+		}
+		if !terminated {
+			return retry.MinorError(fmt.Errorf("gardenlinux test container %q has not terminated yet", gardenlinuxpod.TestContainerName))
+		}
+
+		report, err = podExecutor.Execute(ctx, "/bin/busybox cat /tests/tests/output/test.xml", "")
+		if err != nil {
+			return retry.MinorError(err)
+		}
+		return retry.Ok()
+	}); err != nil {
+		return "", fmt.Errorf("failed to read gardenlinux test report %s: %w", gardenlinuxpod.ReportFilename, err)
+	}
+
+	return report, nil
+}
+
+func (r *Ruleset) testContainerTerminated(ctx context.Context, podName string) (bool, error) {
+	testPod := &corev1.Pod{}
+	if err := r.Client.Get(ctx, client.ObjectKey{Namespace: gardenlinuxpod.SystemNamespace, Name: podName}, testPod); err != nil {
+		return false, err
+	}
+
+	for _, status := range testPod.Status.ContainerStatuses {
+		if status.Name == gardenlinuxpod.TestContainerName {
+			return status.State.Terminated != nil, nil
+		}
+	}
+
+	return false, nil
+}
+
+// Logger returns the Ruleset's logger.
+func (r *Ruleset) Logger() *slog.Logger {
 	return r.logger
 }
