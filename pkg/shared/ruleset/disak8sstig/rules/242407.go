@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -138,6 +139,7 @@ func (r *Rule242407) Run(ctx context.Context) (rule.RuleResult, error) {
 			checkResults = append(checkResults, rule.ErroredCheckResult(fmt.Sprintf("could not find kubelet.service path: %s", err.Error()), execPodTarget))
 			continue
 		}
+		kubeletServicePath = strings.TrimSpace(kubeletServicePath)
 
 		fileStats, err := intutils.GetSingleFileStats(ctx, podExecutor, kubeletServicePath)
 		if err != nil {
