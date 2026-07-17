@@ -63,7 +63,7 @@ func (fs FileStats) Dir() string {
 // ShellEscape wraps s in single quotes, escaping any embedded single quotes.
 // This prevents shell metacharacter interpretation when s is interpolated into a shell command.
 func ShellEscape(s string) string {
-	return "'" + strings.ReplaceAll(strings.TrimSpace(s), "'", "'\\''") + "'"
+	return "'" + strings.ReplaceAll(s, "'", "'\\''") + "'"
 }
 
 // GetSingleFileStats returns file stats for a specified file
