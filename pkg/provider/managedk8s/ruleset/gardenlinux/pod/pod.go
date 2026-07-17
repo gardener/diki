@@ -19,14 +19,11 @@ import (
 )
 
 const (
-	// SystemNamespace is the namespace in which the test pods are created.
-	SystemNamespace = "kube-system"
-
 	// PodContextWaitInterval is the interval between pod status polls.
 	PodContextWaitInterval = 2 * time.Second
 	// PodContextWaitTimeout is the maximum time to wait for the test pod to reach Running.
 	// Both containers start immediately, so we only need enough time for image pull + scheduling.
-	PodContextWaitTimeout = 10 * time.Minute
+	PodContextWaitTimeout = 1 * time.Minute
 
 	// TestContainerName is the name of the container running the gardenlinux/tests suite.
 	TestContainerName = "gardenlinux-test"
@@ -44,13 +41,6 @@ const (
 	// ReportSizeLimitKi is the size limit of the report volume in kibibytes.
 	ReportSizeLimitKi = 500
 
-	// HostRootVolumeName is the name of the volume mounting the host root filesystem.
-	HostRootVolumeName = "host-root-volume"
-	// HostRootMountPath is the in-pod path at which the host root filesystem is mounted.
-	HostRootMountPath = "/host"
-	// HostRootPath is the host path mounted into the reader container.
-	HostRootPath = "/"
-
 	// LabelComplianceRoleGardenlinuxTestPod is used as the label value for LabelComplianceRoleKey indicating gardenlinux test pods.
 	LabelComplianceRoleGardenlinuxTestPod = "gardenlinux-test-pod"
 )
@@ -67,7 +57,7 @@ func NewPodContext(c client.Client, config *rest.Config, additionalPodLabels map
 }
 
 // NewTestPod creates a new gardenlinux-test Pod.
-func NewTestPod(name, gardenlinuxTestImage, reportReaderImage, nodeName string, additionalLabels map[string]string) func() *corev1.Pod {
+func NewTestPod(name, namespace, gardenlinuxTestImage, reportReaderImage, nodeName string, additionalLabels map[string]string) func() *corev1.Pod {
 	if len(name) > kubernetespod.MaxPodNameLength {
 		name = name[:kubernetespod.MaxPodNameLength]
 	}
@@ -80,7 +70,7 @@ func NewTestPod(name, gardenlinuxTestImage, reportReaderImage, nodeName string, 
 	testPod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: SystemNamespace,
+			Namespace: namespace,
 			Labels:    labels,
 		},
 		Spec: corev1.PodSpec{
@@ -149,7 +139,6 @@ func NewTestPod(name, gardenlinuxTestImage, reportReaderImage, nodeName string, 
 					},
 				},
 			},
-			HostNetwork:   true,
 			HostPID:       true,
 			RestartPolicy: corev1.RestartPolicyNever,
 			Tolerations: []corev1.Toleration{

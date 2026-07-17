@@ -49,13 +49,13 @@ var (
 
 // Ruleset implements the Gardenlinux Testing Framework ruleset.
 type Ruleset struct {
-	version           string
-	Config            *rest.Config
-	Client            client.Client
-	ClusterPodContext pod.SimplePodContext
-	args              Args
-	instanceID        string
-	logger            *slog.Logger
+	version    string
+	Config     *rest.Config
+	Client     client.Client
+	PodContext pod.SimplePodContext
+	args       Args
+	instanceID string
+	logger     *slog.Logger
 }
 
 // Args are Ruleset specific arguments.
@@ -87,7 +87,7 @@ func New(options ...CreateOption) (*Ruleset, error) {
 	if err != nil {
 		return nil, err
 	}
-	r.ClusterPodContext = *podContext
+	r.PodContext = *podContext
 
 	return r, nil
 }
@@ -185,12 +185,13 @@ func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
 		return ruleset.RulesetResult{}, err
 	}
 
-	allClusterPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
+	allPods, err := kubeutils.GetPods(ctx, r.Client, "", labels.NewSelector(), 300)
 	if err != nil {
 		return ruleset.RulesetResult{}, err
 	}
 
-	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allClusterPods, nodes)
+	nodesAllocatablePods := kubeutils.GetNodesAllocatablePodsNum(allPods, nodes)
+	// TODO(georgibaltiev): Address the warning check results from the SelectNodes function.
 	selectedNodes, _ := kubeutils.SelectNodes(nodes, nodesAllocatablePods, r.args.NodeGroupByLabels)
 
 	type rulesetRun struct {
@@ -206,8 +207,9 @@ func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
 	)
 
 	for _, node := range selectedNodes {
+		podName := fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
 		wg.Go(func() {
-			result, err := r.runOnNode(ctx, node.Name, testImage.String(), sidecarImage.String())
+			result, err := r.runOnNode(ctx, node.Name, podName, testImage.String(), sidecarImage.String())
 			resultCh <- rulesetRun{result: result, err: err, nodeName: node.Name}
 		})
 	}
@@ -223,10 +225,10 @@ func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
 		resultCount++
 		remaining := len(selectedNodes) - resultCount
 		if rulesetRun.err != nil {
-			r.Logger().Error(finishMsg, "ruleset_id", RulesetID, "node_name", rulesetRun.nodeName, "remaining_nodes", remaining, "error", rulesetRun.err)
+			r.Logger().Error(finishMsg, "node_name", rulesetRun.nodeName, "remaining_nodes", remaining, "error", rulesetRun.err)
 			err = errors.Join(err, fmt.Errorf("ruleset %s on node %s errored: %w", RulesetID, rulesetRun.nodeName, rulesetRun.err))
 		} else {
-			r.Logger().Info(finishMsg, "ruleset_id", RulesetID, "node_name", rulesetRun.nodeName, "remaining_nodes", remaining)
+			r.Logger().Info(finishMsg, "node_name", rulesetRun.nodeName, "remaining_nodes", remaining)
 			rulesetResults = append(rulesetResults, rulesetRun.result)
 		}
 	}
@@ -247,21 +249,19 @@ func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
 	return rulesetResults[0], nil
 }
 
-func (r *Ruleset) runOnNode(ctx context.Context, nodeName, testImage, sidecarImage string) (ruleset.RulesetResult, error) {
-	podName := fmt.Sprintf("test-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
-
+func (r *Ruleset) runOnNode(ctx context.Context, nodeName, podName, testImage, sidecarImage string) (ruleset.RulesetResult, error) {
 	defer func() {
-		timeoutCtx, cancel := context.WithTimeout(context.Background(), r.ClusterPodContext.WaitTimeout)
+		timeoutCtx, cancel := context.WithTimeout(context.Background(), r.PodContext.WaitTimeout)
 		defer cancel()
 
-		if err := r.ClusterPodContext.Delete(timeoutCtx, podName, gardenlinuxpod.SystemNamespace); err != nil {
+		if err := r.PodContext.Delete(timeoutCtx, podName, "kube-system"); err != nil {
 			r.Logger().Error(err.Error())
 		}
 	}()
 
 	additionalLabels := map[string]string{pod.LabelInstanceID: r.instanceID}
 
-	podExecutor, err := r.ClusterPodContext.Create(ctx, gardenlinuxpod.NewTestPod(podName, testImage, sidecarImage, nodeName, additionalLabels))
+	podExecutor, err := r.PodContext.Create(ctx, gardenlinuxpod.NewTestPod(podName, "kube-system", testImage, sidecarImage, nodeName, additionalLabels))
 	if err != nil {
 		return ruleset.RulesetResult{}, fmt.Errorf("failed to create test pod on node %s: %w", nodeName, err)
 	}
@@ -275,11 +275,11 @@ func (r *Ruleset) runOnNode(ctx context.Context, nodeName, testImage, sidecarIma
 }
 
 func (r *Ruleset) readReport(ctx context.Context, podExecutor pod.PodExecutor, podName string) (string, error) {
-	timeoutCtx, cancel := context.WithTimeout(ctx, r.ClusterPodContext.WaitTimeout)
+	timeoutCtx, cancel := context.WithTimeout(ctx, r.PodContext.WaitTimeout)
 	defer cancel()
 
 	var report string
-	if err := retry.Until(timeoutCtx, r.ClusterPodContext.WaitInterval, func(ctx context.Context) (bool, error) {
+	if err := retry.Until(timeoutCtx, r.PodContext.WaitInterval, func(ctx context.Context) (bool, error) {
 		terminated, err := r.testContainerTerminated(ctx, podName)
 		if err != nil {
 			return retry.MinorError(err)
@@ -288,7 +288,7 @@ func (r *Ruleset) readReport(ctx context.Context, podExecutor pod.PodExecutor, p
 			return retry.MinorError(fmt.Errorf("gardenlinux test container %q has not terminated yet", gardenlinuxpod.TestContainerName))
 		}
 
-		report, err = podExecutor.Execute(ctx, "/bin/busybox cat /tests/tests/output/test.xml", "")
+		report, err = podExecutor.Execute(ctx, fmt.Sprintf("/bin/busybox cat %s/%s", gardenlinuxpod.ReportMountPath, gardenlinuxpod.ReportFilename), "")
 		if err != nil {
 			return retry.MinorError(err)
 		}
@@ -302,7 +302,7 @@ func (r *Ruleset) readReport(ctx context.Context, podExecutor pod.PodExecutor, p
 
 func (r *Ruleset) testContainerTerminated(ctx context.Context, podName string) (bool, error) {
 	testPod := &corev1.Pod{}
-	if err := r.Client.Get(ctx, client.ObjectKey{Namespace: gardenlinuxpod.SystemNamespace, Name: podName}, testPod); err != nil {
+	if err := r.Client.Get(ctx, client.ObjectKey{Name: podName, Namespace: "kube-system"}, testPod); err != nil {
 		return false, err
 	}
 
