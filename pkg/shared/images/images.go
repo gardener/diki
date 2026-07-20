@@ -7,4 +7,6 @@ package images
 const (
 	// DikiOpsImageName is a constant for the name of the github.com/gardener/diki diki-ops image.
 	DikiOpsImageName = "diki-ops"
+	// GardenlinuxTestImageName is a constant for the name of the ghcr.io/gardenlinux test image.
+	GardenlinuxTestImageName = "gardenlinux-test"
 )

@@ -58,7 +58,7 @@ type SimplePodContext struct {
 	AdditionalPodLabels map[string]string
 	// WaitInterval is the time between wait API calls.
 	WaitInterval time.Duration
-	// WaitTimeout is the time waited for a pod to reach Running state or be deleted.
+	// WaitTimeout is the time waited for a pod to reach Running state.
 	WaitTimeout time.Duration
 }
 
@@ -252,6 +252,36 @@ func (spc *SimplePodContext) waitPodHealthy(ctx context.Context, name, namespace
 		}
 
 		return retry.Ok()
+	})
+}
+
+// WaitContainerTerminated waits for the container with the given name in the specified pod to reach a terminated state.
+func (spc *SimplePodContext) WaitContainerTerminated(ctx context.Context, name, namespace, containerName string) error {
+	timeoutCtx, cancel := context.WithTimeout(ctx, spc.WaitTimeout)
+	defer cancel()
+
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+
+	return retry.Until(timeoutCtx, spc.WaitInterval, func(ctx context.Context) (done bool, err error) {
+		if err := spc.client.Get(ctx, client.ObjectKeyFromObject(pod), pod); err != nil {
+			return retry.SevereError(err)
+		}
+
+		for _, status := range pod.Status.ContainerStatuses {
+			if status.Name == containerName {
+				if status.State.Terminated != nil {
+					return retry.Ok()
+				}
+				return retry.MinorError(fmt.Errorf("container %q of pod %s has not terminated yet", containerName, client.ObjectKeyFromObject(pod).String()))
+			}
+		}
+
+		return retry.MinorError(fmt.Errorf("container %q of pod %s not found", containerName, client.ObjectKeyFromObject(pod).String()))
 	})
 }
 

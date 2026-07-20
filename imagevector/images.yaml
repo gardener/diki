@@ -7,3 +7,6 @@ images:
 - name: diki-ops
   sourceRepository: github.com/gardener/diki
   repository: europe-docker.pkg.dev/gardener-project/releases/gardener/diki-ops
+- name: gardenlinux-test
+  sourceRepository: github.com/gardenlinux/gardenlinux
+  repository: ghcr.io/gardenlinux/test
