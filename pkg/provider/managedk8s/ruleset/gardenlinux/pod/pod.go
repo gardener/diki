@@ -37,7 +37,7 @@ const (
 	// ReportMountPath is the in-pod path of the shared report volume.
 	ReportMountPath = "/tests/tests/output"
 	// ReportFilename is the name of the generated JUnit XML report inside the pod.
-	ReportFilename = "test.xml"
+	ReportFilename = "report.xml"
 	// ReportSizeLimitKi is the size limit of the report volume in kibibytes.
 	ReportSizeLimitKi = 500
 
@@ -74,6 +74,7 @@ func NewTestPod(name, namespace, gardenlinuxTestImage, reportReaderImage, nodeNa
 			Labels:    labels,
 		},
 		Spec: corev1.PodSpec{
+			ActiveDeadlineSeconds:        ptr.To[int64](300),
 			AutomountServiceAccountToken: ptr.To(false),
 			SecurityContext: &corev1.PodSecurityContext{
 				// The FSGroup ensures that the written XML report is group-owned by 65532 - the reader will be able to get the report even if the "other" permission bits are dropped by the testing framework in a future release.
@@ -97,7 +98,7 @@ func NewTestPod(name, namespace, gardenlinuxTestImage, reportReaderImage, nodeNa
 						"-m",
 						"security_id",
 						"--junit-xml",
-						"output/test.xml",
+						"output/report.xml",
 						"--system-booted",
 						"--expected-users",
 						"gardener",
@@ -117,7 +118,7 @@ func NewTestPod(name, namespace, gardenlinuxTestImage, reportReaderImage, nodeNa
 					},
 					Args: []string{
 						"sleep",
-						"900",
+						"60",
 					},
 					SecurityContext: &corev1.SecurityContext{
 						Privileged:               ptr.To(false),

@@ -59,6 +59,7 @@ var _ = Describe("pod", func() {
 					},
 				},
 				Spec: corev1.PodSpec{
+					ActiveDeadlineSeconds:        ptr.To[int64](300),
 					AutomountServiceAccountToken: ptr.To(false),
 					NodeSelector:                 map[string]string{"kubernetes.io/hostname": nodeName},
 					SecurityContext: &corev1.PodSecurityContext{
@@ -81,7 +82,7 @@ var _ = Describe("pod", func() {
 								"-m",
 								"security_id",
 								"--junit-xml",
-								"output/test.xml",
+								"output/report.xml",
 								"--system-booted",
 								"--expected-users",
 								"gardener",
@@ -101,7 +102,7 @@ var _ = Describe("pod", func() {
 							},
 							Args: []string{
 								"sleep",
-								"900",
+								"60",
 							},
 							SecurityContext: &corev1.SecurityContext{
 								Privileged:               ptr.To(false),

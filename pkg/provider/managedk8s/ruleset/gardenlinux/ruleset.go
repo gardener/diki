@@ -12,13 +12,14 @@ import (
 	"log/slog"
 	"slices"
 	"sync"
+	"time"
 
 	"github.com/gardener/gardener/pkg/utils/retry"
 	"github.com/google/uuid"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/rest"
+	"k8s.io/component-base/version"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/imagevector"
@@ -44,6 +45,7 @@ var (
 	_ ruleset.Ruleset = &Ruleset{}
 	// SupportedVersions is a list of available versions for the Gardenlinux Ruleset.
 	// Versions are sorted from newest to oldest.
+	// TODO (georgibaltiev): Re-evaluate support for versions
 	SupportedVersions = []string{"2298.0.0", "2297.0.0"}
 )
 
@@ -138,10 +140,6 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.C
 func ValidateRulesetConfig(rulesetConfig config.RulesetConfig, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
-	if !slices.Contains(SupportedVersions, rulesetConfig.Version) {
-		allErrs = append(allErrs, field.NotSupported(fldPath.Child("version"), rulesetConfig.Version, SupportedVersions))
-	}
-
 	rulesetArgsByte, err := json.Marshal(rulesetConfig.Args)
 	if err != nil {
 		return append(allErrs, field.Invalid(fldPath.Child("args"), rulesetConfig.Args, err.Error()))
@@ -169,6 +167,11 @@ func (r *Ruleset) RunRule(_ context.Context, _ string) (rule.RuleResult, error) 
 
 // Run deploys the gardenlinux test Pod on every selected Node in parallel and merges the collected test results into a single RulesetResult.
 func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
+
+	if !slices.Contains(SupportedVersions, r.version) {
+		r.Logger().Warn("Ruleset version is not officially supported", "version", r.version, "supportedVersions", SupportedVersions)
+	}
+
 	testImage, err := imagevector.ImageVector().FindImage(images.GardenlinuxTestImageName)
 	if err != nil {
 		return ruleset.RulesetResult{}, fmt.Errorf("failed to find image version for %s: %w", images.GardenlinuxTestImageName, err)
@@ -179,6 +182,7 @@ func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
 	if err != nil {
 		return ruleset.RulesetResult{}, fmt.Errorf("failed to find image version for %s: %w", images.DikiOpsImageName, err)
 	}
+	sidecarImage.WithOptionalTag(version.Get().GitVersion)
 
 	nodes, err := kubeutils.GetNodes(ctx, r.Client, 300)
 	if err != nil {
@@ -251,7 +255,7 @@ func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
 
 func (r *Ruleset) runOnNode(ctx context.Context, nodeName, podName, testImage, sidecarImage string) (ruleset.RulesetResult, error) {
 	defer func() {
-		timeoutCtx, cancel := context.WithTimeout(context.Background(), r.PodContext.WaitTimeout)
+		timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
 
 		if err := r.PodContext.Delete(timeoutCtx, podName, "kube-system"); err != nil {
@@ -278,16 +282,16 @@ func (r *Ruleset) readReport(ctx context.Context, podExecutor pod.PodExecutor, p
 	timeoutCtx, cancel := context.WithTimeout(ctx, r.PodContext.WaitTimeout)
 	defer cancel()
 
-	var report string
-	if err := retry.Until(timeoutCtx, r.PodContext.WaitInterval, func(ctx context.Context) (bool, error) {
-		terminated, err := r.testContainerTerminated(ctx, podName)
-		if err != nil {
-			return retry.MinorError(err)
-		}
-		if !terminated {
-			return retry.MinorError(fmt.Errorf("gardenlinux test container %q has not terminated yet", gardenlinuxpod.TestContainerName))
-		}
+	if err := r.PodContext.WaitContainerTerminated(timeoutCtx, podName, "kube-system", gardenlinuxpod.TestContainerName); err != nil {
+		return "", fmt.Errorf("failed waiting for gardenlinux test container %q to terminate: %w", gardenlinuxpod.TestContainerName, err)
+	}
 
+	var (
+		report string
+		err    error
+	)
+
+	if err := retry.Until(timeoutCtx, r.PodContext.WaitInterval, func(ctx context.Context) (bool, error) {
 		report, err = podExecutor.Execute(ctx, fmt.Sprintf("/bin/busybox cat %s/%s", gardenlinuxpod.ReportMountPath, gardenlinuxpod.ReportFilename), "")
 		if err != nil {
 			return retry.MinorError(err)
@@ -298,21 +302,6 @@ func (r *Ruleset) readReport(ctx context.Context, podExecutor pod.PodExecutor, p
 	}
 
 	return report, nil
-}
-
-func (r *Ruleset) testContainerTerminated(ctx context.Context, podName string) (bool, error) {
-	testPod := &corev1.Pod{}
-	if err := r.Client.Get(ctx, client.ObjectKey{Name: podName, Namespace: "kube-system"}, testPod); err != nil {
-		return false, err
-	}
-
-	for _, status := range testPod.Status.ContainerStatuses {
-		if status.Name == gardenlinuxpod.TestContainerName {
-			return status.State.Terminated != nil, nil
-		}
-	}
-
-	return false, nil
 }
 
 // Logger returns the Ruleset's logger.
