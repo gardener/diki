@@ -10,7 +10,7 @@ require (
 	github.com/gardener/gardener v1.145.0
 	github.com/gardener/gardener-extension-shoot-lakom-service v0.26.0
 	github.com/gardener/gardener/pkg/apis v1.145.0
-	github.com/go-logr/logr v1.4.3
+	github.com/go-logr/logr v1.4.4
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo/v2 v2.32.0
 	github.com/onsi/gomega v1.42.1
