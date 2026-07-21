@@ -48,7 +48,7 @@ Do not set `securityContext.privileged` to `true` on any container.
 ### PSS-B004 - Capabilities (Baseline) <a id="PSS-B004"></a>
 
 #### Description
-Adding additional capabilities beyond those listed below must be disallowed. Allowed capabilities: `AUDIT_WRITE`, `CHOWN`, `DAC_OVERRIDE`, `FOWNER`, `FSETID`, `KILL`, `MKNOD`, `NET_BIND_SERVICE`, `SETFCAP`, `SETGID`, `SETPCAP`, `SETUID`, `SYS_CHROOT`.
+Adding additional capabilities beyond the following must be disallowed: `AUDIT_WRITE`, `CHOWN`, `DAC_OVERRIDE`, `FOWNER`, `FSETID`, `KILL`, `MKNOD`, `NET_BIND_SERVICE`, `SETFCAP`, `SETGID`, `SETPCAP`, `SETUID`, `SYS_CHROOT`.
 
 #### Fix
 Remove any capabilities from `securityContext.capabilities.add` that are not in the allowed set.

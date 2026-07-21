@@ -22,7 +22,7 @@ rules:
   severity: "HIGH"
 - id: PSS-B004
   name: "Capabilities (Baseline)"
-  description: "Adding additional capabilities beyond those listed below must be disallowed."
+  description: "Adding additional capabilities beyond the following must be disallowed: AUDIT_WRITE, CHOWN, DAC_OVERRIDE, FOWNER, FSETID, KILL, MKNOD, NET_BIND_SERVICE, SETFCAP, SETGID, SETPCAP, SETUID, SYS_CHROOT."
   severity: "HIGH"
 - id: PSS-B005
   name: "HostPath Volumes"
