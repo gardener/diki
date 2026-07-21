@@ -7,20 +7,15 @@ permissions:
 on:
   workflow_call:
     inputs:
-      component-descriptor:
+      version:
         type: string
         required: true
-        description: |
-          the OCM-Component-Descriptor from which to publish built artefacts
-  # Manual / ad‑hoc trigger
+        description: The released version (semver without v-prefix, e.g. 0.x.0)
   workflow_dispatch:
     inputs:
-      component-descriptor:
-        description: |
-          The Component-Descriptor from which to read the artefact-digests
-          Hint: component-descriptor can be retrieved, for example:
-          - as (GitHub) release-asset from existing releases
-          - as GitHub-Actions-Artifact (also from non-release-builds)
+      version:
+        description: 'The released version (semver without v-prefix, e.g. 0.x.0)'
+        required: false
         type: string
       dry_run:
         description: "Dry run: disable external actions (no uploads/dispatches)"
@@ -48,41 +43,34 @@ jobs:
             homebrew-tap
             chocolatey-packages
 
-      - uses: gardener/cc-utils/.github/actions/trusted-checkout@v1
-      - name: export-version-from-input
-        if: ${{ inputs.version != '' && inputs.component-descriptor == '' }}
-        run: |
-          set -eu
-          echo "version=${{ inputs.version }}" >> ${GITHUB_ENV}
-      - name: Read-Digests
-        if: ${{ inputs.component-descriptor != '' }}
+      # ───── Compute SHA256 digests from release assets ───────────────────────
+      - name: Compute SHA256 digests from release assets
+        if: ${{ inputs.version != '' }}
         run: |
           set -euo pipefail
+          tag="v${{ inputs.version }}"
+          base_url="https://github.com/${{ github.repository }}/releases/download/${tag}"
 
-          cat <<"EOF" > /tmp/component-descriptor.yaml
-          ${{ inputs.component-descriptor }}
-          EOF
+          compute_sha() {
+            curl -fsSL "${base_url}/$1" | sha256sum | cut -d' ' -f1
+          }
 
-          source .github/workflows/export-digests-from-component-descriptor.sh \
-            /tmp/component-descriptor.yaml
-
-          echo "DARWIN_SHA_AMD64=${DARWIN_SHA_AMD64}" >> "${GITHUB_ENV}"
-          echo "DARWIN_SHA_ARM64=${DARWIN_SHA_ARM64}" >> "${GITHUB_ENV}"
-          echo "LINUX_SHA_AMD64=${LINUX_SHA_AMD64}" >> "${GITHUB_ENV}"
-          echo "LINUX_SHA_ARM64=${LINUX_SHA_ARM64}" >> "${GITHUB_ENV}"
-          echo "WINDOWS_SHA=${WINDOWS_SHA}" >> "${GITHUB_ENV}"
-
-          version="$(cat /tmp/component-descriptor.yaml | \
-            yq '.component.version'
-          )"
-          echo "version=${version}" >> "${GITHUB_ENV}"
+          {
+            echo "version=${tag}"
+            echo "DARWIN_SHA_AMD64=$(compute_sha diki-darwin-amd64)"
+            echo "DARWIN_SHA_ARM64=$(compute_sha diki-darwin-arm64)"
+            echo "LINUX_SHA_AMD64=$(compute_sha diki-linux-amd64)"
+            echo "LINUX_SHA_ARM64=$(compute_sha diki-linux-arm64)"
+            echo "WINDOWS_SHA=$(compute_sha diki-windows-amd64.exe)"
+          } >> "$GITHUB_ENV"
 
       - name: Use dummy hashes (skip‑build)
-        if: ${{ inputs.component-descriptor == '' }}
+        if: ${{ inputs.version == '' }}
         run: |
           set -euo pipefail
           dummy=0000000000000000000000000000000000000000000000000000000000000000
           printf '%s\n' \
+            "version=v0.0.0-dummy" \
             "DARWIN_SHA_AMD64=$dummy" \
             "DARWIN_SHA_ARM64=$dummy" \
             "LINUX_SHA_AMD64=$dummy"  \
