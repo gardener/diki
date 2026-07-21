@@ -1,0 +1,83 @@
+# SPDX-FileCopyrightText: 2026 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+ruleset:
+  id: pod-security-standards
+  name: "Pod Security Standards"
+  version: "v0.1.0"
+rules:
+# Baseline Profile
+- id: PSS-B001
+  name: "HostProcess"
+  description: "Windows Pods offer the ability to run HostProcess containers which enables privileged access to the Windows host machine. Privileged access to the host is disallowed in the Baseline policy."
+  severity: "HIGH"
+- id: PSS-B002
+  name: "Host Namespaces"
+  description: "Sharing the host namespaces must be disallowed."
+  severity: "HIGH"
+- id: PSS-B003
+  name: "Privileged Containers"
+  description: "Privileged Pods disable most security mechanisms and must be disallowed."
+  severity: "HIGH"
+- id: PSS-B004
+  name: "Capabilities (Baseline)"
+  description: "Adding additional capabilities beyond the following must be disallowed: AUDIT_WRITE, CHOWN, DAC_OVERRIDE, FOWNER, FSETID, KILL, MKNOD, NET_BIND_SERVICE, SETFCAP, SETGID, SETPCAP, SETUID, SYS_CHROOT."
+  severity: "HIGH"
+- id: PSS-B005
+  name: "HostPath Volumes"
+  description: "HostPath volumes must be forbidden."
+  severity: "HIGH"
+- id: PSS-B006
+  name: "Host Ports"
+  description: "HostPorts should be disallowed entirely (recommended) or restricted to a known list."
+  severity: "HIGH"
+- id: PSS-B007
+  name: "Host Probes / Lifecycle Hooks"
+  description: "The host field in probes and lifecycle hooks must be disallowed."
+  severity: "HIGH"
+- id: PSS-B008
+  name: "AppArmor"
+  description: "On supported hosts, the RuntimeDefault AppArmor profile is applied by default. The Baseline policy should prevent overriding or disabling the default AppArmor profile, or restrict overrides to an allowed set of profiles."
+  severity: "HIGH"
+- id: PSS-B009
+  name: "SELinux"
+  description: "Setting the SELinux type is restricted, and setting a custom SELinux user or role option is forbidden."
+  severity: "HIGH"
+- id: PSS-B010
+  name: "/proc Mount Type"
+  description: "The default /proc masks are set up to reduce attack surface, and should be required."
+  severity: "HIGH"
+- id: PSS-B011
+  name: "Seccomp (Baseline)"
+  description: "Seccomp profile must not be explicitly set to Unconfined."
+  severity: "HIGH"
+- id: PSS-B012
+  name: "Sysctls"
+  description: "Sysctls can disable security mechanisms or affect all containers on a host, and should be disallowed except for an allowed \"safe\" subset. A sysctl is considered safe if it is namespaced in the container or the Pod, and it is isolated from other Pods or processes on the same Node."
+  severity: "HIGH"
+# Restricted Profile
+- id: PSS-R001
+  name: "Volume Types"
+  description: "The Restricted policy only permits the following volume types: configMap, csi, downwardAPI, emptyDir, ephemeral, persistentVolumeClaim, projected, secret."
+  severity: "MEDIUM"
+- id: PSS-R002
+  name: "Privilege Escalation"
+  description: "Privilege escalation (such as via set-user-ID or set-group-ID file mode) should not be allowed. This is Linux only policy in v1.25+."
+  severity: "MEDIUM"
+- id: PSS-R003
+  name: "Running as Non-root"
+  description: "Containers must be required to run as non-root users."
+  severity: "MEDIUM"
+- id: PSS-R004
+  name: "Running as Non-root user"
+  description: "Containers must not set runAsUser to 0."
+  severity: "MEDIUM"
+- id: PSS-R005
+  name: "Seccomp (Restricted)"
+  description: "Seccomp profile must be explicitly set to RuntimeDefault or Localhost. Unconfined profiles and the absence of a profile are prohibited."
+  severity: "MEDIUM"
+- id: PSS-R006
+  name: "Capabilities (Restricted)"
+  description: "Containers must drop ALL capabilities, and are only permitted to add back NET_BIND_SERVICE."
+  severity: "MEDIUM"
