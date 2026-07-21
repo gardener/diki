@@ -333,7 +333,7 @@ func (r *Rule242451) checkPods(
 			}
 
 			for dir := range pkiDirs {
-				dirStats, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`stat -Lc "%%a%[1]s%%u%[1]s%%g%[1]s%%F%[1]s%%n" %s`, delimiter, dir))
+				dirStats, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`stat -Lc "%%a%[1]s%%u%[1]s%%g%[1]s%%F%[1]s%%n" %s`, delimiter, intutils.ShellEscape(dir)))
 				if err != nil {
 					checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
 					continue
@@ -458,7 +458,7 @@ func (r *Rule242451) checkKubelet(
 
 	for dir := range pkiDirs {
 		delimiter := "\t"
-		dirStats, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`stat -Lc "%%a%[1]s%%u%[1]s%%g%[1]s%%F%[1]s%%n" %s`, delimiter, dir))
+		dirStats, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf(`stat -Lc "%%a%[1]s%%u%[1]s%%g%[1]s%%F%[1]s%%n" %s`, delimiter, intutils.ShellEscape(dir)))
 
 		if err != nil {
 			checkResults = append(checkResults, rule.ErroredCheckResult(err.Error(), execPodTarget))
