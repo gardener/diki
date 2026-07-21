@@ -21,7 +21,7 @@ require (
 	k8s.io/apiserver v0.36.2
 	k8s.io/client-go v0.36.2
 	k8s.io/component-base v0.36.2
-	k8s.io/kubectl v0.36.1
+	k8s.io/kubectl v0.36.2
 	k8s.io/pod-security-admission v0.36.2
 	k8s.io/utils v0.0.0-20260707023825-cf1189d6abe3
 	sigs.k8s.io/controller-runtime v0.24.1
