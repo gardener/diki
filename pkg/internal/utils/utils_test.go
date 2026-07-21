@@ -21,6 +21,38 @@ import (
 )
 
 var _ = Describe("utils", func() {
+	Describe("#ShellEscape", func() {
+		DescribeTable("#MatchCases",
+			func(input, expected string) {
+				Expect(utils.ShellEscape(input)).To(Equal(expected))
+			},
+			Entry("should wrap simple path in single quotes",
+				"/var/lib/kubelet/pki", "'/var/lib/kubelet/pki'"),
+			Entry("should escape embedded single quotes",
+				"it's a path", "'it'\\''s a path'"),
+			Entry("should neutralize semicolons",
+				"/tmp/bar; id", "'/tmp/bar; id'"),
+			Entry("should neutralize command substitution",
+				"/tmp/$(whoami)/foo", "'/tmp/$(whoami)/foo'"),
+			Entry("should neutralize backtick command substitution",
+				"/tmp/`id`/foo", "'/tmp/`id`/foo'"),
+			Entry("should neutralize pipe and redirection",
+				"/tmp/foo | cat /etc/passwd > /tmp/out", "'/tmp/foo | cat /etc/passwd > /tmp/out'"),
+			Entry("should handle spaces in path",
+				"/var/lib/my dir/file.crt", "'/var/lib/my dir/file.crt'"),
+			Entry("should handle empty string",
+				"", "''"),
+			Entry("should neutralize embedded newlines",
+				"/tmp/foo\nid", "'/tmp/foo\nid'"),
+			Entry("should preserve trailing newline",
+				"/etc/systemd/system/kubelet.service\n", "'/etc/systemd/system/kubelet.service\n'"),
+			Entry("should preserve surrounding whitespace",
+				"  /tmp/foo  ", "'  /tmp/foo  '"),
+			Entry("should handle multiple single quotes",
+				"it's the cat's meow", "'it'\\''s the cat'\\''s meow'"),
+		)
+	})
+
 	Describe("#NewFileStats", func() {
 
 		DescribeTable("#MatchCases",

@@ -32,6 +32,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	intutils "github.com/gardener/diki/pkg/internal/utils"
 	"github.com/gardener/diki/pkg/kubernetes/config"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	"github.com/gardener/diki/pkg/rule"
@@ -524,7 +525,7 @@ func GetKubeletCommand(ctx context.Context, podExecutor pod.PodExecutor) (string
 		return "", errors.New("kubelet service is not running")
 	}
 
-	rawKubeletCommand, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf("ps --no-headers -p %s -o command", kubeletPID))
+	rawKubeletCommand, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf("ps --no-headers -p %s -o command", intutils.ShellEscape(kubeletPID)))
 	if err != nil {
 		return "", err
 	}
@@ -584,7 +585,7 @@ func GetKubeletConfig(ctx context.Context, podExecutor pod.PodExecutor, rawKubel
 	}
 	configPath := configPathSlice[0]
 
-	rawKubeletConfig, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf("cat %s", configPath))
+	rawKubeletConfig, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf("cat %s", intutils.ShellEscape(configPath)))
 	if err != nil {
 		return &config.KubeletConfig{}, err
 	}
@@ -605,7 +606,7 @@ func GetKubeletConfig(ctx context.Context, podExecutor pod.PodExecutor, rawKubel
 // GetKubeProxyConfig returns the kube-proxy config specified by it's path
 func GetKubeProxyConfig(ctx context.Context, podExecutor pod.PodExecutor, kubeProxyPath string) (*config.KubeProxyConfig, error) {
 
-	rawKubeProxyConfig, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf("cat %s", kubeProxyPath))
+	rawKubeProxyConfig, err := podExecutor.Execute(ctx, "/bin/sh", fmt.Sprintf("cat %s", intutils.ShellEscape(kubeProxyPath)))
 	if err != nil {
 		return &config.KubeProxyConfig{}, err
 	}
