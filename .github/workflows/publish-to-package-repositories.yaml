@@ -10,11 +10,11 @@ on:
       version:
         type: string
         required: true
-        description: The released version (semver without v-prefix, e.g. 0.x.0)
+        description: The released version (e.g. v0.x.0)
   workflow_dispatch:
     inputs:
       version:
-        description: 'The released version (semver without v-prefix, e.g. 0.x.0)'
+        description: 'The released version (e.g. v0.x.0)'
         required: false
         type: string
       dry_run:
@@ -48,7 +48,7 @@ jobs:
         if: ${{ inputs.version != '' }}
         run: |
           set -euo pipefail
-          tag="v${{ inputs.version }}"
+          tag="${{ inputs.version }}"
           base_url="https://github.com/${{ github.repository }}/releases/download/${tag}"
 
           compute_sha() {
@@ -78,7 +78,7 @@ jobs:
             "WINDOWS_SHA=$dummy" >> "$GITHUB_ENV"
 
       # ───── Homebrew tap dispatch ────────────────────────────────────────────
-      - name: Send update to ${{ github.repository_owner}}/homebrew-tap
+      - name: Send update to ${{ github.repository_owner }}/homebrew-tap
         if: ${{ inputs.dry_run == false }}
         run: |
           set -euo pipefail
