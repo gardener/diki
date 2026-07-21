@@ -2,12 +2,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-ENSURE_GARDENER_MOD := $(shell go get github.com/gardener/gardener@$$(go list -m -f "{{.Version}}" github.com/gardener/gardener))
-GARDENER_HACK_DIR   := $(shell go list -m -f "{{.Dir}}" github.com/gardener/gardener)/hack
-REPO_ROOT           := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-HACK_DIR            := $(REPO_ROOT)/hack
-VERSION             := $(shell cat "$(REPO_ROOT)/VERSION")
-EFFECTIVE_VERSION   := $(VERSION)-$(shell git rev-parse HEAD)
+ENSURE_GARDENER_MOD       := $(shell go get github.com/gardener/gardener@$$(go list -m -f "{{.Version}}" github.com/gardener/gardener))
+ENSURE_GARDENER_TOOLS_MOD := $(shell go get github.com/gardener/gardener/hack/tools@$$(go list -m -f "{{.Version}}" github.com/gardener/gardener/hack/tools))
+GARDENER_HACK_DIR         := $(shell go list -m -f "{{.Dir}}" github.com/gardener/gardener)/hack
+REPO_ROOT                 := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+HACK_DIR                  := $(REPO_ROOT)/hack
+VERSION                   := $(shell cat "$(REPO_ROOT)/VERSION")
+EFFECTIVE_VERSION         := $(VERSION)-$(shell git rev-parse HEAD)
 
 
 LD_FLAGS := "-w $(shell EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) bash $(HACK_DIR)/get-build-ld-flags.sh)"
