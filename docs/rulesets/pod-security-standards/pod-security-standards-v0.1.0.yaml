@@ -9,8 +9,8 @@ ruleset:
 rules:
 # Baseline Profile
 - id: PSS-B001
-  name: "HostProcess"
-  description: "Windows Pods offer the ability to run HostProcess containers which enables privileged access to the Windows host machine. Privileged access to the host is disallowed in the Baseline policy."
+  name: "Host Process"
+  description: "Windows Pods offer the ability to run Host Process containers which enables privileged access to the Windows host machine. Privileged access to the host is disallowed in the Baseline policy."
   severity: "MEDIUM"
 - id: PSS-B002
   name: "Host Namespaces"
@@ -25,12 +25,12 @@ rules:
   description: "Adding additional capabilities beyond the following must be disallowed: AUDIT_WRITE, CHOWN, DAC_OVERRIDE, FOWNER, FSETID, KILL, MKNOD, NET_BIND_SERVICE, SETFCAP, SETGID, SETPCAP, SETUID, SYS_CHROOT."
   severity: "MEDIUM"
 - id: PSS-B005
-  name: "HostPath Volumes"
-  description: "HostPath volumes must be forbidden."
+  name: "Host Path Volumes"
+  description: "Host Path volumes must be forbidden."
   severity: "MEDIUM"
 - id: PSS-B006
   name: "Host Ports"
-  description: "HostPorts should be disallowed entirely (recommended) or restricted to a known list."
+  description: "Host Ports should be disallowed entirely (recommended) or restricted to a known list."
   severity: "MEDIUM"
 - id: PSS-B007
   name: "Host Probes / Lifecycle Hooks"

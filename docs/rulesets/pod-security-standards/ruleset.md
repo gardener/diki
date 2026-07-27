@@ -15,10 +15,10 @@ The Baseline profile prevents known privilege escalations. Targeted at applicati
 
 ---
 
-### PSS-B001 - HostProcess <a id="PSS-B001"></a>
+### PSS-B001 - Host Process <a id="PSS-B001"></a>
 
 #### Description
-Windows Pods offer the ability to run HostProcess containers which enables privileged access to the Windows host machine. Privileged access to the host is disallowed in the Baseline policy.
+Windows Pods offer the ability to run Host Process containers which enables privileged access to the Windows host machine. Privileged access to the host is disallowed in the Baseline policy.
 
 #### Fix
 Do not set `securityContext.windowsOptions.hostProcess` to `true` at the pod or container level.
@@ -55,10 +55,10 @@ Remove any capabilities from `securityContext.capabilities.add` that are not in 
 
 ---
 
-### PSS-B005 - HostPath Volumes <a id="PSS-B005"></a>
+### PSS-B005 - Host Path Volumes <a id="PSS-B005"></a>
 
 #### Description
-HostPath volumes must be forbidden.
+Host Path volumes must be forbidden.
 
 #### Fix
 Remove any `Volumes` of type `hostPath` from the `Pod` spec.
@@ -68,7 +68,7 @@ Remove any `Volumes` of type `hostPath` from the `Pod` spec.
 ### PSS-B006 - Host Ports <a id="PSS-B006"></a>
 
 #### Description
-HostPorts should be disallowed entirely (recommended) or restricted to a known list.
+Host Ports should be disallowed entirely (recommended) or restricted to a known list.
 
 #### Fix
 Remove `hostPort` from container port definitions or set it to `0`.
