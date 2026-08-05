@@ -16,6 +16,7 @@ import (
 
 	"github.com/gardener/gardener/pkg/utils/retry"
 	"github.com/google/uuid"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/rest"
@@ -26,6 +27,7 @@ import (
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
+	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/gardenlinux/parser"
 	gardenlinuxpod "github.com/gardener/diki/pkg/provider/managedk8s/ruleset/gardenlinux/pod"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
@@ -213,7 +215,7 @@ func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
 	for _, node := range selectedNodes {
 		podName := fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
 		wg.Go(func() {
-			result, err := r.runOnNode(ctx, node.Name, podName, testImage.String(), sidecarImage.String())
+			result, err := r.runOnNode(ctx, podName, testImage.String(), sidecarImage.String(), node)
 			resultCh <- rulesetRun{result: result, err: err, nodeName: node.Name}
 		})
 	}
@@ -246,14 +248,14 @@ func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
 		return ruleset.RulesetResult{}, err
 	}
 
-	// TODO (georgibaltiev): return a merged RulesetResult, based on the gathered results from the slices
 	if len(rulesetResults) == 0 {
 		return ruleset.RulesetResult{}, nil
 	}
-	return rulesetResults[0], nil
+
+	return parser.MergeRulesetResults(rulesetResults), nil
 }
 
-func (r *Ruleset) runOnNode(ctx context.Context, nodeName, podName, testImage, sidecarImage string) (ruleset.RulesetResult, error) {
+func (r *Ruleset) runOnNode(ctx context.Context, podName, testImage, sidecarImage string, node corev1.Node) (ruleset.RulesetResult, error) {
 	defer func() {
 		timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
@@ -265,17 +267,25 @@ func (r *Ruleset) runOnNode(ctx context.Context, nodeName, podName, testImage, s
 
 	additionalLabels := map[string]string{pod.LabelInstanceID: r.instanceID}
 
-	podExecutor, err := r.PodContext.Create(ctx, gardenlinuxpod.NewTestPod(podName, "kube-system", testImage, sidecarImage, nodeName, additionalLabels))
+	podExecutor, err := r.PodContext.Create(ctx, gardenlinuxpod.NewTestPod(podName, "kube-system", testImage, sidecarImage, node.Name, additionalLabels))
 	if err != nil {
-		return ruleset.RulesetResult{}, fmt.Errorf("failed to create test pod on node %s: %w", nodeName, err)
+		return ruleset.RulesetResult{}, fmt.Errorf("failed to create test pod on node %s: %w", node.Name, err)
 	}
 
-	// TODO (georgibaltiev): Add parsing logic for the report result. Remove the currently defaulted empty RuleResult
-	if _, err = r.readReport(ctx, podExecutor, podName); err != nil {
-		return ruleset.RulesetResult{}, fmt.Errorf("failed to read test report on node %s: %w", nodeName, err)
+	report, err := r.readReport(ctx, podExecutor, podName)
+	if err != nil {
+		return ruleset.RulesetResult{}, fmt.Errorf("failed to read test report on node %s: %w", node.Name, err)
 	}
 
-	return ruleset.RulesetResult{}, nil
+	result, err := parser.ParseXMLReport(report, node.ObjectMeta)
+	if err != nil {
+		return ruleset.RulesetResult{}, fmt.Errorf("failed to parse test report on node %s: %w", node.Name, err)
+	}
+
+	result.RulesetID = r.ID()
+	result.RulesetName = r.Name()
+
+	return result, nil
 }
 
 func (r *Ruleset) readReport(ctx context.Context, podExecutor pod.PodExecutor, podName string) (string, error) {
