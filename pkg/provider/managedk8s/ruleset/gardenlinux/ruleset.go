@@ -7,7 +7,6 @@ package gardenlinux
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"slices"
@@ -232,19 +231,20 @@ func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
 		remaining := len(selectedNodes) - resultCount
 		if rulesetRun.err != nil {
 			r.Logger().Error(finishMsg, "node_name", rulesetRun.nodeName, "remaining_nodes", remaining, "error", rulesetRun.err)
-			err = errors.Join(err, fmt.Errorf("ruleset %s on node %s errored: %w", RulesetID, rulesetRun.nodeName, rulesetRun.err))
+			// TODO (georgibaltiev): Supress errors for now, in order to avoid a single point of failure while running the tests on a large sample of nodes and workers.
+			// err = errors.Join(err, fmt.Errorf("ruleset %s on node %s errored: %w", RulesetID, rulesetRun.nodeName, rulesetRun.err))
 		} else {
 			r.Logger().Info(finishMsg, "node_name", rulesetRun.nodeName, "remaining_nodes", remaining)
 			rulesetResults = append(rulesetResults, rulesetRun.result)
 		}
 	}
 
-	if err := ctx.Err(); err != nil {
-		return ruleset.RulesetResult{}, err
-	}
+	// TODO (georgibaltiev): Uncomment once error handling has been resolved.
+	// if err != nil {
+	// 	return ruleset.RulesetResult{}, err
+	// }
 
-	// TODO: maybe return both result and err
-	if err != nil {
+	if err = ctx.Err(); err != nil {
 		return ruleset.RulesetResult{}, err
 	}
 
@@ -269,9 +269,7 @@ func (r *Ruleset) runOnNode(ctx context.Context, podName, testImage, sidecarImag
 
 	podExecutor, err := r.PodContext.Create(ctx, gardenlinuxpod.NewTestPod(podName, "kube-system", testImage, sidecarImage, node.Name, additionalLabels))
 	if err != nil {
-		// TODO (georgibaltiev): Address with an appropriate warning in the report failed creations of pods
-		r.Logger().Warn("failed to create a testing pod", "node_name", node.Name)
-		return ruleset.RulesetResult{}, nil
+		return ruleset.RulesetResult{}, fmt.Errorf("failed to create test pod on node %s: %w", node.Name, err)
 	}
 
 	rulesetResultString, err := r.readReport(ctx, podExecutor, podName)
