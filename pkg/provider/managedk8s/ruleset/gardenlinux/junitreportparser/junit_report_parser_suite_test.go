@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package parser_test
+package junitreportparser_test
 
 import (
 	"testing"
@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestParser(t *testing.T) {
+func TestJUnitReportParser(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Parser Test Suite")
+	RunSpecs(t, "JUnit Test Parser Suite")
 }

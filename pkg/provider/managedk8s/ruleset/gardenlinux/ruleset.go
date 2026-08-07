@@ -27,7 +27,7 @@ import (
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
-	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/gardenlinux/parser"
+	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/gardenlinux/junitreportparser"
 	gardenlinuxpod "github.com/gardener/diki/pkg/provider/managedk8s/ruleset/gardenlinux/pod"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
@@ -215,7 +215,7 @@ func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
 	for _, node := range selectedNodes {
 		podName := fmt.Sprintf("diki-%s-%s", r.ID(), sharedrules.Generator.Generate(10))
 		wg.Go(func() {
-			result, err := r.runOnNode(ctx, podName, testImage.String(), sidecarImage.String(), node)
+			result, err := r.runOnNode(ctx, podName, testImage.String(), sidecarImage.String(), &node)
 			resultCh <- rulesetRun{result: result, err: err, nodeName: node.Name}
 		})
 	}
@@ -252,10 +252,10 @@ func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
 		return ruleset.RulesetResult{}, nil
 	}
 
-	return parser.MergeRulesetResults(rulesetResults), nil
+	return junitreportparser.MergeRulesetResults(rulesetResults), nil
 }
 
-func (r *Ruleset) runOnNode(ctx context.Context, podName, testImage, sidecarImage string, node corev1.Node) (ruleset.RulesetResult, error) {
+func (r *Ruleset) runOnNode(ctx context.Context, podName, testImage, sidecarImage string, node *corev1.Node) (ruleset.RulesetResult, error) {
 	defer func() {
 		timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
@@ -269,23 +269,26 @@ func (r *Ruleset) runOnNode(ctx context.Context, podName, testImage, sidecarImag
 
 	podExecutor, err := r.PodContext.Create(ctx, gardenlinuxpod.NewTestPod(podName, "kube-system", testImage, sidecarImage, node.Name, additionalLabels))
 	if err != nil {
-		return ruleset.RulesetResult{}, fmt.Errorf("failed to create test pod on node %s: %w", node.Name, err)
+		// TODO (georgibaltiev): Address with an appropriate warning in the report failed creations of pods
+		r.Logger().Warn("failed to create a testing pod", "node_name", node.Name)
+		return ruleset.RulesetResult{}, nil
 	}
 
-	report, err := r.readReport(ctx, podExecutor, podName)
+	rulesetResultString, err := r.readReport(ctx, podExecutor, podName)
 	if err != nil {
 		return ruleset.RulesetResult{}, fmt.Errorf("failed to read test report on node %s: %w", node.Name, err)
 	}
 
-	result, err := parser.ParseXMLReport(report, node.ObjectMeta)
+	rulesetResult, err := junitreportparser.ParseXMLReport(rulesetResultString, node)
 	if err != nil {
 		return ruleset.RulesetResult{}, fmt.Errorf("failed to parse test report on node %s: %w", node.Name, err)
 	}
 
-	result.RulesetID = r.ID()
-	result.RulesetName = r.Name()
+	rulesetResult.RulesetID = r.ID()
+	rulesetResult.RulesetName = r.Name()
+	rulesetResult.RulesetVersion = r.Version()
 
-	return result, nil
+	return rulesetResult, nil
 }
 
 func (r *Ruleset) readReport(ctx context.Context, podExecutor pod.PodExecutor, podName string) (string, error) {
