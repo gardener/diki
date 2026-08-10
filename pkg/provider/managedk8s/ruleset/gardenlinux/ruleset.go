@@ -231,7 +231,7 @@ func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
 		remaining := len(selectedNodes) - resultCount
 		if rulesetRun.err != nil {
 			r.Logger().Error(finishMsg, "node_name", rulesetRun.nodeName, "remaining_nodes", remaining, "error", rulesetRun.err)
-			// TODO (georgibaltiev): Supress errors for now, in order to avoid a single point of failure while running the tests on a large sample of nodes and workers.
+			// TODO (georgibaltiev): Suppress errors for now, in order to avoid a single point of failure while running the tests on a large sample of nodes and workers.
 			// err = errors.Join(err, fmt.Errorf("ruleset %s on node %s errored: %w", RulesetID, rulesetRun.nodeName, rulesetRun.err))
 		} else {
 			r.Logger().Info(finishMsg, "node_name", rulesetRun.nodeName, "remaining_nodes", remaining)

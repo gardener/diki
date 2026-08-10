@@ -7,6 +7,7 @@ package junitreportparser
 import (
 	"encoding/xml"
 	"fmt"
+	"maps"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -56,7 +57,12 @@ func ParseXMLReport(xmlContent string, node *corev1.Node) (ruleset.RulesetResult
 		}
 
 		if idx, ok := ruleIndex[props.securityID]; ok {
-			result.RuleResults[idx].CheckResults = append(result.RuleResults[idx].CheckResults, check)
+			// A single report may contain multiple testcases sharing the same security_id
+			// that render to an identical check result. Deduplicate them so a rule does not
+			// accumulate redundant checks (and, downstream, duplicated node targets).
+			if !containsCheckResult(result.RuleResults[idx].CheckResults, check) {
+				result.RuleResults[idx].CheckResults = append(result.RuleResults[idx].CheckResults, check)
+			}
 			continue
 		}
 
@@ -127,12 +133,16 @@ func splitDocstring(docstring string) (ruleName, checkDescription *string) {
 
 	// The docstring on each testcase is formatted in the following way:
 	// <Reference to the ID> \n\n <Name of the rule, mapped to the ID> \n\n <Description of the check, which is being performed (could be more than one per rule)>
-	// We only require the name and the description of the check.
-	if len(paragraphs) == 3 {
+	// The check description is optional, so a docstring may consist of only the reference and the rule name.
+	// We only require the name and, when present, the description of the check.
+	switch len(paragraphs) {
+	case 2:
+		return paragraphs[1], nil
+	case 3:
 		return paragraphs[1], paragraphs[2]
+	default:
+		return nil, nil
 	}
-
-	return nil, nil
 }
 
 func splitParagraphsByNewlines(s string) []*string {
@@ -159,6 +169,16 @@ func composeCheckMessage(checkDescription, statusMessage *string) string {
 	}
 
 	return strings.Join(parts, " - ")
+}
+
+// containsCheckResult reports whether checks already holds a check result equal to target.
+func containsCheckResult(checks []rule.CheckResult, target rule.CheckResult) bool {
+	for _, c := range checks {
+		if c.Status == target.Status && c.Message == target.Message && maps.Equal(c.Target, target.Target) {
+			return true
+		}
+	}
+	return false
 }
 
 // MergeRulesetResults collapses multiple RulesetResults (typically one per node)

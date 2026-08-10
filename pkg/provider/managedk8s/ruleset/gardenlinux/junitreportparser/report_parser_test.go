@@ -157,9 +157,22 @@ var _ = Describe("ParseXMLReport", func() {
 		Entry("falls back to the classname when the docstring yields no rule name", ``, func(rr rule.RuleResult) {
 			Expect(rr.RuleName).To(Equal("C"))
 		}),
-		Entry("falls back to the classname when the docstring has fewer than three paragraphs",
+		Entry("derives the RuleName from a two-paragraph docstring with no check description",
 			`<properties>
 				<property name="docstring" value="Ref: Ref-1&#10;&#10;My Rule Name"/>
+			</properties>`,
+			func(rr rule.RuleResult) {
+				Expect(rr).To(Equal(rule.RuleResult{
+					RuleID:   "SEC",
+					RuleName: "My Rule Name",
+					CheckResults: []rule.CheckResult{
+						{Status: rule.Passed, Message: "", Target: nodeTarget},
+					},
+				}))
+			}),
+		Entry("falls back to the classname when the docstring has fewer than two paragraphs",
+			`<properties>
+				<property name="docstring" value="Ref: Ref-1"/>
 			</properties>`,
 			func(rr rule.RuleResult) {
 				Expect(rr).To(Equal(rule.RuleResult{
@@ -225,6 +238,42 @@ var _ = Describe("ParseXMLReport", func() {
 					{
 						Status:  rule.Failed,
 						Message: "second check - bad",
+						Target:  nodeTarget,
+					},
+				},
+			},
+		}))
+	})
+
+	It("should deduplicate testcases sharing the same security_id that render to an identical check", func() {
+		xml := `<testsuites name="root">
+	<testsuite name="s">
+		<testcase name="a" classname="C">
+			<properties>
+				<property name="security_id" value="SEC-1"/>
+				<property name="docstring" value="Ref 1&#10;&#10;Rule Name C&#10;&#10;same check"/>
+			</properties>
+		</testcase>
+		<testcase name="b" classname="C">
+			<properties>
+				<property name="security_id" value="SEC-1"/>
+				<property name="docstring" value="Ref 1&#10;&#10;Rule Name C&#10;&#10;same check"/>
+			</properties>
+		</testcase>
+	</testsuite>
+</testsuites>`
+
+		result, err := junitreportparser.ParseXMLReport(xml, node)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(result.RuleResults).To(Equal([]rule.RuleResult{
+			{
+				RuleID:   "SEC-1",
+				RuleName: "Rule Name C",
+				CheckResults: []rule.CheckResult{
+					{
+						Status:  rule.Passed,
+						Message: "same check",
 						Target:  nodeTarget,
 					},
 				},
