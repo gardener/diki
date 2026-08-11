@@ -33,6 +33,8 @@ import (
 	"github.com/gardener/diki/pkg/shared/images"
 	disaoption "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/option"
 	sharedrules "github.com/gardener/diki/pkg/shared/ruleset/disak8sstig/rules"
+
+	imagevectorutils "github.com/gardener/gardener/pkg/utils/imagevector"
 )
 
 const (
@@ -47,7 +49,7 @@ var (
 	// SupportedVersions is a list of available versions for the Gardenlinux Ruleset.
 	// Versions are sorted from newest to oldest.
 	// TODO (georgibaltiev): Re-evaluate support for versions
-	SupportedVersions = []string{"2298.0.0", "2297.0.0"}
+	SupportedVersions = []string{"2324.0.0", "2323.0.0"}
 )
 
 // Ruleset implements the Gardenlinux Testing Framework ruleset.
@@ -169,15 +171,24 @@ func (r *Ruleset) RunRule(_ context.Context, _ string) (rule.RuleResult, error) 
 // Run deploys the gardenlinux test Pod on every selected Node in parallel and merges the collected test results into a single RulesetResult.
 func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
 
+	var (
+		testImage *imagevectorutils.Image
+		err       error
+	)
+
 	if !slices.Contains(SupportedVersions, r.version) {
 		r.Logger().Warn("Ruleset version is not officially supported", "version", r.version, "supportedVersions", SupportedVersions)
+		testImage, err = imagevector.ImageVector().FindImage(images.GardenlinuxTestImageName)
+		if err != nil {
+			return ruleset.RulesetResult{}, fmt.Errorf("failed to find image version for %s: %w", images.GardenlinuxTestImageName, err)
+		}
+		testImage.WithOptionalTag(r.version)
+	} else {
+		testImage, err = imagevector.ImageVector().FindImage(images.GardenlinuxTestImageName, imagevectorutils.TargetVersion(r.version))
+		if err != nil {
+			return ruleset.RulesetResult{}, fmt.Errorf("failed to find image version for %s: %w", images.GardenlinuxTestImageName, err)
+		}
 	}
-
-	testImage, err := imagevector.ImageVector().FindImage(images.GardenlinuxTestImageName)
-	if err != nil {
-		return ruleset.RulesetResult{}, fmt.Errorf("failed to find image version for %s: %w", images.GardenlinuxTestImageName, err)
-	}
-	testImage.WithOptionalTag(r.version)
 
 	sidecarImage, err := imagevector.ImageVector().FindImage(images.DikiOpsImageName)
 	if err != nil {
