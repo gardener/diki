@@ -23,7 +23,7 @@ const (
 	PodContextWaitInterval = 2 * time.Second
 	// PodContextWaitTimeout is the maximum time to wait for the test pod to reach Running.
 	// Both containers start immediately, so we only need enough time for image pull + scheduling.
-	PodContextWaitTimeout = 1 * time.Minute
+	PodContextWaitTimeout = 2 * time.Minute
 
 	// TestContainerName is the name of the container running the gardenlinux/tests suite.
 	TestContainerName = "gardenlinux-test"
