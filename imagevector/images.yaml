@@ -10,3 +10,13 @@ images:
 - name: gardenlinux-test
   sourceRepository: github.com/gardenlinux/gardenlinux
   repository: ghcr.io/gardenlinux/test
+- name: gardenlinux-test
+  sourceRepository: github.com/gardenlinux/gardenlinux
+  repository: ghcr.io/gardenlinux/test
+  tag: 2324.0.0
+  targetVersion: 2324.0.0
+- name: gardenlinux-test
+  sourceRepository: github.com/gardenlinux/gardenlinux
+  repository: ghcr.io/gardenlinux/test
+  tag: 2323.0.0
+  targetVersion: 2323.0.0
