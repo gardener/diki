@@ -14,10 +14,10 @@ var imageVector imagevector.ImageVector
 func init() {
 	var err error
 
-	imageVector, err = imagevector.Read([]byte(ImagesYAML))
+	imageVector, _, err = imagevector.Read([]byte(ImagesYAML))
 	runtime.Must(err)
 
-	imageVector, err = imagevector.WithEnvOverride(imageVector, imagevector.OverrideEnv)
+	imageVector, _, err = imagevector.WithEnvOverride(imageVector, nil, imagevector.OverrideEnv)
 	runtime.Must(err)
 }
 
