@@ -8,6 +8,8 @@ import (
 	"log/slog"
 
 	"k8s.io/client-go/rest"
+
+	"github.com/gardener/diki/pkg/config"
 )
 
 // CreateOption is a function that acts on a [Ruleset]
@@ -32,6 +34,13 @@ func WithConfig(config *rest.Config) CreateOption {
 func WithArgs(args Args) CreateOption {
 	return func(r *Ruleset) {
 		r.args = args
+	}
+}
+
+// WithRuleOptions sets the ruleOptions of a [Ruleset], keyed by rule ID.
+func WithRuleOptions(ruleOptions map[string]config.RuleOptionsConfig) CreateOption {
+	return func(r *Ruleset) {
+		r.ruleOptions = ruleOptions
 	}
 }
 

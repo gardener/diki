@@ -13,6 +13,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/gardener/diki/pkg/config"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
@@ -219,4 +220,24 @@ func MergeRulesetResults(rulesetResults []ruleset.RulesetResult) ruleset.Ruleset
 	}
 
 	return mergedResults
+}
+
+// ApplyAcceptedRules overrides the check results of rules whose ruleOptions have skip enabled with a single [rule.Accepted] check carrying the configured justification.
+// Rules that are not present in the result are not accounted for.
+func ApplyAcceptedRules(result ruleset.RulesetResult, ruleOptions map[string]config.RuleOptionsConfig) ruleset.RulesetResult {
+	for i, ruleResult := range result.RuleResults {
+		opt, ok := ruleOptions[ruleResult.RuleID]
+		if !ok || opt.Skip == nil || !opt.Skip.Enabled {
+			continue
+		}
+
+		result.RuleResults[i].CheckResults = []rule.CheckResult{
+			{
+				Status:  rule.Accepted,
+				Message: opt.Skip.Justification,
+			},
+		}
+	}
+
+	return result
 }

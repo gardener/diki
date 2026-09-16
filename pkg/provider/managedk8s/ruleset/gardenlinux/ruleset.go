@@ -52,13 +52,14 @@ var (
 
 // Ruleset implements the Gardenlinux Testing Framework ruleset.
 type Ruleset struct {
-	version    string
-	Config     *rest.Config
-	Client     client.Client
-	PodContext pod.SimplePodContext
-	args       Args
-	instanceID string
-	logger     *slog.Logger
+	version     string
+	Config      *rest.Config
+	Client      client.Client
+	PodContext  pod.SimplePodContext
+	args        Args
+	ruleOptions map[string]config.RuleOptionsConfig
+	instanceID  string
+	logger      *slog.Logger
 }
 
 // Args are Ruleset specific arguments.
@@ -126,10 +127,16 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.C
 		return nil, err
 	}
 
+	ruleOptions := make(map[string]config.RuleOptionsConfig, len(rulesetConfig.RuleOptions))
+	for _, opt := range rulesetConfig.RuleOptions {
+		ruleOptions[opt.RuleID] = opt
+	}
+
 	ruleset, err := New(
 		WithVersion(rulesetConfig.Version),
 		WithConfig(managedConfig),
 		WithArgs(rulesetArgs),
+		WithRuleOptions(ruleOptions),
 	)
 	if err != nil {
 		return nil, err
@@ -153,8 +160,21 @@ func ValidateRulesetConfig(rulesetConfig config.RulesetConfig, fldPath *field.Pa
 
 	allErrs = append(allErrs, disaoption.ValidateLabelNames(rulesetArgs.NodeGroupByLabels, fldPath.Child("args", "nodeGroupByLabels"))...)
 
-	if len(rulesetConfig.RuleOptions) > 0 {
-		allErrs = append(allErrs, field.Forbidden(fldPath.Child("ruleOptions"), "the gardenlinux ruleset does not accept per-rule options"))
+	ruleOptionsPath := fldPath.Child("ruleOptions")
+	for idx, ruleOption := range rulesetConfig.RuleOptions {
+		idxPath := ruleOptionsPath.Index(idx)
+		if len(ruleOption.RuleID) == 0 {
+			allErrs = append(allErrs, field.Required(idxPath.Child("ruleID"), "must not be empty"))
+		}
+
+		// Gardenlinux rules are executed by an external testing framework, so non-skip per-rule options are not accepted.
+		if ruleOption.Args != nil {
+			allErrs = append(allErrs, field.Forbidden(idxPath.Child("args"), "the gardenlinux ruleset does not accept per-rule args"))
+		}
+
+		if ruleOption.Skip != nil && ruleOption.Skip.Enabled && len(ruleOption.Skip.Justification) == 0 {
+			allErrs = append(allErrs, field.Required(idxPath.Child("skip", "justification"), "must not be empty when skip is enabled"))
+		}
 	}
 
 	return allErrs
@@ -260,7 +280,8 @@ func (r *Ruleset) Run(ctx context.Context) (ruleset.RulesetResult, error) {
 		return ruleset.RulesetResult{}, nil
 	}
 
-	return junitreportparser.MergeRulesetResults(rulesetResults), nil
+	mergedRulesetResult := junitreportparser.MergeRulesetResults(rulesetResults)
+	return junitreportparser.ApplyAcceptedRules(mergedRulesetResult, r.ruleOptions), nil
 }
 
 func (r *Ruleset) runOnNode(ctx context.Context, podName, testImage, sidecarImage string, node *corev1.Node) (ruleset.RulesetResult, error) {
