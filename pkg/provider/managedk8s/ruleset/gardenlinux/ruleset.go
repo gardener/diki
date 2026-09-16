@@ -47,8 +47,7 @@ var (
 	_ ruleset.Ruleset = &Ruleset{}
 	// SupportedVersions is a list of available versions for the Gardenlinux Ruleset.
 	// Versions are sorted from newest to oldest.
-	// TODO (georgibaltiev): Re-evaluate support for versions
-	SupportedVersions = []string{"2324.0.0", "2323.0.0"}
+	SupportedVersions = []string{"2150.10.1"}
 )
 
 // Ruleset implements the Gardenlinux Testing Framework ruleset.
