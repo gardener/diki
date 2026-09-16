@@ -326,6 +326,11 @@ providers:                   # contains information about known providers
     #   # Only one node per combination will be tested
     #   nodeGroupByLabels: 
     #   - foo
+    # ruleOptions:
+    # - ruleID: "203602"
+    #   skip:
+    #     enabled: true
+    #     justification: "the whole rule is accepted for ... reasons"
 # metadata: # optional, additional metadata to be added to summary json report
 #   foo: bar
 #   bar:

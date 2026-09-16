@@ -10,6 +10,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/gardenlinux/junitreportparser"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
@@ -372,5 +373,78 @@ var _ = Describe("MergeRulesetResults", func() {
 		junitreportparser.MergeRulesetResults([]ruleset.RulesetResult{base, other})
 
 		Expect(base.RuleResults[0].CheckResults).To(HaveLen(1))
+	})
+})
+
+var _ = Describe("ApplyAcceptedRules", func() {
+	ruleResult := ruleset.RulesetResult{
+		RulesetID: "rs-id",
+		RuleResults: []rule.RuleResult{
+			{
+				RuleID:   "R1",
+				RuleName: "Rule One",
+				CheckResults: []rule.CheckResult{
+					{Status: rule.Failed, Message: "boom", Target: rule.NewTarget("name", "node-1")},
+					{Status: rule.Passed, Target: rule.NewTarget("name", "node-2")},
+				},
+			},
+			{
+				RuleID:       "R2",
+				RuleName:     "Rule Two",
+				CheckResults: []rule.CheckResult{{Status: rule.Passed}},
+			},
+		},
+	}
+
+	It("should override the check results of an accepted rule with a single Accepted result", func() {
+		ruleOptions := map[string]config.RuleOptionsConfig{
+			"R1": {
+				RuleID: "R1",
+				Skip: &config.RuleOptionSkipConfig{
+					Enabled:       true,
+					Justification: "risk accepted",
+				},
+			},
+		}
+
+		newRuleResult := junitreportparser.ApplyAcceptedRules(ruleResult, ruleOptions)
+
+		Expect(newRuleResult.RuleResults[0]).To(Equal(rule.RuleResult{
+			RuleID:   "R1",
+			RuleName: "Rule One",
+			CheckResults: []rule.CheckResult{
+				{Status: rule.Accepted, Message: "risk accepted"},
+			},
+		}))
+		Expect(newRuleResult.RuleResults[1].CheckResults).To(Equal([]rule.CheckResult{{Status: rule.Passed}}))
+	})
+
+	It("should leave rules unchanged when skip is not enabled", func() {
+		ruleOptions := map[string]config.RuleOptionsConfig{
+			"R1": {RuleID: "R1", Skip: &config.RuleOptionSkipConfig{Enabled: false, Justification: "n/a"}},
+		}
+
+		newRuleResult := junitreportparser.ApplyAcceptedRules(ruleResult, ruleOptions)
+		Expect(newRuleResult).To(Equal(ruleResult))
+	})
+
+	It("should leave rules unchanged when there is no matching ruleOption", func() {
+		newRuleResult := junitreportparser.ApplyAcceptedRules(ruleResult, map[string]config.RuleOptionsConfig{})
+		Expect(newRuleResult).To(Equal(ruleResult))
+	})
+
+	It("should ignore accepted rule IDs that are not present in the result", func() {
+		ruleOptions := map[string]config.RuleOptionsConfig{
+			"R3": {
+				RuleID: "R3",
+				Skip: &config.RuleOptionSkipConfig{
+					Enabled:       true,
+					Justification: "not reported",
+				},
+			},
+		}
+
+		newRuleResult := junitreportparser.ApplyAcceptedRules(ruleResult, ruleOptions)
+		Expect(newRuleResult).To(Equal(ruleResult))
 	})
 })
