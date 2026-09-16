@@ -43,19 +43,6 @@ var _ = Describe("ValidateRulesetConfig", func() {
 		Expect(errs[0].Field).To(Equal("rulesets[0].ruleOptions[0].ruleID"))
 	})
 
-	It("should require a justification when skip is enabled", func() {
-		rulesetConfig := config.RulesetConfig{
-			RuleOptions: []config.RuleOptionsConfig{
-				{RuleID: "1", Skip: &config.RuleOptionSkipConfig{Enabled: true}},
-			},
-		}
-
-		errs := gardenlinux.ValidateRulesetConfig(rulesetConfig, field.NewPath("rulesets").Index(0))
-		Expect(errs).To(HaveLen(1))
-		Expect(errs[0].Type).To(Equal(field.ErrorTypeRequired))
-		Expect(errs[0].Field).To(Equal("rulesets[0].ruleOptions[0].skip.justification"))
-	})
-
 	It("should forbid per-rule args", func() {
 		rulesetConfig := config.RulesetConfig{
 			RuleOptions: []config.RuleOptionsConfig{

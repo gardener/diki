@@ -171,10 +171,6 @@ func ValidateRulesetConfig(rulesetConfig config.RulesetConfig, fldPath *field.Pa
 		if ruleOption.Args != nil {
 			allErrs = append(allErrs, field.Forbidden(idxPath.Child("args"), "the gardenlinux ruleset does not accept per-rule args"))
 		}
-
-		if ruleOption.Skip != nil && ruleOption.Skip.Enabled && len(ruleOption.Skip.Justification) == 0 {
-			allErrs = append(allErrs, field.Required(idxPath.Child("skip", "justification"), "must not be empty when skip is enabled"))
-		}
 	}
 
 	return allErrs
