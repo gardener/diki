@@ -7,12 +7,12 @@ tool github.com/gardener/gardener/hack/tools
 require (
 	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/distribution/reference v0.6.0
-	github.com/gardener/gardener v1.151.0
+	github.com/gardener/gardener v1.152.0
 	github.com/gardener/gardener-extension-shoot-lakom-service v0.26.0
-	github.com/gardener/gardener/pkg/apis v1.151.0
+	github.com/gardener/gardener/pkg/apis v1.152.0
 	github.com/go-logr/logr v1.4.4
 	github.com/google/uuid v1.6.0
-	github.com/onsi/ginkgo/v2 v2.32.2
+	github.com/onsi/ginkgo/v2 v2.33.0
 	github.com/onsi/gomega v1.43.0
 	github.com/spf13/cobra v1.10.2
 	go.yaml.in/yaml/v4 v4.0.0-rc.6
@@ -80,7 +80,7 @@ require (
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.2 // indirect
 	github.com/gardener/etcd-druid/api v0.38.2 // indirect
-	github.com/gardener/gardener/hack/tools v1.151.0 // indirect
+	github.com/gardener/gardener/hack/tools v1.152.0 // indirect
 	github.com/gardener/machine-controller-manager v0.62.1 // indirect
 	github.com/gardener/pvc-autoscaler v0.3.0 // indirect
 	github.com/go-errors/errors v1.5.1 // indirect
@@ -204,14 +204,14 @@ require (
 	golang.org/x/crypto v0.57.0 // indirect
 	golang.org/x/exp v0.0.0-20260611194520-c48552f49976 // indirect
 	golang.org/x/mod v0.41.0 // indirect
-	golang.org/x/net v0.58.0 // indirect
+	golang.org/x/net v0.59.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/term v0.46.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
-	golang.org/x/time v0.15.0 // indirect
-	golang.org/x/tools v0.49.0 // indirect
+	golang.org/x/time v0.16.0 // indirect
+	golang.org/x/tools v0.50.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260715232425-e75dac1f907d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260819154853-08b0e4226688 // indirect
@@ -222,7 +222,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	helm.sh/helm/v4 v4.2.4 // indirect
-	istio.io/api v1.29.7 // indirect
+	istio.io/api v1.29.8 // indirect
 	istio.io/client-go v1.29.2 // indirect
 	k8s.io/apiextensions-apiserver v0.36.4 // indirect
 	k8s.io/autoscaler/vertical-pod-autoscaler v1.7.1 // indirect
