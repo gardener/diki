@@ -13,5 +13,5 @@ images:
 - name: gardenlinux-test
   sourceRepository: github.com/gardenlinux/gardenlinux
   repository: ghcr.io/gardenlinux/test
-  tag: 2150.10.1
-  targetVersion: 2150.10.1
+  tag: 2150.12.0
+  targetVersion: 2150.12.0
