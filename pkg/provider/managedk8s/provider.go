@@ -19,6 +19,7 @@ import (
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/provider"
 	"github.com/gardener/diki/pkg/provider/gardener/ruleset/disak8sstig"
+	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/podsecuritystandards"
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/securityhardenedk8s"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/ruleset"
@@ -213,6 +214,11 @@ func ManagedK8sDefaultDikiConfigFunc() config.DikiConfig {
 						ID:      securityhardenedk8s.RulesetID,
 						Name:    securityhardenedk8s.RulesetName,
 						Version: securityhardenedk8s.SupportedVersions[0],
+					},
+					{
+						ID:      podsecuritystandards.RulesetID,
+						Name:    podsecuritystandards.RulesetName,
+						Version: podsecuritystandards.SupportedVersions[0],
 					},
 				},
 			},

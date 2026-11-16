@@ -16,6 +16,7 @@ import (
 	"github.com/gardener/diki/pkg/provider/managedk8s"
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/disak8sstig"
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/gardenlinux"
+	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/podsecuritystandards"
 	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/securityhardenedk8s"
 	"github.com/gardener/diki/pkg/ruleset"
 )
@@ -60,6 +61,14 @@ func ManagedK8SProviderFromConfig(conf config.ProviderConfig, fldPath *field.Pat
 			setLoggerGardenlinux := gardenlinux.WithLogger(providerLogger.With("ruleset", ruleset.ID(), "version", ruleset.Version()))
 			setLoggerGardenlinux(ruleset)
 			rulesets = append(rulesets, ruleset)
+		case podsecuritystandards.RulesetID:
+			ruleset, err := podsecuritystandards.FromGenericConfig(rulesetConfig, p.Config, rulesetsPath.Index(rulesetIdx))
+			if err != nil {
+				return nil, err
+			}
+			setLoggerPSS := podsecuritystandards.WithLogger(providerLogger.With("ruleset", ruleset.ID(), "version", ruleset.Version()))
+			setLoggerPSS(ruleset)
+			rulesets = append(rulesets, ruleset)
 		default:
 			return nil, fmt.Errorf("unknown ruleset identifier: %s - use 'diki show provider managedk8s' to see the provider's supported rulesets", rulesetConfig.ID)
 		}
@@ -81,6 +90,8 @@ func managedK8SGetSupportedVersions(ruleset string) []string {
 		return disak8sstig.SupportedVersions
 	case gardenlinux.RulesetID:
 		return gardenlinux.SupportedVersions
+	case podsecuritystandards.RulesetID:
+		return podsecuritystandards.SupportedVersions
 	default:
 		return nil
 	}
@@ -105,6 +116,10 @@ func ManagedK8SProviderMetadata() metadata.ProviderDetailed {
 			{
 				ID:   gardenlinux.RulesetID,
 				Name: gardenlinux.RulesetName,
+			},
+			{
+				ID:   podsecuritystandards.RulesetID,
+				Name: podsecuritystandards.RulesetName,
 			},
 		},
 	}

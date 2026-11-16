@@ -21,6 +21,10 @@ linters:
         text: 'exported: exported'
       - linters:
         - revive
+        path: pkg/provider/managedk8s/ruleset/podsecuritystandards/rules/
+        text: 'exported: exported'
+      - linters:
+        - revive
         path: pkg/provider/managedk8s/ruleset/securityhardenedk8s/rules/
         text: 'exported: exported'
       - linters:
