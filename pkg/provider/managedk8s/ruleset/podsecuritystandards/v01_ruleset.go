@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/pkg/config"
 	internalconfig "github.com/gardener/diki/pkg/internal/config"
@@ -17,131 +18,141 @@ import (
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 )
 
-func (r *Ruleset) validateV01RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath *field.Path) field.ErrorList {
+func (r *Ruleset) validateV01RuleOptions(_ map[string]internalconfig.IndexedRuleOptionsConfig, _ *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
-
-	allErrs = append(allErrs, validateV01Options[rules.OptionsPSSB001](ruleOptions["PSS-B001"].Args, fldPath.Index(ruleOptions["PSS-B001"].Index).Child("args"))...)
-
+	_ = validateV01Options[struct{}] // placeholder, until rule options are implemented
 	return allErrs
 }
 
 func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConfig) error {
+	_, err := client.New(r.Config, client.Options{})
+	if err != nil {
+		return err
+	}
+
 	rules := []rule.Rule{
 		rule.NewSkipRule(
 			"PSS-B001",
-			"Windows Pods offer the ability to run Host Process containers which enables privileged access to the Windows host machine. Privileged access to the host is disallowed in the Baseline policy.",
+			"Host Process",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
 		rule.NewSkipRule(
 			"PSS-B002",
-			"Sharing the host namespaces must be disallowed.",
+			"Host Namespaces",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
 		rule.NewSkipRule(
 			"PSS-B003",
-			"Privileged Pods disable most security mechanisms and must be disallowed.",
+			"Privileged Containers",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
 		rule.NewSkipRule(
 			"PSS-B004",
-			"Adding additional capabilities beyond the following must be disallowed: AUDIT_WRITE, CHOWN, DAC_OVERRIDE, FOWNER, FSETID, KILL, MKNOD, NET_BIND_SERVICE, SETFCAP, SETGID, SETPCAP, SETUID, SYS_CHROOT.",
+			"Capabilities (Baseline)",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
 		rule.NewSkipRule(
 			"PSS-B005",
-			"Host Path volumes must be forbidden.",
+			"Host Path Volumes",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
 		rule.NewSkipRule(
 			"PSS-B006",
-			"Host Ports should be disallowed entirely (recommended) or restricted to a known list.",
+			"Host Ports",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
 		rule.NewSkipRule(
 			"PSS-B007",
-			"The host field in probes and lifecycle hooks must be disallowed.",
+			"Host Probes / Lifecycle Hooks",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
 		rule.NewSkipRule(
 			"PSS-B008",
-			"On supported hosts, the RuntimeDefault AppArmor profile is applied by default. The Baseline policy should prevent overriding or disabling the default AppArmor profile, or restrict overrides to an allowed set of profiles.",
+			"AppArmor",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
 		rule.NewSkipRule(
 			"PSS-B009",
-			"Setting the SELinux type is restricted, and setting a custom SELinux user or role option is forbidden.",
+			"SELinux",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
 		rule.NewSkipRule(
 			"PSS-B010",
-			"The default /proc masks are set up to reduce attack surface, and should be required.",
+			"/proc Mount Type",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
 		rule.NewSkipRule(
 			"PSS-B011",
-			"Seccomp profile must not be explicitly set to Unconfined.",
+			"Seccomp (Baseline)",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
 		rule.NewSkipRule(
 			"PSS-B012",
-			"Sysctls can disable security mechanisms or affect all containers on a host, and should be disallowed except for an allowed \"safe\" subset. A sysctl is considered safe if it is namespaced in the container or the Pod, and it is isolated from other Pods or processes on the same Node.",
+			"Sysctls",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
 
 		rule.NewSkipRule(
 			"PSS-R001",
-			"The Restricted policy only permits the following volume types: configMap, csi, downwardAPI, emptyDir, ephemeral, persistentVolumeClaim, projected, secret.",
+			"Volume Types",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
 		rule.NewSkipRule(
 			"PSS-R002",
-			"Privilege escalation (such as via set-user-ID or set-group-ID file mode) should not be allowed. This is Linux only policy in v1.25+.",
+			"Privilege Escalation",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
 		rule.NewSkipRule(
 			"PSS-R003",
-			"Containers must be required to run as non-root users.",
+			"Running as Non-root",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
 		rule.NewSkipRule(
 			"PSS-R004",
-			"Containers must not set runAsUser to 0.",
+			"Running as Non-root user",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
 		rule.NewSkipRule(
 			"PSS-R005",
-			"Seccomp profile must be explicitly set to RuntimeDefault or Localhost. Unconfined profiles and the absence of a profile are prohibited.",
+			"Seccomp (Restricted)",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
 		rule.NewSkipRule(
 			"PSS-R006",
-			"Containers must drop ALL capabilities, and are only permitted to add back NET_BIND_SERVICE.",
+			"Capabilities (Restricted)",
 			"Not implemented.",
 			rule.NotImplemented,
 		),
 	}
 
 	for i, r := range rules {
+		var severityLevel rule.SeverityLevel
+		if severity, ok := r.(rule.Severity); !ok {
+			return fmt.Errorf("rule %s does not implement rule.Severity", r.ID())
+		} else {
+			severityLevel = severity.Severity()
+		}
+
 		opt, found := ruleOptions[r.ID()]
 		if found && opt.Skip != nil && opt.Skip.Enabled {
-			rules[i] = rule.NewSkipRule(r.ID(), r.Name(), opt.Skip.Justification, rule.Accepted)
+			rules[i] = rule.NewSkipRule(r.ID(), r.Name(), opt.Skip.Justification, rule.Accepted, rule.SkipRuleWithSeverity(severityLevel))
 		}
 	}
 

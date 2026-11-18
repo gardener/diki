@@ -6,7 +6,6 @@ package podsecuritystandards
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 
@@ -40,13 +39,6 @@ type Ruleset struct {
 	Config     *rest.Config
 	numWorkers int
 	logger     *slog.Logger
-	args       Args
-}
-
-// Args are Ruleset specific arguments.
-// TBD if args and what args
-type Args struct {
-	TBD *string `json:"TBD" yaml:"TBD"`
 }
 
 // New creates a new Ruleset.
@@ -83,20 +75,9 @@ func FromGenericConfig(rulesetConfig config.RulesetConfig, managedConfig *rest.C
 		return nil, errs.ToAggregate()
 	}
 
-	rulesetArgsByte, err := json.Marshal(rulesetConfig.Args)
-	if err != nil {
-		return nil, err
-	}
-
-	var rulesetArgs Args
-	if err := json.Unmarshal(rulesetArgsByte, &rulesetArgs); err != nil {
-		return nil, err
-	}
-
 	ruleset, err := New(
 		WithVersion(rulesetConfig.Version),
 		WithConfig(managedConfig),
-		WithArgs(rulesetArgs),
 	)
 	if err != nil {
 		return nil, err

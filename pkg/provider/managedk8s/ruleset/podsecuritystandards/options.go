@@ -28,13 +28,6 @@ func WithConfig(config *rest.Config) CreateOption {
 	}
 }
 
-// WithArgs sets the args of a [Ruleset].
-func WithArgs(args Args) CreateOption {
-	return func(r *Ruleset) {
-		r.args = args
-	}
-}
-
 // WithNumberOfWorkers sets the max number of Workers of a [Ruleset].
 func WithNumberOfWorkers(numWorkers int) CreateOption {
 	return func(r *Ruleset) {

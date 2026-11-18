@@ -334,8 +334,6 @@ providers:                   # contains information about known providers
   - id: pod-security-standards
     name: Pod Security Standards
     version: v0.1.0
-    # args
-    # TBD
     # ruleOptions:
     # - ruleID: "PSS-B001"
     #   skip:
