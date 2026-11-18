@@ -5,5 +5,4 @@
 package rules
 
 type RuleOption interface {
-
 }

@@ -16,6 +16,9 @@ The `Managed Kubernetes` provider implements the following `rulesets`:
 - [Security Hardened Kubernetes Cluster](../rulesets/security-hardened-k8s/ruleset.md)
   - v0.1.0
 
+- [Pod Security Standards](../rulesets/pod-security-standards/ruleset.md)
+- v0.1.0
+
 ### Configuration
 
 See an [example Diki configuration](../../example/config/managedk8s.yaml) for this provider.
