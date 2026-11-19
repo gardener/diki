@@ -7,9 +7,9 @@ tool github.com/gardener/gardener/hack/tools
 require (
 	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/distribution/reference v0.6.0
-	github.com/gardener/gardener v1.153.0
-	github.com/gardener/gardener-extension-shoot-lakom-service v0.26.0
-	github.com/gardener/gardener/pkg/apis v1.153.0
+	github.com/gardener/gardener v1.153.1
+	github.com/gardener/gardener-extension-shoot-lakom-service v0.27.0
+	github.com/gardener/gardener/pkg/apis v1.153.1
 	github.com/go-logr/logr v1.4.4
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo/v2 v2.33.1
@@ -80,7 +80,7 @@ require (
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.4 // indirect
 	github.com/gardener/etcd-druid/api v0.38.2 // indirect
-	github.com/gardener/gardener/hack/tools v1.153.0 // indirect
+	github.com/gardener/gardener/hack/tools v1.153.1 // indirect
 	github.com/gardener/machine-controller-manager v0.63.0 // indirect
 	github.com/gardener/pvc-autoscaler v0.3.1 // indirect
 	github.com/go-errors/errors v1.5.1 // indirect
@@ -205,7 +205,7 @@ require (
 	golang.org/x/mod v0.41.0 // indirect
 	golang.org/x/net v0.59.0 // indirect
 	golang.org/x/oauth2 v0.37.0 // indirect
-	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/term v0.46.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
