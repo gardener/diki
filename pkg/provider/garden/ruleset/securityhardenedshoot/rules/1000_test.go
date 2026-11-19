@@ -13,7 +13,6 @@ import (
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -145,7 +144,7 @@ var _ = Describe("#1000", func() {
 				shoot.Spec.Extensions = []gardencorev1beta1.Extension{
 					{
 						Type:     "foo",
-						Disabled: ptr.To(false),
+						Disabled: new(false),
 					},
 				}
 			},
@@ -167,7 +166,7 @@ var _ = Describe("#1000", func() {
 				shoot.Spec.Extensions = []gardencorev1beta1.Extension{
 					{
 						Type:     "foo",
-						Disabled: ptr.To(true),
+						Disabled: new(true),
 					},
 				}
 			},
@@ -214,11 +213,11 @@ var _ = Describe("#1000", func() {
 					},
 					{
 						Type:     "two",
-						Disabled: ptr.To(false),
+						Disabled: new(false),
 					},
 					{
 						Type:     "three",
-						Disabled: ptr.To(true),
+						Disabled: new(true),
 					},
 				}
 			},

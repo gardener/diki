@@ -9,7 +9,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 )
 
 const (
@@ -44,14 +43,14 @@ func NewPrivilegedPod(name, namespace, image, nodeName string, additionalLabels 
 			Labels:    labels,
 		},
 		Spec: corev1.PodSpec{
-			ActiveDeadlineSeconds: ptr.To[int64](300),
+			ActiveDeadlineSeconds: new(int64(300)),
 			Containers: []corev1.Container{
 				{
 					Name:    "container",
 					Image:   image,
 					Command: []string{"chroot", "/host", "/bin/bash", "-c", "nsenter -m -t $(pgrep -xo systemd) sleep 300"},
 					SecurityContext: &corev1.SecurityContext{
-						Privileged: ptr.To(true),
+						Privileged: new(true),
 					},
 					VolumeMounts: []corev1.VolumeMount{
 						{

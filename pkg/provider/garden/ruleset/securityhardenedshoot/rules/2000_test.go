@@ -15,7 +15,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -118,7 +117,7 @@ kind: AuthenticationConfiguration
 			func() {
 				shoot.Spec.Kubernetes = gardencorev1beta1.Kubernetes{
 					KubeAPIServer: &gardencorev1beta1.KubeAPIServerConfig{
-						EnableAnonymousAuthentication: ptr.To(false),
+						EnableAnonymousAuthentication: new(false),
 					},
 				}
 			},
@@ -129,7 +128,7 @@ kind: AuthenticationConfiguration
 			func() {
 				shoot.Spec.Kubernetes = gardencorev1beta1.Kubernetes{
 					KubeAPIServer: &gardencorev1beta1.KubeAPIServerConfig{
-						EnableAnonymousAuthentication: ptr.To(true),
+						EnableAnonymousAuthentication: new(true),
 					},
 				}
 			},

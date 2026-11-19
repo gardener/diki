@@ -17,7 +17,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -124,7 +123,7 @@ var _ = Describe("#1003", func() {
 				shoot.Spec.Extensions = []gardencorev1beta1.Extension{
 					{
 						Type:     "shoot-lakom-service",
-						Disabled: ptr.To(true),
+						Disabled: new(true),
 					},
 				}
 			},
@@ -141,7 +140,7 @@ var _ = Describe("#1003", func() {
 				shoot.Spec.Extensions = []gardencorev1beta1.Extension{
 					{
 						Type:     "shoot-lakom-service",
-						Disabled: ptr.To(true),
+						Disabled: new(true),
 					},
 				}
 			},

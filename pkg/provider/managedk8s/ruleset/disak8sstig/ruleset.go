@@ -13,7 +13,6 @@ import (
 	"github.com/google/uuid"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/rest"
-	"k8s.io/utils/ptr"
 
 	"github.com/gardener/diki/pkg/config"
 	"github.com/gardener/diki/pkg/rule"
@@ -58,7 +57,7 @@ func New(options ...CreateOption) (*Ruleset, error) {
 		rules:      map[string]rule.Rule{},
 		numWorkers: 5,
 		args: Args{
-			MaxRetries: ptr.To(1),
+			MaxRetries: new(1),
 		},
 		instanceID: uuid.New().String(),
 	}

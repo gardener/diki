@@ -12,7 +12,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubernetespod "github.com/gardener/diki/pkg/kubernetes/pod"
@@ -74,11 +73,11 @@ func NewTestPod(name, namespace, gardenlinuxTestImage, reportReaderImage, nodeNa
 			Labels:    labels,
 		},
 		Spec: corev1.PodSpec{
-			ActiveDeadlineSeconds:        ptr.To[int64](300),
-			AutomountServiceAccountToken: ptr.To(false),
+			ActiveDeadlineSeconds:        new(int64(300)),
+			AutomountServiceAccountToken: new(false),
 			SecurityContext: &corev1.PodSecurityContext{
 				// The FSGroup ensures that the written XML report is group-owned by 65532 - the reader will be able to get the report even if the "other" permission bits are dropped by the testing framework in a future release.
-				FSGroup: ptr.To(int64(65532)),
+				FSGroup: new(int64(65532)),
 				SeccompProfile: &corev1.SeccompProfile{
 					Type: corev1.SeccompProfileTypeRuntimeDefault,
 				},
@@ -89,7 +88,7 @@ func NewTestPod(name, namespace, gardenlinuxTestImage, reportReaderImage, nodeNa
 					Image: gardenlinuxTestImage,
 					// The gardenlinux testing container requires certain privileged access, as described in the official documentation - https://github.com/gardenlinux/gardenlinux/tree/main/tests#gardener--kubernetes-cluster-live-tests
 					SecurityContext: &corev1.SecurityContext{
-						Privileged: ptr.To(true),
+						Privileged: new(true),
 					},
 					Args: []string{
 						"./run_tests",
@@ -121,12 +120,12 @@ func NewTestPod(name, namespace, gardenlinuxTestImage, reportReaderImage, nodeNa
 						"60",
 					},
 					SecurityContext: &corev1.SecurityContext{
-						Privileged:               ptr.To(false),
-						AllowPrivilegeEscalation: ptr.To(false),
-						RunAsNonRoot:             ptr.To(true),
-						RunAsUser:                ptr.To(int64(65532)),
-						RunAsGroup:               ptr.To(int64(65532)),
-						ReadOnlyRootFilesystem:   ptr.To(true),
+						Privileged:               new(false),
+						AllowPrivilegeEscalation: new(false),
+						RunAsNonRoot:             new(true),
+						RunAsUser:                new(int64(65532)),
+						RunAsGroup:               new(int64(65532)),
+						ReadOnlyRootFilesystem:   new(true),
 						Capabilities: &corev1.Capabilities{
 							Drop: []corev1.Capability{"ALL"},
 						},

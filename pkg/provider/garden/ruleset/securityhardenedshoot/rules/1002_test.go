@@ -13,7 +13,6 @@ import (
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -188,7 +187,7 @@ var _ = Describe("#1002", func() {
 			},
 		),
 		Entry("should error when the specified cloudProfile is not found",
-			func() { shoot.Spec.CloudProfileName = ptr.To("notFoo") },
+			func() { shoot.Spec.CloudProfileName = new("notFoo") },
 			nil,
 			[]rule.CheckResult{
 				{Status: rule.Errored, Message: "cloudprofiles.core.gardener.cloud \"notFoo\" not found", Target: rule.NewTarget("kind", "CloudProfile", "name", "notFoo")},
@@ -208,14 +207,14 @@ var _ = Describe("#1002", func() {
 		),
 		Entry("should pass when workers use supported image varsions",
 			func() {
-				shoot.Spec.CloudProfileName = ptr.To("foo")
+				shoot.Spec.CloudProfileName = new("foo")
 				shoot.Spec.Provider.Workers = []gardencorev1beta1.Worker{
 					{
 						Name: "foo",
 						Machine: gardencorev1beta1.Machine{
 							Image: &gardencorev1beta1.ShootMachineImage{
 								Name:    "foo",
-								Version: ptr.To("2"),
+								Version: new("2"),
 							},
 						},
 					},
@@ -224,7 +223,7 @@ var _ = Describe("#1002", func() {
 						Machine: gardencorev1beta1.Machine{
 							Image: &gardencorev1beta1.ShootMachineImage{
 								Name:    "bar",
-								Version: ptr.To("1"),
+								Version: new("1"),
 							},
 						},
 					},
@@ -248,7 +247,7 @@ var _ = Describe("#1002", func() {
 						Machine: gardencorev1beta1.Machine{
 							Image: &gardencorev1beta1.ShootMachineImage{
 								Name:    "foo",
-								Version: ptr.To("1"),
+								Version: new("1"),
 							},
 						},
 					},
@@ -271,7 +270,7 @@ var _ = Describe("#1002", func() {
 						Machine: gardencorev1beta1.Machine{
 							Image: &gardencorev1beta1.ShootMachineImage{
 								Name:    "foo",
-								Version: ptr.To("3"),
+								Version: new("3"),
 							},
 						},
 					},
@@ -294,7 +293,7 @@ var _ = Describe("#1002", func() {
 						Machine: gardencorev1beta1.Machine{
 							Image: &gardencorev1beta1.ShootMachineImage{
 								Name:    "foo",
-								Version: ptr.To("1"),
+								Version: new("1"),
 							},
 						},
 					},
@@ -303,7 +302,7 @@ var _ = Describe("#1002", func() {
 						Machine: gardencorev1beta1.Machine{
 							Image: &gardencorev1beta1.ShootMachineImage{
 								Name:    "foo",
-								Version: ptr.To("2"),
+								Version: new("2"),
 							},
 						},
 					},
@@ -312,7 +311,7 @@ var _ = Describe("#1002", func() {
 						Machine: gardencorev1beta1.Machine{
 							Image: &gardencorev1beta1.ShootMachineImage{
 								Name:    "foo",
-								Version: ptr.To("3"),
+								Version: new("3"),
 							},
 						},
 					},
@@ -321,7 +320,7 @@ var _ = Describe("#1002", func() {
 						Machine: gardencorev1beta1.Machine{
 							Image: &gardencorev1beta1.ShootMachineImage{
 								Name:    "foo",
-								Version: ptr.To("4"),
+								Version: new("4"),
 							},
 						},
 					},
@@ -330,7 +329,7 @@ var _ = Describe("#1002", func() {
 						Machine: gardencorev1beta1.Machine{
 							Image: &gardencorev1beta1.ShootMachineImage{
 								Name:    "bar",
-								Version: ptr.To("1"),
+								Version: new("1"),
 							},
 						},
 					},
@@ -339,7 +338,7 @@ var _ = Describe("#1002", func() {
 						Machine: gardencorev1beta1.Machine{
 							Image: &gardencorev1beta1.ShootMachineImage{
 								Name:    "bar",
-								Version: ptr.To("2"),
+								Version: new("2"),
 							},
 						},
 					},
@@ -367,7 +366,7 @@ var _ = Describe("#1002", func() {
 						Machine: gardencorev1beta1.Machine{
 							Image: &gardencorev1beta1.ShootMachineImage{
 								Name:    "foo",
-								Version: ptr.To("1"),
+								Version: new("1"),
 							},
 						},
 					},
@@ -376,7 +375,7 @@ var _ = Describe("#1002", func() {
 						Machine: gardencorev1beta1.Machine{
 							Image: &gardencorev1beta1.ShootMachineImage{
 								Name:    "foo",
-								Version: ptr.To("2"),
+								Version: new("2"),
 							},
 						},
 					},
@@ -385,7 +384,7 @@ var _ = Describe("#1002", func() {
 						Machine: gardencorev1beta1.Machine{
 							Image: &gardencorev1beta1.ShootMachineImage{
 								Name:    "foo",
-								Version: ptr.To("3"),
+								Version: new("3"),
 							},
 						},
 					},
@@ -394,7 +393,7 @@ var _ = Describe("#1002", func() {
 						Machine: gardencorev1beta1.Machine{
 							Image: &gardencorev1beta1.ShootMachineImage{
 								Name:    "foo",
-								Version: ptr.To("4"),
+								Version: new("4"),
 							},
 						},
 					},
@@ -403,7 +402,7 @@ var _ = Describe("#1002", func() {
 						Machine: gardencorev1beta1.Machine{
 							Image: &gardencorev1beta1.ShootMachineImage{
 								Name:    "bar",
-								Version: ptr.To("1"),
+								Version: new("1"),
 							},
 						},
 					},
