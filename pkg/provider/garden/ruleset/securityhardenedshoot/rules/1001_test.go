@@ -13,7 +13,6 @@ import (
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -147,7 +146,7 @@ var _ = Describe("#1001", func() {
 			},
 		),
 		Entry("should error when the specified cloudProfile is not found",
-			func() { shoot.Spec.CloudProfileName = ptr.To("notFoo") },
+			func() { shoot.Spec.CloudProfileName = new("notFoo") },
 			nil,
 			[]rule.CheckResult{
 				{Status: rule.Errored, Message: "cloudprofiles.core.gardener.cloud \"notFoo\" not found", Target: rule.NewTarget("kind", "CloudProfile", "name", "notFoo")},
@@ -167,7 +166,7 @@ var _ = Describe("#1001", func() {
 		),
 		Entry("should pass when the shoot uses a supported version of Kubernetes",
 			func() {
-				shoot.Spec.CloudProfileName = ptr.To("foo")
+				shoot.Spec.CloudProfileName = new("foo")
 				shoot.Spec.Kubernetes.Version = "1"
 			},
 			nil,

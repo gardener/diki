@@ -12,7 +12,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -76,7 +75,7 @@ var _ = Describe("#2003", func() {
 		Entry("should pass when shoot enables kernel defaults protection in the default kubelet config",
 			func() {
 				shoot.Spec.Kubernetes.Kubelet = &gardencorev1beta1.KubeletConfig{
-					ProtectKernelDefaults: ptr.To(true),
+					ProtectKernelDefaults: new(true),
 				}
 			},
 			[]rule.CheckResult{{Status: rule.Passed, Message: "Default kubelet config enables kernel protection.", Target: rule.NewTarget()}},
@@ -84,7 +83,7 @@ var _ = Describe("#2003", func() {
 		Entry("should fail when shoot disables kernel defaults protection in the default kubelet config",
 			func() {
 				shoot.Spec.Kubernetes.Kubelet = &gardencorev1beta1.KubeletConfig{
-					ProtectKernelDefaults: ptr.To(false),
+					ProtectKernelDefaults: new(false),
 				}
 			},
 			[]rule.CheckResult{{Status: rule.Failed, Message: "Default kubelet config disables kernel protection.", Target: rule.NewTarget()}},
@@ -136,7 +135,7 @@ var _ = Describe("#2003", func() {
 						Name: "worker1",
 						Kubernetes: &gardencorev1beta1.WorkerKubernetes{
 							Kubelet: &gardencorev1beta1.KubeletConfig{
-								ProtectKernelDefaults: ptr.To(true),
+								ProtectKernelDefaults: new(true),
 							},
 						},
 					},
@@ -154,7 +153,7 @@ var _ = Describe("#2003", func() {
 						Name: "worker1",
 						Kubernetes: &gardencorev1beta1.WorkerKubernetes{
 							Kubelet: &gardencorev1beta1.KubeletConfig{
-								ProtectKernelDefaults: ptr.To(false),
+								ProtectKernelDefaults: new(false),
 							},
 						},
 					},

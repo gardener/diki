@@ -12,7 +12,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -30,7 +29,7 @@ var _ = Describe("#2001", func() {
 		namespaceName        = "foo"
 		namespace            *corev1.Namespace
 		validSecurityContext = &corev1.SecurityContext{
-			AllowPrivilegeEscalation: ptr.To(false),
+			AllowPrivilegeEscalation: new(false),
 		}
 	)
 
@@ -105,11 +104,11 @@ var _ = Describe("#2001", func() {
 			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "foo", "container", "test")},
 		),
 		Entry("should fail when allowPrivilegeEscalation is set to true",
-			&corev1.SecurityContext{AllowPrivilegeEscalation: ptr.To(true)}, validSecurityContext, rules.Options2001{}, false,
+			&corev1.SecurityContext{AllowPrivilegeEscalation: new(true)}, validSecurityContext, rules.Options2001{}, false,
 			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "foo", "container", "test")},
 		),
 		Entry("should fail when allowPrivilegeEscalation is set to true in initContainer",
-			validSecurityContext, &corev1.SecurityContext{AllowPrivilegeEscalation: ptr.To(true)}, rules.Options2001{}, false,
+			validSecurityContext, &corev1.SecurityContext{AllowPrivilegeEscalation: new(true)}, rules.Options2001{}, false,
 			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "foo", "container", "initTest")},
 		),
 		Entry("should pass when allowPrivilegeEscalation is set to false",
@@ -121,19 +120,19 @@ var _ = Describe("#2001", func() {
 			rule.CheckResult{Status: rule.Skipped, Message: "Diki privileged pod requires privileged mode.", Target: rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "foo")},
 		),
 		Entry("should fail when privileged is set to true",
-			&corev1.SecurityContext{AllowPrivilegeEscalation: ptr.To(false), Privileged: ptr.To(true)}, validSecurityContext, rules.Options2001{}, false,
+			&corev1.SecurityContext{AllowPrivilegeEscalation: new(false), Privileged: new(true)}, validSecurityContext, rules.Options2001{}, false,
 			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "foo", "container", "test")},
 		),
 		Entry("should fail when SYS_ADMIN capability is added",
-			&corev1.SecurityContext{AllowPrivilegeEscalation: ptr.To(false), Capabilities: &corev1.Capabilities{Add: []corev1.Capability{"SYS_ADMIN"}}}, validSecurityContext, rules.Options2001{}, false,
+			&corev1.SecurityContext{AllowPrivilegeEscalation: new(false), Capabilities: &corev1.Capabilities{Add: []corev1.Capability{"SYS_ADMIN"}}}, validSecurityContext, rules.Options2001{}, false,
 			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "foo", "container", "test")},
 		),
 		Entry("should fail when CAP_SYS_ADMIN capability is added",
-			&corev1.SecurityContext{AllowPrivilegeEscalation: ptr.To(false), Capabilities: &corev1.Capabilities{Add: []corev1.Capability{"CAP_SYS_ADMIN"}}}, validSecurityContext, rules.Options2001{}, false,
+			&corev1.SecurityContext{AllowPrivilegeEscalation: new(false), Capabilities: &corev1.Capabilities{Add: []corev1.Capability{"CAP_SYS_ADMIN"}}}, validSecurityContext, rules.Options2001{}, false,
 			rule.CheckResult{Status: rule.Failed, Message: "Pod must not escalate privileges.", Target: rule.NewTarget("kind", "Pod", "name", "foo", "namespace", "foo", "container", "test")},
 		),
 		Entry("should pass when options are set",
-			&corev1.SecurityContext{AllowPrivilegeEscalation: ptr.To(true)}, validSecurityContext,
+			&corev1.SecurityContext{AllowPrivilegeEscalation: new(true)}, validSecurityContext,
 			rules.Options2001{
 				AcceptedPods: []option.AcceptedNamespacedObject{
 					{

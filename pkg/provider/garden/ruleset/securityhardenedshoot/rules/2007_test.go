@@ -16,7 +16,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	admissionapiv1 "k8s.io/pod-security-admission/admission/api/v1"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -105,7 +104,7 @@ var _ = Describe("#2007", func() {
 					AdmissionPlugins: []gardencorev1beta1.AdmissionPlugin{
 						{
 							Name:     podSecurity,
-							Disabled: ptr.To(true),
+							Disabled: new(true),
 						},
 					},
 				}
@@ -121,11 +120,11 @@ var _ = Describe("#2007", func() {
 					AdmissionPlugins: []gardencorev1beta1.AdmissionPlugin{
 						{
 							Name:     podSecurity,
-							Disabled: ptr.To(true),
+							Disabled: new(true),
 						},
 						{
 							Name:     podSecurity,
-							Disabled: ptr.To(false),
+							Disabled: new(false),
 						},
 					},
 				}
@@ -141,7 +140,7 @@ var _ = Describe("#2007", func() {
 					AdmissionPlugins: []gardencorev1beta1.AdmissionPlugin{
 						{
 							Name:     podSecurity,
-							Disabled: ptr.To(false),
+							Disabled: new(false),
 						},
 					},
 				}
@@ -162,7 +161,7 @@ var _ = Describe("#2007", func() {
 					AdmissionPlugins: []gardencorev1beta1.AdmissionPlugin{
 						{
 							Name:     podSecurity,
-							Disabled: ptr.To(false),
+							Disabled: new(false),
 							Config: &runtime.RawExtension{
 								Raw: rawExtensionBytes,
 							},
@@ -193,7 +192,7 @@ var _ = Describe("#2007", func() {
 					AdmissionPlugins: []gardencorev1beta1.AdmissionPlugin{
 						{
 							Name:     podSecurity,
-							Disabled: ptr.To(false),
+							Disabled: new(false),
 							Config: &runtime.RawExtension{
 								Raw: rawExtensionBytes,
 							},
@@ -220,7 +219,7 @@ var _ = Describe("#2007", func() {
 					AdmissionPlugins: []gardencorev1beta1.AdmissionPlugin{
 						{
 							Name:     podSecurity,
-							Disabled: ptr.To(false),
+							Disabled: new(false),
 							Config: &runtime.RawExtension{
 								Raw: rawExtensionBytes,
 							},
@@ -249,7 +248,7 @@ var _ = Describe("#2007", func() {
 					AdmissionPlugins: []gardencorev1beta1.AdmissionPlugin{
 						{
 							Name:     podSecurity,
-							Disabled: ptr.To(false),
+							Disabled: new(false),
 							Config: &runtime.RawExtension{
 								Raw: rawExtensionBytes,
 							},

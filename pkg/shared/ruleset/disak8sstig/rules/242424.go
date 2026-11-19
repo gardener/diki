@@ -11,7 +11,6 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
@@ -72,7 +71,7 @@ func (r *Rule242424) Run(ctx context.Context) (rule.RuleResult, error) {
 
 		if kubeletConfig.ServerTLSBootstrap == nil {
 			// Defaults to false https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/
-			kubeletConfig.ServerTLSBootstrap = ptr.To(false)
+			kubeletConfig.ServerTLSBootstrap = new(false)
 		}
 		if _, ok := kubeletConfig.FeatureGates["RotateKubeletServerCertificate"]; !ok {
 			// Defaults to true https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/

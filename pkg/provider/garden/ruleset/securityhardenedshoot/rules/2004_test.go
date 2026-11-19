@@ -12,7 +12,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -94,7 +93,7 @@ var _ = Describe("#2004", func() {
 					AdmissionPlugins: []gardencorev1beta1.AdmissionPlugin{
 						{
 							Name:     webhookName,
-							Disabled: ptr.To(false),
+							Disabled: new(false),
 						},
 					},
 				}
@@ -107,7 +106,7 @@ var _ = Describe("#2004", func() {
 					AdmissionPlugins: []gardencorev1beta1.AdmissionPlugin{
 						{
 							Name:     webhookName,
-							Disabled: ptr.To(true),
+							Disabled: new(true),
 						},
 					},
 				}
@@ -123,11 +122,11 @@ var _ = Describe("#2004", func() {
 						},
 						{
 							Name:     webhookName,
-							Disabled: ptr.To(true),
+							Disabled: new(true),
 						},
 						{
 							Name:     webhookName,
-							Disabled: ptr.To(false),
+							Disabled: new(false),
 						},
 					},
 				}

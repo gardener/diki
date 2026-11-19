@@ -19,7 +19,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/rest"
 	"k8s.io/component-base/version"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/diki/imagevector"
@@ -320,9 +319,9 @@ func (r *Rule242400) checkKubeProxy(
 			case len(allAlphaOptions) == 0:
 				// Do nothing
 			case allAlphaOptions[0] == "true":
-				allAlpha = ptr.To(true)
+				allAlpha = new(true)
 			case allAlphaOptions[0] == "false":
-				allAlpha = ptr.To(false)
+				allAlpha = new(false)
 			default:
 				checkResults = append(checkResults, rule.WarningCheckResult(fmt.Sprintf("Option %s set to neither 'true' nor 'false' in container command.", option), podTarget))
 				continue

@@ -13,7 +13,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -68,7 +67,7 @@ var _ = Describe("#2005", func() {
 		),
 		Entry("should pass when the main kubelet has a default connection timeout",
 			func() {
-				shoot.Spec.Kubernetes.Kubelet = ptr.To(gardencorev1beta1.KubeletConfig{})
+				shoot.Spec.Kubernetes.Kubelet = new(gardencorev1beta1.KubeletConfig{})
 			},
 			[]rule.CheckResult{{Status: rule.Passed, Message: "The connection timeout is not set and therefore will be defaulted to the recommended value (5m).", Target: rule.NewTarget()}},
 		),
@@ -77,7 +76,7 @@ var _ = Describe("#2005", func() {
 				duration, err := time.ParseDuration("5m")
 				Expect(err).To(BeNil())
 
-				shoot.Spec.Kubernetes.Kubelet = ptr.To(gardencorev1beta1.KubeletConfig{
+				shoot.Spec.Kubernetes.Kubelet = new(gardencorev1beta1.KubeletConfig{
 					StreamingConnectionIdleTimeout: &metav1.Duration{
 						Duration: duration,
 					},
@@ -90,7 +89,7 @@ var _ = Describe("#2005", func() {
 				duration, err := time.ParseDuration("2h45m")
 				Expect(err).To(BeNil())
 
-				shoot.Spec.Kubernetes.Kubelet = ptr.To(gardencorev1beta1.KubeletConfig{
+				shoot.Spec.Kubernetes.Kubelet = new(gardencorev1beta1.KubeletConfig{
 					StreamingConnectionIdleTimeout: &metav1.Duration{
 						Duration: duration,
 					},
@@ -103,7 +102,7 @@ var _ = Describe("#2005", func() {
 				duration, err := time.ParseDuration("3s")
 				Expect(err).To(BeNil())
 
-				shoot.Spec.Kubernetes.Kubelet = ptr.To(gardencorev1beta1.KubeletConfig{
+				shoot.Spec.Kubernetes.Kubelet = new(gardencorev1beta1.KubeletConfig{
 					StreamingConnectionIdleTimeout: &metav1.Duration{
 						Duration: duration,
 					},
@@ -116,7 +115,7 @@ var _ = Describe("#2005", func() {
 				duration, err := time.ParseDuration("5h12s")
 				Expect(err).To(BeNil())
 
-				shoot.Spec.Kubernetes.Kubelet = ptr.To(gardencorev1beta1.KubeletConfig{
+				shoot.Spec.Kubernetes.Kubelet = new(gardencorev1beta1.KubeletConfig{
 					StreamingConnectionIdleTimeout: &metav1.Duration{
 						Duration: duration,
 					},

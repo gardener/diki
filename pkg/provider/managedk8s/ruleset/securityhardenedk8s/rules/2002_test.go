@@ -12,7 +12,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -69,7 +68,7 @@ var _ = Describe("#2002", func() {
 		),
 		Entry("should pass when a storage class's reclaim policy is explicitly set to delete",
 			func() {
-				plainStorageClass.ReclaimPolicy = ptr.To(deleteReclaimPolicy)
+				plainStorageClass.ReclaimPolicy = new(deleteReclaimPolicy)
 				Expect(client.Create(ctx, plainStorageClass)).To(Succeed())
 			}, rules.Options2002{},
 			[]rule.CheckResult{
@@ -78,7 +77,7 @@ var _ = Describe("#2002", func() {
 		),
 		Entry("should fail when a storage class's reclaim policy is set to a non-delete value",
 			func() {
-				plainStorageClass.ReclaimPolicy = ptr.To(notDeleteReclaimPolicy)
+				plainStorageClass.ReclaimPolicy = new(notDeleteReclaimPolicy)
 				Expect(client.Create(ctx, plainStorageClass)).To(Succeed())
 			}, rules.Options2002{},
 			[]rule.CheckResult{
@@ -87,7 +86,7 @@ var _ = Describe("#2002", func() {
 		),
 		Entry("should pass when a storage class's reclaim policy is set to a non-delete value but accepted by options",
 			func() {
-				plainStorageClass.ReclaimPolicy = ptr.To(notDeleteReclaimPolicy)
+				plainStorageClass.ReclaimPolicy = new(notDeleteReclaimPolicy)
 				Expect(client.Create(ctx, plainStorageClass)).To(Succeed())
 			}, rules.Options2002{
 				AcceptedStorageClasses: []option.AcceptedClusterObject{
@@ -107,7 +106,7 @@ var _ = Describe("#2002", func() {
 		),
 		Entry("should pass when a storage class's reclaim policy is set to a non-delete value but accepted by MatchLabels options",
 			func() {
-				plainStorageClass.ReclaimPolicy = ptr.To(notDeleteReclaimPolicy)
+				plainStorageClass.ReclaimPolicy = new(notDeleteReclaimPolicy)
 				Expect(client.Create(ctx, plainStorageClass)).To(Succeed())
 			}, rules.Options2002{
 				AcceptedStorageClasses: []option.AcceptedClusterObject{
@@ -131,12 +130,12 @@ var _ = Describe("#2002", func() {
 
 				storageClassDeletePolicy := plainStorageClass.DeepCopy()
 				storageClassDeletePolicy.Name = "storageClassDeletePolicyPolicy"
-				storageClassDeletePolicy.ReclaimPolicy = ptr.To(deleteReclaimPolicy)
+				storageClassDeletePolicy.ReclaimPolicy = new(deleteReclaimPolicy)
 				Expect(client.Create(ctx, storageClassDeletePolicy)).To(Succeed())
 
 				storageClassRetainPolicy := plainStorageClass.DeepCopy()
 				storageClassRetainPolicy.Name = "storageClassRetainPolicyPolicy"
-				storageClassRetainPolicy.ReclaimPolicy = ptr.To(notDeleteReclaimPolicy)
+				storageClassRetainPolicy.ReclaimPolicy = new(notDeleteReclaimPolicy)
 				storageClassRetainPolicy.Labels = map[string]string{"bar": "foo"}
 				Expect(client.Create(ctx, storageClassRetainPolicy)).To(Succeed())
 			}, rules.Options2002{
