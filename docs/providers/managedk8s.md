@@ -17,7 +17,7 @@ The `Managed Kubernetes` provider implements the following `rulesets`:
   - v0.1.0
 
 - [Pod Security Standards](../rulesets/pod-security-standards/ruleset.md)
-- v0.1.0
+  - v0.1.0
 
 ### Configuration
 
