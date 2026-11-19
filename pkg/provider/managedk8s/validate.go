@@ -52,7 +52,7 @@ func ValidateProviderConfig(conf config.ProviderConfig, fldPath *field.Path) fie
 		case podsecuritystandards.RulesetID:
 			allErrs = append(allErrs, podsecuritystandards.ValidateRulesetConfig(rulesetConfig, rulesetPath)...)
 		default:
-			allErrs = append(allErrs, field.NotSupported(rulesetPath.Child("id"), rulesetConfig.ID, []string{disak8sstig.RulesetID, securityhardenedk8s.RulesetID, gardenlinux.RulesetID}))
+			allErrs = append(allErrs, field.NotSupported(rulesetPath.Child("id"), rulesetConfig.ID, []string{disak8sstig.RulesetID, securityhardenedk8s.RulesetID, gardenlinux.RulesetID, podsecuritystandards.RulesetID}))
 		}
 	}
 
