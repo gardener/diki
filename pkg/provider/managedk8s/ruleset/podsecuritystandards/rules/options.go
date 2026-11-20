@@ -5,4 +5,5 @@
 package rules
 
 type RuleOption interface {
+	OptionsPSSB003
 }
