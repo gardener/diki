@@ -7,9 +7,9 @@ tool github.com/gardener/gardener/hack/tools
 require (
 	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/distribution/reference v0.6.0
-	github.com/gardener/gardener v1.155.1
+	github.com/gardener/gardener v1.155.2
 	github.com/gardener/gardener-extension-shoot-lakom-service v0.27.0
-	github.com/gardener/gardener/pkg/apis v1.155.1
+	github.com/gardener/gardener/pkg/apis v1.155.2
 	github.com/go-logr/logr v1.4.4
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo/v2 v2.34.0
@@ -79,7 +79,7 @@ require (
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.6 // indirect
 	github.com/gardener/etcd-druid/api v0.39.2 // indirect
-	github.com/gardener/gardener/hack/tools v1.155.1 // indirect
+	github.com/gardener/gardener/hack/tools v1.155.2 // indirect
 	github.com/gardener/machine-controller-manager v0.63.1 // indirect
 	github.com/gardener/pvc-autoscaler v0.3.3 // indirect
 	github.com/go-errors/errors v1.5.1 // indirect
