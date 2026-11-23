@@ -12,6 +12,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/gardener/diki/pkg/internal/utils"
+	kubepod "github.com/gardener/diki/pkg/kubernetes/pod"
 	kubeutils "github.com/gardener/diki/pkg/kubernetes/utils"
 	"github.com/gardener/diki/pkg/rule"
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
@@ -108,6 +110,14 @@ func (r *RulePSSB002) Run(ctx context.Context) (rule.RuleResult, error) {
 
 	for _, pod := range filteredPods {
 		podTarget := kubeutils.TargetWithPod(rule.NewTarget(), pod, replicaSets)
+
+		// Diki privileged pods require host namespaces. During execution, parallel diki rules might create pods.
+		if utils.MatchLabels(pod.Labels, map[string]string{
+			kubepod.LabelComplianceRoleKey: kubepod.LabelComplianceRolePrivPod,
+		}) {
+			checkResults = append(checkResults, rule.SkippedCheckResult("Diki privileged pod requires host namespaces.", podTarget))
+			continue
+		}
 
 		accepted, justification, err := r.accepted(pod.Labels, namespaces[pod.Namespace].Labels)
 		if err != nil {
