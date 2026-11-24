@@ -335,10 +335,14 @@ providers:                   # contains information about known providers
     name: Pod Security Standards
     version: v0.1.0
     # ruleOptions:
-    # - ruleID: "PSS-B001"
-    #   skip:
-    #     enabled: true
-    #     justification: "the whole rule is accepted for ... reasons"
+    # - ruleID: "PSS-B007"
+    #   args:
+    #     acceptedPods:
+    #     - namespaceLabelSelector:
+    #         matchLabels:
+    #           foo: bar
+    #       labelSelector: {}
+    #       justification: "Justification"
 # metadata: # optional, additional metadata to be added to summary json report
 #   foo: bar
 #   bar:
