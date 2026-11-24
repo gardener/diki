@@ -18,16 +18,23 @@ import (
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 )
 
-func (r *Ruleset) validateV01RuleOptions(_ map[string]internalconfig.IndexedRuleOptionsConfig, _ *field.Path) field.ErrorList {
+func (r *Ruleset) validateV01RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
-	_ = validateV01Options[struct{}] // placeholder, until rule options are implemented
+
+	allErrs = append(allErrs, validateV01Options[rules.OptionsPSSB010](ruleOptions["PSS-B010"].Args, fldPath.Index(ruleOptions["PSS-B010"].Index).Child("args"))...)
+
 	return allErrs
 }
 
 func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConfig) error {
-	_, err := client.New(r.Config, client.Options{})
+	c, err := client.New(r.Config, client.Options{})
 	if err != nil {
 		return err
+	}
+
+	optsPSSB010, err := getV01OptionOrNil[rules.OptionsPSSB010](ruleOptions["PSS-B010"].Args)
+	if err != nil {
+		return fmt.Errorf("rule option PSS-B010 error: %s", err.Error())
 	}
 
 	rules := []rule.Rule{
@@ -85,12 +92,10 @@ func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConf
 			"Not implemented.",
 			rule.NotImplemented,
 		),
-		rule.NewSkipRule(
-			"PSS-B010",
-			"/proc Mount Type",
-			"Not implemented.",
-			rule.NotImplemented,
-		),
+		&rules.RulePSSB010{
+			Client:  c,
+			Options: optsPSSB010,
+		},
 		rule.NewSkipRule(
 			"PSS-B011",
 			"Seccomp (Baseline)",

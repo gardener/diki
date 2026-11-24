@@ -6,6 +6,7 @@ package podsecuritystandards
 
 import (
 	"github.com/gardener/diki/pkg/config/merge"
+	"github.com/gardener/diki/pkg/provider/managedk8s/ruleset/podsecuritystandards/rules"
 )
 
 // RegisterMergeFuncs registers all rule option merge functions for the
@@ -16,7 +17,7 @@ func RegisterMergeFuncs(r *merge.Registry) {
 	}
 }
 
-func registerV01MergeFuncs(_ *merge.Registry, version string) {
+func registerV01MergeFuncs(r *merge.Registry, version string) {
 	key := func(ruleID string) merge.RegistryKey {
 		return merge.RegistryKey{
 			ProviderID: "managedk8s",
@@ -26,5 +27,5 @@ func registerV01MergeFuncs(_ *merge.Registry, version string) {
 		}
 	}
 
-	_ = key
+	merge.RegisterMergeFunc[rules.OptionsPSSB010](r, key("PSS-B010"))
 }
