@@ -18,25 +18,30 @@ import (
 	"github.com/gardener/diki/pkg/shared/kubernetes/option"
 )
 
-func (r *Ruleset) validateV01RuleOptions(_ map[string]internalconfig.IndexedRuleOptionsConfig, _ *field.Path) field.ErrorList {
+func (r *Ruleset) validateV01RuleOptions(ruleOptions map[string]internalconfig.IndexedRuleOptionsConfig, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
-	_ = validateV01Options[struct{}] // placeholder, until rule options are implemented
+
+	allErrs = append(allErrs, validateV01Options[rules.OptionsPSSB001](ruleOptions["PSS-B001"].Args, fldPath.Index(ruleOptions["PSS-B001"].Index).Child("args"))...)
+
 	return allErrs
 }
 
 func (r *Ruleset) registerV01Rules(ruleOptions map[string]config.RuleOptionsConfig) error {
-	_, err := client.New(r.Config, client.Options{})
+	c, err := client.New(r.Config, client.Options{})
 	if err != nil {
 		return err
 	}
 
+	optsPSSB001, err := getV01OptionOrNil[rules.OptionsPSSB001](ruleOptions["PSS-B001"].Args)
+	if err != nil {
+		return fmt.Errorf("rule option PSS-B001 error: %s", err.Error())
+	}
+
 	rules := []rule.Rule{
-		rule.NewSkipRule(
-			"PSS-B001",
-			"Host Process",
-			"Not implemented.",
-			rule.NotImplemented,
-		),
+		&rules.RulePSSB001{
+			Client:  c,
+			Options: optsPSSB001,
+		},
 		rule.NewSkipRule(
 			"PSS-B002",
 			"Host Namespaces",
