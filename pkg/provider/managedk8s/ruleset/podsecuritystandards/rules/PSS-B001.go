@@ -48,7 +48,7 @@ type OptionsPSSB001 struct {
 }
 
 // Validate validates that option configurations are correctly defined.
-func (o *OptionsPSSB001) Validate(fldPath *field.Path) field.ErrorList {
+func (o OptionsPSSB001) Validate(fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
 
 	acceptedPodsPath := fldPath.Child("acceptedPods")
@@ -113,34 +113,47 @@ func (r *RulePSSB001) Run(ctx context.Context) (rule.RuleResult, error) {
 			podCheckResults []rule.CheckResult
 			podTarget       = kubeutils.TargetWithPod(rule.NewTarget(), pod, replicaSets)
 
-			checkContainerHostProcess = func(name string, sc *corev1.SecurityContext) {
-				if sc != nil && sc.WindowsOptions != nil && sc.WindowsOptions.HostProcess != nil && *sc.WindowsOptions.HostProcess {
-					podCheckResults = append(podCheckResults, rule.FailedCheckResult("Pod must not have Host Process ability.", podTarget.With("container", name)))
+			checkHostProcess = func(target rule.Target, windowsOptions *corev1.WindowsSecurityContextOptions) error {
+				if windowsOptions == nil || windowsOptions.HostProcess == nil || !*windowsOptions.HostProcess {
+					return nil
 				}
+				accepted, justification, err := r.accepted(pod.Labels, namespaces[pod.Namespace].Labels)
+				if err != nil {
+					return err
+				}
+				if accepted {
+					msg := cmp.Or(justification, "Pod accepted to have Host Process ability.")
+					podCheckResults = append(podCheckResults, rule.AcceptedCheckResult(msg, target))
+				} else {
+					podCheckResults = append(podCheckResults, rule.FailedCheckResult("Pod must not have Host Process ability.", target))
+				}
+				return nil
+			}
+
+			containerWindowsOptions = func(sc *corev1.SecurityContext) *corev1.WindowsSecurityContextOptions {
+				if sc == nil {
+					return nil
+				}
+				return sc.WindowsOptions
 			}
 		)
 
-		accepted, justification, err := r.accepted(pod.Labels, namespaces[pod.Namespace].Labels)
-		if err != nil {
+		var podWindowsOptions *corev1.WindowsSecurityContextOptions
+		if pod.Spec.SecurityContext != nil {
+			podWindowsOptions = pod.Spec.SecurityContext.WindowsOptions
+		}
+		if err := checkHostProcess(podTarget, podWindowsOptions); err != nil {
 			return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
 		}
-		if accepted {
-			msg := cmp.Or(justification, "Pod accepted to have Host Process ability.")
-			checkResults = append(checkResults, rule.AcceptedCheckResult(msg, podTarget))
-			continue
-		}
-
-		psc := pod.Spec.SecurityContext
-		if psc != nil && psc.WindowsOptions != nil && psc.WindowsOptions.HostProcess != nil && *psc.WindowsOptions.HostProcess {
-			checkResults = append(checkResults, rule.FailedCheckResult("Pod must not have Host Process ability.", podTarget))
-			continue
-		}
-
 		for _, c := range slices.Concat(pod.Spec.Containers, pod.Spec.InitContainers) {
-			checkContainerHostProcess(c.Name, c.SecurityContext)
+			if err := checkHostProcess(podTarget.With("container", c.Name), containerWindowsOptions(c.SecurityContext)); err != nil {
+				return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+			}
 		}
 		for _, c := range pod.Spec.EphemeralContainers {
-			checkContainerHostProcess(c.Name, c.SecurityContext)
+			if err := checkHostProcess(podTarget.With("container", c.Name), containerWindowsOptions(c.SecurityContext)); err != nil {
+				return rule.Result(r, rule.ErroredCheckResult(err.Error(), rule.NewTarget())), nil
+			}
 		}
 
 		if len(podCheckResults) == 0 {
