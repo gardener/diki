@@ -11,5 +11,4 @@ TAILWINDCSS_VERSION ?= v3.3.3
 # Tools                                 #
 #########################################
 $(TAILWINDCSS): $(call tool_version_file,$(TAILWINDCSS),$(TAILWINDCSS_VERSION))
-	curl -L -o $(TAILWINDCSS) https://github.com/tailwindlabs/tailwindcss/releases/download/$(TAILWINDCSS_VERSION)/tailwindcss-$(shell uname -s | tr '[:upper:]' '[:lower:]' | sed 's/darwin/macos/')-$(shell uname -m | sed 's/x86_64/x64/')
-	chmod +x $(TAILWINDCSS)
+	./hack/download-tailwindcss.sh $(TAILWINDCSS) $(TAILWINDCSS_VERSION)
